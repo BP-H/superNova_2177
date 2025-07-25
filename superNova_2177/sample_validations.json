@@ -1,0 +1,24 @@
+{
+  "validations": [
+    {
+      "validator_id": "researcher_smith",
+      "score": 0.85,
+      "confidence": 0.9,
+      "signal_strength": 0.8,
+      "note": "Strong evidence supports this hypothesis",
+      "timestamp": "2025-01-15T10:00:00Z",
+      "specialty": "data_science",
+      "affiliation": "University"
+    },
+    {
+      "validator_id": "dr_jones", 
+      "score": 0.72,
+      "confidence": 0.75,
+      "signal_strength": 0.7,
+      "note": "Generally agree with methodology",
+      "timestamp": "2025-01-15T14:30:00Z",
+      "specialty": "statistics", 
+      "affiliation": "Research_Lab"
+    }
+  ]
+}
