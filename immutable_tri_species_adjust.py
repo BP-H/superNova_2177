@@ -20,6 +20,8 @@ class ImmutableTriSpeciesAgent(RemixAgent):
     INTERNAL_SPECIES_THRESHOLD = Decimal('0.1')
     ENGAGEMENT_MEDIUM = 20  # Voters threshold for medium engagement (raise to 0.92)
     ENGAGEMENT_HIGH = 50    # Voters threshold for high engagement (raise to 0.95)
+    KARMA_LIMIT = 10  # Karma limit for proposals; bigger decisions (>10) need all entities' supervision
+
 
     def _get_dynamic_threshold(self, total_voters: int, is_constitutional: bool, avg_yes: Decimal) -> Decimal:
         """
@@ -76,7 +78,7 @@ class ImmutableTriSpeciesAgent(RemixAgent):
             proposal['votes'] = defaultdict(dict)
         proposal['votes'][species][voter] = vote
         
-        # Tally votes per species
+         # Tally votes per species
         species_yes = {s: Decimal('0') for s in self.SPECIES}
         species_total = {s: Decimal('0') for s in self.SPECIES}
         
@@ -96,7 +98,13 @@ class ImmutableTriSpeciesAgent(RemixAgent):
         
         # Average yes across species (1/3 weight each)
         avg_yes = sum(species_yes.values()) / Decimal(len(self.SPECIES))
-                # New logic: Compute overall yes percentage across all voters
+        
+        # Determine if constitutional and get dynamic threshold
+        is_constitutional = proposal.get('type') == 'constitutional' or 'add_species' in proposal.get('description', '').lower() or 'big code change' in proposal.get('description', '').lower() or 'high level change' in proposal.get('description', '').lower() and 'announce a later announcement' in proposal.get('description', '').lower()
+        total_voters = sum(species_total.values())
+        threshold = self._get_dynamic_threshold(int(total_voters), is_constitutional, avg_yes)
+        
+        # New logic: Compute overall yes percentage across all voters
         total_yes = sum(sum(1 for v in proposal['votes'].get(s, {}).values() if v == 'yes') for s in self.SPECIES)
         overall_yes = Decimal(total_yes) / Decimal(total_voters) if total_voters > 0 else Decimal('0')
         
@@ -113,11 +121,44 @@ class ImmutableTriSpeciesAgent(RemixAgent):
             self.storage.set_proposal(proposal_id, proposal)
             return  # Early return to skip standard threshold check
         
+        # New logic: Multispecies required when more than 10 entities (voters)
+        participating_species = sum(1 for t in species_total.values() if t > 0)
+        if total_voters > 10 and participating_species < 2:  # Require multispecies (at least 2)
+            logger.warning(f"Proposal blocked: More than 10 voters but only {participating_species} species participated")
+            return
         
-        # Determine if constitutional and get dynamic threshold
-        is_constitutional = proposal.get('type') == 'constitutional' or 'add_species' in proposal.get('description', '').lower()
-        total_voters = sum(species_total.values())
-        threshold = self._get_dynamic_threshold(int(total_voters), is_constitutional, avg_yes)
+        # Single species fine if harmony is really good (>=0.95); if not as good, cannot pass if exactly 4 voters
+        if participating_species == 1:
+            if avg_yes < Decimal('0.95'):
+                if total_voters == 4:
+                    logger.warning(f"Proposal blocked: Single species with 4 voters and harmony {avg_yes} not really good")
+                    return
+            # Else, really good harmony allows single species
+        
+        # Karma limit to proposals (never more than 10 without all species supervision)
+        if total_voters > self.KARMA_LIMIT and participating_species < len(self.SPECIES):
+            logger.warning(f"Proposal blocked: More than {self.KARMA_LIMIT} voters but not all species supervising")
+            return
+        
+        # For 5-10 entities and all good (high harmony >=0.9), let them do small changes unless constitutional
+        if 5 <= total_voters <= 10 and not is_constitutional and avg_yes >= Decimal('0.9'):
+            proposal['status'] = 'passed'
+            logger.info(f"Proposal {proposal_id} passed: 5-10 entities with good harmony {avg_yes}")
+            self.storage.set_proposal(proposal_id, proposal)
+            return  # Early return for small changes
+        
+        # For example, 10 higher-than-average good reputed AI can pass if reputable (high harmony >=0.8), regardless of race
+        if total_voters == 10 and avg_yes >= Decimal('0.8'):
+            # Assuming good reputation via high harmony; allow passage
+            proposal['status'] = 'passed'
+            logger.info(f"Proposal {proposal_id} passed: 10 entities with good reputation (harmony {avg_yes})")
+            self.storage.set_proposal(proposal_id, proposal)
+            return
+        
+        # For exactly 5 voters, block unless harmony is extreme (>=0.98)
+        if total_voters == 5 and avg_yes < Decimal('0.98'):
+            logger.warning(f"Proposal blocked: 5 voters with harmony {avg_yes} not extreme")
+            return
         
         if avg_yes > threshold:
             proposal['status'] = 'passed'
@@ -139,3 +180,4 @@ class ImmutableTriSpeciesAgent(RemixAgent):
         }
         self.process_event(violation_event)  # Or add to logchain
         logger.error(f"Constitutional violation logged for {proposal_id}")
+```
