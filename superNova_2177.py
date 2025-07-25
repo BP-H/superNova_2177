@@ -2593,6 +2593,39 @@ class RemixAgent:
         proposal["votes"][event["voter"]] = event["vote"]
         self.storage.set_proposal(event["proposal_id"], proposal)
 
+        def _get_dynamic_threshold(self, total_voters: int, is_constitutional: bool, avg_yes: Decimal) -> Decimal:
+        """
+        Dynamically adjust threshold: for constitutional, increase as engagement (total voters) rises.
+        - Base: 0.9
+        - Medium (>20 voters): 0.92
+        - High (>50 voters): 0.95
+        Normal proposals stay at 0.5.
+        """
+        if not is_constitutional:
+            return self.NORMAL_THRESHOLD
+        
+        # Compute dynamic import threshold based on combined harmony (avg_yes)
+        harmony_float = float(avg_yes)
+        import_threshold = round(2 + 8 * harmony_float)
+        
+        if total_voters > import_threshold:
+            import immutable_tri_species_adjust as adjust
+            threshold = adjust.ImmutableTriSpeciesAgent.BASE_CONSTITUTIONAL_THRESHOLD
+            eng_medium = adjust.ImmutableTriSpeciesAgent.ENGAGEMENT_MEDIUM
+            eng_high = adjust.ImmutableTriSpeciesAgent.ENGAGEMENT_HIGH
+        else:
+            threshold = self.BASE_CONSTITUTIONAL_THRESHOLD
+            eng_medium = self.ENGAGEMENT_MEDIUM
+            eng_high = self.ENGAGEMENT_HIGH
+        
+        if total_voters > eng_high:
+            threshold = Decimal('0.95')
+        elif total_voters > eng_medium:
+            threshold = Decimal('0.92')
+        
+        logger.info(f"Dynamic threshold for {total_voters} voters: {threshold}")
+        return threshold
+
     def _apply_EXECUTE_PROPOSAL(self, event: Dict[str, Any]):
         proposal_id = event["proposal_id"]
         proposal_data = self.storage.get_proposal(proposal_id)
