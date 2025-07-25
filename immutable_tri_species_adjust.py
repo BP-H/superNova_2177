@@ -65,14 +65,38 @@ class ImmutableTriSpeciesAgent(RemixAgent):
         gini = Decimal('1') - Decimal('2') * (area_under_lorenz / Decimal(n))
         return max(Decimal('0'), min(gini, Decimal('1')))
 
-    def _get_dynamic_threshold(self, species_totals: Dict[str, Decimal], is_constitutional: bool) -> Decimal:
+    def _get_dynamic_threshold(self, total_voters: int, is_constitutional: bool, avg_yes: Decimal) -> Decimal:
         """
-        Dynamically adjust threshold using Gini (Lorenz-based) for inequality.
-        - Normal: 0.5
-        - Constitutional: 0.9 (Gini=0) to 0.95 (Gini≥0.5)
+        Dynamically adjust threshold: for constitutional, increase as engagement (total voters) rises.
+        - Base: 0.9
+        - Medium (>20 voters): 0.92
+        - High (>50 voters): 0.95
+        Normal proposals stay at 0.5.
         """
         if not is_constitutional:
             return self.NORMAL_THRESHOLD
+        
+        # Compute dynamic import threshold based on combined harmony (avg_yes)
+        harmony_float = float(avg_yes)
+        import_threshold = round(2 + 8 * harmony_float)
+        
+        if total_voters > import_threshold:
+            import immutable_tri_species_adjust as adjust
+            threshold = adjust.ImmutableTriSpeciesAgent.BASE_CONSTITUTIONAL_THRESHOLD
+            eng_medium = adjust.ImmutableTriSpeciesAgent.ENGAGEMENT_MEDIUM
+            eng_high = adjust.ImmutableTriSpeciesAgent.ENGAGEMENT_HIGH
+        else:
+            threshold = self.BASE_CONSTITUTIONAL_THRESHOLD
+            eng_medium = self.ENGAGEMENT_MEDIUM
+            eng_high = self.ENGAGEMENT_HIGH
+        
+        if total_voters > eng_high:
+            threshold = Decimal('0.95')
+        elif total_voters > eng_medium:
+            threshold = Decimal('0.92')
+        
+        logger.info(f"Dynamic threshold for {total_voters} voters: {threshold}")
+        return threshold
 
         gini = self._calculate_gini_coefficient(species_totals)
         threshold = self.BASE_CONSTITUTIONAL_THRESHOLD
