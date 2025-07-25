@@ -1,9 +1,8 @@
-
-
 from typing import Dict, Any, List
 from collections import defaultdict
 from decimal import Decimal
 import logging
+import numpy as np  # For Lorenz curve computation
 
 logger = logging.getLogger(__name__)
 
@@ -13,8 +12,10 @@ class ImmutableTriSpeciesAgent(RemixAgent):
     >50% averaged yes for normal, >90% for constitutional changes, ≥10% internal yes per species.
     Logs violations if prior logic changed without vote.
     Added dynamic supermajority: constitutional threshold increases with engagement (total voters).
+    
+    Constitutional proposals are defined as super big code changes at a high level, which must announce a later announcement of this change.
     """
-    SPECIES = ['human', 'ai', 'company']  # Immutable; changes need 90% vote
+    SPECIES = ['human', 'ai', 'company']  # Immutable; changes need 90% vote (e.g., adding 'cats' later requires constitutional vote and tech advancement)
     NORMAL_THRESHOLD = Decimal('0.5')
     BASE_CONSTITUTIONAL_THRESHOLD = Decimal('0.9')
     INTERNAL_SPECIES_THRESHOLD = Decimal('0.1')
@@ -22,6 +23,24 @@ class ImmutableTriSpeciesAgent(RemixAgent):
     ENGAGEMENT_HIGH = 50    # Voters threshold for high engagement (raise to 0.95)
     KARMA_LIMIT = 10  # Karma limit for proposals; bigger decisions (>10) need all entities' supervision
 
+    def _compute_lorenz_gini(self, voter_karmas: List[Decimal]) -> Decimal:
+        """
+        Compute Gini coefficient from Lorenz curve of voter karma distribution.
+        Used to adjust thresholds based on karma inequality (curve-like flow).
+        """
+        if not voter_karmas:
+            return Decimal('0')
+        
+        values = np.array([float(k) for k in voter_karmas])  # Convert Decimal to float for numpy
+        sorted_values = np.sort(values)
+        cum_values = np.cumsum(sorted_values) / np.sum(sorted_values)
+        cum_population = np.arange(1, len(values) + 1) / len(values)
+        # Lorenz curve points (insert 0,0)
+        curve = np.insert(cum_values, 0, 0)
+        pop = np.insert(cum_population, 0, 0)
+        # Gini = 1 - 2 * area under curve
+        gini = Decimal(1 - 2 * np.trapz(curve, pop))
+        return gini
 
     def _get_dynamic_threshold(self, total_voters: int, is_constitutional: bool, avg_yes: Decimal) -> Decimal:
         """
@@ -78,7 +97,7 @@ class ImmutableTriSpeciesAgent(RemixAgent):
             proposal['votes'] = defaultdict(dict)
         proposal['votes'][species][voter] = vote
         
-         # Tally votes per species
+        # Tally votes per species
         species_yes = {s: Decimal('0') for s in self.SPECIES}
         species_total = {s: Decimal('0') for s in self.SPECIES}
         
@@ -160,6 +179,51 @@ class ImmutableTriSpeciesAgent(RemixAgent):
             logger.warning(f"Proposal blocked: 5 voters with harmony {avg_yes} not extreme")
             return
         
+        # Gather voter karma for Lorenz curve (assume 'karma' in voter_data; fetch from storage)
+        voter_karmas = []
+        for s in self.SPECIES:
+            for voter_name in proposal['votes'].get(s, {}):
+                voter_info = self.storage.get_user(voter_name)
+                if voter_info and 'karma' in voter_info:
+                    voter_karmas.append(Decimal(voter_info['karma']))
+        
+        gini = self._compute_lorenz_gini(voter_karmas)
+        
+        # Adjust threshold based on Gini (karma inequality curve): higher inequality requires stricter harmony
+        if gini > Decimal('0.5'):  # High inequality
+            threshold += Decimal('0.05')  # Increase threshold (make harder to pass)
+            logger.info(f"Threshold adjusted up by 0.05 due to high karma inequality (Gini: {gini})")
+        elif gini < Decimal('0.2'):  # Low inequality (equal karma)
+            threshold -= Decimal('0.05')  # Decrease threshold (easier for balanced groups)
+            logger.info(f"Threshold adjusted down by 0.05 due to low karma inequality (Gini: {gini})")
+        
+        # For decisions >10 entities, always enforce 3 species logic
+        if total_voters > 10 and participating_species < len(self.SPECIES):
+            logger.warning(f"Proposal blocked: Decision with {total_voters} entities requires 3 species logic")
+            return
+        
+        # Under 10 free, unless under 80% agreement within species and good karma levels (use Gini for 'good')
+        if total_voters < 10:
+            # Check agreement within each species
+            for s in self.SPECIES:
+                if species_total[s] > 0 and species_yes[s] < Decimal('0.8'):
+                    if gini > Decimal('0.3'):  # Not good karma levels (inequality high)
+                        logger.warning(f"Proposal blocked: Under 10 voters, but {s} has <80% agreement and poor karma distribution (Gini: {gini})")
+                        return
+        
+        # Really extreme if 5 (harmony >=0.98), easier when 10 (harmony >=0.9) but still need good harmony and karma (low Gini)
+        if total_voters == 5 and avg_yes < Decimal('0.98') and gini > Decimal('0.2'):
+            logger.warning(f"Proposal blocked: 5 voters require extreme harmony (>=0.98) and good karma (Gini <=0.2), but got {avg_yes} and Gini {gini}")
+            return
+        if total_voters == 10 and avg_yes < Decimal('0.9') and gini > Decimal('0.3'):
+            logger.warning(f"Proposal blocked: 10 voters require good harmony (>=0.9) and karma (Gini <=0.3), but got {avg_yes} and Gini {gini}")
+            return
+        
+        # For bigger vote >10, definitely multispecies for all to inspect (enforce all species participate)
+        if total_voters > 10 and participating_species < len(self.SPECIES):
+            logger.warning(f"Bigger vote ({total_voters} >10) requires multispecies inspection from each species to each other")
+            return  # Block, assuming future expansion (e.g., 'cats' added) would scale SPECIES
+        
         if avg_yes > threshold:
             proposal['status'] = 'passed'
             logger.info(f"Proposal {proposal_id} passed (avg_yes: {avg_yes}, threshold: {threshold})")
@@ -180,4 +244,3 @@ class ImmutableTriSpeciesAgent(RemixAgent):
         }
         self.process_event(violation_event)  # Or add to logchain
         logger.error(f"Constitutional violation logged for {proposal_id}")
-```
