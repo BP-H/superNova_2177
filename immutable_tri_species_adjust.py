@@ -10,11 +10,34 @@ class ImmutableTriSpeciesAgent(RemixAgent):
     Subclass enforcing Tri-Species governance: immutable 1/3 weight per species,
     >50% averaged yes for normal, >90% for constitutional changes, ≥10% internal yes per species.
     Logs violations if prior logic changed without vote.
+    Added dynamic supermajority: constitutional threshold increases with engagement (total voters).
     """
     SPECIES = ['human', 'ai', 'company']  # Immutable; changes need 90% vote
     NORMAL_THRESHOLD = Decimal('0.5')
-    CONSTITUTIONAL_THRESHOLD = Decimal('0.9')
+    BASE_CONSTITUTIONAL_THRESHOLD = Decimal('0.9')
     INTERNAL_SPECIES_THRESHOLD = Decimal('0.1')
+    ENGAGEMENT_MEDIUM = 20  # Voters threshold for medium engagement (raise to 0.92)
+    ENGAGEMENT_HIGH = 50    # Voters threshold for high engagement (raise to 0.95)
+
+    def _get_dynamic_threshold(self, total_voters: int, is_constitutional: bool) -> Decimal:
+        """
+        Dynamically adjust threshold: for constitutional, increase as engagement (total voters) rises.
+        - Base: 0.9
+        - Medium (>20 voters): 0.92
+        - High (>50 voters): 0.95
+        Normal proposals stay at 0.5.
+        """
+        if not is_constitutional:
+            return self.NORMAL_THRESHOLD
+        
+        threshold = self.BASE_CONSTITUTIONAL_THRESHOLD
+        if total_voters > self.ENGAGEMENT_HIGH:
+            threshold = Decimal('0.95')
+        elif total_voters > self.ENGAGEMENT_MEDIUM:
+            threshold = Decimal('0.92')
+        
+        logger.info(f"Dynamic threshold for {total_voters} voters: {threshold}")
+        return threshold
 
     def _apply_VOTE_PROPOSAL(self, event: Dict[str, Any]):
         proposal_id = event['proposal_id']
@@ -59,9 +82,10 @@ class ImmutableTriSpeciesAgent(RemixAgent):
         # Average yes across species (1/3 weight each)
         avg_yes = sum(species_yes.values()) / Decimal(len(self.SPECIES))
         
-        # Determine threshold
+        # Determine if constitutional and get dynamic threshold
         is_constitutional = proposal.get('type') == 'constitutional' or 'add_species' in proposal.get('description', '').lower()
-        threshold = self.CONSTITUTIONAL_THRESHOLD if is_constitutional else self.NORMAL_THRESHOLD
+        total_voters = sum(species_total.values())
+        threshold = self._get_dynamic_threshold(int(total_voters), is_constitutional)
         
         if avg_yes > threshold:
             proposal['status'] = 'passed'
