@@ -1,0 +1,123 @@
+# introspection_pipeline.py — End-to-End Self-Audit Orchestrator (v3.9+)
+"""
+A unifying layer that connects trigger_causal_audit, explain_validation_reasoning,
+bias analysis, causal trace, and report formatter. It orchestrates a complete
+introspection audit on a given hypothesis and outputs a bundled report.
+"""
+
+import json # For parsing LogEntry.value
+import logging
+from typing import Dict, Any, Optional, List
+from sqlalchemy.orm import Session
+# Imports from previous modules
+from audit_explainer import explain_validation_reasoning, trace_causal_chain, summarize_bias_impact_on
+from auditor_report_formatter import generate_structured_audit_bundle, render_markdown_report
+# DB Models
+from db_models import LogEntry # LogEntry is still needed here for querying validation logs
+import hypothesis_tracker as ht # hypothesis_tracker is now ORM-based internally, but its public methods return dicts
+
+logger = logging.getLogger(__name__)
+
+
+def safe_json_loads(json_str: str, default=None):
+    try:
+        return json.loads(json_str) if json_str else (default or {})
+    except (json.JSONDecodeError, TypeError):
+        logger.exception(f"JSON decode failed: {json_str}")
+        return default or {}
+
+
+def safe_db_query(db, model, id_field, fallback=None):
+    try:
+        result = db.query(model).filter_by(**{id_field[0]: id_field[1]}).first()
+        return result if result else fallback
+    except Exception:
+        logger.exception(f"DB query failed for {model}")
+        return fallback
+
+
+def run_full_audit(hypothesis_id: str, db: Session) -> Dict[str, Any]:
+    """
+    Performs a full introspection audit for a given hypothesis and returns a structured report bundle.
+
+    Args:
+        hypothesis_id (str): The unique identifier of the hypothesis to audit.
+        db (Session): SQLAlchemy database session.
+
+    Returns:
+        Dict[str, Any]: A structured dictionary containing the full audit report,
+                        or an error message if the hypothesis/logs are not found.
+    """
+    # 1. Load the hypothesis using hypothesis_tracker's compatible dict-returning method
+    # hypothesis_tracker internally uses HypothesisRecord ORM but returns data as a dict for compatibility.
+    try:
+        hypothesis_data = ht._get_hypothesis_record(db, hypothesis_id)
+    except Exception:
+        logger.exception("Failed to load hypothesis record")
+        return {"error": f"Hypothesis '{hypothesis_id}' not found."}
+    
+    if not hypothesis_data:
+        return {"error": f"Hypothesis '{hypothesis_id}' not found."}
+
+    # Extract hypothesis text preview for the formatter (assuming 'text' key is provided by hypothesis_tracker's dict output)
+    hypothesis_text_preview = hypothesis_data.get("text", "N/A description")[:120]
+
+
+    # 2. Determine the latest validation log entry associated with this hypothesis
+    validation_log_ids = hypothesis_data.get("validation_log_ids", [])
+    latest_validation_log_id = None
+    latest_causal_audit_ref = None
+
+    if validation_log_ids:
+        # Query LogEntry using the IDs and order by timestamp to get the latest
+        # LogEntry's payload is a TEXT column storing JSON
+        try:
+            log_entries_for_hyp = db.query(LogEntry).filter(LogEntry.id.in_(validation_log_ids)).all()
+        except Exception:
+            logger.exception("DB query failed for LogEntry")
+            log_entries_for_hyp = []
+        
+        parsed_logs = []
+        for log_entry in log_entries_for_hyp:
+            try:
+                # CORRECTED: Access LogEntry.payload as it's the TEXT column storing JSON
+                log_value_payload = safe_json_loads(log_entry.payload)
+                parsed_logs.append({
+                    "id": log_entry.id,
+                    "timestamp": log_entry.timestamp,
+                    "causal_audit_ref": log_value_payload.get("causal_audit_ref")
+                })
+            except json.JSONDecodeError:
+                pass # Skip malformed log entries
+
+        if parsed_logs:
+            # Sort by timestamp (or ID if timestamps are identical) to find the 'latest'
+            latest_parsed_log = sorted(parsed_logs, key=lambda x: x["timestamp"], reverse=True)[0]
+            latest_validation_log_id = latest_parsed_log["id"]
+            latest_causal_audit_ref = latest_parsed_log["causal_audit_ref"]
+
+    if not latest_validation_log_id or not latest_causal_audit_ref:
+        return {"error": f"No valid causal audit reference found for hypothesis '{hypothesis_id}' via validation logs."}
+
+    # 3. Run Explanation Engine (audit_explainer.py)
+    # Pass the specific validation_id to explain_validation_reasoning
+    explanation_output = explain_validation_reasoning(hypothesis_id, latest_validation_log_id, db)
+
+    # 4. Summarize Bias (audit_explainer.py)
+    bias_data_output = summarize_bias_impact_on(hypothesis_id, db)
+
+    # 5. Causal Trace (audit_explainer.py)
+    # Use the retrieved causal_audit_ref directly
+    causal_chain_output = trace_causal_chain(latest_causal_audit_ref, db)
+
+    # 6. Bundle into reports (auditor_report_formatter.py)
+    audit_bundle = generate_structured_audit_bundle(
+        explainer_output=explanation_output,
+        bias_data=bias_data_output,
+        causal_chain_data=causal_chain_output,
+        hypothesis_id=hypothesis_id,
+        hypothesis_text_preview=hypothesis_text_preview,
+        validation_id=latest_validation_log_id,
+    )
+
+    return audit_bundle
