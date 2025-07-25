@@ -4755,8 +4755,8 @@ class HookManager:
 if __name__ == "__main__":
     import sys
 
-    cosmic_nexus = CosmicNexus(SessionLocal, SystemStateService(SessionLocal()))
-    agent = RemixAgent(cosmic_nexus=cosmic_nexus)
+    from immutable_tri_species_adjust import ImmutableTriSpeciesAgent
+        agent = ImmutableTriSpeciesAgent(cosmic_nexus=cosmic_nexus)
     if len(sys.argv) > 1 and sys.argv[1] == "test":
         import pytest
 
