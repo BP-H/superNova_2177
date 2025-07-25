@@ -1,3 +1,5 @@
+
+
 from typing import Dict, Any, List
 from collections import defaultdict
 from decimal import Decimal
@@ -94,6 +96,23 @@ class ImmutableTriSpeciesAgent(RemixAgent):
         
         # Average yes across species (1/3 weight each)
         avg_yes = sum(species_yes.values()) / Decimal(len(self.SPECIES))
+                # New logic: Compute overall yes percentage across all voters
+        total_yes = sum(sum(1 for v in proposal['votes'].get(s, {}).values() if v == 'yes') for s in self.SPECIES)
+        overall_yes = Decimal(total_yes) / Decimal(total_voters) if total_voters > 0 else Decimal('0')
+        
+        # Enforce 3 species participation for constitutional (e.g., code changes)
+        participating_species = sum(1 for t in species_total.values() if t > 0)
+        if is_constitutional and participating_species < len(self.SPECIES):
+            logger.warning(f"Constitutional proposal blocked: Only {participating_species} species participated")
+            return  # Block if not all 3 species have voters
+        
+        # For non-constitutional (daily/simple decisions): Allow pass with 80% overall yes and harmony >=80%
+        if not is_constitutional and overall_yes >= Decimal('0.8') and avg_yes >= Decimal('0.8'):
+            proposal['status'] = 'passed'
+            logger.info(f"Non-constitutional proposal {proposal_id} passed via 80% rule (overall_yes: {overall_yes}, avg_yes: {avg_yes})")
+            self.storage.set_proposal(proposal_id, proposal)
+            return  # Early return to skip standard threshold check
+        
         
         # Determine if constitutional and get dynamic threshold
         is_constitutional = proposal.get('type') == 'constitutional' or 'add_species' in proposal.get('description', '').lower()
