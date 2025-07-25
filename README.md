@@ -3,7 +3,7 @@
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3120/)
 [![Open Source](https://img.shields.io/badge/Open%20Source-%E2%9D%A4-red.svg)](https://opensource.org/)
 [![Contributors Welcome](https://img.shields.io/badge/Contributors-Welcome-brightgreen.svg)](https://github.com/BP-H/community_guidelines/issues)
-[![Stars](https://img.shields.io/github/stars/BP-H/community_guidelines?style=social)](https://github.com/BP-H/community_guidelines/stargazers)
+[![Stars](https://img.shields.io/github/stars/BP-H/community_guidelines?style=social)](https://github.com/BP-H/superNova_2177)
 
 **A scientifically grounded social metaverse engine for collaborative creativity**
 
