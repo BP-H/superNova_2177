@@ -65,7 +65,7 @@ class ImmutableTriSpeciesAgent(RemixAgent):
         gini = Decimal('1') - Decimal('2') * (area_under_lorenz / Decimal(n))
         return max(Decimal('0'), min(gini, Decimal('1')))
 
-    def _get_dynamic_threshold(self, total_voters: int, is_constitutional: bool, avg_yes: Decimal) -> Decimal:
+        def _get_dynamic_threshold(self, total_voters: int, is_constitutional: bool, avg_yes: Decimal) -> Decimal:
         """
         Dynamically adjust threshold: for constitutional, increase as engagement (total voters) rises.
         - Base: 0.9
