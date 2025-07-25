@@ -1,5 +1,0 @@
-nicegui
-requests
-pytest
-pytest-asyncio
-sentence-transformers
