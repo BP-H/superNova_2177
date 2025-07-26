@@ -373,6 +373,7 @@ class HypothesisRecord(Base):
     score = Column(Float, default=0.0)
     entropy_change = Column(Float, default=0.0) # From associated audit metadata
     confidence_interval = Column(String, default="") # From hypothesis_reasoner
+    metadata_json = Column(JSON, default=lambda: {})
 
     validation_log_ids = Column(JSON, default=lambda: [])  # LogEntry.id references
     audit_sources = Column(JSON, default=lambda: [])       # causal_trigger.py, audit_bridge.py etc. refs (SystemState keys)

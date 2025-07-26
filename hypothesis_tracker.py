@@ -98,7 +98,7 @@ def register_hypothesis(text: str, db: Session, metadata: Optional[Dict[str, Any
         created_at=now_dt,  # Store datetime object
         status="open",
         score=0.0,
-        metadata=metadata or {},
+        metadata_json=metadata or {},
     )
 
     # Ensure mutable JSON columns are initialized before use
@@ -166,9 +166,9 @@ def update_hypothesis_score(
     # Update metadata field (JSON column)
     if metadata_update:
         # Load existing JSON, update, then reassign to trigger ORM change detection
-        current_metadata = record.metadata if isinstance(record.metadata, dict) else {}
+        current_metadata = record.metadata_json if isinstance(record.metadata_json, dict) else {}
         current_metadata.update(metadata_update)
-        record.metadata = current_metadata 
+        record.metadata_json = current_metadata
 
     history_entry = {
         "t": datetime.utcnow().isoformat(), # Use ISO string for history entry
@@ -228,13 +228,13 @@ def attach_evidence_to_hypothesis(
             record.validation_log_ids.append(log_id)
 
     # Attach supporting_nodes information to metadata (JSON column, dict)
-    current_metadata = record.metadata if isinstance(record.metadata, dict) else {}
+    current_metadata = record.metadata_json if isinstance(record.metadata_json, dict) else {}
     if 'supporting_nodes_history' not in current_metadata:
         current_metadata['supporting_nodes_history'] = []
     # Append new nodes, ensuring uniqueness within the history
     current_nodes_in_history = set(current_metadata['supporting_nodes_history'])
     current_metadata['supporting_nodes_history'].extend([n for n in node_ids if n not in current_nodes_in_history])
-    record.metadata = current_metadata # Reassign to ensure ORM detects change
+    record.metadata_json = current_metadata # Reassign to ensure ORM detects change
 
     note_text = f"Evidence attached: Nodes {node_ids}, Logs {log_ids}."
     if summary_note:
