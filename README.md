@@ -35,6 +35,7 @@ pip install -r requirements.txt
 
 This project is tested with **SQLAlchemy 2.x**, so ensure you have
 `sqlalchemy>=2.0` installed.
+The code also requires `python-dateutil` for timestamp parsing.
 
 ## 🔧 Configuration
 
