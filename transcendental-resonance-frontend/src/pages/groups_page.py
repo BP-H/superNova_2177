@@ -22,6 +22,9 @@ async def groups_page():
             f'color: {THEME["accent"]};'
         )
 
+        search_query = ui.input('Search').classes('w-full mb-2')
+        sort_select = ui.select(['name', 'date'], value='name').classes('w-full mb-4')
+
         g_name = ui.input('Group Name').classes('w-full mb-2')
         g_desc = ui.textarea('Description').classes('w-full mb-2')
 
@@ -39,7 +42,19 @@ async def groups_page():
         groups_list = ui.column().classes('w-full')
 
         async def refresh_groups():
-            groups = api_call('GET', '/groups/') or []
+            params = {}
+            if search_query.value:
+                params['search'] = search_query.value
+            if sort_select.value:
+                params['sort'] = sort_select.value
+            groups = api_call('GET', '/groups/', params) or []
+            if search_query.value:
+                groups = [g for g in groups if search_query.value.lower() in g['name'].lower()]
+            if sort_select.value:
+                if sort_select.value == 'name':
+                    groups.sort(key=lambda x: x.get('name', ''))
+                elif sort_select.value == 'date':
+                    groups.sort(key=lambda x: x.get('created_at', ''))
             groups_list.clear()
             for g in groups:
                 with groups_list:

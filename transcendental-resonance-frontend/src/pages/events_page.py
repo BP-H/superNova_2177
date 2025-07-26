@@ -22,6 +22,9 @@ async def events_page():
             f'color: {THEME["accent"]};'
         )
 
+        search_query = ui.input('Search').classes('w-full mb-2')
+        sort_select = ui.select(['name', 'date'], value='name').classes('w-full mb-4')
+
         e_name = ui.input('Event Name').classes('w-full mb-2')
         e_desc = ui.textarea('Description').classes('w-full mb-2')
         e_start = ui.input('Start Time (YYYY-MM-DDTHH:MM)').classes('w-full mb-2')
@@ -46,7 +49,19 @@ async def events_page():
         events_list = ui.column().classes('w-full')
 
         async def refresh_events():
-            events = api_call('GET', '/events/') or []
+            params = {}
+            if search_query.value:
+                params['search'] = search_query.value
+            if sort_select.value:
+                params['sort'] = sort_select.value
+            events = api_call('GET', '/events/', params) or []
+            if search_query.value:
+                events = [e for e in events if search_query.value.lower() in e['name'].lower()]
+            if sort_select.value:
+                if sort_select.value == 'name':
+                    events.sort(key=lambda x: x.get('name', ''))
+                elif sort_select.value == 'date':
+                    events.sort(key=lambda x: x.get('start_time', ''))
             events_list.clear()
             for e in events:
                 with events_list:
