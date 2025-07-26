@@ -1906,6 +1906,16 @@ class Config:
     ALLOWED_POLICY_KEYS: List[str] = ["DAILY_DECAY", "KARMA_MINT_THRESHOLD"]
     SPECIES: List[str] = ["human", "ai", "company"]
 
+    # --- Meta-evaluation tuning ---
+    # Minimum number of records required before bias analysis is considered
+    MIN_SAMPLES_FOR_BIAS_ANALYSIS: int = 5
+    # Proportional difference in validation rate that triggers bias flags
+    VALIDATION_RATE_DELTA_THRESHOLD: float = 0.10
+    # Threshold for detecting overvalidation of low entropy deltas
+    LOW_ENTROPY_DELTA_THRESHOLD: float = 0.1
+    # Days before unresolved hypotheses are considered stale in meta analyses
+    UNRESOLVED_HYPOTHESIS_THRESHOLD_DAYS: int = 60
+
 
 USE_IN_MEMORY_STORAGE = False
 
