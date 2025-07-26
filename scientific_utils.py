@@ -475,6 +475,7 @@ def plot_karma_decay() -> Optional[str]:
     plt.legend()
     plot_filename = "karma_decay_visualization.png"
     plt.savefig(plot_filename)
+    plt.close()
     logging.info("Karma decay visualization saved to %s", plot_filename)
     return plot_filename
 
