@@ -20,6 +20,15 @@ logger = logging.getLogger(__name__)
 
 
 def safe_json_loads(json_str: str, default=None):
+    """Safely parse a JSON string.
+
+    Args:
+        json_str (str): The JSON-formatted string to decode.
+        default (Any, optional): Value returned if decoding fails or ``json_str`` is empty.
+
+    Returns:
+        Any: The decoded JSON object or ``default``/empty ``dict`` on failure.
+    """
     try:
         return json.loads(json_str) if json_str else (default or {})
     except (json.JSONDecodeError, TypeError):
