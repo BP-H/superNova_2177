@@ -17,19 +17,24 @@ async def status_page():
             f'color: {THEME["accent"]};'
         )
 
-        async def refresh_status():
+        status_label = ui.label().classes('mb-2')
+        harmonizers_label = ui.label().classes('mb-2')
+        vibenodes_label = ui.label().classes('mb-2')
+        entropy_label = ui.label().classes('mb-2')
+
+        async def refresh_status() -> None:
             status = api_call('GET', '/status')
             if status:
-                ui.label(f"Status: {status['status']}").classes('mb-2')
-                ui.label(
+                status_label.text = f"Status: {status['status']}"
+                harmonizers_label.text = (
                     f"Total Harmonizers: {status['metrics']['total_harmonizers']}"
-                ).classes('mb-2')
-                ui.label(
+                )
+                vibenodes_label.text = (
                     f"Total VibeNodes: {status['metrics']['total_vibenodes']}"
-                ).classes('mb-2')
-                ui.label(
+                )
+                entropy_label.text = (
                     f"Entropy: {status['metrics']['current_system_entropy']}"
-                ).classes('mb-2')
+                )
 
         await refresh_status()
-        ui.timer(60, refresh_status)
+        ui.timer(5, refresh_status)
