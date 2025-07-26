@@ -8,10 +8,10 @@ simulates a "scientific conscience"—closing the feedback loop of automated rea
 
 import json
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any, Tuple
+from typing import List, Dict, Optional, Any, Tuple, cast
 import collections
 import math
-import dateutil.parser # Added for robust datetime parsing
+import dateutil.parser  # type: ignore[import]
 
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -34,9 +34,10 @@ class TempConfig:
 
 try:
     from superNova_2177 import Config as SystemConfig
-    CONFIG = SystemConfig
 except ImportError:
-    CONFIG = TempConfig
+    SystemConfig = TempConfig  # type: ignore[misc]
+
+CONFIG: Any = SystemConfig
 
 
 def _get_all_hypotheses_with_parsed_metadata(db: Session) -> List[Dict[str, Any]]:
@@ -47,7 +48,8 @@ def _get_all_hypotheses_with_parsed_metadata(db: Session) -> List[Dict[str, Any]
     ).all()
     for record in records:
         try:
-            hyp_data = json.loads(record.value)
+            value_str = cast(str, record.value)
+            hyp_data = json.loads(value_str)
             # Ensure metadata is a dict, not just assumed from schema
             if "metadata" not in hyp_data or not isinstance(hyp_data["metadata"], dict):
                 hyp_data["metadata"] = {}
@@ -76,13 +78,13 @@ def analyze_validation_patterns(db: Session) -> Dict[str, Any]:
     """
     all_hypotheses = _get_all_hypotheses_with_parsed_metadata(db)
 
-    validated_texts = []
-    falsified_texts = []
-    time_to_resolve_seconds = []
-    all_supporting_nodes = collections.Counter()
-    all_audit_sources = collections.Counter()
-    source_module_popularity = collections.Counter()
-    author_popularity = collections.Counter() # Based on 'user_id' in metadata
+    validated_texts: List[str] = []
+    falsified_texts: List[str] = []
+    time_to_resolve_seconds: List[float] = []
+    all_supporting_nodes: collections.Counter[str] = collections.Counter()
+    all_audit_sources: collections.Counter[str] = collections.Counter()
+    source_module_popularity: collections.Counter[str] = collections.Counter()
+    author_popularity: collections.Counter[str] = collections.Counter()  # Based on 'user_id' in metadata
 
     for hyp in all_hypotheses:
         hyp_status = hyp.get("status")
@@ -156,8 +158,8 @@ def detect_judgment_biases(db: Session) -> List[Dict[str, Any]]:
     biases: List[Dict[str, Any]] = []
 
     # Bias 1: Disproportionate validation by source module/user
-    module_validation_stats = collections.defaultdict(lambda: {'total': 0, 'validated': 0})
-    user_validation_stats = collections.defaultdict(lambda: {'total': 0, 'validated': 0})
+    module_validation_stats: Dict[str, Dict[str, int]] = collections.defaultdict(lambda: {"total": 0, "validated": 0})
+    user_validation_stats: Dict[str, Dict[str, int]] = collections.defaultdict(lambda: {"total": 0, "validated": 0})
 
     for hyp in all_hypotheses:
         meta = hyp.get("metadata", {})
@@ -415,7 +417,7 @@ def run_meta_evaluation(db: Session) -> str:
     state_entry = db.query(SystemState).filter(SystemState.key == key).first()
 
     if state_entry:
-        state_entry.value = json.dumps(meta_eval_results, default=str)
+        state_entry.value = json.dumps(meta_eval_results, default=str)  # type: ignore[assignment]
     else:
         state_entry = SystemState(key=key, value=json.dumps(meta_eval_results, default=str))
         db.add(state_entry)

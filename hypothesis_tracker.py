@@ -71,6 +71,26 @@ def _store_hypothesis_record_to_db(hypothesis: HypothesisRecord, db: Session) ->
         raise RuntimeError(f"Failed to save hypothesis: {hypothesis.id}") from e
 
 
+def _get_hypothesis_record(db: Session, hypothesis_id: str) -> Optional[Dict[str, Any]]:
+    """Return a hypothesis record as a dictionary if present."""
+    record = _load_hypothesis_record_from_db(db, hypothesis_id)
+    if not record:
+        return None
+
+    return {
+        "id": record.id,
+        "text": record.description,
+        "status": record.status,
+        "score": record.score,
+        "validation_log_ids": record.validation_log_ids or [],
+        "metadata": record.metadata_json or {},
+        "created_at": record.created_at.isoformat() if record.created_at else "",
+        "history": record.history or [],
+        "notes": record.notes,
+        "audit_sources": record.audit_sources or [],
+    }
+
+
 def register_hypothesis(text: str, db: Session, metadata: Optional[Dict[str, Any]] = None) -> str:
     """
     Registers a new hypothesis, storing it using the HypothesisRecord ORM model.

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Any, List, cast
 from sqlalchemy.orm import Session
 import logging
 import datetime
@@ -12,7 +12,7 @@ from governance_reviewer import evaluate_governance_risks, apply_governance_acti
 logger = logging.getLogger("superNova_2177.trigger")
 
 
-def safe_json_loads(json_str: str, default=None):
+def safe_json_loads(json_str: str, default: Optional[Any] = None) -> Any:
     try:
         return json.loads(json_str) if json_str else (default or {})
     except (json.JSONDecodeError, TypeError):
@@ -20,7 +20,7 @@ def safe_json_loads(json_str: str, default=None):
         return default or {}
 
 
-def safe_db_query(db, model, id_field, fallback=None):
+def safe_db_query(db: Session, model: Any, id_field: tuple[str, Any], fallback: Optional[Any] = None) -> Any:
     try:
         result = db.query(model).filter_by(**{id_field[0]: id_field[1]}).first()
         return result if result else fallback
@@ -57,7 +57,7 @@ def trigger_causal_audit(
     Returns:
         dict: audit summary report
     """
-    audit_summary = {
+    audit_summary: Dict[str, Any] = {
         "log_id": log_id,
         "hypothesis_id": hypothesis_id,
         "timestamp": datetime.datetime.utcnow().isoformat(),
@@ -75,7 +75,7 @@ def trigger_causal_audit(
         logger.warning(f"LogEntry {log_id} not found.")
         return {"error": f"LogEntry {log_id} not found"}
 
-    payload_json = safe_json_loads(log_entry.payload)
+    payload_json = safe_json_loads(cast(str, log_entry.payload))
     causal_audit_ref = payload_json.get("causal_audit_ref")
 
     if causal_audit_ref is None:
@@ -104,8 +104,9 @@ def trigger_causal_audit(
                 if score is not None:
                     logger.info(f"Governance score for {hypothesis_id}: {score}")
 
-                if gov_result["auto_actions_taken"]:
-                    apply_governance_actions(hypothesis_record, gov_result["auto_actions_taken"], db)
+                actions = cast(List[str], gov_result.get("auto_actions_taken", []))
+                if actions:
+                    apply_governance_actions(hypothesis_record, actions, db)
                     logger.info(f"Governance actions applied: {gov_result['auto_actions_taken']}")
             except Exception as ge:
                 logger.exception("Governance review failed")

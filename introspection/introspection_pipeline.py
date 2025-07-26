@@ -5,9 +5,9 @@ bias analysis, causal trace, and report formatter. It orchestrates a complete
 introspection audit on a given hypothesis and outputs a bundled report.
 """
 
-import json # For parsing LogEntry.value
+import json  # For parsing LogEntry.value
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, cast
 from sqlalchemy.orm import Session
 # Imports from previous modules
 from audit_explainer import explain_validation_reasoning, trace_causal_chain, summarize_bias_impact_on
@@ -64,9 +64,9 @@ def run_full_audit(hypothesis_id: str, db: Session) -> Dict[str, Any]:
 
 
     # 2. Determine the latest validation log entry associated with this hypothesis
-    validation_log_ids = hypothesis_data.get("validation_log_ids", [])
-    latest_validation_log_id = None
-    latest_causal_audit_ref = None
+    validation_log_ids: List[int] = hypothesis_data.get("validation_log_ids", [])
+    latest_validation_log_id: Optional[int] = None
+    latest_causal_audit_ref: Optional[str] = None
 
     if validation_log_ids:
         # Query LogEntry using the IDs and order by timestamp to get the latest
@@ -77,11 +77,11 @@ def run_full_audit(hypothesis_id: str, db: Session) -> Dict[str, Any]:
             logger.exception("DB query failed for LogEntry")
             log_entries_for_hyp = []
         
-        parsed_logs = []
+        parsed_logs: List[Dict[str, Any]] = []
         for log_entry in log_entries_for_hyp:
             try:
                 # CORRECTED: Access LogEntry.payload as it's the TEXT column storing JSON
-                log_value_payload = safe_json_loads(log_entry.payload)
+                log_value_payload = safe_json_loads(cast(str, log_entry.payload))
                 parsed_logs.append({
                     "id": log_entry.id,
                     "timestamp": log_entry.timestamp,
