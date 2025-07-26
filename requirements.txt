@@ -5,3 +5,8 @@ python-dateutil
 types-python-dateutil
 types-requests
 types-networkx
+numpy
+python-snappy
+python-dotenv
+structlog
+prometheus-client
