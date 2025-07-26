@@ -11,7 +11,7 @@ else:
     sys.modules["superNova_2177"] = stub
 
 if not hasattr(stub, "RemixAgent"):
-    stub.RemixAgent = type("RemixAgent", (), {})
+    stub.RemixAgent = type("RemixAgent", (), {"fork_badges": {}})
 if not hasattr(stub, "Config"):
     stub.Config = type("Config", (), {"SPECIES": ["human", "ai", "company"]})
 
