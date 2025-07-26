@@ -9,6 +9,7 @@ hypothesis storage.
 import json
 import logging
 from datetime import datetime
+import uuid
 from typing import List, Dict, Optional, Any
 import math # For isfinite check
 
@@ -84,27 +85,27 @@ def register_hypothesis(text: str, db: Session, metadata: Optional[Dict[str, Any
     Returns:
         str: The generated hypothesis_id.
     """
-    now_dt = datetime.utcnow() # Get datetime object
-    now_iso = now_dt.isoformat() # Convert to ISO string for storage
-    timestamp_for_id = int(now_dt.timestamp()) # Use timestamp from datetime object for ID
-    hypothesis_id = f"HYP_{timestamp_for_id}" # Keep HYP_ prefix in the ID
+    now_dt = datetime.utcnow()  # Get datetime object
+    now_iso = now_dt.isoformat()  # Convert to ISO string for storage
+    timestamp_for_id = int(now_dt.timestamp())  # Use timestamp from datetime object for ID
+    unique_part = uuid.uuid4().hex[:8]
+    hypothesis_id = f"HYP_{timestamp_for_id}_{unique_part}"  # Keep HYP_ prefix in the ID and add randomness
 
     new_hypothesis_record = HypothesisRecord(
         id=hypothesis_id,
-        title=text[:255] if len(text) > 255 else text, # Truncate for title field if too long
+        title=text[:255] if len(text) > 255 else text,  # Truncate for title field if too long
         description=text,
-        created_at=now_dt, # Store datetime object
+        created_at=now_dt,  # Store datetime object
         status="open",
         score=0.0,
         metadata=metadata or {},
-        # ORM model defaults (default=lambda: []) handle these being lists automatically
-        # for new instances, so no need to explicitly initialize as empty lists here.
-        # validation_log_ids=[],
-        # audit_sources=[],
-        # tags=[],
-        # notes="", # Notes is Text type, defaults to ""
-        # history=[],
     )
+
+    # Ensure mutable JSON columns are initialized before use
+    if new_hypothesis_record.history is None:
+        new_hypothesis_record.history = []
+    if new_hypothesis_record.notes is None:
+        new_hypothesis_record.notes = ""
 
     new_hypothesis_record.history.append({
         "t": now_iso, # Use ISO string for history entry

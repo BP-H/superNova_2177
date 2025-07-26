@@ -365,7 +365,7 @@ class HypothesisRecord(Base):
     """
     __tablename__ = "hypotheses"
 
-    id = Column(String, primary_key=True)  # e.g., HYP_1721495734
+    id = Column(String, primary_key=True)  # e.g., HYP_1721495734_a1b2c3d4
     title = Column(String, nullable=True)
     description = Column(Text, nullable=True)
 
