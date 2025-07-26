@@ -33,8 +33,8 @@ python validate_hypothesis.py --validations sample_validations.json
 pip install -r requirements.txt
 ```
 
-This project is tested with **SQLAlchemy 2.x**, so ensure you have
-`sqlalchemy>=2.0` installed.
+This project relies on features introduced in **SQLAlchemy 2.x** such as
+`DeclarativeBase`. Ensure you have `sqlalchemy>=2.0` installed.
 The code also requires `python-dateutil` for timestamp parsing.
 
 ## 🔧 Configuration
