@@ -2,7 +2,8 @@
 
 from nicegui import ui
 
-from utils.api import api_call, THEME, TOKEN, clear_token
+from utils.api import api_call, TOKEN, clear_token
+from utils.styles import get_theme
 from .login_page import login_page
 from .vibenodes_page import vibenodes_page
 from .groups_page import groups_page
@@ -25,6 +26,7 @@ async def profile_page():
         ui.open(login_page)
         return
 
+    THEME = get_theme()
     with ui.column().classes('w-full p-4').style(
         f'background: {THEME["gradient"]}; color: {THEME["text"]};'
     ):

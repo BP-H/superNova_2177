@@ -3,7 +3,8 @@
 import json
 from nicegui import ui
 
-from utils.api import api_call, THEME, TOKEN
+from utils.api import api_call, TOKEN
+from utils.styles import get_theme
 from .login_page import login_page
 
 
@@ -14,6 +15,7 @@ async def network_page():
         ui.open(login_page)
         return
 
+    THEME = get_theme()
     with ui.column().classes('w-full p-4').style(
         f'background: {THEME["gradient"]}; color: {THEME["text"]};'
     ):

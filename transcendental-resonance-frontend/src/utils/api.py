@@ -2,20 +2,12 @@
 
 from typing import Optional, Dict
 
+import os
 import requests
 from nicegui import ui
 
 # Backend API base URL
-BACKEND_URL = "http://localhost:8000"
-
-# Theme configuration used across all pages
-THEME = {
-    'primary': '#0d47a1',  # Deep blue for futuristic feel
-    'accent': '#00e676',   # Neon green
-    'background': '#121212',  # Dark mode
-    'text': '#ffffff',
-    'gradient': 'linear-gradient(135deg, #0d47a1 0%, #121212 100%)'
-}
+BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 TOKEN: Optional[str] = None
 
