@@ -44,6 +44,8 @@ def export_causal_path(
     """
     Export a simplified causal trace path in either upstream or downstream direction.
     """
+    if direction not in {"ancestors", "descendants"}:
+        raise ValueError("direction must be 'ancestors' or 'descendants'")
     trace = (
         graph.trace_to_ancestors(node_id, max_depth=depth)
         if direction == "ancestors"

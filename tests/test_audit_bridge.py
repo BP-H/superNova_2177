@@ -4,7 +4,10 @@ from decimal import Decimal
 import datetime
 
 # Import the functions to be tested
+import pytest
 from scientific_metrics import log_metric_change, get_metric_history
+from audit_bridge import export_causal_path
+from causal_graph import InfluenceGraph
 
 # Import DB models and the test fixture
 from db_models import SystemState
@@ -141,3 +144,27 @@ def test_metric_name_robustness(test_db):
     history = get_metric_history(test_db, weird_name)
     assert len(history) == 1
     assert history[0]["metric_name"] == weird_name
+
+
+def test_export_causal_path_valid_directions():
+    """Ensure export_causal_path returns expected nodes for each direction."""
+    g = InfluenceGraph()
+    g.add_causal_node("A")
+    g.add_causal_node("B")
+    g.add_causal_node("C")
+    g.add_edge("A", "B")
+    g.add_edge("B", "C")
+
+    upstream = export_causal_path(g, "C", direction="ancestors", depth=3)
+    downstream = export_causal_path(g, "A", direction="descendants", depth=3)
+
+    assert set(upstream["path_nodes"]) == {"A", "B"}
+    assert set(downstream["path_nodes"]) == {"B", "C"}
+
+
+def test_export_causal_path_invalid_direction():
+    """Invalid direction should raise ``ValueError``."""
+    g = InfluenceGraph()
+    g.add_causal_node("A")
+    with pytest.raises(ValueError):
+        export_causal_path(g, "A", direction="sideways")
