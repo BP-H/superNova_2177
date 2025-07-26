@@ -155,6 +155,8 @@ for mod_name in [
             def _base():
                 class B:
                     metadata = types.SimpleNamespace()
+                    metadata.create_all = lambda *a, **kw: None
+                    metadata.drop_all = lambda *a, **kw: None
 
                 return B
 
