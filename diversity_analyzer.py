@@ -1,5 +1,5 @@
 """
-validation_certifier.py — Intelligent Validation Scoring & Certification (v4.2)
+diversity_analyzer.py — Validator diversity scoring and analysis
 
 Analyzes validation records to produce quality scores, detect contradictions,
 and recommend certification levels for scientific hypotheses.
