@@ -18,6 +18,7 @@ new RFC:
 |-------|-------|
 | [002](validators/002-example-validator/README.md) | Daily Participation Validator ✅ |
 | [003](validators/003-cross-universe-bridge/README.md) | Cross-Universe Bridge Validator |
+| [003](validators/003-auto-lint/README.md) | Auto Linting with GitHub Actions |
 
 ### Governance
 
