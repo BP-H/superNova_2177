@@ -2602,6 +2602,7 @@ class RemixAgent:
         - High (>50 voters): 0.95
         Normal proposals stay at 0.5.
         """
+        pass
         if not is_constitutional:
             return self.NORMAL_THRESHOLD
         
