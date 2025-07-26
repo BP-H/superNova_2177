@@ -982,8 +982,8 @@ def log_metric_change(
 
     entry = {
         "metric_name": metric_name,
-        "old_value": old_value,
-        "new_value": new_value,
+        "old_value": float(old_value) if isinstance(old_value, Decimal) else old_value,
+        "new_value": float(new_value) if isinstance(new_value, Decimal) else new_value,
         "source_module": source_module,
         "note": optional_note,
         "timestamp": datetime.datetime.utcnow().isoformat(),
