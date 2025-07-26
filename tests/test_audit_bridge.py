@@ -168,3 +168,26 @@ def test_export_causal_path_invalid_direction():
     g.add_causal_node("A")
     with pytest.raises(ValueError):
         export_causal_path(g, "A", direction="sideways")
+
+
+def test_attach_trace_to_logentry_updates_payload(test_db):
+    """attach_trace_to_logentry should persist causal node ids in payload."""
+    from audit_bridge import attach_trace_to_logentry
+    from db_models import LogEntry
+
+    log = LogEntry(
+        timestamp=datetime.datetime.utcnow(),
+        event_type="test",
+        payload=json.dumps({"foo": "bar"}),
+        previous_hash="p",
+        current_hash="c",
+    )
+    test_db.add(log)
+    test_db.commit()
+
+    attach_trace_to_logentry(log.id, ["x", "y"], test_db, summary="trace")
+
+    refreshed = test_db.query(LogEntry).filter(LogEntry.id == log.id).first()
+    data = json.loads(refreshed.payload)
+    assert data["causal_node_ids"] == ["x", "y"]
+    assert data["causal_commentary"] == "trace"
