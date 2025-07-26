@@ -32,6 +32,8 @@ async def profile_page():
         ui.open(login_page)
         return
 
+    score_data = api_call('GET', '/users/me/influence-score') or {}
+
     THEME = get_theme()
     with ui.column().classes('w-full p-4').style(
         f'background: {THEME["gradient"]}; color: {THEME["text"]};'
@@ -42,6 +44,9 @@ async def profile_page():
 
         ui.label(f'Harmony Score: {user_data["harmony_score"]}').classes('mb-2')
         ui.label(f'Creative Spark: {user_data["creative_spark"]}').classes('mb-2')
+        ui.label(
+            f'Influence Score: {score_data.get("influence_score", "N/A")}'
+        ).classes('mb-2')
         ui.label(f'Species: {user_data["species"]}').classes('mb-2')
 
         bio = ui.input('Bio', value=user_data.get('bio', '')).classes('w-full mb-2')
