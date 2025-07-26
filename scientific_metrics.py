@@ -60,7 +60,7 @@ except Exception:  # pragma: no cover - fallback definition
 )
 @ScientificModel(source="Brin & Page 1998", model_type="PageRank", approximation="simulated")
 def calculate_influence_score(graph: nx.DiGraph, user_id: int, *, iterations: int = 10) -> Dict[str, Optional[float]]:
-    """Compute a user's PageRank-based InfluenceScore.
+    r"""Compute a user's PageRank-based InfluenceScore.
 
     Parameters
     ----------
@@ -146,7 +146,7 @@ def calculate_interaction_entropy(
     method: str = "shannon",
     decay_rate: float = 0.0,
 ) -> Dict[str, Optional[float]]:
-    """Measure diversity of user actions with optional temporal decay.
+    r"""Measure diversity of user actions with optional temporal decay.
 
     Parameters
     ----------
@@ -390,7 +390,7 @@ def query_influence(
     approximation="heuristic",
 )
 def track_information_gain(previous: Dict[str, float], current: Dict[str, float]) -> Dict[str, Optional[float]]:
-    """Track entropy reduction between two probability distributions.
+    r"""Track entropy reduction between two probability distributions.
 
     ``previous`` and ``current`` are dictionaries mapping discrete outcomes to
     their probabilities.  Information gain is defined as
@@ -420,7 +420,7 @@ def track_information_gain(previous: Dict[str, float], current: Dict[str, float]
     approximation="heuristic",
 )
 def estimate_lyapunov_stability(series_a: list[float], series_b: list[float]) -> Dict[str, Optional[float]]:
-    """Approximate chaotic sensitivity via divergence of nearby trajectories.
+    r"""Approximate chaotic sensitivity via divergence of nearby trajectories.
 
     ``series_a`` and ``series_b`` should represent two time series starting from
     nearly identical initial conditions.  The Lyapunov exponent is estimated as
