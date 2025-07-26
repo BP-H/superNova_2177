@@ -12,7 +12,6 @@ import logging
 from typing import List, Dict, Any
 from datetime import datetime
 from statistics import mean
-from diversity_analyzer import compute_diversity_score
 
 logger = logging.getLogger("superNova_2177.certifier")
 
@@ -40,6 +39,50 @@ class Config:
     # Reputation system (placeholder)
     DEFAULT_VALIDATOR_REPUTATION = 0.5  # Until reputation tracking implemented
     MAX_NOTE_SCORE = 1.0             # Maximum boost/penalty from note analysis
+
+def compute_diversity_score(validations: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Compute a simple diversity metric for a list of validations.
+
+    The score is based on the proportion of unique ``validator_id``,
+    ``specialty`` and ``affiliation`` values present.  A value of ``1``
+    indicates maximum diversity while ``0`` means no diversity.
+
+    Parameters
+    ----------
+    validations:
+        Sequence of validation dictionaries which may contain the keys
+        ``validator_id``, ``specialty`` and ``affiliation``.
+
+    Returns
+    -------
+    Dict[str, Any]
+        Dictionary with the overall ``diversity_score`` in ``[0, 1]`` and
+        optional ``flags`` if low diversity is detected.  Counts of unique
+        fields are also returned for debugging purposes.
+    """
+
+    total = len(validations) or 1
+
+    ids = {v.get("validator_id") for v in validations if v.get("validator_id")}
+    specialties = {v.get("specialty") for v in validations if v.get("specialty")}
+    affiliations = {v.get("affiliation") for v in validations if v.get("affiliation")}
+
+    ratios = [len(ids) / total, len(specialties) / total, len(affiliations) / total]
+    diversity_score = max(0.0, min(1.0, sum(ratios) / 3.0))
+
+    flags = []
+    if diversity_score < 0.3:
+        flags.append("low_diversity")
+
+    return {
+        "diversity_score": round(diversity_score, 3),
+        "counts": {
+            "unique_validators": len(ids),
+            "unique_specialties": len(specialties),
+            "unique_affiliations": len(affiliations),
+        },
+        "flags": flags,
+    }
 
 def score_validation(val: Dict[str, Any]) -> float:
     """
