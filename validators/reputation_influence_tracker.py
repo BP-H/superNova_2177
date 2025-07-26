@@ -12,6 +12,7 @@ import logging
 from typing import List, Dict, Any, Optional
 from collections import defaultdict
 from statistics import mean, stdev
+from datetime import datetime
 
 logger = logging.getLogger("superNova_2177.reputation")
 
@@ -33,11 +34,17 @@ class Config:
     LOW_DIVERSITY_THRESHOLD = 0.1
     EXTREME_DEVIATION_THRESHOLD = 0.8
 
+    # Reputation decay
+    DECAY_HALF_LIFE_DAYS = 90
+
 def compute_validator_reputations(
     all_validations: List[Dict[str, Any]],
     consensus_scores: Dict[str, float],
     temporal_trust: Optional[Dict[str, float]] = None,
-    diversity_scores: Optional[Dict[str, float]] = None
+    diversity_scores: Optional[Dict[str, float]] = None,
+    *,
+    current_time: Optional[datetime] = None,
+    half_life_days: Optional[float] = None
 ) -> Dict[str, Any]:
     """
     Compute reputation scores for each validator based on their validation patterns.
@@ -47,6 +54,8 @@ def compute_validator_reputations(
         consensus_scores: Average score per hypothesis_id
         temporal_trust: Optional trust factors for validators (0.0-1.0)
         diversity_scores: Optional diversity contributions per validator (0.0-1.0)
+        current_time: Evaluation time for decay calculation (defaults to now)
+        half_life_days: Half-life for decay factor in days
 
     Returns:
         Dict with:
@@ -72,15 +81,19 @@ def compute_validator_reputations(
 
     temporal_trust = temporal_trust or {}
     diversity_scores = diversity_scores or {}
+    current_time = current_time or datetime.utcnow()
+    half_life = half_life_days or Config.DECAY_HALF_LIFE_DAYS
 
     validator_scores = defaultdict(list)
     validator_deviations = defaultdict(list)
+    last_timestamps: Dict[str, datetime] = {}
 
     for v in all_validations:
         try:
             validator = v.get("validator_id")
             hypothesis = v.get("hypothesis_id")
             val_score = float(v.get("score", 0.5))
+            timestamp_str = v.get("timestamp")
 
             if not validator or not hypothesis:
                 continue
@@ -94,6 +107,14 @@ def compute_validator_reputations(
 
             validator_scores[validator].append(agreement_score)
             validator_deviations[validator].append(deviation)
+            if timestamp_str:
+                try:
+                    ts = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+                    prev = last_timestamps.get(validator)
+                    if not prev or ts > prev:
+                        last_timestamps[validator] = ts
+                except Exception as e:
+                    logger.warning(f"Invalid timestamp for validator {validator}: {e}")
 
         except (ValueError, TypeError) as e:
             logger.warning(f"Invalid validation data: {v} - {e}")
@@ -119,7 +140,17 @@ def compute_validator_reputations(
             )
 
             final_reputation = max(Config.MIN_REPUTATION, min(Config.MAX_REPUTATION, reputation))
-            reputations[validator] = round(final_reputation, 3)
+
+            ts = last_timestamps.get(validator)
+            if ts:
+                age_days = (current_time - ts).days
+                decay_factor = 0.5 ** (age_days / half_life)
+                final_reputation *= decay_factor
+
+            reputations[validator] = round(
+                max(Config.MIN_REPUTATION, min(Config.MAX_REPUTATION, final_reputation)),
+                3,
+            )
 
             avg_deviation = mean(validator_deviations[validator])
 
@@ -191,6 +222,4 @@ def get_reputation_weighted_score(
 
 # TODO v4.5:
 # - Add cross-validation consistency tracking
-# - Implement reputation decay over time
-# - Add validator specialty-based reputation tracking
 # - Include network analysis for coordination detection
