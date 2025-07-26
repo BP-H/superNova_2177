@@ -6,11 +6,21 @@ import json
 import uuid
 from datetime import datetime
 from typing import List, Dict, Optional, Any
+import logging
 
 from sqlalchemy.orm import Session
 
 from causal_graph import InfluenceGraph
 from db_models import SystemState, LogEntry
+
+logger = logging.getLogger(__name__)
+
+
+def safe_json_loads(json_str: str, default=None):
+    try:
+        return json.loads(json_str) if json_str else (default or {})
+    except (json.JSONDecodeError, TypeError):
+        return default or {}
 
 
 def log_hypothesis_with_trace(
@@ -85,7 +95,12 @@ def attach_trace_to_logentry(
     if not entry:
         raise ValueError(f"LogEntry {log_id} not found")
 
-    existing = json.loads(entry.payload or "{}")
+    _sentinel = object()
+    existing = safe_json_loads(entry.payload or "{}", default=_sentinel)
+    if existing is _sentinel:
+        logger.warning("Failed to parse JSON payload for LogEntry %s", log_id)
+        return
+
     existing["causal_node_ids"] = causal_node_ids
     if summary:
         existing["causal_commentary"] = summary

@@ -191,3 +191,27 @@ def test_attach_trace_to_logentry_updates_payload(test_db):
     data = json.loads(refreshed.payload)
     assert data["causal_node_ids"] == ["x", "y"]
     assert data["causal_commentary"] == "trace"
+
+
+def test_attach_trace_to_logentry_invalid_json_does_not_modify(test_db, caplog):
+    """Invalid JSON payload should leave entry unchanged and log a warning."""
+    from audit_bridge import attach_trace_to_logentry
+    from db_models import LogEntry
+    import logging
+
+    bad_payload = "{invalid json]"
+    log = LogEntry(
+        timestamp=datetime.datetime.utcnow(),
+        event_type="test",
+        payload=bad_payload,
+        previous_hash="p",
+        current_hash="c",
+    )
+    test_db.add(log)
+    test_db.commit()
+
+    with caplog.at_level(logging.WARNING):
+        attach_trace_to_logentry(log.id, ["x"], test_db, summary="trace")
+    refreshed = test_db.query(LogEntry).filter(LogEntry.id == log.id).first()
+    assert refreshed.payload == bad_payload
+    assert any("Failed to parse JSON payload" in rec.message for rec in caplog.records)
