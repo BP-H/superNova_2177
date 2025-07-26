@@ -152,7 +152,7 @@ for mod_name in [
                 pass
 
             stub.Session = Session
-            stub.sessionmaker = lambda *a, **kw: None
+            stub.sessionmaker = lambda *a, **kw: Session
             stub.relationship = lambda *a, **kw: None
             class DeclarativeBase:
                 metadata = types.SimpleNamespace(
