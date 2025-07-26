@@ -72,7 +72,7 @@ class PredictionManager:
 
     def _get_value(self, key: str) -> Optional[str]:
         if self.state_service is not None:
-            return self.state_service.get_state(key, "")
+            return self.state_service.get_state(key, None)
         session = self.session_factory()
         try:
             state = session.query(SystemState).filter(SystemState.key == key).first()
