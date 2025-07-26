@@ -7,3 +7,9 @@ types-requests
 types-networkx
 numpy
 sentence-transformers
+scipy
+pandas
+pygame
+mido
+midiutil
+torch
