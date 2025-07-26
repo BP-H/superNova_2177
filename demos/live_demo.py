@@ -17,8 +17,28 @@ def typewriter_print(text, delay=0.03):
         time.sleep(delay)
     print()
 
-def create_dramatic_scenario(save_output=False):
-    """Create a suspicious validation scenario that unfolds dramatically"""
+def create_dramatic_scenario(
+    normal_count: int = 3,
+    suspicious_count: int = 3,
+    coord_window: int = 2,
+    *,
+    save_output: bool = False,
+) -> None:
+    """Create a suspicious validation scenario that unfolds dramatically.
+
+    Parameters
+    ----------
+    normal_count:
+        Number of non-coordinated validator submissions to generate.
+    suspicious_count:
+        Number of coordinated submissions in the second wave.
+    coord_window:
+        Minutes between each suspicious submission, controlling the
+        "tightness" of the coordination.
+    save_output:
+        When ``True`` the generated validations and analysis results are
+        written to JSON/Markdown files.
+    """
     
     print("🔬 " + "="*60)
     typewriter_print("  SUPERNOVΑ_2177 LIVE VALIDATION ANALYSIS", 0.05)
@@ -30,11 +50,13 @@ def create_dramatic_scenario(save_output=False):
     # Create increasingly suspicious validation data
     validations = []
     
-    typewriter_print("\n⏰ Validation submissions incoming...\n")
+    typewriter_print(
+        f"\n⏰ Validation submissions incoming (first wave: {normal_count})...\n"
+    )
     
     # First wave - normal looking
     base_time = datetime.utcnow()
-    for i in range(3):
+    for i in range(normal_count):
         validator = f"validator_{chr(65+i)}"
         typewriter_print(f"  📥 {validator} submitted validation... ", 0.02)
         
@@ -48,7 +70,7 @@ def create_dramatic_scenario(save_output=False):
                 "Some concerns but generally positive results",
                 "Needs more data but directionally correct"
             ]),
-            "timestamp": (base_time + timedelta(hours=i*2)).isoformat(),
+            "timestamp": (base_time + timedelta(hours=i * 2)).isoformat(),
             "specialty": random.choice(["economics", "data_science", "statistics"]),
             "affiliation": random.choice(["University_A", "Research_Lab_B", "Institute_C"]),
             "suspicious": False  # Added suspicious flag
@@ -56,12 +78,15 @@ def create_dramatic_scenario(save_output=False):
         validations.append(validation)
         time.sleep(0.5)
     
-    typewriter_print("\n⚠️  Suspicious pattern emerging...", 0.04)
+    typewriter_print(
+        f"\n⚠️  Suspicious pattern emerging: {suspicious_count} rapid submissions (every {coord_window}m)...",
+        0.04,
+    )
     time.sleep(1)
     
     # Second wave - coordinated submissions (within minutes)
     suspicious_time = base_time + timedelta(hours=8)
-    for i in range(3):
+    for i in range(suspicious_count):
         validator = f"validator_{chr(68+i)}"  # D, E, F
         typewriter_print(f"  🚨 {validator} submitted validation (suspicious timing)... ", 0.02)
         
@@ -71,7 +96,9 @@ def create_dramatic_scenario(save_output=False):
             "confidence": 0.95,
             "signal_strength": 0.88,
             "note": "Strong evidence supports this hypothesis",  # Identical notes
-            "timestamp": (suspicious_time + timedelta(minutes=i*2)).isoformat(),
+            "timestamp": (
+                suspicious_time + timedelta(minutes=i * coord_window)
+            ).isoformat(),
             "specialty": "machine_learning",  # Same specialty
             "affiliation": "TechCorp_X",  # Same affiliation
             "suspicious": True  # Added suspicious flag
@@ -185,13 +212,31 @@ def create_dramatic_scenario(save_output=False):
 def main():
     parser = argparse.ArgumentParser(description="🎬 Interactive superNova_2177 Demo")
     parser.add_argument("--save", action="store_true", help="Save analysis results to files")
-    parser.add_argument("--scenario", choices=["manipulation", "clean"], default="manipulation", 
+    parser.add_argument("--scenario", choices=["manipulation", "clean"], default="manipulation",
                        help="Demo scenario to run")
+    parser.add_argument("--normal-count", type=int, default=3, help="Number of normal validations")
+    parser.add_argument(
+        "--suspicious-count",
+        type=int,
+        default=3,
+        help="Number of coordinated suspicious validations",
+    )
+    parser.add_argument(
+        "--coord-window",
+        type=int,
+        default=2,
+        help="Minutes between suspicious submissions",
+    )
     
     args = parser.parse_args()
     
     if args.scenario == "manipulation":
-        create_dramatic_scenario(save_output=args.save)
+        create_dramatic_scenario(
+            args.normal_count,
+            args.suspicious_count,
+            args.coord_window,
+            save_output=args.save,
+        )
     else:
         typewriter_print("🚧 Clean scenario not yet implemented", 0.03)
 
