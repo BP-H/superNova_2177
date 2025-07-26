@@ -11,6 +11,7 @@ from .events_page import events_page
 from .proposals_page import proposals_page
 from .notifications_page import notifications_page
 from .messages_page import messages_page
+from .predictions_page import predictions_page
 
 
 @ui.page('/profile')
@@ -65,6 +66,9 @@ async def profile_page():
             f'background: {THEME["accent"]}; color: {THEME["background"]};'
         )
         ui.button('Messages', on_click=lambda: ui.open(messages_page)).classes('w-full mb-2').style(
+            f'background: {THEME["accent"]}; color: {THEME["background"]};'
+        )
+        ui.button('Predictions', on_click=lambda: ui.open(predictions_page)).classes('w-full mb-2').style(
             f'background: {THEME["accent"]}; color: {THEME["background"]};'
         )
         ui.button(
