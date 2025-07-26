@@ -228,17 +228,51 @@ except Exception:  # pragma: no cover - lightweight fallback
     import types
     from typing import Dict, Iterable, Any, List
 
+    class _NodeView(dict):
+        """Minimal dictionary-like node view supporting call syntax."""
+
+        def __call__(self):
+            return list(self.keys())
+
     class DiGraph:
         def __init__(self):
-            self._adj: Dict[Any, Dict[Any, Dict[str, float]]] = {}
+            self._adj: Dict[Any, Dict[Any, Dict[str, Any]]] = {}
+            self._nodes = _NodeView()
 
-        def add_node(self, node: Any) -> None:
+        @property
+        def nodes(self) -> _NodeView:
+            return self._nodes
+
+        def add_node(self, node: Any, **attrs) -> None:
             self._adj.setdefault(node, {})
+            self._nodes.setdefault(node, {}).update(attrs)
 
-        def add_edge(self, u: Any, v: Any, weight: float = 1.0) -> None:
+        def add_edge(self, u: Any, v: Any, weight: float = 1.0, **attrs) -> None:
             self.add_node(u)
             self.add_node(v)
-            self._adj[u][v] = {"weight": weight}
+            data = {"weight": weight}
+            data.update(attrs)
+            self._adj[u][v] = data
+
+        def edges(self, data: bool = False):
+            for u, nbrs in self._adj.items():
+                for v, attr in nbrs.items():
+                    yield (u, v, attr) if data else (u, v)
+
+        def number_of_nodes(self) -> int:
+            return len(self._nodes)
+
+        def number_of_edges(self) -> int:
+            return sum(len(nbrs) for nbrs in self._adj.values())
+
+        def copy(self) -> "DiGraph":
+            g = DiGraph()
+            for n, attr in self.nodes.items():
+                g.add_node(n, **attr)
+            for u, nbrs in self._adj.items():
+                for v, data in nbrs.items():
+                    g.add_edge(u, v, **data)
+            return g
 
         def has_edge(self, u: Any, v: Any) -> bool:
             return v in self._adj.get(u, {})
