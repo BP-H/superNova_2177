@@ -102,7 +102,7 @@ class QuantumContext:
     def measure_superposition(
         self, input_value: float, *, error_rate: float = 0.0
     ) -> Dict[str, Optional[float]]:
-        """Simulate measurement of a superposition for a decision.
+        r"""Simulate measurement of a superposition for a decision.
 
         Scientific Basis
         ----------------
@@ -412,7 +412,7 @@ quantum_prediction_engine = QuantumContext.quantum_prediction_engine
 def approximate_trace_distance(
     state1: list[float], state2: list[float]
 ) -> Dict[str, Optional[float]]:
-    """Approximate trace distance between two quantum states.
+    r"""Approximate trace distance between two quantum states.
 
     Scientific Basis
     ----------------
@@ -456,7 +456,7 @@ def approximate_trace_distance(
 def pseudo_fidelity_score(
     initial: list[float], final: list[float]
 ) -> Dict[str, Optional[float]]:
-    """Pseudo fidelity between initial and final states using cosine similarity.
+    r"""Pseudo fidelity between initial and final states using cosine similarity.
 
     Scientific Basis
     ----------------

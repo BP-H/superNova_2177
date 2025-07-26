@@ -189,7 +189,7 @@ class CausalGraph:
         return node in self.graph
 
     def get_edge_data(self, u: Any, v: Any, default=None):
-        """Return attribute dictionary for the edge ``u``\->``v``.
+        """Return attribute dictionary for the edge ``u``->``v``.
 
         Parameters
         ----------
