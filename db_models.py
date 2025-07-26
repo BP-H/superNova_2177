@@ -409,4 +409,8 @@ class MarketplaceListing(Base):
     price = Column(String, nullable=False)
     timestamp = Column(String, nullable=False)
 
-Base.metadata.create_all(bind=engine)
+
+def init_db() -> None:
+    """Create all tables defined in this module."""
+    Base.metadata.create_all(bind=engine)
+
