@@ -3,5 +3,5 @@ sqlalchemy
 networkx
 python-dateutil
 types-python-dateutil
-types-requests
 types-networkx
+httpx

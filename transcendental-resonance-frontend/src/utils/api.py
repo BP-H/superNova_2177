@@ -3,7 +3,7 @@
 from typing import Optional, Dict
 
 import os
-import requests
+import httpx
 from nicegui import ui
 
 # Backend API base URL
@@ -11,14 +11,14 @@ BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 TOKEN: Optional[str] = None
 
-def api_call(
+async def api_call(
     method: str,
     endpoint: str,
     data: Optional[Dict] = None,
     headers: Optional[Dict] = None,
     files: Optional[Dict] = None,
 ) -> Optional[Dict]:
-    """Wrapper around ``requests`` to interact with the backend API."""
+    """Asynchronous wrapper around ``httpx`` to interact with the backend API."""
     url = f"{BACKEND_URL}{endpoint}"
     default_headers = {'Content-Type': 'application/json'} if method != 'multipart' else {}
     if headers:
@@ -27,22 +27,23 @@ def api_call(
         default_headers['Authorization'] = f'Bearer {TOKEN}'
 
     try:
-        if method == 'GET':
-            response = requests.get(url, headers=default_headers, params=data)
-        elif method == 'POST':
-            if files:
-                response = requests.post(url, headers=default_headers, data=data, files=files)
+        async with httpx.AsyncClient() as client:
+            if method == 'GET':
+                response = await client.get(url, headers=default_headers, params=data)
+            elif method == 'POST':
+                if files:
+                    response = await client.post(url, headers=default_headers, data=data, files=files)
+                else:
+                    response = await client.post(url, headers=default_headers, json=data)
+            elif method == 'PUT':
+                response = await client.put(url, headers=default_headers, json=data)
+            elif method == 'DELETE':
+                response = await client.delete(url, headers=default_headers, json=data)
             else:
-                response = requests.post(url, headers=default_headers, json=data)
-        elif method == 'PUT':
-            response = requests.put(url, headers=default_headers, json=data)
-        elif method == 'DELETE':
-            response = requests.delete(url, headers=default_headers, json=data)
-        else:
-            raise ValueError(f"Unsupported method: {method}")
-        response.raise_for_status()
-        return response.json() if response.text else None
-    except requests.exceptions.RequestException as exc:
+                raise ValueError(f"Unsupported method: {method}")
+            response.raise_for_status()
+            return response.json() if response.text else None
+    except httpx.HTTPError as exc:
         ui.notify(f"API Error: {exc}", color='negative')
         return None
 

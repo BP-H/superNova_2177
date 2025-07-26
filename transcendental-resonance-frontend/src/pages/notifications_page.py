@@ -25,7 +25,7 @@ async def notifications_page():
         notifs_list = ui.column().classes('w-full')
 
         async def refresh_notifs():
-            notifs = api_call('GET', '/notifications/') or []
+            notifs = await api_call('GET', '/notifications/') or []
             notifs_list.clear()
             for n in notifs:
                 with notifs_list:
@@ -33,7 +33,7 @@ async def notifications_page():
                         ui.label(n['message']).classes('text-sm')
                         if not n['is_read']:
                             async def mark_read(n_id=n['id']):
-                                api_call('PUT', f'/notifications/{n_id}/read')
+                                await api_call('PUT', f'/notifications/{n_id}/read')
                                 await refresh_notifs()
                             ui.button('Mark Read', on_click=mark_read).style(
                                 f'background: {THEME["primary"]}; color: {THEME["text"]};'
