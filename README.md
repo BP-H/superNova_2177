@@ -46,6 +46,9 @@ strong random value is recommended:
 export SECRET_KEY="your-random-secret"
 ```
 
+Copy `.env.example` to `.env` and set values for `SECRET_KEY`, `DATABASE_URL`,
+and `BACKEND_URL` before running the app.
+
 ## 🧪 Running Tests
 
 After installing the dependencies, run:
