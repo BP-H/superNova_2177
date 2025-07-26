@@ -2104,6 +2104,12 @@ class CosmicNexus:
         )
         return fork_id
 
+    def apply_fork_universe(self, event: "ForkUniversePayload") -> str:
+        """Handle a forking event dispatched by a RemixAgent."""
+        return self.fork_universe(
+            user=event["user"], custom_config=event["custom_config"]
+        )
+
     def handle_cross_remix(self, data: Dict, source_universe: str):
         """Handle cross-remix from sub-universe."""
         user = data.get("user")
@@ -2708,10 +2714,8 @@ class RemixAgent:
     # TODO: Centralize this forking logic under CosmicNexus in a future version.
 
     def _apply_FORK_UNIVERSE(self, event: ForkUniversePayload):
-        # TODO: Centralize this forking logic under CosmicNexus in a future version.
-        self.cosmic_nexus.fork_universe(
-            user=event["user"], custom_config=event["custom_config"]
-        )
+        # Delegate forking to the CosmicNexus
+        self.cosmic_nexus.apply_fork_universe(event)
 
     def _apply_CROSS_REMIX(self, event: CrossRemixPayload):
         user = event["user"]
