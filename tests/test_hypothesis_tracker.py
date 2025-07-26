@@ -16,3 +16,19 @@ def test_register_hypothesis_generates_unique_id(test_db):
     hid2 = register_hypothesis("another hypothesis", test_db)
     assert hid != hid2
 
+
+def test_metadata_json_persistence_new_session(test_db):
+    metadata = {"creator": "tester", "timestamp": "2025-01-01T00:00:00"}
+    hid = register_hypothesis("metadata test", test_db, metadata)
+
+    test_db.close()
+    from db_models import SessionLocal
+
+    new_session = SessionLocal()
+    try:
+        record = new_session.query(HypothesisRecord).filter_by(id=hid).first()
+        assert record is not None
+        assert record.metadata_json == metadata
+    finally:
+        new_session.close()
+

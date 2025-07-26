@@ -44,7 +44,7 @@ def evaluate_governance_risks(
     requires_human_review = False
     score_penalty = 0.0
 
-    metadata = hypothesis.metadata or {}
+    metadata = hypothesis.metadata_json or {}
     text = (hypothesis.text or "").lower()
 
     # --- Metadata checks ---
@@ -120,10 +120,10 @@ def apply_governance_actions(hypothesis: HypothesisRecord, actions: List[str], d
             hypothesis.status = "quarantined"  # Ensure 'quarantined' is a valid status in your model
             logger.warning(f"Hypothesis {hypothesis.id} quarantined due to governance violations.")
         elif action == "flag_for_retraining":
-            hypothesis.metadata["retraining_required"] = True
+            hypothesis.metadata_json["retraining_required"] = True
             logger.info(f"Hypothesis {hypothesis.id} flagged for retraining.")
         elif action == "rollback_requested":
-            hypothesis.metadata["rollback_flag"] = True
+            hypothesis.metadata_json["rollback_flag"] = True
             logger.warning(f"Rollback flag set for hypothesis {hypothesis.id}.")
         else:
             logger.info(f"Action '{action}' logged for hypothesis {hypothesis.id} (no-op).")
