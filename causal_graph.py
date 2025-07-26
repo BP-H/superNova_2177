@@ -10,13 +10,107 @@ from sqlalchemy import select
 try:
     import networkx as nx
 except Exception:  # pragma: no cover - optional dependency
-    from tests.conftest import DiGraph as nx_DiGraph  # type: ignore
-    class nx:
-        DiGraph = nx_DiGraph
-        def has_path(*args, **kwargs):
-            return False
-        def all_simple_paths(*args, **kwargs):
-            return []
+    from typing import Any, Dict, Iterable, List
+
+    class _NodeView(dict):
+        """Minimal dictionary-like node view supporting call syntax."""
+
+        def __call__(self) -> List[Any]:
+            return list(self.keys())
+
+    class DiGraph:
+        def __init__(self) -> None:
+            self._adj: Dict[Any, Dict[Any, Dict[str, Any]]] = {}
+            self._nodes = _NodeView()
+
+        @property
+        def nodes(self) -> _NodeView:
+            return self._nodes
+
+        def add_node(self, node: Any, **attrs) -> None:
+            self._adj.setdefault(node, {})
+            self._nodes.setdefault(node, {}).update(attrs)
+
+        def add_edge(self, u: Any, v: Any, weight: float = 1.0, **attrs) -> None:
+            self.add_node(u)
+            self.add_node(v)
+            data = {"weight": weight}
+            data.update(attrs)
+            self._adj[u][v] = data
+
+        def edges(self, data: bool = False):
+            for u, nbrs in self._adj.items():
+                for v, attr in nbrs.items():
+                    yield (u, v, attr) if data else (u, v)
+
+        def number_of_nodes(self) -> int:
+            return len(self._nodes)
+
+        def number_of_edges(self) -> int:
+            return sum(len(nbrs) for nbrs in self._adj.values())
+
+        def copy(self) -> "DiGraph":
+            g = DiGraph()
+            for n, attr in self.nodes.items():
+                g.add_node(n, **attr)
+            for u, nbrs in self._adj.items():
+                for v, data in nbrs.items():
+                    g.add_edge(u, v, **data)
+            return g
+
+        def has_edge(self, u: Any, v: Any) -> bool:
+            return v in self._adj.get(u, {})
+
+        def __contains__(self, node: Any) -> bool:
+            return node in self._adj
+
+        def get_edge_data(self, u: Any, v: Any, default=None):
+            return self._adj.get(u, {}).get(v, default)
+
+        def __getitem__(self, node: Any):
+            return self._adj[node]
+
+    def _has_path(graph: DiGraph, source: Any, target: Any) -> bool:
+        visited = set()
+        stack = [source]
+        while stack:
+            node = stack.pop()
+            if node == target:
+                return True
+            if node in visited:
+                continue
+            visited.add(node)
+            stack.extend(graph._adj.get(node, {}))
+        return False
+
+    def _all_simple_paths(graph: DiGraph, source: Any, target: Any) -> Iterable[List[Any]]:
+        path = [source]
+        visited = {source}
+
+        def dfs(current: Any):
+            if current == target:
+                yield list(path)
+                return
+            for nbr in graph._adj.get(current, {}):
+                if nbr not in visited:
+                    visited.add(nbr)
+                    path.append(nbr)
+                    yield from dfs(nbr)
+                    path.pop()
+                    visited.remove(nbr)
+
+        yield from dfs(source)
+
+    class nx:  # type: ignore
+        DiGraph = DiGraph
+
+        @staticmethod
+        def has_path(graph: DiGraph, source: Any, target: Any) -> bool:
+            return _has_path(graph, source, target)
+
+        @staticmethod
+        def all_simple_paths(graph: DiGraph, source: Any, target: Any) -> List[List[Any]]:
+            return list(_all_simple_paths(graph, source, target))
 
 from scientific_utils import ScientificModel, VerifiedScientificModel
 
