@@ -25,6 +25,53 @@ async def network_page():
 
         nodes_label = ui.label().classes('mb-2')
         edges_label = ui.label().classes('mb-2')
+
+        # ---- Node creation form ----
+        node_id = ui.input('Node ID').classes('w-full mb-2')
+        node_label = ui.input('Label').classes('w-full mb-2')
+        node_type = ui.input('Type').classes('w-full mb-2')
+
+        async def create_node() -> None:
+            data = {
+                'id': node_id.value,
+                'label': node_label.value,
+                'type': node_type.value,
+            }
+            resp = api_call('POST', '/network-analysis/nodes', data)
+            if resp is not None:
+                ui.notify('Node created', color='positive')
+                node_id.value = ''
+                node_label.value = ''
+                node_type.value = ''
+                await refresh_network()
+
+        ui.button('Add Node', on_click=create_node).classes('w-full mb-4').style(
+            f'background: {THEME["primary"]}; color: {THEME["text"]};'
+        )
+
+        # ---- Edge creation form ----
+        edge_source = ui.input('Source ID').classes('w-full mb-2')
+        edge_target = ui.input('Target ID').classes('w-full mb-2')
+        edge_type = ui.input('Edge Type').classes('w-full mb-2')
+
+        async def create_edge() -> None:
+            data = {
+                'source': edge_source.value,
+                'target': edge_target.value,
+                'type': edge_type.value,
+            }
+            resp = api_call('POST', '/network-analysis/edges', data)
+            if resp is not None:
+                ui.notify('Edge created', color='positive')
+                edge_source.value = ''
+                edge_target.value = ''
+                edge_type.value = ''
+                await refresh_network()
+
+        ui.button('Add Edge', on_click=create_edge).classes('w-full mb-4').style(
+            f'background: {THEME["primary"]}; color: {THEME["text"]};'
+        )
+
         graph = ui.html('').classes('w-full h-96')
 
         async def refresh_network() -> None:
