@@ -37,6 +37,20 @@ This project is tested with **SQLAlchemy 2.x**, so ensure you have
 `sqlalchemy>=2.0` installed.
 The code also requires `python-dateutil` for timestamp parsing.
 
+## 🏁 Getting Started
+
+Set up a Python environment and install the required packages:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the full test suite to verify your setup:
+
+```bash
+pytest
+```
+
 ## 🔧 Configuration
 
 `SECRET_KEY` **must** be supplied via environment variables for JWT signing.  A
