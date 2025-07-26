@@ -56,6 +56,8 @@ pytest
 
 Some tests rely on optional packages such as `networkx`. Install them
 with `pip install networkx` to run the full test suite.
+Certain modules and tests also require `numpy`. Install it with
+`pip install numpy` if it isn't already available.
 
 ## ✨ Features
 
