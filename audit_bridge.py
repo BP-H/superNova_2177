@@ -56,12 +56,11 @@ def export_causal_path(
         (entry["edge"]["source"], entry["edge"]["target"], entry["edge"].get("edge_type", ""))
         for entry in trace
     ]
-    highlights = [
-        entry["node_id"]
-        for entry in trace
-        if entry["node_data"].get("node_specific_entropy", 1.0) < 0.25
-        or entry["node_data"].get("debug_payload")
-    ]
+    highlights = []
+    for entry in trace:
+        entropy = entry["node_data"].get("node_specific_entropy")
+        if (entropy is not None and entropy < 0.25) or entry["node_data"].get("debug_payload"):
+            highlights.append(entry["node_id"])
     return {
         "path_nodes": path_nodes,
         "edge_list": edge_list,
