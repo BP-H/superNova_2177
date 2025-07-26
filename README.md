@@ -28,6 +28,15 @@ python validate_hypothesis.py --demo
 python validate_hypothesis.py --validations sample_validations.json
 ````
 
+## 🧪 Running Tests
+
+Install the minimal requirements and run `pytest`:
+
+```bash
+pip install -r requirements.txt
+pytest
+```
+
 ## ✨ Features
 
 * **🧠 Smart Scoring** — Combines confidence, signal strength, and NLP sentiment
