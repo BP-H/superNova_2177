@@ -228,12 +228,40 @@ except Exception:  # pragma: no cover - lightweight fallback
     import types
     from typing import Dict, Iterable, Any, List
 
+    class NodesView:
+        def __init__(self, graph: 'DiGraph') -> None:
+            self._graph = graph
+
+        def __iter__(self):
+            return iter(self._graph._node)
+
+        def __len__(self) -> int:
+            return len(self._graph._node)
+
+        def __contains__(self, node: Any) -> bool:
+            return node in self._graph._node
+
+        def __getitem__(self, node: Any):
+            return self._graph._node[node]
+
+        def __call__(self, data: bool = False):
+            if data:
+                return [(n, self._graph._node[n]) for n in self._graph._node]
+            return list(self._graph._node)
+
+        def get(self, node: Any, default=None):
+            return self._graph._node.get(node, default)
+
     class DiGraph:
         def __init__(self):
             self._adj: Dict[Any, Dict[Any, Dict[str, float]]] = {}
+            self._node: Dict[Any, Dict[str, Any]] = {}
 
-        def add_node(self, node: Any) -> None:
+        def add_node(self, node: Any, **attrs: Any) -> None:
             self._adj.setdefault(node, {})
+            if node not in self._node:
+                self._node[node] = {}
+            self._node[node].update(attrs)
 
         def add_edge(self, u: Any, v: Any, weight: float = 1.0) -> None:
             self.add_node(u)
@@ -248,6 +276,17 @@ except Exception:  # pragma: no cover - lightweight fallback
 
         def get_edge_data(self, u: Any, v: Any, default=None) -> Dict[str, float]:
             return self._adj.get(u, {}).get(v, default)
+
+        @property
+        def nodes(self) -> NodesView:
+            return NodesView(self)
+
+        def edges(self, data: bool = False):
+            edges = []
+            for u, nbrs in self._adj.items():
+                for v, d in nbrs.items():
+                    edges.append((u, v, d) if data else (u, v))
+            return edges
 
         def __getitem__(self, node: Any):
             return self._adj[node]
