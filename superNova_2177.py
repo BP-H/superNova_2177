@@ -371,32 +371,51 @@ ALGORITHM = settings.ALGORITHM
 os.makedirs(settings.UPLOAD_FOLDER, exist_ok=True)  # Create the folder.
 
 # Scientific and Artistic Libraries from all files
-try:
-    import numpy as np
-    import networkx as nx
-    import sympy
-    from sympy import symbols, Eq, solve
-    from scipy.integrate import solve_ivp
-    import mido
-    from midiutil import MIDIFile
-    import pygame as pg
-    from tqdm import tqdm
-    import pandas as pd
-    import statsmodels.api as sm
-    from pulp import LpProblem, LpMinimize, LpVariable
-    import torch
-    import torch.nn as nn
-    import torch.optim as optim
-    from torch.utils.data import Dataset, DataLoader
-    import matplotlib.pyplot as plt
-    from scipy.optimize import minimize
-    import requests  # For AI API calls
-    import snappy  # For compression
-except ImportError as e:
-    logging.critical(
-        "CRITICAL: Required scientific libraries are not installed. Please run 'pip install -r requirements.txt'. Exiting."
-    )
-    sys.exit(1)
+import importlib
+
+
+def _safe_import(module_name: str, alias: Optional[str] = None, attrs: Optional[list] = None) -> None:
+    """Import a module and expose it in globals, logging a warning on failure."""
+    try:
+        module = importlib.import_module(module_name)
+        if alias:
+            globals()[alias] = module
+        if attrs:
+            for attr in attrs:
+                globals()[attr] = getattr(module, attr)
+    except ImportError as exc:
+        logging.warning(
+            "Optional library '%s' is not installed: %s. Some functionality may be unavailable.",
+            module_name,
+            exc,
+        )
+        if alias:
+            globals()[alias] = None
+        if attrs:
+            for attr in attrs:
+                globals()[attr] = None
+
+
+_safe_import("numpy", alias="np")
+_safe_import("networkx", alias="nx")
+_safe_import("sympy")
+_safe_import("sympy", attrs=["symbols", "Eq", "solve"])
+_safe_import("scipy.integrate", attrs=["solve_ivp"])
+_safe_import("mido")
+_safe_import("midiutil", attrs=["MIDIFile"])
+_safe_import("pygame", alias="pg")
+_safe_import("tqdm", attrs=["tqdm"])
+_safe_import("pandas", alias="pd")
+_safe_import("statsmodels.api", alias="sm")
+_safe_import("pulp", attrs=["LpProblem", "LpMinimize", "LpVariable"])
+_safe_import("torch")
+_safe_import("torch.nn", alias="nn")
+_safe_import("torch.optim", alias="optim")
+_safe_import("torch.utils.data", attrs=["Dataset", "DataLoader"])
+_safe_import("matplotlib.pyplot", alias="plt")
+_safe_import("scipy.optimize", attrs=["minimize"])
+_safe_import("requests")  # For AI API calls
+_safe_import("snappy")  # For compression
 
 # Optional quantum toolkit for entanglement simulations
 try:
