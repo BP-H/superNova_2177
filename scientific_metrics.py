@@ -1007,9 +1007,9 @@ def log_metric_change(
         log = log[-1000:]
 
     if state:
-        state.value = json.dumps(log)
+        state.value = json.dumps(log, default=str)
     else:
-        state = SystemState(key="metric_audit_log", value=json.dumps(log))
+        state = SystemState(key="metric_audit_log", value=json.dumps(log, default=str))
         db.add(state)
     db.commit()
 
