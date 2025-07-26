@@ -16,7 +16,7 @@ new RFC:
 
 | Number | Title |
 |-------|-------|
-| [002](validators/002-example-validator/README.md) | Daily Participation Validator |
+| [002](validators/002-example-validator/README.md) | Daily Participation Validator ✅ |
 
 ### Governance
 
