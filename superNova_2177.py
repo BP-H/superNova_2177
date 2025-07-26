@@ -4028,8 +4028,12 @@ class TranscendentalCLI(cmd.Cmd):
 
 # --- MODULE: tests.py ---
 
-import pytest
-import httpx
+try:
+    import pytest  # type: ignore
+    import httpx  # type: ignore
+except ImportError:  # pragma: no cover - optional testing dependencies
+    pytest = None
+    httpx = None
 
 
 @pytest.fixture
@@ -4806,13 +4810,21 @@ if __name__ == "__main__":
     cosmic_nexus = CosmicNexus(SessionLocal, SystemStateService(SessionLocal()))
     agent = RemixAgent(cosmic_nexus=cosmic_nexus)
     if len(sys.argv) > 1 and sys.argv[1] == "test":
-        import pytest
+        try:
+            import pytest  # type: ignore
+        except ImportError:
+            print("pytest not installed.")
+            sys.exit(1)
 
         pytest.main(["-vv"])
     elif len(sys.argv) > 1 and sys.argv[1] == "cli":
         TranscendentalCLI(agent).cmdloop()
     else:
-        import uvicorn
+        try:
+            import uvicorn
+        except ImportError:
+            print("uvicorn not installed.")
+            sys.exit(1)
 
         run_validation_cycle()
         uvicorn.run(app, host="0.0.0.0", port=8000)
