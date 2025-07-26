@@ -8,7 +8,7 @@ simulates a "scientific conscience"—closing the feedback loop of automated rea
 
 import json
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any, Tuple
+from typing import List, Dict, Optional, Any, Tuple, DefaultDict
 import collections
 import math
 import dateutil.parser # Added for robust datetime parsing
@@ -156,8 +156,12 @@ def detect_judgment_biases(db: Session) -> List[Dict[str, Any]]:
     biases: List[Dict[str, Any]] = []
 
     # Bias 1: Disproportionate validation by source module/user
-    module_validation_stats = collections.defaultdict(lambda: {'total': 0, 'validated': 0})
-    user_validation_stats = collections.defaultdict(lambda: {'total': 0, 'validated': 0})
+    module_validation_stats: DefaultDict[str, Dict[str, int]] = collections.defaultdict(
+        lambda: {"total": 0, "validated": 0}
+    )
+    user_validation_stats: DefaultDict[str, Dict[str, int]] = collections.defaultdict(
+        lambda: {"total": 0, "validated": 0}
+    )
 
     for hyp in all_hypotheses:
         meta = hyp.get("metadata", {})
