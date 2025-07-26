@@ -6,7 +6,7 @@ A minimalist social metaverse UI built with [NiceGUI](https://nicegui.io/) for i
 
 ```bash
 pip install -r requirements.txt
-streamlit run src/main.py
+nicegui src/main.py
 ```
 
 Replace the backend URL in `src/utils/api.py` if your API is not running on `http://localhost:8000`.
