@@ -244,6 +244,11 @@ class QuantumContext:
         assumptions: probabilistic weight models linkage
         validation_notes: unit tests verify weight update
         """
+        if influence_factor < 0:
+            raise ValueError("influence_factor must be >= 0")
+
+        influence_factor = max(0.0, influence_factor)
+
         pair = tuple(sorted((entity1_id, entity2_id)))
         self.entangled_pairs[pair] = (
             self.entangled_pairs.get(pair, 0.0) + influence_factor
