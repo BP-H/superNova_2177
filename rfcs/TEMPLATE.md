@@ -1,5 +1,7 @@
 # RFC Title
 
+<!-- Example path: rfcs/validators/002-my-feature/README.md -->
+
 ## Summary
 Briefly describe the proposal in a few sentences.
 
