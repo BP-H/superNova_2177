@@ -8,10 +8,11 @@ review selection, and governance escalation in superNova_2177.
 
 import logging
 from typing import List, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime
 from statistics import mean
 
 logger = logging.getLogger("superNova_2177.reputation")
+
 
 # --- Configuration ---
 class Config:
@@ -29,10 +30,14 @@ class Config:
     DECAY_HALF_LIFE_DAYS = 90
     MIN_VALIDATIONS_FOR_SCORING = 2
 
+
 # --- Main Function ---
-def update_validator_reputations(validations: List[Dict[str, Any]]) -> Dict[str, float]:
+def update_validator_reputations(
+    validations: List[Dict[str, Any]],
+) -> Dict[str, float]:
     """
-    Updates validator reputations based on validation quality and certification.
+    Updates validator reputations based on validation quality and
+    certification.
 
     Args:
         validations: List of dicts with fields:
@@ -73,11 +78,17 @@ def update_validator_reputations(validations: List[Dict[str, Any]]) -> Dict[str,
                 half_life = Config.DECAY_HALF_LIFE_DAYS
                 decay_factor = 0.5 ** (age_days / half_life)
             except Exception as e:
-                logger.warning(f"Invalid timestamp for validator {validator_id}: {e}")
+                logger.warning(
+                    f"Invalid timestamp for validator {validator_id}: {e}"
+                )
 
         # Reputation delta
         reward = Config.CERTIFICATION_REWARD.get(cert, 0.0)
-        penalty = -Config.CONTRADICTION_PENALTY if "contradict" in v.get("note", "").lower() else 0.0
+        penalty = (
+            -Config.CONTRADICTION_PENALTY
+            if "contradict" in v.get("note", "").lower()
+            else 0.0
+        )
         delta = (score + reward + penalty) * decay_factor
 
         reputations.setdefault(validator_id, []).append(delta)
@@ -88,13 +99,20 @@ def update_validator_reputations(validations: List[Dict[str, Any]]) -> Dict[str,
         if len(deltas) >= Config.MIN_VALIDATIONS_FOR_SCORING:
             rep = min(
                 Config.MAX_REPUTATION,
-                max(Config.MIN_REPUTATION, mean(deltas) + Config.DEFAULT_REPUTATION)
+                max(
+                    Config.MIN_REPUTATION,
+                    mean(deltas) + Config.DEFAULT_REPUTATION,
+                ),
             )
             final_scores[vid] = rep
-            logger.info(f"Validator {vid} updated reputation: {rep:.3f} — Specialty: {specialties.get(vid, 'N/A')}")
+            logger.info(
+                f"Validator {vid} updated reputation: {rep:.3f} — "
+                f"Specialty: {specialties.get(vid, 'N/A')}"
+            )
 
     logger.info(f"Updated reputations for {len(final_scores)} validators")
     return final_scores
+
 
 # --- Placeholder Persistence Functions ---
 def save_reputations(reputations: Dict[str, float], db) -> None:
@@ -107,9 +125,11 @@ def save_reputations(reputations: Dict[str, float], db) -> None:
         return
 
     for vid, rep in reputations.items():
-        row = db.query(ValidatorReputation).filter(
-            ValidatorReputation.validator_id == vid
-        ).first()
+        row = (
+            db.query(ValidatorReputation)
+            .filter(ValidatorReputation.validator_id == vid)
+            .first()
+        )
         if row:
             row.reputation = float(rep)
         else:
@@ -130,6 +150,7 @@ def load_reputations(db) -> Dict[str, float]:
 
     rows = db.query(ValidatorReputation).all()
     return {row.validator_id: float(row.reputation) for row in rows}
+
 
 # TODO (v4.2):
 # - Implement semantic_contradiction_resolver integration
