@@ -22,6 +22,9 @@ async def vibenodes_page():
             f'color: {THEME["accent"]};'
         )
 
+        search_query = ui.input('Search').classes('w-full mb-2')
+        sort_select = ui.select(['name', 'date'], value='name').classes('w-full mb-4')
+
         name = ui.input('Name').classes('w-full mb-2')
         description = ui.textarea('Description').classes('w-full mb-2')
         media_type = ui.select(
@@ -51,7 +54,19 @@ async def vibenodes_page():
         vibenodes_list = ui.column().classes('w-full')
 
         async def refresh_vibenodes():
-            vibenodes = api_call('GET', '/vibenodes/') or []
+            params = {}
+            if search_query.value:
+                params['search'] = search_query.value
+            if sort_select.value:
+                params['sort'] = sort_select.value
+            vibenodes = api_call('GET', '/vibenodes/', params) or []
+            if search_query.value:
+                vibenodes = [vn for vn in vibenodes if search_query.value.lower() in vn['name'].lower()]
+            if sort_select.value:
+                if sort_select.value == 'name':
+                    vibenodes.sort(key=lambda x: x.get('name', ''))
+                elif sort_select.value == 'date':
+                    vibenodes.sort(key=lambda x: x.get('created_at', ''))
             vibenodes_list.clear()
             for vn in vibenodes:
                 with vibenodes_list:
