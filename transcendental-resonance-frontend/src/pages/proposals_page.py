@@ -32,7 +32,7 @@ async def proposals_page():
                 'proposal_type': p_type.value,
                 'group_id': int(p_group_id.value) if p_group_id.value else None,
             }
-            resp = api_call('POST', '/proposals/', data)
+            resp = await api_call('POST', '/proposals/', data)
             if resp:
                 ui.notify('Proposal created!', color='positive')
                 await refresh_proposals()
@@ -44,7 +44,7 @@ async def proposals_page():
         proposals_list = ui.column().classes('w-full')
 
         async def refresh_proposals():
-            proposals = api_call('GET', '/proposals/') or []
+            proposals = await api_call('GET', '/proposals/') or []
             proposals_list.clear()
             for p in proposals:
                 with proposals_list:
@@ -54,10 +54,10 @@ async def proposals_page():
                         ui.label(f"Status: {p['status']}").classes('text-sm')
                         if p['status'] == 'open':
                             async def vote_yes(p_id=p['id']):
-                                api_call('POST', f'/proposals/{p_id}/vote', {'vote': 'yes'})
+                                await api_call('POST', f'/proposals/{p_id}/vote', {'vote': 'yes'})
                                 await refresh_proposals()
                             async def vote_no(p_id=p['id']):
-                                api_call('POST', f'/proposals/{p_id}/vote', {'vote': 'no'})
+                                await api_call('POST', f'/proposals/{p_id}/vote', {'vote': 'no'})
                                 await refresh_proposals()
                             ui.row().classes('justify-between')
                             ui.button('Yes', on_click=vote_yes).style('background: green; color: white;')

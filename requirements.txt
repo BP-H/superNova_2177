@@ -2,3 +2,4 @@ pytest
 sqlalchemy
 networkx
 python-dateutil
+httpx

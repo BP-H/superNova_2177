@@ -37,7 +37,7 @@ async def vibenodes_page():
                 'tags': [t.strip() for t in tags.value.split(',')] if tags.value else None,
                 'parent_vibenode_id': int(parent_id.value) if parent_id.value else None,
             }
-            resp = api_call('POST', '/vibenodes/', data)
+            resp = await api_call('POST', '/vibenodes/', data)
             if resp:
                 ui.notify('VibeNode created!', color='positive')
                 await refresh_vibenodes()
@@ -49,7 +49,7 @@ async def vibenodes_page():
         vibenodes_list = ui.column().classes('w-full')
 
         async def refresh_vibenodes():
-            vibenodes = api_call('GET', '/vibenodes/') or []
+            vibenodes = await api_call('GET', '/vibenodes/') or []
             vibenodes_list.clear()
             for vn in vibenodes:
                 with vibenodes_list:
@@ -58,7 +58,7 @@ async def vibenodes_page():
                         ui.label(vn['description']).classes('text-sm')
                         ui.label(f"Likes: {vn.get('likes_count', 0)}").classes('text-sm')
                         async def like_fn(vn_id=vn['id']):
-                            api_call('POST', f'/vibenodes/{vn_id}/like')
+                            await api_call('POST', f'/vibenodes/{vn_id}/like')
                             await refresh_vibenodes()
                         ui.button('Like/Unlike', on_click=like_fn).style(
                             f'background: {THEME["accent"]}; color: {THEME["background"]};'
