@@ -3,7 +3,13 @@
 from nicegui import ui
 
 from utils.api import api_call, TOKEN, clear_token
-from utils.styles import get_theme
+from utils.styles import (
+    get_theme,
+    set_theme,
+    set_accent,
+    get_theme_name,
+    THEMES,
+)
 from .login_page import login_page
 from .vibenodes_page import vibenodes_page
 from .groups_page import groups_page
@@ -71,3 +77,15 @@ async def profile_page():
             'Logout',
             on_click=lambda: (clear_token(), ui.open(login_page)),
         ).classes('w-full').style(f'background: red; color: {THEME["text"]};')
+
+        with ui.row().classes('w-full mt-4'):
+            theme_select = ui.select(
+                list(THEMES.keys()),
+                value=get_theme_name(),
+                on_change=lambda e: set_theme(e.value),
+            ).classes('mr-2')
+            ui.color_input(
+                'Accent',
+                value=THEME['accent'],
+                on_change=lambda e: set_accent(e.value),
+            )
