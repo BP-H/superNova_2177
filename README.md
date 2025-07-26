@@ -27,6 +27,11 @@ python validate_hypothesis.py --demo
 # Run your own validation set
 python validate_hypothesis.py --validations sample_validations.json
 ````
+## 📦 Installation
+
+```bash
+pip install -r requirements.txt
+```
 
 ## 🔧 Configuration
 
@@ -39,10 +44,9 @@ export SECRET_KEY="your-random-secret"
 
 ## 🧪 Running Tests
 
-Install the minimal requirements and run `pytest`:
+After installing the dependencies, run:
 
 ```bash
-pip install -r requirements.txt
 pytest
 ```
 
