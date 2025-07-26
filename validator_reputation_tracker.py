@@ -98,18 +98,38 @@ def update_validator_reputations(validations: List[Dict[str, Any]]) -> Dict[str,
 
 # --- Placeholder Persistence Functions ---
 def save_reputations(reputations: Dict[str, float], db) -> None:
-    """
-    Placeholder for persistence to DB.
-    """
-    logger.debug("Saving reputations — not yet implemented.")
+    """Persist reputation scores using the provided session."""
+
+    try:
+        from db_models import ValidatorReputation
+    except Exception as e:  # pragma: no cover - fallback handling
+        logger.error(f"DB models unavailable: {e}")
+        return
+
+    for vid, rep in reputations.items():
+        row = db.query(ValidatorReputation).filter(
+            ValidatorReputation.validator_id == vid
+        ).first()
+        if row:
+            row.reputation = float(rep)
+        else:
+            row = ValidatorReputation(validator_id=vid, reputation=float(rep))
+            db.add(row)
+
+    db.commit()
 
 
 def load_reputations(db) -> Dict[str, float]:
-    """
-    Placeholder for loading from DB.
-    """
-    logger.debug("Loading reputations — not yet implemented.")
-    return {}
+    """Return all saved reputation scores."""
+
+    try:
+        from db_models import ValidatorReputation
+    except Exception as e:  # pragma: no cover - fallback handling
+        logger.error(f"DB models unavailable: {e}")
+        return {}
+
+    rows = db.query(ValidatorReputation).all()
+    return {row.validator_id: float(row.reputation) for row in rows}
 
 # TODO (v4.2):
 # - Implement semantic_contradiction_resolver integration

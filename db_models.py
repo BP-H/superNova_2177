@@ -346,6 +346,17 @@ class SystemState(Base):
     value = Column(String, nullable=False)
 
 
+class ValidatorReputation(Base):
+    """Stores reputation scores for validators."""
+
+    __tablename__ = "validator_reputations"
+
+    validator_id = Column(String, primary_key=True)
+    reputation = Column(Float, nullable=False, default=0.0)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow,
+                        onupdate=datetime.datetime.utcnow)
+
+
 # Add this below the SystemState class but before Coin to maintain ordering:
 class HypothesisRecord(Base):
     """
