@@ -162,6 +162,19 @@ def test_interaction_entropy_zero():
     result = calculate_interaction_entropy(dummy, None)
     assert result["value"] == 0.0
 
+
+def test_interaction_entropy_with_decay():
+    """Non-zero decay should not raise and returns bounded entropy."""
+    now = datetime.datetime.utcnow()
+    dummy = types.SimpleNamespace(
+        vibenodes=[types.SimpleNamespace(created_at=now)],
+        comments=[types.SimpleNamespace(created_at=now - datetime.timedelta(seconds=30))],
+        liked_vibenodes=[],
+        following=[],
+    )
+    result = calculate_interaction_entropy(dummy, None, decay_rate=0.01)
+    assert 0.0 <= result["value"] <= 1.0
+
 def test_quantum_context_superposition():
     qc = QuantumContext(fuzzy_enabled=True, simulate=True)
     val = qc.measure_superposition(0.6)
