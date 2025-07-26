@@ -231,25 +231,17 @@ import html
 import os
 import queue
 import math
-import unittest
 import cmd
-import functools
 import inspect
 import copy
 import asyncio
 import traceback
-import signal
-import immutable_tri_species_adjust
 import random
 import optimization_engine
-from collections import defaultdict, deque, Counter
+from collections import defaultdict, Counter
 from decimal import (
     Decimal,
     getcontext,
-    InvalidOperation,
-    ROUND_HALF_UP,
-    ROUND_FLOOR,
-    localcontext,
 )
 from typing import (
     Optional,
@@ -257,14 +249,11 @@ from typing import (
     List,
     Any,
     Callable,
-    Union,
     TypedDict,
     Literal,
-    Awaitable,
 )
 from contextlib import contextmanager
-from dataclasses import dataclass, field
-import weakref
+from dataclasses import dataclass
 from datetime import timedelta
 
 # Web and DB Imports from FastAPI files
@@ -273,13 +262,11 @@ from fastapi import (
     Depends,
     HTTPException,
     status,
-    Query,
     Body,
     UploadFile,
     File,
-    BackgroundTasks,
 )
-from fastapi.responses import HTMLResponse, JSONResponse
+
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, EmailStr, ValidationError
@@ -299,7 +286,6 @@ from sqlalchemy import (
     JSON,
 )
 from sqlalchemy.orm import sessionmaker, relationship, Session, declarative_base
-from sqlalchemy.exc import IntegrityError
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 
@@ -374,45 +360,27 @@ os.makedirs(settings.UPLOAD_FOLDER, exist_ok=True)  # Create the folder.
 try:
     import numpy as np
     import networkx as nx
-    import sympy
-    from sympy import symbols, Eq, solve
-    from scipy.integrate import solve_ivp
-    import mido
     from midiutil import MIDIFile
     import pygame as pg
-    from tqdm import tqdm
-    import pandas as pd
-    import statsmodels.api as sm
-    from pulp import LpProblem, LpMinimize, LpVariable
     import torch
     import torch.nn as nn
-    import torch.optim as optim
-    from torch.utils.data import Dataset, DataLoader
     import matplotlib.pyplot as plt
-    from scipy.optimize import minimize
     import requests  # For AI API calls
-    import snappy  # For compression
 except ImportError as e:
     logging.critical(
         "CRITICAL: Required scientific libraries are not installed. Please run 'pip install -r requirements.txt'. Exiting."
     )
     sys.exit(1)
 
-# Optional quantum toolkit for entanglement simulations
-try:
-    from qutip import basis, tensor, entropy_vn  # For qubit entanglement sims
-except ImportError:
-    logging.warning("qutip not installed; advanced quantum simulations are disabled.")
+
 
 # Set global decimal precision
 getcontext().prec = 50
 
 # FUSED: Additional imports from v01_grok15.py
-import secrets
 from dotenv import load_dotenv
 import structlog
 import prometheus_client as prom
-from sqlalchemy import func
 from scientific_metrics import (
     calculate_influence_score,
     calculate_interaction_entropy,
@@ -481,7 +449,7 @@ logging.getRoot().addHandler(file_handler)
 entropy_gauge = prom.Gauge("system_entropy", "Current system entropy")
 users_counter = prom.Counter("total_users", "Total number of harmonizers")
 vibenodes_gauge = prom.Gauge("total_vibenodes", "Total number of vibenodes")
-prom.start_http_server(Config.METRICS_PORT)  # Metrics endpoint
+prom.start_http_server(8001)  # Metrics endpoint (uses Config.METRICS_PORT)
 
 # --- MODULE: models.py ---
 # Database setup from FastAPI files
@@ -1449,7 +1417,7 @@ def calculate_creative_leap_score(
             else 0.0
         )
     try:
-        from sentence_transformers import SentenceTransformer, util
+        from sentence_transformers import SentenceTransformer
 
         if _creative_leap_model is None:
             _creative_leap_model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -2003,6 +1971,105 @@ class HarmonyScanner:
             entry = self._block_queue.get()
             with open("blocked_content.log", "a") as f:
                 f.write(entry)
+
+
+class Vaccine(HarmonyScanner):
+    """Alias kept for backward compatibility."""
+    pass
+
+
+class User:
+    """Lightweight user representation used by ``RemixAgent``."""
+
+    def __init__(self, username: str, is_genesis: bool, species: str, config: Config):
+        self.username = username
+        self.is_genesis = is_genesis
+        self.species = species
+        self.config = config
+        self.karma = Decimal("0")
+        self.root_coin_id = ""
+        self.coins_owned: List[str] = []
+        self.consent_given = True
+        self.lock = threading.RLock()
+        self.action_timestamps: Dict[str, str] = {}
+
+    def effective_karma(self) -> Decimal:
+        return self.karma
+
+    def check_rate_limit(self, _action: str) -> bool:
+        return True
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "name": self.username,
+            "is_genesis": self.is_genesis,
+            "species": self.species,
+            "karma": str(self.karma),
+            "root_coin_id": self.root_coin_id,
+            "coins_owned": self.coins_owned,
+            "consent": self.consent_given,
+            "action_timestamps": self.action_timestamps,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any], config: Config) -> "User":
+        user = cls(
+            data.get("name") or data.get("user") or "",
+            data.get("is_genesis", False),
+            data.get("species", "human"),
+            config,
+        )
+        user.karma = Decimal(str(data.get("karma", "0")))
+        user.root_coin_id = data.get("root_coin_id", "")
+        user.coins_owned = list(data.get("coins_owned", []))
+        user.consent_given = data.get("consent", True)
+        user.action_timestamps = data.get("action_timestamps", {})
+        return user
+
+
+class LogChain:
+    """Minimal append-only log with integrity hashes."""
+
+    def __init__(self, filename: str):
+        self.filename = filename
+        self.entries: List[Dict[str, Any]] = []
+        self.last_hash = "0"
+        if os.path.exists(filename):
+            with open(filename) as f:
+                for line in f:
+                    entry = json.loads(line)
+                    self.entries.append(entry)
+                    self.last_hash = entry["current_hash"]
+
+    def add(self, event: Dict[str, Any]) -> None:
+        payload = json.dumps(event, sort_keys=True)
+        current_hash = hashlib.sha256((self.last_hash + payload).encode()).hexdigest()
+        entry = {
+            "timestamp": datetime.datetime.utcnow().isoformat(),
+            "event": event,
+            "previous_hash": self.last_hash,
+            "current_hash": current_hash,
+        }
+        with open(self.filename, "a") as f:
+            f.write(json.dumps(entry) + "\n")
+        self.entries.append(entry)
+        self.last_hash = current_hash
+
+    def replay_events(self, handler: Callable[[Dict[str, Any]], None], after: float = 0.0) -> None:
+        for entry in self.entries:
+            ts_val = datetime.datetime.fromisoformat(entry["timestamp"]).timestamp()
+            if ts_val >= after:
+                handler(entry["event"])
+
+    def verify(self) -> bool:
+        prev = "0"
+        for entry in self.entries:
+            payload = json.dumps(entry["event"], sort_keys=True)
+            expected = hashlib.sha256((prev + payload).encode()).hexdigest()
+            if entry["current_hash"] != expected or entry["previous_hash"] != prev:
+                return False
+            prev = entry["current_hash"]
+        return True
 
 
 # --- MODULE: cosmic_nexus.py ---
@@ -3173,7 +3240,7 @@ def follow_unfollow_user(
         current_user.following.append(user_to_follow)
         message = "Followed"
     db.commit()
-    return {"message": message, "bonus_applied": f"{bonus_factor:.2f}x"}
+    return {"message": message}
 
 
 @app.get("/status", tags=["System"])
