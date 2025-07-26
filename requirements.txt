@@ -5,3 +5,4 @@ python-dateutil
 types-python-dateutil
 types-requests
 types-networkx
+numpy
