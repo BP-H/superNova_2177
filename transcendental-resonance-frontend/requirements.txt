@@ -1,5 +1,6 @@
 nicegui
 requests
+websockets
 pytest
 pytest-asyncio
 sentence-transformers
