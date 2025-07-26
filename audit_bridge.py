@@ -20,6 +20,7 @@ def safe_json_loads(json_str: str, default=None):
     try:
         return json.loads(json_str) if json_str else (default or {})
     except (json.JSONDecodeError, TypeError):
+        logger.exception(f"JSON decode failed: {json_str}")
         return default or {}
 
 
