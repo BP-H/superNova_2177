@@ -16,3 +16,17 @@ def test_register_hypothesis_generates_unique_id(test_db):
     hid2 = register_hypothesis("another hypothesis", test_db)
     assert hid != hid2
 
+
+def test_metadata_round_trip(test_db):
+    hid = register_hypothesis("meta hypothesis", test_db, {"foo": "bar"})
+
+    # load in a fresh session to ensure data persisted
+    from db_models import SessionLocal
+    new_db = SessionLocal()
+    try:
+        record = new_db.query(HypothesisRecord).filter_by(id=hid).first()
+        assert record is not None
+        assert record.metadata_json == {"foo": "bar"}
+    finally:
+        new_db.close()
+

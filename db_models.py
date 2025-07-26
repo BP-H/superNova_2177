@@ -377,6 +377,9 @@ class HypothesisRecord(Base):
     validation_log_ids = Column(JSON, default=lambda: [])  # LogEntry.id references
     audit_sources = Column(JSON, default=lambda: [])       # causal_trigger.py, audit_bridge.py etc. refs (SystemState keys)
 
+    # renamed from ``metadata`` to avoid clashing with SQLAlchemy's ``metadata`` attribute
+    metadata_json = Column(JSON, default=lambda: {})
+
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
