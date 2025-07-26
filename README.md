@@ -80,16 +80,15 @@ and `BACKEND_URL` before running the app.
 
 ## 🧪 Running Tests
 
-After installing the dependencies, run:
+Install all dependencies first:
 
 ```bash
+pip install -r requirements.txt
 pytest
 ```
 
-Some tests rely on optional packages such as `networkx`. Install them
-with `pip install networkx` to run the full test suite.
-Certain modules and tests also require `numpy`. Install it with
-`pip install numpy` if it isn't already available.
+The test suite requires packages like `SQLAlchemy`, `networkx`, and `numpy`.
+If `pytest` fails with missing module errors, run `pip install -r requirements.txt` again.
 
 ## ✨ Features
 
