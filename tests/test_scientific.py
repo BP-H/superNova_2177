@@ -288,3 +288,12 @@ def test_assess_meta_cognitive_awareness_basic():
     assert result["total_validations"] == 4
     assert result["bias_correction_events"] == 2
     assert 0.5 <= result["average_accuracy"] <= 0.95
+
+
+def test_entangle_entities_negative_factor_raises():
+    """Negative influence factors should raise ``ValueError``."""
+    qc = QuantumContext()
+    pair = tuple(sorted(("a", "b")))
+    with pytest.raises(ValueError):
+        qc.entangle_entities("a", "b", influence_factor=-1.0)
+    assert pair not in qc.entangled_pairs
