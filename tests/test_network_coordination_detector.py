@@ -2,6 +2,7 @@ import pytest
 from network.network_coordination_detector import (
     calculate_sophisticated_risk_score,
     analyze_coordination_patterns,
+    detect_semantic_coordination,
 )
 
 
@@ -71,4 +72,27 @@ def test_analyze_coordination_patterns_detects_clusters():
 
     # Overall risk score is rounded to three decimals
     assert result["overall_risk_score"] == pytest.approx(0.32, abs=0.01)
+
+
+def test_detect_semantic_coordination_embeddings():
+    validations = [
+        {
+            "validator_id": "v1",
+            "hypothesis_id": "h1",
+            "score": 0.8,
+            "timestamp": "2025-01-01T00:00:00Z",
+            "note": "the quick brown fox jumps over the lazy dog",
+        },
+        {
+            "validator_id": "v2",
+            "hypothesis_id": "h2",
+            "score": 0.8,
+            "timestamp": "2025-01-01T00:01:00Z",
+            "note": "the quick brown fox leaps over the lazy dog",
+        },
+    ]
+
+    result = detect_semantic_coordination(validations)
+    assert result["semantic_clusters"]
+    assert result["semantic_clusters"][0]["similarity_score"] >= 0.8
 

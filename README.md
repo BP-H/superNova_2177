@@ -137,7 +137,8 @@ jupyter notebook docs/Network_Graph_Visualization.ipynb
 * `reputation_influence_tracker.py` — Tracks and scores validators over time
 * `diversity_analyzer.py` — Detects echo chambers and affiliation bias
 * `temporal_consistency_checker.py` — Tracks time-based volatility
-* `network_coordination_detector.py` — Spots suspicious group behavior
+* `network_coordination_detector.py` — Spots suspicious group behavior using
+  sentence‑embedding similarity
 
 ## 🧪 Status
 

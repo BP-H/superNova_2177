@@ -232,76 +232,79 @@ def detect_score_coordination(validations: List[Dict[str, Any]]) -> Dict[str, An
    }
 
 def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str, Any]:
-   """
-   Detect validators who use suspiciously similar language in their validation notes.
-   Enhanced with better text preprocessing and similarity calculation.
-   
-   Args:
-       validations: List of validation records
-       
-   Returns:
-       Dict with semantic coordination analysis
-   """
-   validator_phrases = defaultdict(set)
-   validator_full_text = defaultdict(list)
-   
-   for v in validations:
-       validator_id = v.get("validator_id")
-       note = v.get("note", "")
-       if not validator_id or len(note) < Config.REPEATED_PHRASE_MIN_LENGTH:
-           continue
-       
-       # Store full text for advanced analysis
-       validator_full_text[validator_id].append(note.lower().strip())
-       
-       # Extract phrases (improved n-gram extraction)
-       words = [w for w in note.lower().split() if len(w) > 2]  # Filter short words
-       
-       # Extract 3-word and 4-word phrases
-       for n in [3, 4]:
-           for i in range(len(words) - n + 1):
-               phrase = " ".join(words[i:i+n])
-               if len(phrase) >= Config.REPEATED_PHRASE_MIN_LENGTH:
-                   validator_phrases[validator_id].add(phrase)
-   
-   semantic_clusters = []
-   flags = []
-   validators = list(validator_phrases.keys())
-   
-   for v1, v2 in itertools.combinations(validators, 2):
-       phrases1 = validator_phrases[v1]
-       phrases2 = validator_phrases[v2]
-       
-       if not phrases1 or not phrases2:
-           continue
-       
-       # Jaccard similarity for phrases
-       intersection = len(phrases1.intersection(phrases2))
-       union = len(phrases1.union(phrases2))
-       jaccard_similarity = intersection / union if union > 0 else 0.0
-       
-       # Additional check: exact text matches
-       text1_set = set(validator_full_text[v1])
-       text2_set = set(validator_full_text[v2])
-       exact_matches = len(text1_set.intersection(text2_set))
-       
-       # Combined similarity score
-       similarity = max(jaccard_similarity, min(1.0, exact_matches / 5.0))
-       
-       if similarity >= Config.SEMANTIC_SIMILARITY_THRESHOLD:
-           semantic_clusters.append({
-               "validators": [v1, v2],
-               "shared_phrases": intersection,
-               "exact_text_matches": exact_matches,
-               "similarity_score": round(similarity, 3),
-               "coordination_likelihood": similarity
-           })
-           flags.append(f"semantic_coordination_{v1}_{v2}")
-   
-   return {
-       "semantic_clusters": semantic_clusters,
-       "flags": flags
-   }
+    """Detect validators who use suspiciously similar language in their
+    validation notes using sentence embeddings.
+
+    This replaces the older phrase-based approach with cosine similarity on
+    averaged sentence embeddings. If the embedding model cannot be loaded (e.g.,
+    due to network restrictions), the function falls back to a TF‑IDF based
+    embedding.
+
+    Args:
+        validations: List of validation records
+
+    Returns:
+        Dict with semantic coordination analysis
+    """
+
+    validator_texts = defaultdict(list)
+
+    for v in validations:
+        validator_id = v.get("validator_id")
+        note = v.get("note", "")
+        if not validator_id or len(note) < Config.REPEATED_PHRASE_MIN_LENGTH:
+            continue
+        validator_texts[validator_id].append(note.lower().strip())
+
+    if not validator_texts:
+        return {"semantic_clusters": [], "flags": []}
+
+    all_notes = [text for notes in validator_texts.values() for text in notes]
+
+    def _compute_embeddings(texts: List[str]):
+        try:
+            from sentence_transformers import SentenceTransformer
+            model = SentenceTransformer("paraphrase-MiniLM-L6-v2")
+            return model.encode(texts)
+        except Exception as e:  # pragma: no cover - fallback rarely triggered
+            logger.warning(f"SentenceTransformer unavailable: {e}; using TF-IDF fallback")
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            vec = TfidfVectorizer().fit(texts)
+            return vec.transform(texts).toarray()
+
+    embeddings = _compute_embeddings(all_notes)
+
+    idx = 0
+    validator_embeddings = {}
+    for vid, notes in validator_texts.items():
+        note_embeds = embeddings[idx: idx + len(notes)]
+        idx += len(notes)
+        validator_embeddings[vid] = note_embeds.mean(axis=0)
+
+    semantic_clusters = []
+    flags = []
+    validators = list(validator_embeddings.keys())
+
+    for v1, v2 in itertools.combinations(validators, 2):
+        emb1 = validator_embeddings[v1]
+        emb2 = validator_embeddings[v2]
+        # Cosine similarity
+        dot = float(emb1 @ emb2)
+        norm = float((emb1 @ emb1) ** 0.5 * (emb2 @ emb2) ** 0.5)
+        similarity = dot / norm if norm else 0.0
+
+        if similarity >= Config.SEMANTIC_SIMILARITY_THRESHOLD:
+            semantic_clusters.append({
+                "validators": [v1, v2],
+                "similarity_score": round(similarity, 3),
+                "coordination_likelihood": similarity,
+            })
+            flags.append(f"semantic_coordination_{v1}_{v2}")
+
+    return {
+        "semantic_clusters": semantic_clusters,
+        "flags": flags,
+    }
 
 def calculate_sophisticated_risk_score(
    temporal_flags: int,
