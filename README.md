@@ -53,6 +53,7 @@ pytest
 * **📊 Multi-Factor Analysis** — Diversity, reputation, coordination, timing
 * **📋 Actionable Reports** — Output includes flags, scores, certification level
 * **🧵 Fully Modular** — Each analysis step is plug-and-play
+* **⏱️ Time Parsing** — Uses `python-dateutil` for robust timestamp handling
 
 ## 📈 Example Output
 
