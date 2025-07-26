@@ -21,7 +21,7 @@ async def network_page():
             f'color: {THEME["accent"]};'
         )
 
-        analysis = await api_call('GET', '/network-analysis/')
+        analysis = api_call('GET', '/network-analysis/')
         if analysis:
             ui.label(f"Nodes: {analysis['metrics']['node_count']}").classes('mb-2')
             ui.label(f"Edges: {analysis['metrics']['edge_count']}").classes('mb-2')

@@ -19,8 +19,13 @@ THEME = {
 
 TOKEN: Optional[str] = None
 
-async def api_call(method: str, endpoint: str, data: Optional[Dict] = None,
-                   headers: Optional[Dict] = None, files: Optional[Dict] = None):
+def api_call(
+    method: str,
+    endpoint: str,
+    data: Optional[Dict] = None,
+    headers: Optional[Dict] = None,
+    files: Optional[Dict] = None,
+) -> Optional[Dict]:
     """Wrapper around ``requests`` to interact with the backend API."""
     url = f"{BACKEND_URL}{endpoint}"
     default_headers = {'Content-Type': 'application/json'} if method != 'multipart' else {}
