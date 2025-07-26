@@ -282,7 +282,7 @@ from fastapi import (
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, ValidationError
 from pydantic_settings import BaseSettings
 import redis
 from sqlalchemy import (
@@ -322,7 +322,7 @@ class Settings(BaseSettings):
     # SECRET_KEY must be provided via environment variables for security
     # Using Field(..., env="SECRET_KEY") ensures there is no insecure default
     SECRET_KEY: str = Field(..., env="SECRET_KEY")
-    
+
     ALGORITHM: str = "HS256"
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:3000"
@@ -332,7 +332,12 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost"
 
 
-settings = Settings()
+try:
+    settings = Settings()
+except ValidationError as e:
+    raise RuntimeError(
+        "SECRET_KEY environment variable missing. Set SECRET_KEY before running the application."
+    ) from e
 redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
 
 # Model for creative leap scoring is loaded lazily to conserve resources
@@ -1311,8 +1316,6 @@ def today() -> str:
     return now_utc().date().isoformat()
 
 
-
-
 def is_valid_username(name: str) -> bool:
     if not isinstance(name, str) or len(name) < 3 or len(name) > 30:
         return False
@@ -1349,8 +1352,6 @@ def detailed_error_log(exc: Exception) -> str:
 async def async_add_event(logchain: "LogChain", event: Dict[str, Any]) -> None:
     loop = asyncio.get_event_loop()
     await loop.run_in_executor(None, logchain.add, event)
-
-
 
 
 # Added for scientific visualization enhancement
@@ -2606,7 +2607,9 @@ class RemixAgent:
         proposal["votes"][event["voter"]] = event["vote"]
         self.storage.set_proposal(event["proposal_id"], proposal)
 
-    def _get_dynamic_threshold(self, total_voters: int, is_constitutional: bool, avg_yes: Decimal) -> Decimal:
+    def _get_dynamic_threshold(
+        self, total_voters: int, is_constitutional: bool, avg_yes: Decimal
+    ) -> Decimal:
         """
         Dynamically adjust threshold: for constitutional, increase as engagement (total voters) rises.
         - Base: 0.9
@@ -2615,16 +2618,17 @@ class RemixAgent:
         Normal proposals stay at 0.5.
         """
         pass
-        
+
         if not is_constitutional:
             return self.NORMAL_THRESHOLD
-        
+
         # Compute dynamic import threshold based on combined harmony (avg_yes)
         harmony_float = float(avg_yes)
         import_threshold = round(2 + 8 * harmony_float)
-        
+
         if total_voters > import_threshold:
             import immutable_tri_species_adjust as adjust
+
             threshold = adjust.ImmutableTriSpeciesAgent.BASE_CONSTITUTIONAL_THRESHOLD
             eng_medium = adjust.ImmutableTriSpeciesAgent.ENGAGEMENT_MEDIUM
             eng_high = adjust.ImmutableTriSpeciesAgent.ENGAGEMENT_HIGH
@@ -2632,12 +2636,12 @@ class RemixAgent:
             threshold = self.BASE_CONSTITUTIONAL_THRESHOLD
             eng_medium = self.ENGAGEMENT_MEDIUM
             eng_high = self.ENGAGEMENT_HIGH
-        
+
         if total_voters > eng_high:
-            threshold = Decimal('0.95')
+            threshold = Decimal("0.95")
         elif total_voters > eng_medium:
-            threshold = Decimal('0.92')
-        
+            threshold = Decimal("0.92")
+
         logger.info(f"Dynamic threshold for {total_voters} voters: {threshold}")
         return threshold
 
@@ -2897,7 +2901,9 @@ class RemixAgent:
 
 async def proposal_lifecycle_task(agent: RemixAgent):
     while True:
-        await asyncio.sleep(Config.PROPOSAL_LIFECYCLE_INTERVAL_SECONDS)  # Every 5 minutes
+        await asyncio.sleep(
+            Config.PROPOSAL_LIFECYCLE_INTERVAL_SECONDS
+        )  # Every 5 minutes
         agent._process_proposal_lifecycle()
 
 
@@ -3618,9 +3624,9 @@ def like_vibenode(
                 )
             )
         )
-        bonus_factor = Decimal("1.0") + Decimal(
-            str(current_user.network_centrality)
-        ) * multiplier
+        bonus_factor = (
+            Decimal("1.0") + Decimal(str(current_user.network_centrality)) * multiplier
+        )
         final_echo_gain = base_echo_gain * bonus_factor
         vibenode.echo = str(Decimal(vibenode.echo) + final_echo_gain)
         scaled_catalyst = base_catalyst * bonus_factor
@@ -3887,7 +3893,9 @@ async def scientific_reasoning_cycle_task(db_session_factory):
         try:
             db = db_session_factory()
             pm = PredictionManager(db_session_factory, SystemStateService(db))
-            rows = db.query(SystemState).filter(SystemState.key.like("prediction:%")).all()
+            rows = (
+                db.query(SystemState).filter(SystemState.key.like("prediction:%")).all()
+            )
             all_predictions = []
             for r in rows:
                 try:
@@ -3901,9 +3909,16 @@ async def scientific_reasoning_cycle_task(db_session_factory):
                 expired = True
                 if exp_str:
                     try:
-                        expired = datetime.datetime.fromisoformat(exp_str) <= datetime.datetime.utcnow()
+                        expired = (
+                            datetime.datetime.fromisoformat(exp_str)
+                            <= datetime.datetime.utcnow()
+                        )
                     except Exception as exc:
-                        logger.error("invalid expires_at", prediction=prediction_id, error=str(exc))
+                        logger.error(
+                            "invalid expires_at",
+                            prediction=prediction_id,
+                            error=str(exc),
+                        )
                 if not expired:
                     continue
                 logger.info(f"Validating expired prediction: {prediction_id}")
@@ -3912,10 +3927,16 @@ async def scientific_reasoning_cycle_task(db_session_factory):
                     "like_posts": random.choice([True, False]),
                     "follow_users": random.choice([True, False]),
                 }
-                result = analyze_prediction_accuracy(prediction_id, actual_outcome, all_predictions)
+                result = analyze_prediction_accuracy(
+                    prediction_id, actual_outcome, all_predictions
+                )
                 hypothesis_id = pred.get("data", {}).get("hypothesis_id")
                 if hypothesis_id:
-                    state = db.query(SystemState).filter(SystemState.key == "hypotheses").first()
+                    state = (
+                        db.query(SystemState)
+                        .filter(SystemState.key == "hypotheses")
+                        .first()
+                    )
                     existing = []
                     if state:
                         try:
@@ -3924,7 +3945,12 @@ async def scientific_reasoning_cycle_task(db_session_factory):
                             logger.error("malformed hypotheses", error=str(exc))
                     updated = refine_hypotheses_from_evidence(
                         hypothesis_id,
-                        [{"predicted_outcome": pred.get("data", {}), "actual_outcome": actual_outcome}],
+                        [
+                            {
+                                "predicted_outcome": pred.get("data", {}),
+                                "actual_outcome": actual_outcome,
+                            }
+                        ],
                         existing,
                     )
                     if state:
@@ -3952,9 +3978,7 @@ async def adaptive_optimization_task(db_session_factory):
         try:
             await asyncio.sleep(Config.ADAPTIVE_OPTIMIZATION_INTERVAL_SECONDS)
             db = db_session_factory()
-            metrics = {
-                "average_prediction_accuracy": random.uniform(0.5, 0.9)
-            }
+            metrics = {"average_prediction_accuracy": random.uniform(0.5, 0.9)}
             overrides = optimization_engine.tune_system_parameters(metrics)
             for param, value in overrides.items():
                 SystemStateService(db).set_state(
@@ -4780,7 +4804,9 @@ class InMemoryStorage(AbstractStorage):
 # --- MODULE: tasks.py ---
 async def proactive_intervention_task(cosmic_nexus: CosmicNexus):
     while True:
-        await asyncio.sleep(Config.PROACTIVE_INTERVENTION_INTERVAL_SECONDS)  # Every hour
+        await asyncio.sleep(
+            Config.PROACTIVE_INTERVENTION_INTERVAL_SECONDS
+        )  # Every hour
         cosmic_nexus.analyze_and_intervene()
 
 
