@@ -4,6 +4,7 @@ from nicegui import ui
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
+from utils.ws_client import start_client
 from .login_page import login_page
 
 
@@ -46,6 +47,14 @@ async def messages_page():
                     with ui.card().classes('w-full mb-2').style('border: 1px solid #333; background: #1e1e1e;'):
                         ui.label(f"From: {m['sender_id']}").classes('text-sm')
                         ui.label(m['content']).classes('text-sm')
+
+        async def handle_ws(data: dict) -> None:
+            with messages_list:
+                with ui.card().classes('w-full mb-2').style('border: 1px solid #333; background: #1e1e1e;'):
+                    ui.label(f"From: {data.get('sender', 'system')}").classes('text-sm')
+                    ui.label(data.get('content', '')).classes('text-sm')
+
+        start_client('/ws/messages', handle_ws)
 
         await refresh_messages()
         ui.timer(30, refresh_messages)

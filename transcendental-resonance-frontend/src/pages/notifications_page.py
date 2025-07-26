@@ -4,6 +4,7 @@ from nicegui import ui
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
+from utils.ws_client import start_client
 from .login_page import login_page
 
 
@@ -38,6 +39,13 @@ async def notifications_page():
                             ui.button('Mark Read', on_click=mark_read).style(
                                 f'background: {THEME["primary"]}; color: {THEME["text"]};'
                             )
+
+        async def handle_ws(data: dict) -> None:
+            with notifs_list:
+                with ui.card().classes('w-full mb-2').style('border: 1px solid #333; background: #1e1e1e;'):
+                    ui.label(data.get('message', '')).classes('text-sm')
+
+        start_client('/ws/notifications', handle_ws)
 
         await refresh_notifs()
         ui.timer(30, refresh_notifs)
