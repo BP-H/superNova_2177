@@ -319,8 +319,10 @@ class Settings(BaseSettings):
     # PRODUCTION WARNING: Avoid using SQLite here; it cannot handle concurrent writes in a multi-user environment.
     # Configure a PostgreSQL database URL before deploying.
 
-    SECRET_KEY: str = "generate_a_secure_secret_key"
-
+    # SECRET_KEY must be provided via environment variables for security
+    # Using Field(..., env="SECRET_KEY") ensures there is no insecure default
+    SECRET_KEY: str = Field(..., env="SECRET_KEY")
+    
     ALGORITHM: str = "HS256"
     ALLOWED_ORIGINS: List[str] = [
         "http://localhost:3000"
