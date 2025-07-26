@@ -120,7 +120,7 @@ def create_dramatic_scenario(save_output=False):
     # Show the power of the system
     component_scores = result.get("integrity_analysis", {}).get("component_scores", {})
     
-    typewriter_print(f"\n📊 COMPONENT ANALYSIS:", 0.03)
+    typewriter_print("\n📊 COMPONENT ANALYSIS:", 0.03)
     typewriter_print(f"    🎨 Diversity: {component_scores.get('diversity', 0):.2f}/1.0", 0.02)
     typewriter_print(f"    ⭐ Reputation: {component_scores.get('reputation', 0):.2f}/1.0", 0.02)  # Fixed key name
     typewriter_print(f"    ⏰ Temporal: {component_scores.get('temporal_trust', 0):.2f}/1.0", 0.02)
@@ -128,13 +128,13 @@ def create_dramatic_scenario(save_output=False):
     
     recommendations = result.get("recommendations", [])
     if recommendations:
-        typewriter_print(f"\n💡 SYSTEM RECOMMENDATIONS:", 0.03)
+        typewriter_print("\n💡 SYSTEM RECOMMENDATIONS:", 0.03)
         for rec in recommendations[:3]:
             typewriter_print(f"    → {rec}", 0.02)
             time.sleep(0.5)
     
-    typewriter_print(f"\n✨ Analysis completed in real-time", 0.03)
-    typewriter_print(f"🛡️  System successfully detected manipulation attempt", 0.03)
+    typewriter_print("\n✨ Analysis completed in real-time", 0.03)
+    typewriter_print("🛡️  System successfully detected manipulation attempt", 0.03)
     
     print("\n" + "🟢" * 60)
     typewriter_print("🧠 This is the power of superNova_2177", 0.04)
@@ -165,18 +165,18 @@ def create_dramatic_scenario(save_output=False):
         # Also save markdown report
         md_filename = f"demo_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
         with open(md_filename, 'w') as f:
-            f.write(f"# superNova_2177 Demo Analysis Report\n\n")
+            f.write("# superNova_2177 Demo Analysis Report\n\n")
             f.write(f"**Generated:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}\n\n")
-            f.write(f"## Summary\n")
+            f.write("## Summary\n")
             f.write(f"- **Certification:** {certification}\n")
             f.write(f"- **Risk Level:** {risk_level}\n")
             f.write(f"- **Integrity Score:** {integrity_score}/1.0\n")
             f.write(f"- **Validators Analyzed:** {validator_count}\n")
             f.write(f"- **Flags Detected:** {len(flags)}\n\n")
-            f.write(f"## Detected Issues\n")
+            f.write("## Detected Issues\n")
             for flag in flags:
                 f.write(f"- {flag.replace('_', ' ').title()}\n")
-            f.write(f"\n## System Recommendations\n")
+            f.write("\n## System Recommendations\n")
             for rec in recommendations:
                 f.write(f"- {rec}\n")
         

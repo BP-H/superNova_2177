@@ -11,11 +11,9 @@ import json
 import logging
 from datetime import datetime
 from typing import List, Dict, Optional, Any
-import collections # For potential future use in more complex string analysis
 import dateutil.parser # For robust datetime parsing
 
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
 from db_models import SystemState, LogEntry # For accessing logs and hypothesis data
 import hypothesis_tracker as ht # For getting hypothesis records
@@ -198,7 +196,7 @@ def explain_validation_reasoning(
                 entropy_delta = audit_result_metadata.get("entropy_delta")
                 if entropy_delta is not None and abs(entropy_delta) < CONFIG.LOW_ENTROPY_DELTA_THRESHOLD:
                     risk_flags_list.append(f"low_entropy_delta (delta={entropy_delta:.2f})")
-                    reasoning_fragments.append(f"Note: This audit involved a low entropy change, which may warrant closer review.")
+                    reasoning_fragments.append("Note: This audit involved a low entropy change, which may warrant closer review.")
 
             audit_sources_processed.add(audit_source_key)
 
