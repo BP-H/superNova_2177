@@ -14,7 +14,8 @@ from sqlalchemy import (
     Float,
     JSON,
 )
-from sqlalchemy.orm import sessionmaker, relationship, Session, declarative_base
+from sqlalchemy.orm import sessionmaker, relationship, Session, DeclarativeBase
+from typing import TYPE_CHECKING
 import datetime # Ensure datetime is imported for default values
 
 # NOTE: In a real project, DATABASE_URL and SessionLocal would typically be imported from a central config/db module.
@@ -28,7 +29,12 @@ engine = create_engine(
     ),
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
+
+
+class Base(DeclarativeBase):
+    """Base class for all ORM models."""
+
+    pass
 
 # Association Tables from FastAPI files
 harmonizer_follows = Table(
