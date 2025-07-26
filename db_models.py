@@ -20,7 +20,7 @@ import datetime # Ensure datetime is imported for default values
 # NOTE: In a real project, DATABASE_URL and SessionLocal would typically be imported from a central config/db module.
 # For this extraction, we'll keep it self-contained for clarity, assuming it would be integrated.
 # DATABASE_URL = "postgresql+asyncpg://user:password@localhost/transcendental_resonance" # Original hardcoded line
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db") # Refined: Get from environment or use default
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///:memory:")  # Refined: Get from environment or use in-memory SQLite
 engine = create_engine(
     DATABASE_URL,
     connect_args=(
