@@ -33,9 +33,11 @@ python validate_hypothesis.py --validations sample_validations.json
 pip install -r requirements.txt
 ```
 
-This project is tested with **SQLAlchemy 2.x**, so ensure you have
-`sqlalchemy>=2.0` installed.
-The code also requires `python-dateutil` for timestamp parsing.
+The requirements file now installs all runtime and test dependencies such as
+**FastAPI**, **Pydantic**, **Passlib[bcrypt]**, **python-jose**, and the Redis
+client. It also pulls in scientific packages like **networkx** and **numpy**.
+The project is tested with **SQLAlchemy 2.x**, so `sqlalchemy>=2.0` is included
+alongside `python-dateutil` for timestamp parsing.
 
 ## 🔧 Configuration
 
@@ -54,10 +56,9 @@ After installing the dependencies, run:
 pytest
 ```
 
-Some tests rely on optional packages such as `networkx`. Install them
-with `pip install networkx` to run the full test suite.
-Certain modules and tests also require `numpy`. Install it with
-`pip install numpy` if it isn't already available.
+All required packages, including `networkx` and `numpy`, are installed from
+`requirements.txt`, so no additional manual installation steps are needed for the
+test suite.
 
 ## ✨ Features
 
