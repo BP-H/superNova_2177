@@ -105,3 +105,8 @@ Flags: ['limited_consensus', 'low_diversity']
 
 *Built for scientific integrity in a world of noise.*
 
+
+## 📝 Contributing RFCs
+
+We welcome design proposals through our RFC process. Create a numbered folder under `rfcs/` with a `README.md` describing your idea and update `rfcs/README.md` to add its title. Open a pull request so the community can review.
+
