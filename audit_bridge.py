@@ -3,6 +3,7 @@ audit_bridge.py - Symbolic Trace Logger & Hypothesis Reference Engine (superNova
 """
 
 import json
+import uuid
 from datetime import datetime
 from typing import List, Dict, Optional, Any
 
@@ -28,7 +29,7 @@ def log_hypothesis_with_trace(
         "causal_node_ids": causal_node_ids,
         "metadata": metadata or {},
     }
-    key = f"hypothesis_log_{int(datetime.utcnow().timestamp())}"
+    key = f"hypothesis_log_{uuid.uuid4().hex}"
     state = SystemState(key=key, value=json.dumps(payload))
     db.add(state)
     db.commit()
