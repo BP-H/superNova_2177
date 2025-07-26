@@ -23,20 +23,28 @@ async def network_page():
             f'color: {THEME["accent"]};'
         )
 
-        analysis = api_call('GET', '/network-analysis/')
-        if analysis:
-            ui.label(f"Nodes: {analysis['metrics']['node_count']}").classes('mb-2')
-            ui.label(f"Edges: {analysis['metrics']['edge_count']}").classes('mb-2')
-            graph_html = """
-            <div id="network"></div>
-            <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-            <script type="text/javascript">
-                var nodes = new vis.DataSet(""" + json.dumps(analysis['nodes']) + """);
-                var edges = new vis.DataSet(""" + json.dumps(analysis['edges']) + """);
-                var container = document.getElementById('network');
-                var data = {nodes: nodes, edges: edges};
-                var options = {physics: {enabled: true}};
-                var network = new vis.Network(container, data, options);
-            </script>
-            """
-            ui.html(graph_html).classes('w-full h-96')
+        nodes_label = ui.label().classes('mb-2')
+        edges_label = ui.label().classes('mb-2')
+        graph = ui.html('').classes('w-full h-96')
+
+        async def refresh_network() -> None:
+            analysis = api_call('GET', '/network-analysis/')
+            if analysis:
+                nodes_label.text = f"Nodes: {analysis['metrics']['node_count']}"
+                edges_label.text = f"Edges: {analysis['metrics']['edge_count']}"
+                graph_html = f"""
+                <div id='network'></div>
+                <script type='text/javascript' src='https://unpkg.com/vis-network/standalone/umd/vis-network.min.js'></script>
+                <script type='text/javascript'>
+                    var nodes = new vis.DataSet({json.dumps(analysis['nodes'])});
+                    var edges = new vis.DataSet({json.dumps(analysis['edges'])});
+                    var container = document.getElementById('network');
+                    var data = {{nodes: nodes, edges: edges}};
+                    var options = {{physics: {{enabled: true}}}};
+                    var network = new vis.Network(container, data, options);
+                </script>
+                """
+                graph.set_content(graph_html)
+
+        await refresh_network()
+        ui.timer(10, refresh_network)
