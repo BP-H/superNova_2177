@@ -160,8 +160,8 @@ class VibeNode(Base):
     entangled_with = relationship(
         "VibeNode",
         secondary=vibenode_entanglements,
-        primary_join=(vibenode_entanglements.c.source_id == id),
-        secondary_join=(vibenode_entanglements.c.target_id == id),
+        primaryjoin=(vibenode_entanglements.c.source_id == id),
+        secondaryjoin=(vibenode_entanglements.c.target_id == id),
         backref="entangled_from",
     )
     creative_guild = relationship(
