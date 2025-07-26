@@ -1,8 +1,12 @@
 import json
+from pathlib import Path
 from validation_certifier import analyze_validation_integrity
 
+DATA_FILE = Path(__file__).resolve().parents[1] / "sample_validations.json"
+
+
 def test_sample_data_analysis():
-    with open("sample_validations.json") as f:
+    with open(DATA_FILE) as f:
         data = json.load(f)
         validations = data.get("validations", [])
     
