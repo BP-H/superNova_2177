@@ -9,7 +9,7 @@ pip install -r requirements.txt
 nicegui src/main.py
 ```
 
-Replace the backend URL in `src/utils/api.py` if your API is not running on `http://localhost:8000`.
+Replace the backend URL with the `BACKEND_URL` environment variable if your API is not running on `http://localhost:8000`.
 
 ## Structure
 
@@ -20,4 +20,4 @@ Replace the backend URL in `src/utils/api.py` if your API is not running on `htt
 
 ## Notes
 
-This UI is mobile-first with a futuristic aesthetic (dark mode and neon accents). Future improvements include real-time notifications, theming, and internationalization.
+This UI is mobile-first with a futuristic aesthetic (dark mode and neon accents). A theme toggle is built in so you can switch between light and dark palettes. Future improvements include real-time notifications and internationalization.
