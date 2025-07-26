@@ -85,12 +85,12 @@ def attach_trace_to_logentry(
     if not entry:
         raise ValueError(f"LogEntry {log_id} not found")
 
-    existing = json.loads(entry.value or "{}")
+    existing = json.loads(entry.payload or "{}")
     existing["causal_node_ids"] = causal_node_ids
     if summary:
         existing["causal_commentary"] = summary
 
-    entry.value = json.dumps(existing)
+    entry.payload = json.dumps(existing)
     db.commit()
 
 
