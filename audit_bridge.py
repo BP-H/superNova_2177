@@ -1,6 +1,4 @@
-"""
-audit_bridge.py - Symbolic Trace Logger & Hypothesis Reference Engine (superNova_2177 v3.6)
-"""
+"""Symbolic Trace Logger & Hypothesis Reference Engine (superNova_2177 v3.6)"""
 
 import json
 import uuid
@@ -31,8 +29,8 @@ def log_hypothesis_with_trace(
     metadata: Optional[Dict[str, Any]] = None
 ) -> str:
     """
-    Store a hypothesis log with its supporting causal node IDs and optional metadata.
-    Returns the key used in SystemState.
+    Store a hypothesis log with its supporting causal node IDs and optional
+    metadata. Returns the key used in SystemState.
     """
     payload = {
         "timestamp": datetime.utcnow().isoformat(),
@@ -54,7 +52,8 @@ def export_causal_path(
     depth: int = 3
 ) -> Dict[str, Any]:
     """
-    Export a simplified causal trace path in either upstream or downstream direction.
+    Export a simplified causal trace path in either upstream or downstream
+    direction.
     """
     if direction not in {"ancestors", "descendants"}:
         raise ValueError("direction must be 'ancestors' or 'descendants'")
@@ -65,7 +64,11 @@ def export_causal_path(
     )
     path_nodes = [entry["node_id"] for entry in trace]
     edge_list = [
-        (entry["edge"]["source"], entry["edge"]["target"], entry["edge"].get("edge_type", ""))
+        (
+            entry["edge"]["source"],
+            entry["edge"]["target"],
+            entry["edge"].get("edge_type", ""),
+        )
         for entry in trace
     ]
     highlights = []
@@ -90,7 +93,8 @@ def attach_trace_to_logentry(
     summary: Optional[str] = None
 ) -> None:
     """
-    Attach causal node references and optional commentary to an existing LogEntry.
+    Attach causal node references and optional commentary to an existing
+    LogEntry.
     """
     entry = db.query(LogEntry).filter(LogEntry.id == log_id).first()
     if not entry:
@@ -119,6 +123,8 @@ def generate_commentary_from_trace(trace: Dict[str, Any]) -> str:
 
     chain = " → ".join(trace["path_nodes"])
     highlights = trace.get("highlights", [])
-    highlight_text = f" Notable nodes: {', '.join(highlights)}." if highlights else ""
+    highlight_text = (
+        f" Notable nodes: {', '.join(highlights)}." if highlights else ""
+    )
 
     return f"This trace follows the causal chain: {chain}.{highlight_text}"
