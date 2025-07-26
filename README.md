@@ -119,6 +119,21 @@ Flags: ['limited_consensus', 'low_diversity']
 - Check timestamp clustering for coordination risks
 ```
 
+## 🗓️ Daily Participation Validator
+
+Use `evaluate_daily_participation` to detect users who have not interacted for
+a configurable number of days. Provide a list of activity records with
+`user_id` and `timestamp` strings:
+
+```python
+from validators.daily_participation_validator import evaluate_daily_participation
+
+result = evaluate_daily_participation(activity_log, inactivity_days=3)
+```
+
+`result["inactive_users"]` will contain any user IDs that have been inactive
+beyond the threshold.
+
 ## 🏗️ Architecture (v4.6)
 
 * `validation_integrity_pipeline.py` — Orchestrator for full validation logic
@@ -126,6 +141,7 @@ Flags: ['limited_consensus', 'low_diversity']
 * `diversity_analyzer.py` — Detects echo chambers and affiliation bias
 * `temporal_consistency_checker.py` — Tracks time-based volatility
 * `network_coordination_detector.py` — Spots suspicious group behavior
+* `daily_participation_validator.py` — Alerts on prolonged user inactivity
 
 ## 🧪 Status
 
