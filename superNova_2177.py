@@ -2227,6 +2227,8 @@ class RemixAgent:
         self.lock = threading.RLock()
         self.snapshot = snapshot
         self.hooks = HookManager()
+        # Track awarded fork badges for users
+        self.fork_badges: Dict[str, list[str]] = {}
         # Register hook for cross remix creation events
         self.hooks.register_hook("cross_remix_created", self.on_cross_remix_created)
         self.event_count = 0

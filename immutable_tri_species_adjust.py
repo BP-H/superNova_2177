@@ -2,7 +2,43 @@ from typing import Dict, Any, List
 from collections import defaultdict
 from decimal import Decimal
 import logging
-import numpy as np  # For Lorenz curve computation
+try:  # numpy is optional for tests
+    import numpy as np  # type: ignore
+except Exception:  # pragma: no cover - fallback minimal stub
+    class _NP:
+        def array(self, x):
+            return list(x)
+
+        def sort(self, x):
+            y = list(x)
+            y.sort()
+            return y
+        def cumsum(self, x):
+            total = 0
+            out = []
+            for v in x:
+                total += v
+                out.append(total)
+            return out
+
+        def sum(self, x):
+            return sum(x)
+
+        def arange(self, start, stop=None):
+            if stop is None:
+                start, stop = 0, start
+            return list(range(start, stop))
+
+        def insert(self, arr, idx, val):
+            return arr[:idx] + [val] + arr[idx:]
+
+        def trapz(self, y, x):
+            area = 0.0
+            for i in range(1, len(x)):
+                area += (x[i] - x[i - 1]) * (y[i] + y[i - 1]) / 2
+            return area
+
+    np = _NP()
 from superNova_2177 import RemixAgent
 
 class InvalidEventError(Exception):

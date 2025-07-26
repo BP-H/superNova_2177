@@ -14,7 +14,13 @@ from sqlalchemy import (
     Float,
     JSON,
 )
-from sqlalchemy.orm import sessionmaker, relationship, Session, DeclarativeBase
+from sqlalchemy.orm import sessionmaker, relationship, Session
+
+try:  # DeclarativeBase may not exist in stubbed sqlalchemy
+    from sqlalchemy.orm import DeclarativeBase
+except Exception:  # pragma: no cover - fallback class for tests
+    class DeclarativeBase:
+        metadata = type("Meta", (), {"create_all": lambda *a, **k: None, "drop_all": lambda *a, **k: None})()
 from typing import TYPE_CHECKING
 import datetime # Ensure datetime is imported for default values
 

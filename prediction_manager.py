@@ -6,6 +6,8 @@ import datetime
 import logging
 from typing import Any, Dict, Optional, Callable
 
+from quantum_sim import QuantumContext
+
 from sqlalchemy.orm import Session
 
 try:  # Prefer SystemState from db_models if available
@@ -145,4 +147,45 @@ class PredictionManager:
             "Updated prediction status",
             extra={"prediction_id": prediction_id, "status": new_status},
         )
+
+    def schedule_annual_audit_proposal(
+        self, *, current_time: Optional[datetime.datetime] = None
+    ) -> Optional[str]:
+        """Create an audit proposal once per year using ``quantum_sim``.
+
+        Parameters
+        ----------
+        current_time:
+            Optional timestamp used for scheduling logic. Defaults to now.
+
+        Returns
+        -------
+        Optional[str]
+            Identifier of the created proposal or ``None`` if not scheduled.
+        """
+
+        now = current_time or datetime.datetime.utcnow()
+
+        last_run_raw = self._get_value("audit_scheduler_last_run")
+        if last_run_raw:
+            try:
+                last_run = datetime.datetime.fromisoformat(last_run_raw)
+                if (now - last_run).days < 365:
+                    return None
+            except ValueError:
+                pass
+
+        qc = QuantumContext()
+        metric = qc.quantum_prediction_engine(["audit"]).get(
+            "overall_quantum_coherence", 0.0
+        )
+
+        proposal_id = f"audit_{now.year}_{uuid.uuid4().hex}"
+        payload = {
+            "timestamp": now.isoformat(),
+            "coherence": metric,
+        }
+        self._set_value(f"audit_proposal:{proposal_id}", json.dumps(payload))
+        self._set_value("audit_scheduler_last_run", now.isoformat())
+        return proposal_id
 
