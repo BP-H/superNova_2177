@@ -28,7 +28,7 @@ async def network_page():
         graph = ui.html('').classes('w-full h-96')
 
         async def refresh_network() -> None:
-            analysis = api_call('GET', '/network-analysis/')
+            analysis = await api_call('GET', '/network-analysis/')
             if analysis:
                 nodes_label.text = f"Nodes: {analysis['metrics']['node_count']}"
                 edges_label.text = f"Edges: {analysis['metrics']['edge_count']}"

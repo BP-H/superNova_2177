@@ -27,7 +27,7 @@ async def groups_page():
 
         async def create_group():
             data = {'name': g_name.value, 'description': g_desc.value}
-            resp = api_call('POST', '/groups/', data)
+            resp = await api_call('POST', '/groups/', data)
             if resp:
                 ui.notify('Group created!', color='positive')
                 await refresh_groups()
@@ -39,7 +39,7 @@ async def groups_page():
         groups_list = ui.column().classes('w-full')
 
         async def refresh_groups():
-            groups = api_call('GET', '/groups/') or []
+            groups = await api_call('GET', '/groups/') or []
             groups_list.clear()
             for g in groups:
                 with groups_list:
@@ -47,7 +47,7 @@ async def groups_page():
                         ui.label(g['name']).classes('text-lg')
                         ui.label(g['description']).classes('text-sm')
                         async def join_fn(g_id=g['id']):
-                            api_call('POST', f'/groups/{g_id}/join')
+                            await api_call('POST', f'/groups/{g_id}/join')
                             await refresh_groups()
                         ui.button('Join/Leave', on_click=join_fn).style(
                             f'background: {THEME["accent"]}; color: {THEME["background"]};'
