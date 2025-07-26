@@ -23,7 +23,7 @@ async def status_page():
         entropy_label = ui.label().classes('mb-2')
 
         async def refresh_status() -> None:
-            status = api_call('GET', '/status')
+            status = await api_call('GET', '/status')
             if status:
                 status_label.text = f"Status: {status['status']}"
                 harmonizers_label.text = (
