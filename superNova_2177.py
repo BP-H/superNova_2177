@@ -1886,6 +1886,7 @@ class Config:
     GUINNESS_PURSUIT_INTERVAL_SECONDS: int = 86400 * 3
     SCIENTIFIC_REASONING_CYCLE_INTERVAL_SECONDS: int = 3600
     ADAPTIVE_OPTIMIZATION_INTERVAL_SECONDS: int = 3600
+    ANNUAL_AUDIT_INTERVAL_SECONDS: int = 86400 * 365
     METRICS_PORT: int = 8001
 
     # --- Passive influence parameters ---
@@ -2196,6 +2197,38 @@ class CosmicNexus:
             logging.info(
                 f"Cross remix {new_coin.coin_id} minted in {source_universe} referencing {reference_universe}:{reference_coin}"
             )
+
+    def quantum_audit(self) -> None:
+        """Post an annual audit proposal to the governance system."""
+        db = self._get_session()
+        try:
+            system_user = (
+                db.query(Harmonizer)
+                .filter(Harmonizer.username == "CosmicNexus")
+                .first()
+            )
+            if not system_user:
+                system_user = Harmonizer(
+                    username="CosmicNexus",
+                    email="nexus@transcendental.com",
+                    hashed_password=get_password_hash("nexus_pass"),
+                    species="ai",
+                    is_genesis=True,
+                )
+                db.add(system_user)
+                db.commit()
+                db.refresh(system_user)
+            proposal = Proposal(
+                title="Annual Quantum Audit",
+                description="Automated yearly audit to ensure protocol integrity.",
+                author_id=system_user.id,
+                voting_deadline=datetime.datetime.utcnow() + timedelta(days=7),
+                payload={"action": "quantum_audit"},
+            )
+            db.add(proposal)
+            db.commit()
+        finally:
+            db.close()
 
 
 # --- MODULE: remix_agent.py ---
@@ -3996,6 +4029,19 @@ async def adaptive_optimization_task(db_session_factory):
                 pass
 
 
+async def annual_audit_task(cosmic_nexus: CosmicNexus):
+    """Trigger a yearly quantum audit proposal."""
+    while True:
+        try:
+            await asyncio.sleep(Config.ANNUAL_AUDIT_INTERVAL_SECONDS)
+            cosmic_nexus.quantum_audit()
+        except asyncio.CancelledError:
+            logger.info("annual_audit_task cancelled")
+            break
+        except Exception as exc:
+            logger.error("annual_audit_task error", exc_info=True)
+
+
 @app.on_event("startup")
 async def startup_event():
     loop = asyncio.get_event_loop()
@@ -4005,6 +4051,7 @@ async def startup_event():
     loop.create_task(proposal_lifecycle_task(agent))
     cosmic_nexus = CosmicNexus(SessionLocal, SystemStateService(SessionLocal()))
     loop.create_task(proactive_intervention_task(cosmic_nexus))
+    loop.create_task(annual_audit_task(cosmic_nexus))
     loop.create_task(update_content_entropy_task(SessionLocal))
     loop.create_task(update_network_centrality_task(SessionLocal))
     loop.create_task(system_prediction_task(SessionLocal))
