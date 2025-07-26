@@ -98,13 +98,54 @@ def select_optimal_intervention(system_state: Dict) -> str:
 @ScientificModel(
     source="Metacognitive Audit Framework",
     model_type="EffectivenessEvaluation",
-    approximation="placeholder"
+    approximation="heuristic",
 )
-def evaluate_optimization_effectiveness(past_metrics: List[Dict], intervention_history: List[str]) -> float:
-    """
-    Future extension: Quantifies how effective past interventions and parameter changes were
-    in reducing system entropy or improving prediction accuracy over time.
+def evaluate_optimization_effectiveness(
+    past_metrics: List[Dict], intervention_history: List[str]
+) -> float:
+    """Return a simple effectiveness score from historic metrics and actions.
 
-    Currently unimplemented; placeholder for the metacognitive audit phase.
+    The function compares the earliest and latest metric snapshots in
+    ``past_metrics``. If ``average_prediction_accuracy`` increased and
+    ``current_system_entropy`` decreased, the optimization is considered
+    effective.
+
+    The returned score is a weighted combination of accuracy improvement and
+    normalized entropy reduction. A larger number of interventions slightly
+    penalizes the final score.
+
+    Parameters
+    ----------
+    past_metrics : List[Dict]
+        Historical metric dictionaries containing ``average_prediction_accuracy``
+        and ``current_system_entropy``.
+    intervention_history : List[str]
+        Ordered list of interventions that were applied.
+
+    Returns
+    -------
+    float
+        Effectiveness value between ``-1.0`` and ``1.0`` where positive values
+        indicate an overall improvement.
     """
-    pass
+
+    if len(past_metrics) < 2:
+        return 0.0
+
+    start = past_metrics[0]
+    end = past_metrics[-1]
+
+    acc_start = float(start.get("average_prediction_accuracy", 0.0))
+    acc_end = float(end.get("average_prediction_accuracy", acc_start))
+    entropy_start = float(start.get("current_system_entropy", 0.0))
+    entropy_end = float(end.get("current_system_entropy", entropy_start))
+
+    acc_change = acc_end - acc_start
+    entropy_change = entropy_start - entropy_end
+
+    entropy_norm = entropy_start or 1.0
+    score = 0.6 * acc_change + 0.4 * (entropy_change / entropy_norm)
+
+    penalty = 1.0 / max(1, len(intervention_history))
+
+    return score * penalty
