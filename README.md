@@ -77,5 +77,3 @@ Flags: ['limited_consensus', 'low_diversity']
 
 *Built for scientific integrity in a world of noise.*
 
-```
-```
