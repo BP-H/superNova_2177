@@ -2594,7 +2594,7 @@ class RemixAgent:
         proposal["votes"][event["voter"]] = event["vote"]
         self.storage.set_proposal(event["proposal_id"], proposal)
 
-        def _get_dynamic_threshold(self, total_voters: int, is_constitutional: bool, avg_yes: Decimal) -> Decimal:
+    def _get_dynamic_threshold(self, total_voters: int, is_constitutional: bool, avg_yes: Decimal) -> Decimal:
         """
         Dynamically adjust threshold: for constitutional, increase as engagement (total voters) rises.
         - Base: 0.9
@@ -2603,6 +2603,7 @@ class RemixAgent:
         Normal proposals stay at 0.5.
         """
         pass
+        
         if not is_constitutional:
             return self.NORMAL_THRESHOLD
         
