@@ -39,7 +39,7 @@ export SECRET_KEY="your-random-secret"
 
 ## 🧪 Running Tests
 
-Install the minimal requirements and run `pytest`:
+Install the minimal requirements (including `python-dateutil` for datetime parsing) and run `pytest`:
 
 ```bash
 pip install -r requirements.txt
