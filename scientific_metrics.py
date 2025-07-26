@@ -213,7 +213,8 @@ def calculate_interaction_entropy(
         # Bootstrap confidence using multinomial resampling
         samples = []
         for _ in range(10):
-            sample = random.choices(range(len(probs)), probs, k=total)
+            k = int(round(total))
+            sample = random.choices(range(len(probs)), probs, k=k)
             sample_counts = [sample.count(i) for i in range(len(probs))]
             s_probs = [c / total for c in sample_counts]
             if method == "gini":
