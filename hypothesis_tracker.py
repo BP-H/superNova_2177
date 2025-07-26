@@ -151,7 +151,11 @@ def update_hypothesis_score(
         return False
 
     if not math.isfinite(new_score):
-        print(f"Warning: Attempted to set non-finite score for hypothesis {hypothesis_id}: {new_score}")
+        logger.warning(
+            "Attempted to set non-finite score for hypothesis %s: %s",
+            hypothesis_id,
+            new_score,
+        )
         return False
 
     record.score = new_score
