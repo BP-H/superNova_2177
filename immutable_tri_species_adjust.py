@@ -44,7 +44,7 @@ class ImmutableTriSpeciesAgent(RemixAgent):
         curve = np.insert(cum_values, 0, 0)
         pop = np.insert(cum_population, 0, 0)
         # Gini = 1 - 2 * area under curve
-        gini = Decimal(1 - 2 * np.trapz(curve, pop))
+        gini = Decimal(1 - 2 * np.trapezoid(curve, pop))
         return gini
 
     def _get_dynamic_threshold(self, total_voters: int, is_constitutional: bool, avg_yes: Decimal) -> Decimal:
