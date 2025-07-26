@@ -16,7 +16,7 @@ async def status_page():
         )
 
         async def refresh_status():
-            status = await api_call('GET', '/status')
+            status = api_call('GET', '/status')
             if status:
                 ui.label(f"Status: {status['status']}").classes('mb-2')
                 ui.label(

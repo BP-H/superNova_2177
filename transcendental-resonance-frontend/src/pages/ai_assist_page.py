@@ -24,7 +24,7 @@ async def ai_assist_page(vibenode_id: int):
 
         async def get_ai_response():
             data = {'prompt': prompt.value}
-            resp = await api_call('POST', f'/ai-assist/{vibenode_id}', data)
+            resp = api_call('POST', f'/ai-assist/{vibenode_id}', data)
             if resp:
                 ui.label('AI Response:').classes('mb-2')
                 ui.label(resp['response']).classes('text-sm break-words')

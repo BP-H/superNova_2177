@@ -24,7 +24,7 @@ async def upload_page():
 
         async def handle_upload(content, name):
             files = {'file': (name, content.read(), 'multipart/form-data')}
-            resp = await api_call('POST', '/upload/', files=files, method='multipart')
+            resp = api_call('POST', '/upload/', files=files, method='multipart')
             if resp:
                 ui.notify(f"Uploaded: {resp['media_url']}", color='positive')
 

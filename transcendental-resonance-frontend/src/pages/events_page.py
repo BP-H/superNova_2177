@@ -32,7 +32,7 @@ async def events_page():
                 'start_time': e_start.value,
                 'group_id': int(group_id.value),
             }
-            resp = await api_call('POST', '/events/', data)
+            resp = api_call('POST', '/events/', data)
             if resp:
                 ui.notify('Event created!', color='positive')
                 await refresh_events()
@@ -44,7 +44,7 @@ async def events_page():
         events_list = ui.column().classes('w-full')
 
         async def refresh_events():
-            events = await api_call('GET', '/events/') or []
+            events = api_call('GET', '/events/') or []
             events_list.clear()
             for e in events:
                 with events_list:
@@ -53,7 +53,7 @@ async def events_page():
                         ui.label(e['description']).classes('text-sm')
                         ui.label(f"Start: {e['start_time']}").classes('text-sm')
                         async def attend_fn(e_id=e['id']):
-                            await api_call('POST', f'/events/{e_id}/attend')
+                            api_call('POST', f'/events/{e_id}/attend')
                             await refresh_events()
                         ui.button('Attend/Leave', on_click=attend_fn).style(
                             f'background: {THEME["accent"]}; color: {THEME["background"]};'
