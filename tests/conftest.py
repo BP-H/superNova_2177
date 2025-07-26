@@ -73,6 +73,7 @@ if "superNova_2177" not in sys.modules:
         PROACTIVE_INTERVENTION_INTERVAL_SECONDS = 3600
         AI_PERSONA_EVOLUTION_INTERVAL_SECONDS = 86400
         GUINNESS_PURSUIT_INTERVAL_SECONDS = 86400 * 3
+        ANNUAL_AUDIT_INTERVAL_SECONDS = 86400 * 365
         METRICS_PORT = 8001
         INFLUENCE_THRESHOLD_FOR_AURA_GAIN = 0.1
         PASSIVE_AURA_GAIN_MULTIPLIER = Decimal("10.0")
@@ -153,6 +154,12 @@ for mod_name in [
             stub.Session = Session
             stub.sessionmaker = lambda *a, **kw: None
             stub.relationship = lambda *a, **kw: None
+            class DeclarativeBase:
+                metadata = types.SimpleNamespace(
+                    create_all=lambda *a, **kw: None,
+                    drop_all=lambda *a, **kw: None,
+                )
+            stub.DeclarativeBase = DeclarativeBase
             def _base():
                 class B:
                     metadata = types.SimpleNamespace()
@@ -196,6 +203,7 @@ for mod_name in [
             stub.BaseModel = BaseModel
             stub.Field = lambda *a, **kw: None
             stub.EmailStr = str
+            stub.ValidationError = type("ValidationError", (), {})
         if mod_name == "pydantic_settings":
             class BaseSettings:
                 pass
