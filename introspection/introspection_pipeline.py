@@ -88,7 +88,11 @@ def run_full_audit(hypothesis_id: str, db: Session) -> Dict[str, Any]:
                     "causal_audit_ref": log_value_payload.get("causal_audit_ref")
                 })
             except json.JSONDecodeError:
-                pass # Skip malformed log entries
+                logger.warning(
+                    "Skipping malformed log entry %s: %s",
+                    getattr(log_entry, "id", "<unknown>"),
+                    getattr(log_entry, "payload", "<no payload>"),
+                )
 
         if parsed_logs:
             # Sort by timestamp (or ID if timestamps are identical) to find the 'latest'
