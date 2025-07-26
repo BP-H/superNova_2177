@@ -38,6 +38,10 @@ except Exception:  # pragma: no cover - fallback minimal stub
                 area += (x[i] - x[i - 1]) * (y[i] + y[i - 1]) / 2
             return area
 
+        # numpy >=1.22 exposes `trapezoid` as an alias of `trapz`
+        def trapezoid(self, y, x):
+            return self.trapz(y, x)
+
     np = _NP()
 from superNova_2177 import RemixAgent
 
@@ -72,15 +76,23 @@ class ImmutableTriSpeciesAgent(RemixAgent):
         if not voter_karmas:
             return Decimal('0')
         
-        values = np.array([float(k) for k in voter_karmas])  # Convert Decimal to float for numpy
-        sorted_values = np.sort(values)
-        cum_values = np.cumsum(sorted_values) / np.sum(sorted_values)
-        cum_population = np.arange(1, len(values) + 1) / len(values)
+        # Use simple Python lists so the routine also works if numpy isn't installed
+        values = [float(k) for k in voter_karmas]
+        values.sort()
+        total = sum(values)
+        cum_values = []
+        running = 0.0
+        for v in values:
+            running += v
+            cum_values.append(running / total)
+
+        cum_population = [(i + 1) / len(values) for i in range(len(values))]
         # Lorenz curve points (insert 0,0)
-        curve = np.insert(cum_values, 0, 0)
-        pop = np.insert(cum_population, 0, 0)
+        curve = [0.0] + cum_values
+        pop = [0.0] + cum_population
         # Gini = 1 - 2 * area under curve
-        gini = Decimal(1 - 2 * np.trapezoid(curve, pop))
+        gini_area = np.trapezoid(curve, pop)
+        gini = Decimal(1 - 2 * gini_area)
         return gini
 
     def _get_dynamic_threshold(self, total_voters: int, is_constitutional: bool, avg_yes: Decimal) -> Decimal:
