@@ -1,3 +1,4 @@
 pytest
 sqlalchemy
 networkx
+python-dateutil
