@@ -48,7 +48,10 @@ def _get_all_hypotheses(db: Session) -> List[Dict[str, Any]]:
             parsed_hypotheses.append(json.loads(entry.value))
         except json.JSONDecodeError:
             # Log error for malformed entry, but continue
-            print(f"Warning: Malformed hypothesis record found for key: {entry.key}")
+            logger.warning(
+                "Warning: Malformed hypothesis record found for key: %s",
+                entry.key,
+            )
             continue
     return parsed_hypotheses
 
