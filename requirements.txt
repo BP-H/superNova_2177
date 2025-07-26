@@ -1,5 +1,5 @@
 pytest
-sqlalchemy
+sqlalchemy>=2.0
 networkx
 python-dateutil
 types-python-dateutil
