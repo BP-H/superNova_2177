@@ -67,6 +67,10 @@ async def profile_page():
         ui.button('Messages', on_click=lambda: ui.open(messages_page)).classes('w-full mb-2').style(
             f'background: {THEME["accent"]}; color: {THEME["background"]};'
         )
+        from .system_insights_page import system_insights_page  # lazy import
+        ui.button('System Insights', on_click=lambda: ui.open(system_insights_page)).classes('w-full mb-2').style(
+            f'background: {THEME["accent"]}; color: {THEME["background"]};'
+        )
         ui.button(
             'Logout',
             on_click=lambda: (clear_token(), ui.open(login_page)),

@@ -6,6 +6,7 @@ import asyncio
 from .utils.api import clear_token, api_call
 from .utils.styles import apply_global_styles, set_theme, get_theme, THEMES
 from .pages import *  # register all pages
+from .pages.system_insights_page import system_insights_page  # noqa: F401
 
 ui.context.client.on_disconnect(clear_token)
 apply_global_styles()
