@@ -28,6 +28,15 @@ python validate_hypothesis.py --demo
 python validate_hypothesis.py --validations sample_validations.json
 ````
 
+## 🔧 Configuration
+
+`SECRET_KEY` **must** be supplied via environment variables for JWT signing.  A
+strong random value is recommended:
+
+```bash
+export SECRET_KEY="your-random-secret"
+```
+
 ## ✨ Features
 
 * **🧠 Smart Scoring** — Combines confidence, signal strength, and NLP sentiment
