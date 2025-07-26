@@ -116,6 +116,7 @@ for mod_name in [
     "redis",
     "passlib",
     "jose",
+    "governance_reviewer",
 ]:
     if mod_name not in sys.modules:
         stub = types.ModuleType(mod_name)
@@ -219,6 +220,12 @@ for mod_name in [
         if mod_name == "jose":
             stub.jwt = types.SimpleNamespace(encode=lambda *a, **kw: "", decode=lambda *a, **kw: {})
             stub.JWTError = type("JWTError", (), {})
+        if mod_name == "governance_reviewer":
+            def _noop(*_a, **_kw):
+                return {}
+
+            stub.evaluate_governance_risks = _noop
+            stub.apply_governance_actions = _noop
         sys.modules[mod_name] = stub
 
 # Provide a minimal networkx stub if the real package is unavailable
