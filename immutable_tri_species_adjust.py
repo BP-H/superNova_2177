@@ -3,6 +3,11 @@ from collections import defaultdict
 from decimal import Decimal
 import logging
 import numpy as np  # For Lorenz curve computation
+from superNova_2177 import RemixAgent
+
+class InvalidEventError(Exception):
+    """Raised when an event cannot be processed due to invalid data."""
+    pass
 
 logger = logging.getLogger(__name__)
 
