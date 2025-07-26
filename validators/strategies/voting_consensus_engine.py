@@ -64,7 +64,8 @@ def aggregate_validator_votes(
        
    Returns:
        Dict containing:
-       - consensus_decision: str or float
+       - consensus_score: float
+       - consensus_decision: str
        - consensus_confidence: float (0.0-1.0)
        - voting_method: str
        - vote_breakdown: Dict with detailed results
@@ -159,7 +160,8 @@ def _weighted_average_consensus(
    consensus_confidence = sum(confidences) / total_weight if total_weight > 0 else 0.0
    
    return {
-       "consensus_decision": round(consensus_score, 3),
+       "consensus_score": round(consensus_score, 3),
+       "consensus_decision": "score_based",
        "consensus_confidence": round(consensus_confidence, 3),
        "vote_breakdown": {
            "method": "weighted_average",
@@ -195,6 +197,7 @@ def _majority_rule_consensus(
    meets_majority = confidence >= Config.MAJORITY_THRESHOLD
    
    return {
+       "consensus_score": 1.0 if meets_majority else 0.0,
        "consensus_decision": winning_decision if meets_majority else "no_consensus",
        "consensus_confidence": round(confidence, 3),
        "vote_breakdown": {
@@ -216,6 +219,7 @@ def _supermajority_consensus(
    meets_supermajority = confidence >= Config.SUPERMAJORITY_THRESHOLD
    
    result.update({
+       "consensus_score": 1.0 if meets_supermajority else 0.0,
        "consensus_decision": result["consensus_decision"] if meets_supermajority else "no_consensus",
        "vote_breakdown": {
            **result["vote_breakdown"],
@@ -238,6 +242,7 @@ def _consensus_threshold_vote(
    meets_consensus = confidence >= Config.CONSENSUS_THRESHOLD
    
    result.update({
+       "consensus_score": 1.0 if meets_consensus else 0.0,
        "consensus_decision": result["consensus_decision"] if meets_consensus else "no_consensus",
        "vote_breakdown": {
            **result["vote_breakdown"],
@@ -286,7 +291,8 @@ def _reputation_weighted_consensus(
        decision_confidence = 0.0
    
    return {
-       "consensus_decision": round(consensus_score, 3),
+       "consensus_score": round(consensus_score, 3),
+       "consensus_decision": consensus_decision,
        "consensus_confidence": round(decision_confidence, 3),
        "vote_breakdown": {
            "method": "reputation_weighted",
@@ -299,6 +305,7 @@ def _reputation_weighted_consensus(
 def _empty_consensus_result(reason: str) -> Dict[str, Any]:
    """Return empty consensus result with specified reason."""
    return {
+       "consensus_score": 0.0,
        "consensus_decision": "no_consensus",
        "consensus_confidence": 0.0,
        "voting_method": "none",
