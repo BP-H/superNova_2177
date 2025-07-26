@@ -33,6 +33,9 @@ python validate_hypothesis.py --validations sample_validations.json
 pip install -r requirements.txt
 ```
 
+This project is tested with **SQLAlchemy 2.x**, so ensure you have
+`sqlalchemy>=2.0` installed.
+
 ## 🔧 Configuration
 
 `SECRET_KEY` **must** be supplied via environment variables for JWT signing.  A
@@ -49,6 +52,9 @@ After installing the dependencies, run:
 ```bash
 pytest
 ```
+
+Some tests rely on optional packages such as `networkx`. Install them
+with `pip install networkx` to run the full test suite.
 
 ## ✨ Features
 
