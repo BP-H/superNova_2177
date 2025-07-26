@@ -165,6 +165,20 @@ for mod_name in [
                     super().__init__("sqlalchemy")
                     self.__path__ = []
 
+                    class Column:
+                        def __init__(self, name, *a, **kw):
+                            self.name = name
+
+                    def Table(_name, _metadata, *cols, **_kw):
+                        c = types.SimpleNamespace()
+                        for col in cols:
+                            if hasattr(col, "name"):
+                                setattr(c, col.name, object())
+                        return types.SimpleNamespace(c=c)
+
+                    self.Column = Column
+                    self.Table = Table
+
                 def __getattr__(self, name):
                     return lambda *a, **kw: None
 
