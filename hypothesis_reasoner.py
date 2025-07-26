@@ -12,7 +12,9 @@ from typing import List, Dict, Optional, Any, Tuple
 import math
 import itertools # For combinations in conflict detection
 import textwrap # Added for text summarization
+import logging
 
+logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -308,7 +310,9 @@ def auto_flag_stale_or_redundant(db: Session) -> List[str]:
             try:
                 last_update_dt = datetime.fromisoformat(last_update_str)
             except ValueError:
-                pass # Malformed datetime string
+                logger.warning(
+                    f"Invalid timestamp for hypothesis {hyp_id}: {last_update_str}"
+                )
 
         if last_update_dt and last_update_dt < staleness_threshold_date:
             hyp["status"] = "inconclusive"
