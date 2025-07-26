@@ -29,13 +29,28 @@ python validate_hypothesis.py --validations sample_validations.json
 ````
 ## 📦 Installation
 
-```bash
-pip install -r requirements.txt
-```
+### Step-by-Step
+
+1. **Install Python 3.12** from [python.org](https://www.python.org/) if it isn't
+   already on your machine. You can check by running `python --version` in your
+   terminal.
+2. **Create a virtual environment** so all required packages stay organized:
+   ```bash
+   python -m venv venv
+   # Linux/macOS
+   source venv/bin/activate
+   # Windows
+   .\venv\Scripts\activate
+   ```
+3. **Install the project requirements**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. You're ready to run the demo commands shown in [Quick Start](#-quick-start).
 
 This project relies on features introduced in **SQLAlchemy 2.x** such as
-`DeclarativeBase`. Ensure you have `sqlalchemy>=2.0` installed.
-The code also requires `python-dateutil` for timestamp parsing.
+`DeclarativeBase`. Ensure you have `sqlalchemy>=2.0` installed. The code also
+requires `python-dateutil` for timestamp parsing.
 
 ## 🏁 Getting Started
 
