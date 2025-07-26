@@ -119,6 +119,18 @@ Flags: ['limited_consensus', 'low_diversity']
 - Check timestamp clustering for coordination risks
 ```
 
+## 📓 Jupyter Examples
+
+Two notebooks in `docs/` showcase how to run the validation pipeline and plot
+coordination graphs using the sample data in `sample_validations.json`.
+
+Launch them from the repository root:
+
+```bash
+jupyter notebook docs/Validation_Pipeline.ipynb
+jupyter notebook docs/Network_Graph_Visualization.ipynb
+```
+
 ## 🏗️ Architecture (v4.6)
 
 * `validation_integrity_pipeline.py` — Orchestrator for full validation logic
