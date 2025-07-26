@@ -15,8 +15,8 @@ from statistics import mean
 
 # Import all v4.x analysis modules
 from diversity_analyzer import compute_diversity_score
-from reputation_influence_tracker import compute_validator_reputations, get_reputation_weighted_score
-from network_coordination_detector import analyze_coordination_patterns
+from validators.reputation_influence_tracker import compute_validator_reputations, get_reputation_weighted_score
+from network.network_coordination_detector import analyze_coordination_patterns
 from temporal_consistency_checker import analyze_temporal_consistency, assess_temporal_trust_factor
 
 logger = logging.getLogger("superNova_2177.certifier")
