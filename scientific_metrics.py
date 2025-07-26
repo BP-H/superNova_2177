@@ -980,10 +980,13 @@ def log_metric_change(
 ) -> None:
     """Persist a single metric change event to ``SystemState`` audit log."""
 
+    def _json_safe(val: Any) -> Any:
+        return float(val) if isinstance(val, Decimal) else val
+
     entry = {
         "metric_name": metric_name,
-        "old_value": old_value,
-        "new_value": new_value,
+        "old_value": _json_safe(old_value),
+        "new_value": _json_safe(new_value),
         "source_module": source_module,
         "note": optional_note,
         "timestamp": datetime.datetime.utcnow().isoformat(),

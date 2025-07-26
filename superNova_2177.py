@@ -572,8 +572,12 @@ class Harmonizer(Base):
         back_populates="receiver",
         cascade="all, delete-orphan",
     )
-    groups = relationship("Group", secondary=group_members, back_populates="groups")
-    events = relationship("Event", secondary=event_attendees, back_populates="events")
+    groups = relationship(
+        "Group", secondary=group_members, back_populates="members"
+    )
+    events = relationship(
+        "Event", secondary=event_attendees, back_populates="attendees"
+    )
     following = relationship(
         "Harmonizer",
         secondary=harmonizer_follows,
@@ -609,6 +613,7 @@ class VibeNode(Base):
         backref="parent_vibenode",
         remote_side=[id],
         cascade="all, delete-orphan",
+        single_parent=True,
     )
     comments = relationship(
         "Comment", back_populates="vibenode", cascade="all, delete-orphan"
@@ -697,6 +702,7 @@ class Comment(Base):
         backref="parent_comment",
         remote_side=[id],
         cascade="all, delete-orphan",
+        single_parent=True,
     )
 
 
