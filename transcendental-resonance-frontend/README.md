@@ -9,7 +9,7 @@ pip install -r requirements.txt
 streamlit run src/main.py
 ```
 
-Replace the backend URL in `src/utils/api.py` if your API is not running on `http://localhost:8000`.
+If your backend is not running on `http://localhost:8000`, set the `BACKEND_URL` environment variable before starting the app.
 
 ## Structure
 
