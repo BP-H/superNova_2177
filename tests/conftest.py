@@ -301,9 +301,9 @@ import pytest
 @pytest.fixture
 def test_db(tmp_path):
     """Provide an in-memory SQLite session for tests."""
-    from db_models import Base, SessionLocal, engine
+    from db_models import Base, SessionLocal, engine, init_db
 
-    Base.metadata.create_all(bind=engine)
+    init_db()
     db = SessionLocal()
     try:
         yield db
