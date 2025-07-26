@@ -38,7 +38,12 @@ def trigger_causal_audit(
 ) -> dict:
     """
     Perform a causal audit on a given LogEntry and hypothesis (if provided),
-    trace the causal chain using the graph, and return an audit summary.
+    trace the causal chain using the stored audit snapshot referenced in the
+    LogEntry payload, and return an audit summary.
+
+    The ``payload`` field of the LogEntry must contain a JSON object with a
+    ``"causal_audit_ref"`` key pointing to the snapshot stored in
+    :class:`db_models.SystemState`.
     Includes governance enforcement if a hypothesis is linked.
 
     Args:
@@ -70,12 +75,19 @@ def trigger_causal_audit(
         logger.warning(f"LogEntry {log_id} not found.")
         return {"error": f"LogEntry {log_id} not found"}
 
-    try:
-        chain = trace_causal_chain(log_id, db, graph)
-        audit_summary["causal_chain"] = chain
-    except Exception as e:
-        logger.exception("Causal chain tracing failed")
-        audit_summary["causal_chain_error"] = str(e)
+    payload_json = safe_json_loads(log_entry.payload)
+    causal_audit_ref = payload_json.get("causal_audit_ref")
+
+    if causal_audit_ref is None:
+        logger.warning("LogEntry %s missing causal_audit_ref", log_id)
+        audit_summary["causal_chain_error"] = "Missing causal_audit_ref"
+    else:
+        try:
+            chain = trace_causal_chain(causal_audit_ref, db)
+            audit_summary["causal_chain"] = chain
+        except Exception as e:
+            logger.exception("Causal chain tracing failed")
+            audit_summary["causal_chain_error"] = str(e)
 
     hypothesis_record = None
     if hypothesis_id:
