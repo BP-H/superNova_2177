@@ -79,6 +79,18 @@ export SECRET_KEY="your-random-secret"
 Copy `.env.example` to `.env` and set values for `SECRET_KEY`, `DATABASE_URL`,
 and `BACKEND_URL` before running the app.
 
+## 🐳 Docker
+
+You can run the API along with its Postgres and Redis services using
+`docker-compose`:
+
+```bash
+cp .env.example .env  # set your own secrets
+docker-compose up
+```
+
+The application will be available at [http://localhost:8000](http://localhost:8000).
+
 ## 🧪 Running Tests
 
 Install all dependencies first:
