@@ -51,6 +51,11 @@ supernova-validate --validations sample_validations.json
    # python setup_env.py --run-app    # launch API after install
    # python setup_env.py --build-ui   # build NiceGUI frontend assets
    ```
+   You can also let `install.py` choose the appropriate installer for your
+   platform:
+   ```bash
+   python install.py
+   ```
   Or install the published wheel directly from PyPI:
   ```bash
   # Linux/macOS
