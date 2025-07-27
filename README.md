@@ -90,6 +90,21 @@ pytest
 The test suite requires packages like `SQLAlchemy`, `networkx`, and `numpy`.
 If `pytest` fails with missing module errors, run `pip install -r requirements.txt` again.
 
+### Makefile Commands
+
+For a quicker workflow you can use the provided `Makefile`:
+
+```bash
+# install project dependencies
+make install
+
+# run the full test suite
+make test
+
+# run static type checks
+make lint
+```
+
 ## ✨ Features
 
 * **🧠 Smart Scoring** — Combines confidence, signal strength, and NLP sentiment
