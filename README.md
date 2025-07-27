@@ -59,7 +59,7 @@ supernova-validate --validations sample_validations.json
    ```bash
    python install.py
    ```
-  Or install the published wheel directly from PyPI:
+  A PyPI wheel is currently unavailable. Run `python setup_env.py` or use the online installer scripts:
   ```bash
   # Linux/macOS
   ./online_install.sh
