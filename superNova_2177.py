@@ -332,13 +332,20 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost"
 
 
-try:
-    settings = Settings()
-except ValidationError as e:
-    raise RuntimeError(
-        "SECRET_KEY environment variable missing. Set SECRET_KEY before running the application."
-    ) from e
-redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+from functools import lru_cache
+
+
+@lru_cache()
+def get_settings() -> Settings:
+    """Return cached application settings, loading from environment when first called."""
+    try:
+        return Settings()
+    except ValidationError as e:
+        raise RuntimeError(
+            "SECRET_KEY environment variable missing. Set SECRET_KEY before running the application."
+        ) from e
+
+redis_client = None
 
 # Model for creative leap scoring is loaded lazily to conserve resources
 _creative_leap_model = None
@@ -359,16 +366,13 @@ def create_access_token(data: Dict, expires_delta: Optional[timedelta] = None) -
     else:
         expire = datetime.datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
+    s = get_settings()
     encoded_jwt = jwt.encode(
-        to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+        to_encode, s.SECRET_KEY, algorithm=s.ALGORITHM
     )
     return encoded_jwt
 
 
-DATABASE_URL = settings.DATABASE_URL
-SECRET_KEY = settings.SECRET_KEY
-ALGORITHM = settings.ALGORITHM
-os.makedirs(settings.UPLOAD_FOLDER, exist_ok=True)  # Create the folder.
 
 # Scientific and Artistic Libraries from all files
 import importlib
@@ -504,13 +508,8 @@ prom.start_http_server(Config.METRICS_PORT)  # Metrics endpoint
 
 # --- MODULE: models.py ---
 # Database setup from FastAPI files
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args=(
-        {"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}
-    ),
-)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = None
+SessionLocal = None
 Base = declarative_base()
 
 # Association Tables from FastAPI files
@@ -827,7 +826,6 @@ class SystemState(Base):
     value = Column(String, nullable=False)
 
 
-Base.metadata.create_all(bind=engine)
 
 
 # Pydantic Schemas from FastAPI files
@@ -1216,7 +1214,8 @@ class GenerativeAIService:
             # Placeholder for transmitting voice - uses pygame for sound
             return self._transmit_voice_stub(prompt)
         elif content_type == "text":
-            headers = {"Authorization": f"Bearer {settings.AI_API_KEY}"}
+            s = get_settings()
+            headers = {"Authorization": f"Bearer {s.AI_API_KEY}"}
             payload = {"prompt": prompt, "model": "gpt-3.5-turbo"}
             response = requests.post(
                 "https://api.mock-openai.com/v1/completions",
@@ -1497,10 +1496,11 @@ def calculate_creative_leap_score(
     leap_score = max(0.0, min(1.0, leap_score))
 
     # trivial bootstrap using Gaussian noise
+    s = get_settings()
     samples = []
     for _ in range(10):
         vec_noise = vec1 + np.random.normal(
-            0, settings.CREATIVE_LEAP_NOISE_STD, size=vec1.shape
+            0, s.CREATIVE_LEAP_NOISE_STD, size=vec1.shape
         )
         p_s = np.exp(vec_noise) / np.sum(np.exp(vec_noise))
         kl = float(np.sum(p_s * np.log((p_s + 1e-12) / (q + 1e-12))))
@@ -1508,7 +1508,7 @@ def calculate_creative_leap_score(
         samples.append(max(0.0, min(1.0, val)))
     conf = None
     if len(samples) > 1:
-        conf = max(0.0, min(1.0, 1 - np.std(samples) * settings.BOOTSTRAP_Z_SCORE))
+        conf = max(0.0, min(1.0, 1 - np.std(samples) * s.BOOTSTRAP_Z_SCORE))
     logging.info(f"SemanticNoveltyScore: {leap_score:.4f}")
 
     result = {
@@ -2965,24 +2965,44 @@ async def proposal_lifecycle_task(agent: RemixAgent):
         agent._process_proposal_lifecycle()
 
 
-cosmic_nexus = CosmicNexus(SessionLocal, SystemStateService(SessionLocal()))
-agent = RemixAgent(cosmic_nexus=cosmic_nexus)
-
-# --- MODULE: api.py ---
-# FastAPI App
 app = FastAPI(
     title="Transcendental Resonance",
     description="A voter-owned social metaverse reversing entropy through collaborative creativity.",
     version="1.0",
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+cosmic_nexus = None
+agent = None
+
+# --- MODULE: api.py ---
+# FastAPI application factory
+def create_app() -> FastAPI:
+    """Create and configure the FastAPI application."""
+    global cosmic_nexus, agent, redis_client, engine, SessionLocal
+
+    s = get_settings()
+
+    redis_client = redis.from_url(s.REDIS_URL, decode_responses=True)
+    engine = create_engine(
+        s.DATABASE_URL,
+        connect_args={"check_same_thread": False} if "sqlite" in s.DATABASE_URL else {},
+    )
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    os.makedirs(s.UPLOAD_FOLDER, exist_ok=True)
+    Base.metadata.create_all(bind=engine)
+
+    cosmic_nexus = CosmicNexus(SessionLocal, SystemStateService(SessionLocal()))
+    agent = RemixAgent(cosmic_nexus=cosmic_nexus)
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=s.ALLOWED_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    return app
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -3028,9 +3048,10 @@ class MusicGeneratorService:
 def get_current_user(
     token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
 ):
+    s = get_settings()
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            token, s.SECRET_KEY, algorithms=[s.ALGORITHM]
         )
         username = payload.get("sub")
     except JWTError:
@@ -3551,7 +3572,7 @@ async def upload_file(
         raise HTTPException(status_code=400, detail="Unsupported file type")
     file_extension = os.path.splitext(file.filename)[1]
     unique_filename = f"{uuid.uuid4().hex}{file_extension}"
-    file_path = os.path.join(settings.UPLOAD_FOLDER, unique_filename)
+    file_path = os.path.join(get_settings().UPLOAD_FOLDER, unique_filename)
     content = await file.read()
     if not is_allowed_file(content[:4], allowed_types):
         raise HTTPException(status_code=400, detail="File signature mismatch")
@@ -4578,6 +4599,7 @@ def test_entropy_calc(test_db):
 if __name__ == "__main__":
     import uvicorn
 
+    create_app()
     run_validation_cycle()
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
@@ -4905,8 +4927,7 @@ class HookManager:
 if __name__ == "__main__":
     import sys
 
-    cosmic_nexus = CosmicNexus(SessionLocal, SystemStateService(SessionLocal()))
-    agent = RemixAgent(cosmic_nexus=cosmic_nexus)
+    create_app()
     if len(sys.argv) > 1 and sys.argv[1] == "test":
         try:
             import pytest  # type: ignore
