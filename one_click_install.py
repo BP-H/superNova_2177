@@ -12,17 +12,43 @@ OFFLINE_DIR = "offline_deps"
 ENV_DIR = "venv"
 
 
-def download(url: str, dest: str, expected_sha256: str | None = None) -> None:
-    print(f"Downloading {url}...")
-    with urllib.request.urlopen(url) as resp, open(dest, "wb") as f:
-        total = resp.length or int(resp.headers.get("Content-Length", 0))
-        with tqdm(total=total, unit="B", unit_scale=True, desc=os.path.basename(dest)) as pbar:
-            while True:
-                chunk = resp.read(8192)
-                if not chunk:
-                    break
-                f.write(chunk)
-                pbar.update(len(chunk))
+def download(
+    url: str,
+    dest: str,
+    expected_sha256: str | None = None,
+    *,
+    mirror_url: str | None = None,
+    retries: int = 3,
+) -> None:
+    """Download a file with optional retries and mirror fallback."""
+
+    attempt = 0
+    current_url = url
+    while True:
+        try:
+            print(f"Downloading {current_url}...")
+            with urllib.request.urlopen(current_url) as resp, open(dest, "wb") as f:
+                total = resp.length or int(resp.headers.get("Content-Length", 0))
+                with tqdm(total=total, unit="B", unit_scale=True, desc=os.path.basename(dest)) as pbar:
+                    while True:
+                        chunk = resp.read(8192)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                        pbar.update(len(chunk))
+            break
+        except Exception as e:  # pragma: no cover - network dependent
+            attempt += 1
+            if attempt < retries:
+                print(f"Download failed: {e}. Retrying ({attempt}/{retries})...")
+                continue
+            if mirror_url and current_url != mirror_url:
+                print(f"Download failed: {e}. Falling back to mirror {mirror_url}...")
+                current_url = mirror_url
+                attempt = 0
+                continue
+            raise RuntimeError(f"Failed to download {current_url}: {e}") from e
+
     if expected_sha256:
         hasher = hashlib.sha256()
         with open(dest, "rb") as f:
