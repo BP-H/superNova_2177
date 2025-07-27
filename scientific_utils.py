@@ -492,7 +492,7 @@ def plot_karma_decay() -> Optional[str]:
     approximation="exact",
 )
 def levenshtein_distance(s1: str, s2: str) -> int:
-    """Compute the edit distance between ``s1`` and ``s2``.
+    r"""Compute the edit distance between ``s1`` and ``s2``.
 
     Parameters
     ----------
@@ -620,7 +620,7 @@ def validate_event_payload(event: Dict[str, Any], payload_type: type) -> bool:
 def estimate_uncertainty(
     model_output: Dict[str, Any], confidence_vector: list[float]
 ) -> Dict[str, Any]:
-    """Compute entropy and related uncertainty metrics.
+    r"""Compute entropy and related uncertainty metrics.
 
     Parameters
     ----------
