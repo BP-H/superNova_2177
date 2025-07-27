@@ -251,6 +251,7 @@ import immutable_tri_species_adjust
 import random
 import optimization_engine
 from agent_core import RemixAgent
+from hook_manager import HookManager
 from annual_audit import annual_audit_task
 from collections import defaultdict, deque, Counter
 from decimal import (
@@ -3969,7 +3970,6 @@ async def proactive_intervention_task(cosmic_nexus: CosmicNexus):
 
 
 # --- MODULE: hook_manager.py ---
-from hook_manager import HookManager
 
 
 if __name__ == "__main__":
