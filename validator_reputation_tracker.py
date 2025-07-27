@@ -10,6 +10,8 @@ import logging
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
 from statistics import mean
+from exceptions import DataAccessError
+
 
 logger = logging.getLogger("superNova_2177.reputation")
 
@@ -126,7 +128,7 @@ def load_reputations(db) -> Dict[str, float]:
         from db_models import ValidatorReputation
     except Exception as e:  # pragma: no cover - fallback handling
         logger.error(f"DB models unavailable: {e}")
-        return {}
+        raise DataAccessError("ValidatorReputation model unavailable") from e
 
     rows = db.query(ValidatorReputation).all()
     return {row.validator_id: float(row.reputation) for row in rows}

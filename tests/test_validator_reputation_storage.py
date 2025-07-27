@@ -1,5 +1,6 @@
 import pytest
-from validator_reputation_tracker import save_reputations, load_reputations
+import sys
+from validator_reputation_tracker import save_reputations, load_reputations, DataAccessError
 from db_models import ValidatorReputation
 
 
@@ -20,3 +21,10 @@ def test_save_updates_existing(test_db):
 
     row = test_db.query(ValidatorReputation).filter_by(validator_id="v1").first()
     assert row.reputation == 0.9
+
+def test_load_reputations_missing_models(monkeypatch, test_db):
+    monkeypatch.setitem(sys.modules, 'db_models', None)
+    from validator_reputation_tracker import load_reputations, DataAccessError
+    with pytest.raises(DataAccessError):
+        load_reputations(test_db)
+
