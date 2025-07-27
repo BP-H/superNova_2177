@@ -36,13 +36,17 @@ supernova-validate --validations sample_validations.json
    already on your machine. You can check by running `python --version` in your
    terminal.
 2. **Run the install script** to set up a virtual environment and install all
-   dependencies:
+   dependencies locally:
    ```bash
    ./install.sh
    ```
    On Windows use:
    ```powershell
    ./install.ps1
+   ```
+   Or install the published wheel directly from PyPI:
+   ```bash
+   ./online_install.sh
    ```
 3. **Activate the environment**:
    ```bash
@@ -85,9 +89,15 @@ and `BACKEND_URL` before running the app.
 
 ## 🐳 Docker
 
-You can run the API along with its Postgres and Redis services using
-`docker-compose`:
+You can build a standalone Docker image or run the API with Postgres and Redis
+via `docker-compose`.
 
+Build the image:
+```bash
+docker build -t supernova-2177 .
+```
+
+Or bring up the full stack:
 ```bash
 cp .env.example .env  # set your own secrets
 docker-compose up
