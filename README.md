@@ -276,8 +276,8 @@ Install the minimal set of packages required for running the tests:
 pip install -r requirements-minimal.txt
 ```
 
-This file installs `numpy`, `python-dateutil`, `networkx` and
-`sqlalchemy` so that `pytest` can import all modules. With these
+This file installs `numpy`, `python-dateutil`, `networkx`, `sqlalchemy`,
+and `pytest-asyncio` so that `pytest` can import all modules. With these
 installed, running `pytest` should succeed (`99 passed`).
 
 ### Makefile Commands
