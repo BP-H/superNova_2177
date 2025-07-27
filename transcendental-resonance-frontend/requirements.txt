@@ -1,5 +1,5 @@
 nicegui
-requests
+aiohttp
 pytest
 pytest-asyncio
 sentence-transformers

@@ -13,3 +13,4 @@ pygame
 mido
 midiutil
 torch
+aiohttp

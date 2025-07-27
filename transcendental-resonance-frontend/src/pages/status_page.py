@@ -1,6 +1,6 @@
 """System status metrics page."""
 
-from nicegui import ui
+from nicegui import ui, background_tasks
 
 from utils.api import api_call
 from utils.styles import get_theme
@@ -23,7 +23,7 @@ async def status_page():
         entropy_label = ui.label().classes('mb-2')
 
         async def refresh_status() -> None:
-            status = api_call('GET', '/status')
+            status = await api_call('GET', '/status')
             if status:
                 status_label.text = f"Status: {status['status']}"
                 harmonizers_label.text = (
@@ -36,5 +36,5 @@ async def status_page():
                     f"Entropy: {status['metrics']['current_system_entropy']}"
                 )
 
-        await refresh_status()
-        ui.timer(5, refresh_status)
+        background_tasks.create(refresh_status())
+        ui.timer(5, lambda: background_tasks.create(refresh_status()))

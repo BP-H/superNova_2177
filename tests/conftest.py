@@ -105,6 +105,7 @@ except ImportError:  # pragma: no cover - fallback stub
 
     stub = types.ModuleType("nicegui")
     stub.ui = types.SimpleNamespace(page=lambda *_args, **_kw: (lambda f: f))
+    stub.background_tasks = types.SimpleNamespace(create=lambda *_a, **_kw: None)
     sys.modules["nicegui"] = stub
 
 for mod_name in [
