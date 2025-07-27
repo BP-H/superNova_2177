@@ -19,6 +19,10 @@ from typing import Dict, Any, List
 from datetime import datetime, timedelta
 import random
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from db_models import HypothesisRecord, LogEntry
+
 # Import the unified validation pipeline
 try:
     from validation_certifier import analyze_validation_integrity, certify_validations
@@ -255,9 +259,47 @@ For more information: https://github.com/yourusername/superNova_2177
         print(f"✅ Loaded {len(validations)} validations")
         
     elif args.hypothesis:
-        print("❌ Hypothesis lookup not yet implemented")
-        print("💡 Use --demo or --validations for now")
-        return 1
+        if not args.db_url:
+            print("❌ --db-url is required when using --hypothesis")
+            return 1
+
+        print(f"🔗 Connecting to database at {args.db_url}...")
+        engine = create_engine(
+            args.db_url,
+            connect_args={"check_same_thread": False} if "sqlite" in args.db_url else {},
+        )
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        try:
+            record = session.query(HypothesisRecord).filter_by(id=args.hypothesis).first()
+            if not record:
+                print(f"❌ Hypothesis {args.hypothesis} not found in database")
+                return 1
+
+            log_ids = record.validation_log_ids or []
+            if not log_ids:
+                print(f"❌ No validations found for hypothesis {args.hypothesis}")
+                return 1
+
+            log_entries = session.query(LogEntry).filter(LogEntry.id.in_(log_ids)).all()
+            for entry in log_entries:
+                try:
+                    payload = json.loads(entry.payload) if entry.payload else {}
+                except json.JSONDecodeError:
+                    continue
+
+                validation = payload.get("validation", payload)
+                if isinstance(validation, dict):
+                    validation.setdefault("hypothesis_id", args.hypothesis)
+                    validations.append(validation)
+
+            if not validations:
+                print(f"❌ No valid validation payloads found for {args.hypothesis}")
+                return 1
+
+            print(f"✅ Retrieved {len(validations)} validations from database")
+        finally:
+            session.close()
     
     # Show validation data if verbose
     if args.verbose and validations:
