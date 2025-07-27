@@ -95,14 +95,47 @@ def calculate_entropy_divergence(config: dict, base: object | None = None) -> fl
     return float(arr.mean())
 
 
-def quantum_consensus(votes: list[bool]) -> float:
-    """Compute consensus level using a simple quantum-inspired model."""
+def quantum_consensus(
+    votes: list[bool], correlation_matrix: np.ndarray | None = None
+) -> float:
+    """Compute consensus level using an optional entangled vote model.
+
+    Parameters
+    ----------
+    votes:
+        Sequence of boolean votes.
+    correlation_matrix:
+        Optional square matrix of correlations in ``[0, 1]``. When provided,
+        vote states are partially entangled in a GHZ state weighted by the
+        mean of the off-diagonal correlations.
+    """
+
     if not votes:
         return 0.0
+
+    # Fall back to classical averaging when the quantum toolkit is unavailable.
     if basis is None:
         return sum(votes) / len(votes)
+
+    n = len(votes)
+
+    # Base product state of individual votes
     states = [basis(2, 1 if v else 0) for v in votes]
     joint = tensor(states)
-    obs = tensor([sigmaz()] * len(votes))
-    expectation = expect(obs, joint)
-    return float((expectation + 1) / 2)
+    obs = tensor([sigmaz()] * n)
+    expectation = float(expect(obs, joint))
+    consensus = (expectation + 1) / 2
+
+    if correlation_matrix is not None and n > 1:
+        cm = np.array(correlation_matrix, dtype=float)
+        if cm.shape != (n, n):
+            raise ValueError("correlation_matrix must be NxN where N=len(votes)")
+        # Mean of off-diagonal correlations clipped to [0, 1]
+        strength = float(np.clip(cm[np.triu_indices(n, 1)].mean(), 0.0, 1.0))
+        if strength > 0:
+            ghz = (tensor([basis(2, 0)] * n) + tensor([basis(2, 1)] * n)).unit()
+            ghz_expect = float(expect(obs, ghz))
+            ghz_consensus = (ghz_expect + 1) / 2
+            consensus = (1 - strength) * consensus + strength * ghz_consensus
+
+    return float(consensus)

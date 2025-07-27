@@ -71,3 +71,22 @@ Simulate measurement of a superposition for a decision.
         ----------------
         Implements a simple stochastic process mimicking quantum measurement
         collapse by introducing a bias when ``fuzzy_enabled`` is True.
+
+## quantum_consensus
+* **Source:** Quantum Voting
+* **Model Type:** GHZ mixture
+* **Approximation:** simulated
+
+Compute a consensus value from binary votes with optional entanglement.
+
+    Parameters
+    ----------
+    correlation_matrix : array-like, optional
+        Square matrix describing pairwise vote correlations. The mean
+        correlation controls the strength of the GHZ entanglement used when
+        aggregating votes.
+
+    Notes
+    -----
+    When no quantum toolkit is available, this function falls back to the
+    classical average of ``True`` votes.
