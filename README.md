@@ -45,11 +45,13 @@ supernova-validate --validations sample_validations.json
    already on your machine. You can check by running `python --version` in your
    terminal.
 2. **Run the setup script** to create the virtual environment and install all
-   dependencies locally. You can also pass `--run-app` or `--build-ui` to
-   automatically start the API or compile the frontend:
+   dependencies locally. You can also pass `--locked` to install packages from
+   `requirements.lock` for deterministic builds. Additional flags `--run-app`
+   and `--build-ui` can automatically start the API or compile the frontend:
    ```bash
    python setup_env.py
    # python setup_env.py --run-app    # launch API after install
+   # python setup_env.py --locked     # install from requirements.lock
    # python setup_env.py --build-ui   # build NiceGUI frontend assets
    ```
    You can also let `install.py` choose the appropriate installer for your
@@ -117,6 +119,9 @@ Set up a Python environment and install the package and its dependencies:
 pip install .
 # install optional libraries used by the tests
 pip install -r requirements.txt
+# To install the exact versions used during development,
+# use the generated `requirements.lock` file instead:
+# pip install -r requirements.lock
 ```
 
 Run the full test suite to verify your setup:
@@ -174,12 +179,14 @@ After the build completes, you'll get a shareable URL to interact with the valid
 Install all dependencies first:
 
 ```bash
-pip install -r requirements.txt
+# use requirements.lock for reproducible installs
+pip install -r requirements.lock
 pytest
 ```
 
 The test suite requires packages like `SQLAlchemy`, `networkx`, and `numpy`.
-If `pytest` fails with missing module errors, run `pip install -r requirements.txt` again.
+If `pytest` fails with missing module errors, ensure packages are installed via
+`pip install -r requirements.lock`.
 
 ### Makefile Commands
 
