@@ -109,3 +109,57 @@ def test_run_full_audit_with_malformed_log(monkeypatch):
     assert calls["explain"] == ("HYP_X", 2, mock_db)
     assert calls["trace"] == ("ref1", mock_db)
     assert calls["bundle"]["validation_id"] == 2
+
+
+def test_run_full_audit_with_missing_payload(monkeypatch):
+    """Skips log entries that have no payload."""
+    mock_db = MagicMock()
+    import introspection.introspection_pipeline as ip
+    monkeypatch.setattr(
+        ip.ht,
+        "_get_hypothesis_record",
+        lambda db, hid: {"text": "desc", "validation_log_ids": [1, 2]},
+        raising=False,
+    )
+
+    missing = types.SimpleNamespace(
+        id=1,
+        timestamp=datetime.datetime(2024, 1, 1),
+        payload=None,
+    )
+    good = types.SimpleNamespace(
+        id=2,
+        timestamp=datetime.datetime(2024, 1, 2),
+        payload='{"causal_audit_ref": "ref2"}',
+    )
+    mock_query = MagicMock()
+    mock_query.filter.return_value.all.return_value = [missing, good]
+    mock_db.query.return_value = mock_query
+
+    calls = {}
+
+    def fake_bundle(**kwargs):
+        calls.update(kwargs)
+        return {"bundle": True}
+
+    monkeypatch.setattr(
+        "introspection.introspection_pipeline.explain_validation_reasoning",
+        lambda hid, log_id, db: {"summary": "ok"},
+    )
+    monkeypatch.setattr(
+        "introspection.introspection_pipeline.summarize_bias_impact_on",
+        lambda hid, db: {},
+    )
+    monkeypatch.setattr(
+        "introspection.introspection_pipeline.trace_causal_chain",
+        lambda ref, db: [],
+    )
+    monkeypatch.setattr(
+        "introspection.introspection_pipeline.generate_structured_audit_bundle",
+        fake_bundle,
+    )
+
+    result = run_full_audit("HYP_X", mock_db)
+
+    assert result == {"bundle": True}
+    assert calls["validation_id"] == 2

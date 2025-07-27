@@ -93,6 +93,13 @@ def run_full_audit(hypothesis_id: str, db: Session) -> Dict[str, Any]:
         
         parsed_logs: List[Dict[str, Any]] = []
         for log_entry in log_entries_for_hyp:
+            if not getattr(log_entry, "payload", None):
+                logger.warning(
+                    "Skipping log entry %s with missing payload",
+                    getattr(log_entry, "id", "<unknown>"),
+                )
+                continue
+
             try:
                 log_value_payload = safe_json_loads(
                     cast(str, log_entry.payload), raise_on_error=True
