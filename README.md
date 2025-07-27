@@ -21,7 +21,7 @@ A modular intelligence pipeline that evaluates hypotheses through evidence-based
 ## 🚀 Quick Start
 
 ```bash
-./setup_env.sh  # set up environment (use setup_env.ps1 on Windows)
+python setup_env.py  # set up environment on any platform
 # Try demo mode
 supernova-validate --demo
 
@@ -38,15 +38,7 @@ supernova-validate --validations sample_validations.json
 2. **Run the setup script** to create the virtual environment and install all
    dependencies locally:
    ```bash
-   ./setup_env.sh
-   ```
-   On Windows run:
-   ```powershell
-   ./setup_env.ps1
-   ```
-   Or execute the batch wrapper:
-   ```cmd
-   setup_env.bat
+   python setup_env.py
    ```
    Or install the published wheel directly from PyPI:
    ```bash
