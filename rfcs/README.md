@@ -49,3 +49,9 @@ Explain the expected benefits and any potential downsides.
 | Number | Title |
 |-------|-------|
 | [001](001-gui-integration/README.md) | Streamlit GUI Integration |
+
+### LLM Integration
+
+| Number | Title |
+|-------|-------|
+| [008](008-llm-integration/README.md) | LLM Integration |
