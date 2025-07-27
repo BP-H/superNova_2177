@@ -393,6 +393,8 @@ def create_access_token(data: Dict, expires_delta: Optional[timedelta] = None) -
 # Scientific and Artistic Libraries from all files
 import importlib
 
+logger = logging.getLogger(__name__)
+
 
 def _safe_import(module_name: str, alias: Optional[str] = None, attrs: Optional[list] = None) -> None:
     """Import a module and expose it in globals, logging a warning on failure."""
@@ -404,7 +406,7 @@ def _safe_import(module_name: str, alias: Optional[str] = None, attrs: Optional[
             for attr in attrs:
                 globals()[attr] = getattr(module, attr)
     except ImportError as exc:
-        logging.warning(
+        logger.debug(
             "Optional library '%s' is not installed: %s. Some functionality may be unavailable.",
             module_name,
             exc,
@@ -441,7 +443,7 @@ _safe_import("snappy")  # For compression
 try:
     from qutip import basis, tensor, entropy_vn  # For qubit entanglement sims
 except ImportError:
-    logging.warning("qutip not installed; advanced quantum simulations are disabled.")
+    logger.debug("qutip not installed; advanced quantum simulations are disabled.")
 
 # Set global decimal precision
 getcontext().prec = 50
