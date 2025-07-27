@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "superNova_2177 social metaverse engine"
 authors = [{name = "BP-H"}]
 readme = "README.md"
+license = {file = "LICENSE"}
 requires-python = ">=3.12"
 dependencies = [
     "sqlalchemy>=2.0",
@@ -24,5 +25,35 @@ dependencies = [
     "scikit-learn"
 ]
 
+[project.urls]
+Homepage = "https://github.com/BP-H/superNova_2177"
+Repository = "https://github.com/BP-H/superNova_2177"
+
 [project.scripts]
 supernova-validate = "validate_hypothesis:main"
+
+[tool.setuptools]
+packages = {find = {exclude = ["tests*", "docs*", "demos*", "reports*", "network*", "scripts*", "rfcs*", "governance*", "transcendental-resonance-frontend*"]}}
+py-modules = [
+    "audit_bridge",
+    "audit_explainer",
+    "auditor_report_formatter",
+    "causal_graph",
+    "causal_trigger",
+    "db_models",
+    "diversity_analyzer",
+    "hypothesis_meta_evaluator",
+    "hypothesis_reasoner",
+    "hypothesis_tracker",
+    "immutable_tri_species_adjust",
+    "optimization_engine",
+    "prediction_manager",
+    "quantum_sim",
+    "scientific_metrics",
+    "scientific_utils",
+    "superNova_2177",
+    "temporal_consistency_checker",
+    "validate_hypothesis",
+    "validation_certifier",
+    "validator_reputation_tracker"
+]
