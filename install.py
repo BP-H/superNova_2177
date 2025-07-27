@@ -8,6 +8,12 @@ from pathlib import Path
 
 
 def main() -> None:
+    if sys.version_info < (3, 12):
+        print(
+            "Error: Python 3.12 or newer is required to run this installer.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     root = Path(__file__).resolve().parent
     system = platform.system()
 
