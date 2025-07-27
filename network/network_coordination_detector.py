@@ -333,13 +333,17 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
             model = SentenceTransformer("paraphrase-MiniLM-L6-v2")
             return model.encode(list(texts))
         except Exception as e:  # pragma: no cover - fallback rarely triggered
-            logger.warning(
-                f"SentenceTransformer unavailable: {e}; using TF-IDF fallback"
-            )
-            from sklearn.feature_extraction.text import TfidfVectorizer
+            logger.warning(f"SentenceTransformer unavailable: {e}; using TF-IDF fallback")
+            try:
+                from sklearn.feature_extraction.text import TfidfVectorizer
 
-            vec = TfidfVectorizer().fit(list(texts))
-            return vec.transform(list(texts)).toarray()
+                vec = TfidfVectorizer().fit(list(texts))
+                return vec.transform(list(texts)).toarray()
+            except Exception as tfidf_exc:  # pragma: no cover - minimal fallback
+                logger.error(f"TF-IDF fallback unavailable: {tfidf_exc}; using zeros")
+                import numpy as np
+
+                return np.zeros((len(texts), 1))
 
     # Heavy embedding generation can dominate runtime on large datasets.
     # Profile with ``cProfile`` to verify and consider batching strategies.
@@ -400,9 +404,7 @@ def calculate_sophisticated_risk_score(
         return 0.0
 
     # Normalize by validator count (more validators should reduce individual flag impact)
-    validator_factor = math.log(max(2, total_validators)) / math.log(
-        10
-    )  # Log scale normalization
+    validator_factor = math.log(max(2, total_validators)) / math.log(10)  # Log scale normalization
 
     # Weight different types of coordination
     weighted_score = (
@@ -412,9 +414,7 @@ def calculate_sophisticated_risk_score(
     )
 
     # Normalize by validator factor and max expected flags
-    normalized_score = weighted_score / (
-        validator_factor * Config.MAX_FLAGS_FOR_NORMALIZATION
-    )
+    normalized_score = weighted_score / (validator_factor * Config.MAX_FLAGS_FOR_NORMALIZATION)
 
     # Apply sigmoid function for smooth scaling
     risk_score = 2 / (1 + math.exp(-4 * normalized_score)) - 1
