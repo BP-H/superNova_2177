@@ -9,6 +9,7 @@ Part of superNova_2177's audit resilience system.
 """
 
 import logging
+from functools import lru_cache
 from typing import List, Dict, Any, Set, Tuple
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -43,6 +44,14 @@ class Config:
     TEMPORAL_WEIGHT = 0.4
     SCORE_WEIGHT = 0.4
     SEMANTIC_WEIGHT = 0.2
+
+
+@lru_cache(maxsize=1)
+def _load_sentence_transformer():
+    """Load and cache the sentence transformer model."""
+    from sentence_transformers import SentenceTransformer
+
+    return SentenceTransformer("paraphrase-MiniLM-L6-v2")
 
 
 def build_validation_graph(validations: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -92,7 +101,7 @@ def build_validation_graph(validations: List[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
-def detect_graph_communities(
+def _detect_graph_communities_impl(
     edges: List[Tuple[str, str, float]], nodes: Set[str]
 ) -> List[Set[str]]:
     """
@@ -106,6 +115,7 @@ def detect_graph_communities(
         List of communities (sets of validator_ids)
     """
     # Build adjacency list for strong connections
+    # TODO: profile with cProfile; consider using NetworkX for large graphs
     adj = defaultdict(set)
     for v1, v2, weight in edges:
         if weight >= Config.COORDINATION_EDGE_THRESHOLD:
@@ -121,7 +131,7 @@ def detect_graph_communities(
         visited.add(node)
         community.add(node)
         for neighbor in adj[node]:
-            dfs(neighbor, community)
+            dfs(neighbor, community)  # Recursive DFS, replace with iterative if needed
 
     for node in nodes:
         if node not in visited and node in adj:
@@ -131,6 +141,35 @@ def detect_graph_communities(
                 communities.append(community)
 
     return communities
+
+
+def _communities_cache_key(
+    edges: List[Tuple[str, str, float]], nodes: Set[str]
+) -> Tuple[Tuple[Tuple[str, str, float], ...], Tuple[str, ...]]:
+    """Helper to create a hashable cache key."""
+    return (
+        tuple((e1, e2, float(w)) for e1, e2, w in edges),
+        tuple(sorted(nodes)),
+    )
+
+
+@lru_cache(maxsize=128)
+def _cached_detect_graph_communities(
+    edges_key: Tuple[Tuple[str, str, float], ...], nodes_key: Tuple[str, ...]
+) -> Tuple[Tuple[str, ...], ...]:
+    communities = _detect_graph_communities_impl(
+        [tuple(e) for e in edges_key], set(nodes_key)
+    )
+    return tuple(tuple(sorted(c)) for c in communities)
+
+
+def detect_graph_communities(
+    edges: List[Tuple[str, str, float]], nodes: Set[str]
+) -> List[Set[str]]:
+    """Cached wrapper for community detection."""
+    key = _communities_cache_key(edges, nodes)
+    cached = _cached_detect_graph_communities(*key)
+    return [set(c) for c in cached]
 
 
 def _temporal_worker(
@@ -310,11 +349,11 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
 
     all_notes = [text for notes in validator_texts.values() for text in notes]
 
-    def _compute_embeddings(texts: List[str]):
+    @lru_cache(maxsize=32)
+    def _compute_embeddings_cached(texts_key: Tuple[str, ...]):
+        texts = list(texts_key)
         try:
-            from sentence_transformers import SentenceTransformer
-
-            model = SentenceTransformer("paraphrase-MiniLM-L6-v2")
+            model = _load_sentence_transformer()
             return model.encode(texts)
         except Exception as e:  # pragma: no cover - fallback rarely triggered
             logger.warning(
@@ -325,7 +364,8 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
             vec = TfidfVectorizer().fit(texts)
             return vec.transform(texts).toarray()
 
-    embeddings = _compute_embeddings(all_notes)
+    # Cache embeddings to avoid expensive recomputation
+    embeddings = _compute_embeddings_cached(tuple(all_notes))
 
     idx = 0
     validator_embeddings = {}
@@ -344,6 +384,7 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
         # Cosine similarity
         dot = float(emb1 @ emb2)
         norm = float((emb1 @ emb1) ** 0.5 * (emb2 @ emb2) ** 0.5)
+        # TODO: profile NumPy operations; consider vectorization for large data
         similarity = dot / norm if norm else 0.0
 
         if similarity >= Config.SEMANTIC_SIMILARITY_THRESHOLD:
@@ -362,6 +403,7 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
     }
 
 
+@lru_cache(maxsize=256)  # memoization for repeated scoring
 def calculate_sophisticated_risk_score(
     temporal_flags: int, score_flags: int, semantic_flags: int, total_validators: int
 ) -> float:
@@ -480,6 +522,21 @@ def analyze_coordination_patterns(validations: List[Dict[str, Any]]) -> Dict[str
         }
 
 
+def profile_coordination(validations: List[Dict[str, Any]], sort_by: str = "cumtime") -> None:
+    """Profile coordination analysis to find performance issues."""
+    import cProfile
+    import pstats
+    import io
+
+    pr = cProfile.Profile()
+    pr.enable()
+    analyze_coordination_patterns(validations)
+    pr.disable()
+    s = io.StringIO()
+    pstats.Stats(pr, stream=s).sort_stats(sort_by).print_stats(10)
+    logger.debug("Coordination profiling results:\n%s", s.getvalue())
+
+
 # TODO v4.6:
 # - Integrate with reputation_influence_tracker for feedback loop
 # - Add advanced NLP for semantic similarity (sentence embeddings)
@@ -487,3 +544,4 @@ def analyze_coordination_patterns(validations: List[Dict[str, Any]]) -> Dict[str
 # - Add validator organization/affiliation cross-reference
 # - Include validation outcome correlation analysis
 # - Add time-series analysis for evolving coordination patterns
+# - Profile with cProfile to locate NumPy/NetworkX hot spots
