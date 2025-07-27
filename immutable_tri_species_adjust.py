@@ -43,7 +43,7 @@ except Exception:  # pragma: no cover - fallback minimal stub
             return self.trapz(y, x)
 
     np = _NP()
-from superNova_2177 import RemixAgent
+from agent_core import RemixAgent
 
 class InvalidEventError(Exception):
     """Raised when an event cannot be processed due to invalid data."""
