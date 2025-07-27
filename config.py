@@ -21,12 +21,6 @@ class Config:
     VAX_FUZZY_THRESHOLD: int = 2
     REACTOR_KARMA_PER_REACT: Decimal = Decimal("1")
     CREATOR_KARMA_PER_REACT: Decimal = Decimal("2")
-    SNAPSHOT_INTERVAL: int = 100
-    KARMA_MINT_THRESHOLD: Decimal = Decimal("100")
-    MIN_IMPROVEMENT_LEN: int = 50
-    DAILY_DECAY: Decimal = Decimal("0.99")
-    VAX_PATTERNS: Dict[str, List[str]] = {"block": [r"\b(blocked_word)\b"]}
-    MAX_INPUT_LENGTH: int = 10000
 
     # --- Named constants for network effects and simulations ---
     NETWORK_CENTRALITY_BONUS_MULTIPLIER: Decimal = Decimal("5")
