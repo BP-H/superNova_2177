@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "supernova-2177"
+version = "0.1.0"
+description = "superNova_2177 social metaverse engine"
+authors = [{name = "BP-H"}]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "sqlalchemy>=2.0",
+    "networkx",
+    "python-dateutil",
+    "numpy",
+    "sentence-transformers",
+    "scipy",
+    "pandas",
+    "pygame",
+    "mido",
+    "midiutil",
+    "torch",
+    "scikit-learn"
+]
+
+[project.scripts]
+supernova-validate = "validate_hypothesis:main"
