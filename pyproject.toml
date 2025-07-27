@@ -13,9 +13,27 @@ dependencies = [
     "sqlalchemy>=2.0",
     "networkx",
     "python-dateutil",
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "pydantic-settings",
+    "redis",
+    "passlib[bcrypt]",
+    "python-jose[cryptography]",
+    "requests",
+    "structlog",
+    "prometheus-client",
+    "python-dotenv",
     "numpy",
+    "sympy",
     "sentence-transformers",
     "scipy",
+    "tqdm",
+    "statsmodels",
+    "pulp",
+    "matplotlib",
+    "python-snappy",
+    "qutip",
     "pandas",
     "pygame",
     "mido",
@@ -28,3 +46,7 @@ dependencies = [
 supernova-validate = "validate_hypothesis:main"
 supernova-federate = "federation_cli:main"
 supernova-milestone = "milestone_cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["*"]
