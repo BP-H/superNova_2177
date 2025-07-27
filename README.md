@@ -36,6 +36,14 @@ supernova-validate --demo
 
 # Run your own validation set
 supernova-validate --validations sample_validations.json
+# List existing forks
+supernova-federate list
+
+# Create a new fork with custom config
+supernova-federate create --creator Alice --config HARMONY_WEIGHT=0.9
+
+# Cast a vote on a fork
+supernova-federate vote <fork_id> --voter Bob --vote yes
 ````
 ## 📦 Installation
 
@@ -332,6 +340,18 @@ Flags: ['limited_consensus', 'low_diversity']
 - Add more validators from diverse affiliations
 - Check timestamp clustering for coordination risks
 ```
+
+## 🔮 Fork Metrics
+
+`supernova-federate create` computes an *entropy divergence* value for each new fork.
+This is the mean absolute deviation between your provided configuration and the
+default `Config` parameters. After harmonizers vote with `supernova-federate vote`,
+the CLI recalculates a consensus score using `quantum_consensus`. When the
+optional `qutip` dependency is installed, this applies a Pauli-Z expectation over
+all votes; otherwise it falls back to a simple majority fraction.
+
+Both divergence and consensus are **symbolic gameplay indicators** only — they
+carry no real financial or governance weight.
 
 ## 📓 Jupyter Examples
 
