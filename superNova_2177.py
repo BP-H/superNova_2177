@@ -460,6 +460,7 @@ from scientific_utils import (
     refine_hypotheses_from_evidence,
 )
 from prediction_manager import PredictionManager
+from resonance_music import generate_midi_from_metrics
 
 # --- MODULE: logging_setup.py ---
 # Logging setup with thematic flavor
@@ -3461,6 +3462,15 @@ def quantum_status(db: Session = Depends(get_db)):
     except Exception:  # pragma: no cover - safety
         status["interaction_likelihoods"] = {}
     return status
+
+
+# RFC_V5_1_INIT
+@app.get("/resonance-summary", tags=["System"])
+def resonance_summary(db: Session = Depends(get_db)):
+    """Return basic resonance metrics and placeholder MIDI."""
+    metrics = {"harmony": 0.0, "entropy": 0.0}
+    midi = generate_midi_from_metrics(metrics)
+    return {"metrics": metrics, "midi_bytes": len(midi)}
 
 
 @app.get("/api/adaptive-config-status", tags=["System"])
