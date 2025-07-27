@@ -19,6 +19,7 @@ fi
 
 pip install --upgrade pip
 pip install "git+https://github.com/BP-H/superNova_2177.git"
+pip install -r requirements.txt
 
 if [ -f ".env.example" ] && [ ! -f ".env" ]; then
     cp .env.example .env

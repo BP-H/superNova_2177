@@ -17,6 +17,7 @@ if (-not $env:VIRTUAL_ENV) {
 
 pip install --upgrade pip
 pip install "git+https://github.com/BP-H/superNova_2177.git"
+pip install -r requirements.txt
 
 if (Test-Path '.env.example' -and -not (Test-Path '.env')) {
     Copy-Item '.env.example' '.env'
