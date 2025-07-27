@@ -4,6 +4,7 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
+sys.modules.setdefault("conftest", sys.modules[__name__])
 
 try:
     import db_models  # noqa: F401
@@ -17,6 +18,7 @@ if "superNova_2177" not in sys.modules:
     from decimal import Decimal
 
     stub_sn = types.ModuleType("superNova_2177")
+    stub_sn.__file__ = "superNova_2177_stub"
 
     class Config:
         """Lightweight stand-in mirroring ``superNova_2177.Config`` attributes."""
@@ -118,6 +120,12 @@ for mod_name in [
     "passlib",
     "jose",
     "governance_reviewer",
+    "structlog",
+    "prometheus_client",
+    "httpx",
+    "pytest_asyncio",
+    "numpy",
+    "dateutil",
 ]:
     if mod_name not in sys.modules:
         stub = types.ModuleType(mod_name)
@@ -247,6 +255,95 @@ for mod_name in [
 
             stub.evaluate_governance_risks = _noop
             stub.apply_governance_actions = _noop
+        if mod_name == "structlog":
+            stub.get_logger = lambda *_a, **_kw: types.SimpleNamespace(
+                info=lambda *a, **k: None,
+                warning=lambda *a, **k: None,
+                error=lambda *a, **k: None,
+            )
+            stub.configure = lambda *a, **k: None
+            stub.stdlib = types.SimpleNamespace(
+                filter_by_level=None,
+                add_log_level=None,
+                add_logger_name=None,
+                LoggerFactory=object,
+            )
+            stub.processors = types.SimpleNamespace(
+                TimeStamper=lambda **_kw: None,
+                StackInfoRenderer=lambda: None,
+                format_exc_info=None,
+                UnicodeDecoder=lambda: None,
+                JSONRenderer=lambda: None,
+            )
+        if mod_name == "prometheus_client":
+            class _Collector:
+                def __init__(self, *a, **k):
+                    pass
+
+            stub.Counter = _Collector
+            stub.Gauge = _Collector
+            stub.Histogram = _Collector
+            stub.start_http_server = lambda *a, **kw: None
+            stub.REGISTRY = types.SimpleNamespace(_names_to_collectors={})
+        if mod_name == "httpx":
+            class Response:
+                def __init__(self, status_code=200, json_data=None):
+                    self.status_code = status_code
+                    self._json = json_data or {}
+
+                def json(self):
+                    return self._json
+
+            class AsyncClient:
+                def __init__(self, *a, **kw):
+                    pass
+
+                async def __aenter__(self):
+                    return self
+
+                async def __aexit__(self, exc_type, exc, tb):
+                    return False
+
+                async def post(self, *a, **kw):
+                    return Response()
+
+                async def get(self, *a, **kw):
+                    return Response(status_code=404)
+
+            class ASGITransport:
+                def __init__(self, *a, **kw):
+                    self.app = kw.get("app")
+
+            stub.AsyncClient = AsyncClient
+            stub.ASGITransport = ASGITransport
+            stub.Response = Response
+        if mod_name == "pytest_asyncio":
+            class fixture:
+                def __call__(self, *a, **kw):
+                    def wrapper(f):
+                        return f
+
+                    return wrapper
+
+            stub.fixture = fixture()
+        if mod_name == "numpy":
+            class _Array(list):
+                def mean(self):
+                    return sum(float(x) for x in self) / len(self) if self else 0.0
+
+            stub.array = lambda x, dtype=float: _Array(dtype(v) for v in x)
+            stub.ndarray = list
+            stub.stack = lambda arrays: arrays
+            stub.zeros = lambda shape, dtype=float: [0.0] * shape if isinstance(shape, int) else [[0.0] * shape[1] for _ in range(shape[0])]
+        if mod_name == "dateutil":
+            parser_mod = types.ModuleType("dateutil.parser")
+            def _parse(val):
+                from datetime import datetime
+                return datetime.fromisoformat(val.replace("Z", "+00:00"))
+            parser_mod.parse = _parse
+            parser_mod.isoparse = _parse
+            stub.parser = parser_mod
+            sys.modules["dateutil.parser"] = parser_mod
         sys.modules[mod_name] = stub
 
 # Provide a minimal networkx stub if the real package is unavailable
