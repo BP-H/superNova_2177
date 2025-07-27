@@ -1596,7 +1596,7 @@ def validate_event_payload(event: Dict[str, Any], payload_type: type) -> bool:
     approximation="heuristic",
 )
 def calculate_content_entropy(db: Session) -> float:
-    """Calculate Shannon entropy of tags from VibeNodes created in the
+    r"""Calculate Shannon entropy of tags from VibeNodes created in the
     last ``Config.CONTENT_ENTROPY_WINDOW_HOURS`` hours.
 
     Computes ``S = -\sum p_i \log_2 p_i`` over tag probabilities and returns
@@ -1633,7 +1633,7 @@ def calculate_content_entropy(db: Session) -> float:
     approximation="heuristic",
 )
 def calculate_negentropy_from_tags(db: Session) -> float:
-    """Computes negentropy based on the distribution of recent VibeNode tags.
+    r"""Computes negentropy based on the distribution of recent VibeNode tags.
 
     Ref: Based on Shannon's information theory and negentropy concepts (arXiv:2503.20543).
     A higher value indicates more "order" or "focus" in the collective content.
