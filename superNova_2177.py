@@ -314,11 +314,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = (
-        "postgresql+asyncpg://user:password@localhost/transcendental_resonance"  # NOTE: SQLite is not recommended in production due to concurrency limitations. Use PostgreSQL instead.
-    )
-    # PRODUCTION WARNING: Avoid using SQLite here; it cannot handle concurrent writes in a multi-user environment.
-    # Configure a PostgreSQL database URL before deploying.
+    # In central mode this must be provided via environment variables.
+    # No credentials or hostnames are hard-coded here.
+    DATABASE_URL: str = Field(default="", env="DATABASE_URL")
+    # PRODUCTION WARNING: Avoid using SQLite here; it cannot handle concurrent
+    # writes in a multi-user environment. Configure a PostgreSQL database URL
+    # via the `DATABASE_URL` environment variable before deploying.
 
     # SECRET_KEY is loaded from the environment or generated securely if absent
     SECRET_KEY: str = Field(
