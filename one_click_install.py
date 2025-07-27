@@ -5,14 +5,34 @@ import subprocess
 import sys
 import tempfile
 import urllib.request
+import hashlib
+from tqdm import tqdm
 
 OFFLINE_DIR = "offline_deps"
 ENV_DIR = "venv"
 
 
-def download(url: str, dest: str) -> None:
+def download(url: str, dest: str, expected_sha256: str | None = None) -> None:
     print(f"Downloading {url}...")
-    urllib.request.urlretrieve(url, dest)
+    with urllib.request.urlopen(url) as resp, open(dest, "wb") as f:
+        total = resp.length or int(resp.headers.get("Content-Length", 0))
+        with tqdm(total=total, unit="B", unit_scale=True, desc=os.path.basename(dest)) as pbar:
+            while True:
+                chunk = resp.read(8192)
+                if not chunk:
+                    break
+                f.write(chunk)
+                pbar.update(len(chunk))
+    if expected_sha256:
+        hasher = hashlib.sha256()
+        with open(dest, "rb") as f:
+            for block in iter(lambda: f.read(8192), b""):
+                hasher.update(block)
+        digest = hasher.hexdigest()
+        if digest.lower() != expected_sha256.lower():
+            raise ValueError(
+                f"SHA256 mismatch for {dest}: expected {expected_sha256}, got {digest}"
+            )
 
 
 def ensure_python312() -> str:
