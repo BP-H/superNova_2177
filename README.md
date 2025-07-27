@@ -41,9 +41,9 @@ supernova-validate --validations sample_validations.json
 
 ### Step-by-Step
 
-1. **Install Python 3.12** from [python.org](https://www.python.org/) if it isn't
-   already on your machine. You can check by running `python --version` in your
-   terminal.
+1. **Install Python 3.12 or newer** from [python.org](https://www.python.org/)
+   if it isn't already on your machine. This project requires Python 3.12+.
+   You can check by running `python --version` in your terminal.
 2. **Run the setup script** to create the virtual environment and install all
    dependencies locally. You can also pass `--locked` to install packages from
    `requirements.lock` for deterministic builds. Additional flags `--run-app`
