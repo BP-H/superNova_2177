@@ -22,7 +22,7 @@ def main() -> None:
         cmd = ["bash", str(root / "install" / "install_desktop.sh")]
     elif system == "Linux":
         if os.environ.get("ANDROID_ROOT") or os.environ.get("TERMUX_VERSION"):
-            cmd = ["bash", str(root / "install" / "install_desktop.sh")]
+            cmd = ["bash", str(root / "install" / "install_android.sh")]
         else:
             cmd = ["bash", str(root / "online_install.sh")]
     else:
