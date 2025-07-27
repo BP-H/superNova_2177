@@ -30,6 +30,9 @@ python setup_env.py
 
 # optional: build the NiceGUI frontend
 # python setup_env.py --build-ui
+# to run the UI manually later
+# pip install -r transcendental-resonance-frontend/requirements.txt
+# nicegui transcendental-resonance-frontend/src/main.py
 
 # Try demo mode
 supernova-validate --demo
