@@ -514,10 +514,20 @@ file_handler.setFormatter(
 logging.getLogger().addHandler(console_handler)
 
 # Prometheus metrics
-if "system_entropy" not in REGISTRY._names_to_collectors:
+if "system_entropy" in REGISTRY._names_to_collectors:
+    entropy_gauge = REGISTRY._names_to_collectors["system_entropy"]
+else:
     entropy_gauge = prom.Gauge("system_entropy", "Current system entropy")
-users_counter = prom.Counter("total_users", "Total number of harmonizers")
-vibenodes_gauge = prom.Gauge("total_vibenodes", "Total number of vibenodes")
+
+if "total_users" in REGISTRY._names_to_collectors:
+    users_counter = REGISTRY._names_to_collectors["total_users"]
+else:
+    users_counter = prom.Counter("total_users", "Total number of harmonizers")
+
+if "total_vibenodes" in REGISTRY._names_to_collectors:
+    vibenodes_gauge = REGISTRY._names_to_collectors["total_vibenodes"]
+else:
+    vibenodes_gauge = prom.Gauge("total_vibenodes", "Total number of vibenodes")
 prom.start_http_server(Config.METRICS_PORT)  # Metrics endpoint
 
 # --- MODULE: models.py ---
