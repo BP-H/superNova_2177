@@ -14,6 +14,7 @@ if (Test-Path 'requirements.txt') {
 
 pip install .
 
+# Copy example environment file if needed
 if (Test-Path '.env.example' -and -not (Test-Path '.env')) {
     Copy-Item '.env.example' '.env'
 }
