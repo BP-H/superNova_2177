@@ -330,6 +330,29 @@ Flags: ['limited_consensus', 'low_diversity']
 - Check timestamp clustering for coordination risks
 ```
 
+## 🔮 Advanced Quantum Consensus
+
+The `quantum_consensus` helper accepts an optional entanglement parameter to
+model correlated votes. Pass either a global correlation factor or an
+``NxN`` entanglement matrix:
+
+```python
+from governance_config import quantum_consensus
+
+votes = [True, False, True, True]
+score = quantum_consensus(votes, 0.8)  # global factor
+
+matrix = [
+    [0, 1, 0, 0],
+    [1, 0, 0.5, 0],
+    [0, 0.5, 0, 1],
+    [0, 0, 1, 0],
+]
+score_matrix = quantum_consensus(votes, matrix)
+```
+
+When ``qutip`` is not installed the function falls back to a classical average.
+
 ## 📓 Jupyter Examples
 
 Two notebooks in `docs/` showcase how to run the validation pipeline and plot

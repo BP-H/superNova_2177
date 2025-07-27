@@ -3,7 +3,7 @@ import sys
 import builtins
 import pytest
 
-from governance_config import calculate_entropy_divergence
+from governance_config import calculate_entropy_divergence, quantum_consensus, basis
 from superNova_2177 import Config
 
 
@@ -28,3 +28,26 @@ def test_calculate_entropy_divergence_import_error(monkeypatch):
     monkeypatch.setattr(builtins, "__import__", fake_import)
     with pytest.raises(ImportError):
         calculate_entropy_divergence({})
+
+
+def test_quantum_consensus_entanglement_factor():
+    if basis is None:
+        pytest.skip("qutip not installed")
+    votes = [True, True]
+    baseline = quantum_consensus(votes)
+    entangled = quantum_consensus(votes, 1.0)
+    assert entangled != pytest.approx(baseline)
+    assert 0.0 <= entangled <= 1.0
+
+
+def test_quantum_consensus_entanglement_matrix():
+    if basis is None:
+        pytest.skip("qutip not installed")
+    votes = [True, False, True]
+    matrix = [
+        [0.0, 1.0, 0.0],
+        [1.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0],
+    ]
+    result = quantum_consensus(votes, matrix)
+    assert 0.0 <= result <= 1.0
