@@ -564,6 +564,16 @@ SessionLocal = None
 DB_ENGINE_URL = None
 Base = declarative_base()
 
+# Provide a fallback in-memory database when the module is imported directly.
+# This allows tests and fixtures to instantiate ``CosmicNexus`` or
+# ``RemixAgent`` without first invoking ``create_app`` which normally configures
+# the engine and session factory.
+if SessionLocal is None:
+    engine = create_engine(
+        "sqlite:///:memory:", connect_args={"check_same_thread": False}
+    )
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 # Association Tables from FastAPI files
 harmonizer_follows = Table(
     "harmonizer_follows",
