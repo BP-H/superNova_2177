@@ -98,9 +98,9 @@ class ImmutableTriSpeciesAgent(RemixAgent):
     def _get_dynamic_threshold(self, total_voters: int, is_constitutional: bool, avg_yes: Decimal) -> Decimal:
         """
         Dynamically adjust threshold: for constitutional, increase as engagement (total voters) rises.
-        - Base: 0.9
-        - Medium (>20 voters): 0.92
-        - High (>50 voters): 0.95
+        - Base: 0.8
+        - Medium (>20 voters): 0.84
+        - High (>50 voters): 0.9
         Normal proposals stay at 0.5.
         """
         if not is_constitutional:
