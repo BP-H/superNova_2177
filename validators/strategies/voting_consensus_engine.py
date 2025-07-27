@@ -12,7 +12,9 @@ import logging
 from typing import List, Dict, Any, Optional
 from collections import Counter, defaultdict
 from statistics import mean
+from math import sqrt
 from enum import Enum
+from datetime import datetime
 
 logger = logging.getLogger("superNova_2177.voting")
 
@@ -25,6 +27,8 @@ class VotingMethod(Enum):
     SUPERMAJORITY = "supermajority"
     CONSENSUS_THRESHOLD = "consensus_threshold"
     REPUTATION_WEIGHTED = "reputation_weighted"
+    RANKED_CHOICE = "ranked_choice"
+    QUADRATIC = "quadratic"
 
 
 class Config:
@@ -48,6 +52,9 @@ class Config:
     DEFAULT_TIE_BREAK_METHOD = "median"
     ABSTENTION_PENALTY = 0.1
 
+    # Time decay for votes
+    VOTE_DECAY_HALF_LIFE_DAYS = 30
+
 
 def aggregate_validator_votes(
     votes: List[Dict[str, Any]],
@@ -55,6 +62,9 @@ def aggregate_validator_votes(
     reputations: Optional[Dict[str, float]] = None,
     diversity_score: Optional[float] = None,
     temporal_trust: Optional[Dict[str, float]] = None,
+    *,
+    cross_validation_history: Optional[List[Dict[str, Any]]] = None,
+    current_time: Optional[datetime] = None,
 ) -> Dict[str, Any]:
     """
     Aggregate multiple validator votes into a consensus decision.
@@ -65,6 +75,8 @@ def aggregate_validator_votes(
         reputations: Optional reputation scores per validator
         diversity_score: Optional overall diversity score for the validator pool
         temporal_trust: Optional temporal trust scores per validator
+        cross_validation_history: Optional list tracking past consensus results
+        current_time: Optional datetime for time-decay calculations
 
     Returns:
         Dict containing:
@@ -74,6 +86,7 @@ def aggregate_validator_votes(
         - vote_breakdown: Dict with detailed results
         - flags: List of issues or warnings
         - quorum_met: bool
+        - cross_validation: Optional consistency report
     """
     if not votes:
         return _empty_consensus_result("no_votes")
@@ -82,6 +95,7 @@ def aggregate_validator_votes(
     reputations = reputations or {}
     temporal_trust = temporal_trust or {}
     diversity_score = diversity_score or 0.0
+    current_time = current_time or datetime.utcnow()
 
     # Filter valid votes
     valid_votes = []
@@ -100,6 +114,9 @@ def aggregate_validator_votes(
     if len(valid_votes) < Config.MIN_VALIDATORS_FOR_CONSENSUS:
         return _empty_consensus_result("insufficient_quorum")
 
+    # Apply delegation before processing
+    valid_votes, reputations = _apply_delegation(valid_votes, reputations)
+
     # Check diversity and temporal requirements
     flags = []
     if diversity_score < Config.MIN_DIVERSITY_SCORE:
@@ -113,20 +130,24 @@ def aggregate_validator_votes(
 
     # Route to appropriate aggregation method
     if method == VotingMethod.WEIGHTED_AVERAGE:
-        result = _weighted_average_consensus(valid_votes, reputations)
+        result = _weighted_average_consensus(valid_votes, reputations, current_time=current_time)
     elif method == VotingMethod.MAJORITY_RULE:
-        result = _majority_rule_consensus(valid_votes, reputations)
+        result = _majority_rule_consensus(valid_votes, reputations, current_time=current_time)
     elif method == VotingMethod.SUPERMAJORITY:
-        result = _supermajority_consensus(valid_votes, reputations)
+        result = _supermajority_consensus(valid_votes, reputations, current_time=current_time)
     elif method == VotingMethod.CONSENSUS_THRESHOLD:
-        result = _consensus_threshold_vote(valid_votes, reputations)
+        result = _consensus_threshold_vote(valid_votes, reputations, current_time=current_time)
+    elif method == VotingMethod.RANKED_CHOICE:
+        result = _ranked_choice_consensus(valid_votes, reputations, current_time=current_time)
+    elif method == VotingMethod.QUADRATIC:
+        result = _quadratic_voting_consensus(valid_votes, reputations, current_time=current_time)
     elif method == VotingMethod.REPUTATION_WEIGHTED:
         result = _reputation_weighted_consensus(
-            valid_votes, reputations, temporal_trust
+            valid_votes, reputations, temporal_trust, current_time=current_time
         )
     else:
         result = _reputation_weighted_consensus(
-            valid_votes, reputations, temporal_trust
+            valid_votes, reputations, temporal_trust, current_time=current_time
         )
 
     # Add metadata
@@ -141,6 +162,14 @@ def aggregate_validator_votes(
         }
     )
 
+    if cross_validation_history is not None:
+        result["cross_validation"] = _update_cross_validation_history(
+            cross_validation_history, {
+                "consensus_decision": result.get("consensus_decision"),
+                "consensus_confidence": result.get("consensus_confidence"),
+            }
+        )
+
     logger.info(
         "Consensus via %s: %s (confidence: %.3f)",
         method.value,
@@ -152,7 +181,10 @@ def aggregate_validator_votes(
 
 
 def _weighted_average_consensus(
-    votes: List[Dict[str, Any]], reputations: Dict[str, float]
+    votes: List[Dict[str, Any]],
+    reputations: Dict[str, float],
+    *,
+    current_time: datetime,
 ) -> Dict[str, Any]:
     """Simple weighted average of numerical scores."""
     weighted_sum = 0.0
@@ -168,6 +200,9 @@ def _weighted_average_consensus(
         weight = min(
             weight * Config.MAX_REPUTATION_WEIGHT,
             Config.MAX_REPUTATION_WEIGHT,
+        )
+        weight *= _time_decay_factor(
+            vote.get("timestamp"), current_time, Config.VOTE_DECAY_HALF_LIFE_DAYS
         )
 
         weighted_sum += score * weight
@@ -189,7 +224,10 @@ def _weighted_average_consensus(
 
 
 def _majority_rule_consensus(
-    votes: List[Dict[str, Any]], reputations: Dict[str, float]
+    votes: List[Dict[str, Any]],
+    reputations: Dict[str, float],
+    *,
+    current_time: datetime,
 ) -> Dict[str, Any]:
     """Majority rule with reputation-weighted vote counting."""
     decisions = []
@@ -199,8 +237,12 @@ def _majority_rule_consensus(
         validator_id = vote.get("validator_id")
         decision = vote.get("decision", "abstain")
         weight = reputations.get(validator_id, 0.5)
+        decay = _time_decay_factor(
+            vote.get("timestamp"), current_time, Config.VOTE_DECAY_HALF_LIFE_DAYS
+        )
+        weight *= decay
 
-        decisions.extend([decision] * int(weight * 10))  # Weight by reputation
+        decisions.extend([decision] * max(1, int(weight * 10)))  # Weight by reputation
         total_weight += weight
 
     if not decisions:
@@ -226,10 +268,13 @@ def _majority_rule_consensus(
 
 
 def _supermajority_consensus(
-    votes: List[Dict[str, Any]], reputations: Dict[str, float]
+    votes: List[Dict[str, Any]],
+    reputations: Dict[str, float],
+    *,
+    current_time: datetime,
 ) -> Dict[str, Any]:
     """Supermajority rule (2/3+) with reputation weighting."""
-    result = _majority_rule_consensus(votes, reputations)
+    result = _majority_rule_consensus(votes, reputations, current_time=current_time)
 
     confidence = result["consensus_confidence"]
     meets_supermajority = confidence >= Config.SUPERMAJORITY_THRESHOLD
@@ -252,10 +297,13 @@ def _supermajority_consensus(
 
 
 def _consensus_threshold_vote(
-    votes: List[Dict[str, Any]], reputations: Dict[str, float]
+    votes: List[Dict[str, Any]],
+    reputations: Dict[str, float],
+    *,
+    current_time: datetime,
 ) -> Dict[str, Any]:
     """High consensus threshold (80%+) for critical decisions."""
-    result = _majority_rule_consensus(votes, reputations)
+    result = _majority_rule_consensus(votes, reputations, current_time=current_time)
 
     confidence = result["consensus_confidence"]
     meets_consensus = confidence >= Config.CONSENSUS_THRESHOLD
@@ -281,6 +329,8 @@ def _reputation_weighted_consensus(
     votes: List[Dict[str, Any]],
     reputations: Dict[str, float],
     temporal_trust: Dict[str, float],
+    *,
+    current_time: datetime,
 ) -> Dict[str, Any]:
     """Advanced consensus using reputation and temporal trust weighting."""
     weighted_scores = []
@@ -296,7 +346,10 @@ def _reputation_weighted_consensus(
         # Combine reputation and temporal trust
         reputation = reputations.get(validator_id, 0.5)
         temporal = temporal_trust.get(validator_id, 0.5)
-        combined_weight = (reputation * 0.7 + temporal * 0.3) * confidence
+        decay = _time_decay_factor(
+            vote.get("timestamp"), current_time, Config.VOTE_DECAY_HALF_LIFE_DAYS
+        )
+        combined_weight = (reputation * 0.7 + temporal * 0.3) * confidence * decay
 
         weighted_scores.append(score * combined_weight)
         decision_weights[decision] += combined_weight
@@ -325,6 +378,86 @@ def _reputation_weighted_consensus(
     }
 
 
+def _ranked_choice_consensus(
+    votes: List[Dict[str, Any]],
+    reputations: Dict[str, float],
+    *,
+    current_time: datetime,
+) -> Dict[str, Any]:
+    """Ranked choice voting using Borda count."""
+    ranking_scores = defaultdict(float)
+    total_points = 0.0
+    for vote in votes:
+        ranking = vote.get("ranking")
+        validator_id = vote.get("validator_id")
+        if not ranking or not isinstance(ranking, list):
+            continue
+        weight = reputations.get(validator_id, 0.5)
+        weight *= _time_decay_factor(
+            vote.get("timestamp"), current_time, Config.VOTE_DECAY_HALF_LIFE_DAYS
+        )
+        n = len(ranking)
+        for i, choice in enumerate(ranking):
+            points = n - i
+            ranking_scores[choice] += points * weight
+            total_points += points * weight
+
+    if not ranking_scores:
+        return _empty_consensus_result("no_valid_rankings")
+
+    winner = max(ranking_scores, key=ranking_scores.get)
+    confidence = ranking_scores[winner] / total_points if total_points else 0.0
+
+    return {
+        "consensus_decision": winner,
+        "consensus_confidence": round(confidence, 3),
+        "vote_breakdown": {
+            "method": "ranked_choice",
+            "ranking_scores": {k: round(v, 3) for k, v in ranking_scores.items()},
+        },
+    }
+
+
+def _quadratic_voting_consensus(
+    votes: List[Dict[str, Any]],
+    reputations: Dict[str, float],
+    *,
+    current_time: datetime,
+) -> Dict[str, Any]:
+    """Quadratic voting where credits translate to sqrt-weighted votes."""
+    decision_weights = defaultdict(float)
+    total_weight = 0.0
+    for vote in votes:
+        validator_id = vote.get("validator_id")
+        decision = vote.get("decision")
+        credits = float(vote.get("credits", 1))
+        if not decision:
+            continue
+        weight = reputations.get(validator_id, 0.5) * sqrt(max(0.0, credits))
+        weight *= _time_decay_factor(
+            vote.get("timestamp"), current_time, Config.VOTE_DECAY_HALF_LIFE_DAYS
+        )
+        decision_weights[decision] += weight
+        total_weight += weight
+
+    if not decision_weights:
+        return _empty_consensus_result("no_valid_decisions")
+
+    winner = max(decision_weights, key=decision_weights.get)
+    confidence = decision_weights[winner] / total_weight if total_weight else 0.0
+    meets_majority = confidence >= Config.MAJORITY_THRESHOLD
+
+    return {
+        "consensus_decision": winner if meets_majority else "no_consensus",
+        "consensus_confidence": round(confidence, 3),
+        "vote_breakdown": {
+            "method": "quadratic",
+            "decision_weights": {k: round(v, 3) for k, v in decision_weights.items()},
+            "meets_threshold": meets_majority,
+        },
+    }
+
+
 def _empty_consensus_result(reason: str) -> Dict[str, Any]:
     """Return empty consensus result with specified reason."""
     return {
@@ -334,6 +467,56 @@ def _empty_consensus_result(reason: str) -> Dict[str, Any]:
         "vote_breakdown": {"reason": reason},
         "flags": [reason],
         "quorum_met": False,
+    }
+
+
+def _time_decay_factor(
+    timestamp: Optional[str],
+    current_time: datetime,
+    half_life: int,
+) -> float:
+    """Return decay multiplier based on age of the vote."""
+    if not timestamp:
+        return 1.0
+    try:
+        ts = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        age_days = (current_time - ts).days
+        return 0.5 ** (age_days / half_life)
+    except Exception:
+        return 1.0
+
+
+def _apply_delegation(
+    votes: List[Dict[str, Any]],
+    reputations: Dict[str, float],
+) -> (List[Dict[str, Any]], Dict[str, float]):
+    """Aggregate delegate weights into delegatee reputations."""
+    updated_reps = reputations.copy()
+    filtered_votes = []
+    for v in votes:
+        delegate_to = v.get("delegate_to")
+        vid = v.get("validator_id")
+        if delegate_to:
+            weight = reputations.get(vid, 0.5)
+            updated_reps[delegate_to] = updated_reps.get(delegate_to, 0.5) + weight
+        else:
+            filtered_votes.append(v)
+    return filtered_votes, updated_reps
+
+
+def _update_cross_validation_history(
+    history: List[Dict[str, Any]], result: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Update history list and return consistency information."""
+    history.append(result)
+    decisions = [r.get("consensus_decision") for r in history]
+    counts = Counter(decisions)
+    top, top_count = counts.most_common(1)[0]
+    consistency = top_count / len(history)
+    return {
+        "history_size": len(history),
+        "top_decision": top,
+        "consistency_score": round(consistency, 3),
     }
 
 
