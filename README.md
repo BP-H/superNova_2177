@@ -202,6 +202,13 @@ not set, a secure random value will be generated automatically:
 export SECRET_KEY="your-random-secret"
 ```
 
+`METRICS_PORT` configures the Prometheus metrics server port. Override it if the
+default `8001` is unavailable:
+
+```bash
+export METRICS_PORT=9000
+```
+
 Copy `.env.example` to `.env` and set values for `SECRET_KEY` and
 `BACKEND_URL`. Provide your own connection string for `DATABASE_URL` via
 environment variables rather than hard-coding it. Set `DB_MODE=central` if you

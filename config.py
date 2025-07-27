@@ -1,6 +1,7 @@
 # --- MODULE: config.py ---
 from decimal import Decimal
 from typing import Dict, List
+import os
 
 class Config:
     ROOT_INITIAL_VALUE: Decimal = Decimal("1000000")
@@ -75,7 +76,7 @@ class Config:
     SCIENTIFIC_REASONING_CYCLE_INTERVAL_SECONDS: int = 3600
     ADAPTIVE_OPTIMIZATION_INTERVAL_SECONDS: int = 3600
     ANNUAL_AUDIT_INTERVAL_SECONDS: int = 86400 * 365
-    METRICS_PORT: int = 8001
+    METRICS_PORT: int = int(os.environ.get("METRICS_PORT", "8001"))
 
     # Cooldown to prevent excessive universe forking
     FORK_COOLDOWN_SECONDS: int = 3600
