@@ -91,6 +91,17 @@ pytest
 The test suite requires packages like `SQLAlchemy`, `networkx`, and `numpy`.
 If `pytest` fails with missing module errors, run `pip install -r requirements.txt` again.
 
+## 🐳 Docker
+
+Build the API container and expose it on port 8000:
+
+```bash
+docker build -t supernova-api .
+docker run -p 8000:8000 supernova-api
+```
+
+The service will be available at `http://localhost:8000`.
+
 ## ✨ Features
 
 * **🧠 Smart Scoring** — Combines confidence, signal strength, and NLP sentiment
