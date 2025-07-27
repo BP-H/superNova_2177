@@ -11,7 +11,6 @@ from causal_graph import InfluenceGraph
 
 # Import DB models and the test fixture
 from db_models import SystemState
-from conftest import test_db
 
 
 def test_log_metric_change_and_get_history(test_db):
