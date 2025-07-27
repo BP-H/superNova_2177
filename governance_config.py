@@ -3,6 +3,13 @@ from __future__ import annotations
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+import numpy as np
+
+try:  # optional quantum consensus engine
+    from qutip import basis, tensor, sigmaz, expect
+except Exception:  # pragma: no cover - qutip may be missing in minimal env
+    basis = tensor = sigmaz = expect = None
+
 from db_models import Harmonizer, SessionLocal, SystemState
 
 
@@ -68,3 +75,34 @@ def is_eligible_for_fork(user: Harmonizer, db: Session | None = None) -> bool:
     percentile = get_forking_percentile(db)
     cutoff = karma_percentile_cutoff(percentile, db)
     return user.karma_score >= cutoff
+
+
+def calculate_entropy_divergence(config: dict, base: object | None = None) -> float:
+    """Return mean absolute deviation from base Config values."""
+    if base is None:
+        from superNova_2177 import Config as base
+    diffs: list[float] = []
+    for k, v in config.items():
+        if hasattr(base, k):
+            try:
+                base_v = float(getattr(base, k))
+                diffs.append(abs(float(v) - base_v))
+            except Exception:
+                continue
+    if not diffs:
+        return 0.0
+    arr = np.array(diffs, dtype=float)
+    return float(arr.mean())
+
+
+def quantum_consensus(votes: list[bool]) -> float:
+    """Compute consensus level using a simple quantum-inspired model."""
+    if not votes:
+        return 0.0
+    if basis is None:
+        return sum(votes) / len(votes)
+    states = [basis(2, 1 if v else 0) for v in votes]
+    joint = tensor(states)
+    obs = tensor([sigmaz()] * len(votes))
+    expectation = expect(obs, joint)
+    return float((expectation + 1) / 2)
