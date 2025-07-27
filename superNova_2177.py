@@ -1727,7 +1727,7 @@ class HarmonyScanner:
         if nn is not None and torch is not None:
             self.embedding_model = nn.Sequential(
                 nn.Linear(128, 64), nn.ReLU(), nn.Linear(64, 32)
-            )  # Stub; train with torch on keywords
+            )
         else:
             self.embedding_model = None
 
