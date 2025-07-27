@@ -178,7 +178,7 @@ Unix systems or `supernova-cli.exe` on Windows.
 
 ### Running the Installer
 
-If you're on Windows, download `supernova-cli.exe` from the GitHub Releases page
+If you're on Windows, download `supernova-cli.exe` from the [GitHub Releases page](https://github.com/BP-H/superNova_2177/releases/latest)
 or build it yourself with the script above. Before launching, set the required
 environment variables so the application can connect to its services. `SECRET_KEY`
 is optional because a secure one will be generated if omitted:
@@ -201,8 +201,8 @@ After setting the variables, execute the binary directly:
 
 ### One-Click Installers
 
-Prebuilt installers for each platform can be found in the `dist/` directory. The
-installer bundles Python 3.12 and all dependencies so it works offline:
+Prebuilt installers for each platform are published under the [Releases page](https://github.com/BP-H/superNova_2177/releases).
+Each installer bundles Python 3.12 and all dependencies so it works offline:
 
 * **Windows** – run `SuperNova_2177.msi` to install the CLI.
 * **macOS** – open `supernova-cli.dmg` and drag the app to `Applications`.
