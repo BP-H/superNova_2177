@@ -1,7 +1,7 @@
 .PHONY: install test lint
 
 install:
-	./setup.sh
+        ./setup_env.sh
 
 test:
 	pytest -q
