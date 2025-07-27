@@ -345,26 +345,58 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
                 logger.error(
                     f"TF-IDF fallback unavailable: {tfidf_exc}; using simple counts"
                 )
-                import numpy as np
+                try:
+                    import numpy as np
 
-                vocab = sorted({w for t in texts for w in t.split()})
+                    vocab = sorted({w for t in texts for w in t.split()})
 
-                def to_counts(text: str) -> np.ndarray:
-                    counts = [text.split().count(tok) for tok in vocab]
-                    return np.array(counts, dtype=float)
+                    def to_counts(text: str) -> np.ndarray:
+                        counts = [text.split().count(tok) for tok in vocab]
+                        return np.array(counts, dtype=float)
 
-                return np.stack([to_counts(t) for t in texts])
+                    return np.stack([to_counts(t) for t in texts])
+                except Exception as np_exc:  # pragma: no cover - extremely rare
+                    logger.error(
+                        f"NumPy unavailable: {np_exc}; using pure Python counts"
+                    )
+
+                    vocab = sorted({w for t in texts for w in t.split()})
+
+                    def to_counts_list(text: str) -> List[float]:
+                        return [float(text.split().count(tok)) for tok in vocab]
+
+                    return [to_counts_list(t) for t in texts]
 
     # Heavy embedding generation can dominate runtime on large datasets.
     # Profile with ``cProfile`` to verify and consider batching strategies.
     embeddings = _compute_embeddings(tuple(all_notes))
+
+    def _average_vectors(vectors: List[Any]):
+        """Compute mean of vectors supporting numpy arrays or lists."""
+        try:
+            import numpy as np
+
+            if isinstance(vectors, np.ndarray):
+                return vectors.mean(axis=0)
+            if vectors and isinstance(vectors[0], np.ndarray):
+                stacked = np.stack(vectors)
+                return stacked.mean(axis=0)
+        except Exception:
+            pass
+
+        length = len(vectors[0]) if vectors else 0
+        sums = [0.0] * length
+        for v in vectors:
+            for i, val in enumerate(v):
+                sums[i] += float(val)
+        return [s / len(vectors) for s in sums]
 
     idx = 0
     validator_embeddings = {}
     for vid, notes in validator_texts.items():
         note_embeds = embeddings[idx : idx + len(notes)]
         idx += len(notes)
-        validator_embeddings[vid] = note_embeds.mean(axis=0)
+        validator_embeddings[vid] = _average_vectors(note_embeds)
 
     semantic_clusters = []
     flags = []
@@ -373,10 +405,25 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
     for v1, v2 in itertools.combinations(validators, 2):
         emb1 = validator_embeddings[v1]
         emb2 = validator_embeddings[v2]
-        # Cosine similarity
-        dot = float(emb1 @ emb2)
-        norm = float((emb1 @ emb1) ** 0.5 * (emb2 @ emb2) ** 0.5)
-        similarity = dot / norm if norm else 0.0
+
+        def _cosine_similarity(a: Any, b: Any) -> float:
+            try:
+                import numpy as np
+
+                if isinstance(a, np.ndarray) and isinstance(b, np.ndarray):
+                    dot = float(a @ b)
+                    norm = math.sqrt(float(a @ a) * float(b @ b))
+                    return dot / norm if norm else 0.0
+            except Exception:
+                pass
+
+            dot = sum(x * y for x, y in zip(a, b))
+            norm1 = math.sqrt(sum(x * x for x in a))
+            norm2 = math.sqrt(sum(y * y for y in b))
+            norm = norm1 * norm2
+            return dot / norm if norm else 0.0
+
+        similarity = _cosine_similarity(emb1, emb2)
 
         if similarity >= Config.SEMANTIC_SIMILARITY_THRESHOLD:
             semantic_clusters.append(
