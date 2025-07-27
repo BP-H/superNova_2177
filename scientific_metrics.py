@@ -16,7 +16,7 @@ from scientific_utils import ScientificModel, VerifiedScientificModel
 from causal_graph import InfluenceGraph, build_causal_graph as _build
 
 try:
-    from superNova_2177 import Config
+    from config import Config
     BOOTSTRAP_Z_SCORE = Config.BOOTSTRAP_Z_SCORE
     CREATE_CAP = Config.CREATE_PROBABILITY_CAP
     LIKE_CAP = Config.LIKE_PROBABILITY_CAP

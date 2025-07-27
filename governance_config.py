@@ -107,7 +107,7 @@ def calculate_entropy_divergence(config: dict, base: object | None = None) -> fl
     """Return mean absolute deviation from base Config values."""
     if base is None:
         try:
-            from superNova_2177 import Config as base
+            from config import Config as base
         except Exception as exc:  # pragma: no cover - optional dependency
             raise ImportError(
                 "Cannot import superNova_2177.Config for entropy divergence calculation"

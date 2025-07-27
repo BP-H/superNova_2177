@@ -8,7 +8,7 @@ from scientific_utils import ScientificModel
 
 try:
     # Attempt to import the main Config for production values
-    from superNova_2177 import Config
+    from config import Config
 except (ImportError, ModuleNotFoundError):
     # Fallback for isolated testing or environments where the main app isn't available
     class Config:

@@ -4,7 +4,7 @@ import builtins
 import pytest
 
 from governance_config import calculate_entropy_divergence, karma_percentile_cutoff
-from superNova_2177 import Config
+from config import Config
 from db_models import Harmonizer
 
 
@@ -21,11 +21,11 @@ def test_calculate_entropy_divergence_import_error(monkeypatch):
     original_import = builtins.__import__
 
     def fake_import(name, *args, **kwargs):
-        if name == "superNova_2177":
+        if name == "config":
             raise ImportError("missing")
         return original_import(name, *args, **kwargs)
 
-    monkeypatch.delitem(sys.modules, "superNova_2177", raising=False)
+    monkeypatch.delitem(sys.modules, "config", raising=False)
     monkeypatch.setattr(builtins, "__import__", fake_import)
     with pytest.raises(ImportError):
         calculate_entropy_divergence({})
