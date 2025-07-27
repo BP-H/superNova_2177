@@ -136,7 +136,9 @@ def generate_commentary_from_trace(trace: Dict[str, Any]) -> str:
     """
     Heuristic commentary generation based on node sequence and entropy.
     """
-    path_nodes = trace.get("path_nodes")
+    # Safely pull the path information from the trace. ``get`` avoids raising
+    # ``KeyError`` when the calling code provides incomplete data.
+    path_nodes = trace.get("path_nodes") or []
     if not path_nodes:
         return "No significant causal chain found."
 

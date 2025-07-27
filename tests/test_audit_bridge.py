@@ -253,3 +253,12 @@ def test_generate_commentary_from_trace_missing_path_nodes():
     commentary = generate_commentary_from_trace(trace)
 
     assert commentary == "No significant causal chain found."
+
+
+def test_generate_commentary_from_trace_no_path_nodes_key():
+    """An empty trace should also yield the default commentary message."""
+    from audit_bridge import generate_commentary_from_trace
+
+    commentary = generate_commentary_from_trace({})
+
+    assert commentary == "No significant causal chain found."
