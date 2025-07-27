@@ -233,6 +233,7 @@ import queue
 import math
 import unittest
 import cmd
+import argparse
 import functools
 import inspect
 import copy
@@ -330,6 +331,15 @@ class Settings(BaseSettings):
     AI_API_KEY: str | None = None
     UPLOAD_FOLDER: str = "./uploads"
     REDIS_URL: str = "redis://localhost"
+    DB_MODE: str = Field("local", env="DB_MODE")
+    UNIVERSE_ID: str = Field(default_factory=lambda: str(uuid.uuid4()), env="UNIVERSE_ID")
+
+    @property
+    def engine_url(self) -> str:
+        """Return resolved database engine URL."""
+        if self.DB_MODE == "central":
+            return self.DATABASE_URL
+        return f"sqlite:///universe_{self.UNIVERSE_ID}.db"
 
 
 from functools import lru_cache
@@ -511,6 +521,7 @@ prom.start_http_server(Config.METRICS_PORT)  # Metrics endpoint
 # Database setup from FastAPI files
 engine = None
 SessionLocal = None
+DB_ENGINE_URL = None
 Base = declarative_base()
 
 # Association Tables from FastAPI files
@@ -2979,14 +2990,16 @@ agent = None
 # FastAPI application factory
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
-    global cosmic_nexus, agent, redis_client, engine, SessionLocal
+    global cosmic_nexus, agent, redis_client, engine, SessionLocal, DB_ENGINE_URL
 
     s = get_settings()
 
     redis_client = redis.from_url(s.REDIS_URL, decode_responses=True)
+    engine_url = s.engine_url
+    DB_ENGINE_URL = engine_url
     engine = create_engine(
-        s.DATABASE_URL,
-        connect_args={"check_same_thread": False} if "sqlite" in s.DATABASE_URL else {},
+        engine_url,
+        connect_args={"check_same_thread": False} if "sqlite" in engine_url else {},
     )
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     os.makedirs(s.UPLOAD_FOLDER, exist_ok=True)
@@ -3239,6 +3252,17 @@ def get_system_status(
             "current_system_entropy": float(current_entropy),
         },
         "mission": "To create order and meaning from chaos through collective resonance.",
+    }
+
+
+@app.get("/universe/info", tags=["System"])
+def universe_info() -> Dict[str, str]:
+    """Return details about the current database configuration."""
+    s = get_settings()
+    return {
+        "mode": s.DB_MODE,
+        "engine": DB_ENGINE_URL or s.engine_url,
+        "universe_id": s.UNIVERSE_ID,
     }
 
 
@@ -4850,6 +4874,10 @@ class SQLAlchemyStorage(AbstractStorage):
         finally:
             db.close()
 
+    def sync_to_mainchain(self) -> None:
+        """Placeholder for future synchronization with the main chain."""
+        logging.info("sync_to_mainchain stub called")
+
 
 class InMemoryStorage(AbstractStorage):
     def __init__(self):
@@ -4908,6 +4936,10 @@ class InMemoryStorage(AbstractStorage):
     def delete_marketplace_listing(self, listing_id: str):
         self.marketplace_listings.pop(listing_id, None)
 
+    def sync_to_mainchain(self) -> None:
+        """Placeholder for future synchronization with the main chain."""
+        logging.info("sync_to_mainchain stub called (in-memory)")
+
 
 # --- MODULE: tasks.py ---
 async def proactive_intervention_task(cosmic_nexus: CosmicNexus):
@@ -4936,9 +4968,19 @@ class HookManager:
 
 if __name__ == "__main__":
     import sys
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Launch superNova_2177")
+    parser.add_argument("command", nargs="?", default="run", choices=["run", "test", "cli"], help="Execution mode")
+    parser.add_argument("--db-mode", choices=["central", "local"], dest="db_mode")
+    args = parser.parse_args()
+
+    if args.db_mode:
+        os.environ["DB_MODE"] = args.db_mode
 
     create_app()
-    if len(sys.argv) > 1 and sys.argv[1] == "test":
+
+    if args.command == "test":
         try:
             import pytest  # type: ignore
         except ImportError:
@@ -4946,7 +4988,7 @@ if __name__ == "__main__":
             sys.exit(1)
 
         pytest.main(["-vv"])
-    elif len(sys.argv) > 1 and sys.argv[1] == "cli":
+    elif args.command == "cli":
         TranscendentalCLI(agent).cmdloop()
     else:
         try:

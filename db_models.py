@@ -1,6 +1,7 @@
 # --- MODULE: db_models.py ---
 # Database setup from FastAPI files
-import os # Added for DATABASE_URL environment variable
+import os  # Added for DATABASE_URL environment variable
+import uuid
 from sqlalchemy import (
     create_engine,
     Column,
@@ -27,12 +28,21 @@ import datetime # Ensure datetime is imported for default values
 # NOTE: In a real project, DATABASE_URL and SessionLocal would typically be imported from a central config/db module.
 # For this extraction, we'll keep it self-contained for clarity, assuming it would be integrated.
 # DATABASE_URL = "postgresql+asyncpg://user:password@localhost/transcendental_resonance" # Original hardcoded line
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///:memory:")  # Refined: Get from environment or use in-memory SQLite
+DB_MODE = os.getenv("DB_MODE", "local")
+UNIVERSE_ID = os.getenv("UNIVERSE_ID", str(uuid.uuid4()))
+
+if DB_MODE == "central":
+    DATABASE_URL = os.getenv("DATABASE_URL", "")
+    if not DATABASE_URL:
+        raise RuntimeError("DATABASE_URL must be set in central mode")
+else:
+    DATABASE_URL = os.getenv(
+        "DATABASE_URL", f"sqlite:///universe_{UNIVERSE_ID}.db"
+    )
+
 engine = create_engine(
     DATABASE_URL,
-    connect_args=(
-        {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
-    ),
+    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {},
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

@@ -91,7 +91,8 @@ export SECRET_KEY="your-random-secret"
 ```
 
 Copy `.env.example` to `.env` and set values for `SECRET_KEY`, `DATABASE_URL`,
-and `BACKEND_URL` before running the app.
+and `BACKEND_URL` before running the app. Set `DB_MODE=central` if you want to
+use a shared PostgreSQL instance instead of the default local SQLite file.
 
 ## 🐳 Docker
 
@@ -161,6 +162,9 @@ export SECRET_KEY="your-secret"
 export DATABASE_URL="postgresql+asyncpg://user:password@localhost/transcendental_resonance"
 export BACKEND_URL="http://localhost:8000"
 ```
+
+To connect to a central database instead of the local file, pass
+`--db-mode central` when launching the application or set `DB_MODE=central`.
 
 After setting the variables, execute the binary directly:
 
