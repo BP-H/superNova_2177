@@ -67,23 +67,36 @@ def export_causal_path(
         if direction == "ancestors"
         else graph.trace_to_descendants(node_id, max_depth=depth)
     )
-    path_nodes = [entry["node_id"] for entry in trace]
-    edge_list = [
-        (
-            entry["edge"]["source"],
-            entry["edge"]["target"],
-            entry["edge"].get("edge_type", ""),
-        )
-        for entry in trace
-    ]
+
+    path_nodes = []
+    edge_list = []
     highlights = []
+
     for entry in trace:
+        if "node_id" not in entry or "edge" not in entry:
+            logger.warning(
+                "Malformed trace entry missing 'node_id' or 'edge': %s", entry
+            )
+            continue
+
+        node_id_val = entry["node_id"]
+        edge = entry["edge"]
+
+        path_nodes.append(node_id_val)
+        edge_list.append(
+            (
+                edge.get("source"),
+                edge.get("target"),
+                edge.get("edge_type", ""),
+            )
+        )
+
         node_data = entry.get("node_data", {})
         entropy = node_data.get("node_specific_entropy", 1.0)
         if entropy is None:
             entropy = 1.0
         if entropy < 0.25 or node_data.get("debug_payload"):
-            highlights.append(entry["node_id"])
+            highlights.append(node_id_val)
     return {
         "path_nodes": path_nodes,
         "edge_list": edge_list,

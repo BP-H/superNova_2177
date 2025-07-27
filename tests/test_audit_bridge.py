@@ -170,6 +170,34 @@ def test_export_causal_path_invalid_direction():
         export_causal_path(g, "A", direction="sideways")
 
 
+def test_export_causal_path_handles_malformed_entries(monkeypatch, caplog):
+    """Entries missing required fields are skipped with a warning."""
+    g = InfluenceGraph()
+
+    def fake_trace(_node_id, max_depth=None):
+        return [
+            {"edge": {"source": "x", "target": "y"}},
+            {"node_id": "b"},
+            {
+                "node_id": "c",
+                "edge": {"source": "z", "target": "c"},
+                "node_data": {"node_specific_entropy": 0.1},
+            },
+        ]
+
+    monkeypatch.setattr(g, "trace_to_ancestors", fake_trace)
+
+    import logging
+
+    with caplog.at_level(logging.WARNING):
+        result = export_causal_path(g, "c", direction="ancestors")
+
+    assert result["path_nodes"] == ["c"]
+    assert result["edge_list"] == [("z", "c", "")]
+    assert result["highlights"] == ["c"]
+    assert any("Malformed trace entry" in rec.message for rec in caplog.records)
+
+
 def test_attach_trace_to_logentry_updates_payload(test_db):
     """attach_trace_to_logentry should persist causal node ids in payload."""
     from audit_bridge import attach_trace_to_logentry
