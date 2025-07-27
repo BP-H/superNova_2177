@@ -13,7 +13,8 @@ st.set_page_config(page_title="superNova_2177 Demo")
 st.title("superNova_2177 Validation Analyzer")
 
 st.markdown(
-    "Upload a JSON file with a `validations` array or enable demo mode to see the pipeline in action."
+    "Upload a JSON file with a `validations` array or enable demo "
+    "mode to see the pipeline in action."
 )
 
 # Load secrets provided by Streamlit Cloud or local .streamlit/secrets.toml
@@ -54,7 +55,14 @@ def run_analysis(validations):
         pos = nx.spring_layout(G, seed=42)
         weights = [G[u][v]["weight"] * 3 for u, v in G.edges()]
         fig, ax = plt.subplots()
-        nx.draw(G, pos, with_labels=True, width=weights, node_color="#4da6ff", ax=ax)
+        nx.draw(
+            G,
+            pos,
+            with_labels=True,
+            width=weights,
+            node_color="#4da6ff",
+            ax=ax,
+        )
         st.subheader("Validator Coordination Graph")
         st.pyplot(fig)
 
@@ -73,4 +81,3 @@ if st.button("Run Analysis"):
         st.stop()
 
     run_analysis(data.get("validations", []))
-
