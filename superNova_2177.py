@@ -1724,9 +1724,12 @@ class HarmonyScanner:
         )
         self._block_writer_thread.start()
         # ML model for enhanced fuzzy detection
-        self.embedding_model = nn.Sequential(
-            nn.Linear(128, 64), nn.ReLU(), nn.Linear(64, 32)  # Simple embedding sim
-        )  # Stub; train with torch on keywords
+        if nn is not None and torch is not None:
+            self.embedding_model = nn.Sequential(
+                nn.Linear(128, 64), nn.ReLU(), nn.Linear(64, 32)
+            )  # Stub; train with torch on keywords
+        else:
+            self.embedding_model = None
 
     def scan(self, text: str) -> bool:
         """Scan text for dissonant content."""
@@ -1758,6 +1761,8 @@ class HarmonyScanner:
 
     def _ml_detect_dissonance(self, text: str) -> bool:
         """Use torch for embedding-based detection."""
+        if self.embedding_model is None or torch is None:
+            return False
         # Stub: convert text to vector, compare to bad embeddings
         vector = torch.tensor([hash(c) for c in text[:10]])  # Simple hash vector
         embedded = self.embedding_model(vector.float())
