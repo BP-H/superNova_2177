@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <title>superNova 2177 UI</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    button { margin: 0.5rem 0; }
+    #proposals li { margin-bottom: 0.25rem; }
+  </style>
+</head>
+<body>
+  <h1>superNova 2177</h1>
+
+  <section>
+    <h2>Create Universe</h2>
+    <input id="universe-name" placeholder="Universe name">
+    <button onclick="createUniverse()">Create</button>
+  </section>
+
+  <section>
+    <h2>Propose</h2>
+    <textarea id="proposal-text" placeholder="Proposal text"></textarea><br>
+    <button onclick="submitProposal()">Submit Proposal</button>
+  </section>
+
+  <section>
+    <h2>Vote</h2>
+    <input id="vote-id" placeholder="Proposal ID">
+    <select id="vote-value">
+      <option value="yes">Yes</option>
+      <option value="no">No</option>
+    </select>
+    <button onclick="submitVote()">Vote</button>
+  </section>
+
+  <section>
+    <h2>Universe Metadata</h2>
+    <pre id="universe-meta">Loading...</pre>
+  </section>
+
+  <section>
+    <h2>Proposals</h2>
+    <ul id="proposals"></ul>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
