@@ -264,13 +264,15 @@ pip install -r requirements.txt
 
 ### Test Requirements
 
-Install the packages needed for the tests in one step:
+Install the minimal set of packages required for running the tests:
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-minimal.txt
 ```
 
-With these installed, running `pytest` should succeed (`99 passed`).
+This file installs `numpy`, `python-dateutil`, `networkx` and
+`sqlalchemy` so that `pytest` can import all modules. With these
+installed, running `pytest` should succeed (`99 passed`).
 
 ### Makefile Commands
 
