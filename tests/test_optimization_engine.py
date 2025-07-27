@@ -2,16 +2,16 @@ import pytest
 from optimization_engine import (
     tune_system_parameters,
     select_optimal_intervention,
-    settings,
+    Config,
 )
 
 def test_module_imports_cleanly():
     """
-    Validates that the optimization_engine module and its settings can be
+    Validates that the optimization_engine module and its Config can be
     imported without errors, ensuring the fallback config logic is sound.
     """
-    assert hasattr(settings, "INFLUENCE_MULTIPLIER")
-    assert hasattr(settings, "ENTROPY_REDUCTION_STEP")
+    assert hasattr(Config, "INFLUENCE_MULTIPLIER")
+    assert hasattr(Config, "ENTROPY_REDUCTION_STEP")
 
 def test_tune_system_parameters_low_accuracy():
     """
@@ -29,7 +29,7 @@ def test_tune_system_parameters_low_accuracy():
     
     # Assert: The output suggests reducing the INFLUENCE_MULTIPLIER
     assert "INFLUENCE_MULTIPLIER" in overrides
-    assert overrides["INFLUENCE_MULTIPLIER"] == pytest.approx(settings.INFLUENCE_MULTIPLIER * 0.95)
+    assert overrides["INFLUENCE_MULTIPLIER"] == pytest.approx(Config.INFLUENCE_MULTIPLIER * 0.95)
 
 def test_tune_system_parameters_high_entropy():
     """
@@ -47,7 +47,7 @@ def test_tune_system_parameters_high_entropy():
     
     # Assert: The output suggests increasing the ENTROPY_REDUCTION_STEP
     assert "ENTROPY_REDUCTION_STEP" in overrides
-    expected_step = float(settings.ENTROPY_REDUCTION_STEP) * 1.1
+    expected_step = float(Config.ENTROPY_REDUCTION_STEP) * 1.1
     assert overrides["ENTROPY_REDUCTION_STEP"] == pytest.approx(expected_step)
 
 def test_tune_system_parameters_normal_state():
