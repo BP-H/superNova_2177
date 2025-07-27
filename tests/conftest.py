@@ -379,7 +379,7 @@ def test_db(tmp_path):
 
 @pytest.fixture
 def mock_config(monkeypatch):
-    """Temporarily override ``superNova_2177.Config`` attributes for a test.
+    """Temporarily override ``config.Config`` attributes for a test.
 
     Usage::
 
@@ -395,7 +395,7 @@ def mock_config(monkeypatch):
 
     def apply(**overrides):
         for key, value in overrides.items():
-            monkeypatch.setattr(sys.modules["superNova_2177"].Config, key, value)
+            monkeypatch.setattr(sys.modules["config"].Config, key, value)
 
     yield apply
 
