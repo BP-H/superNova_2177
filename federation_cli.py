@@ -69,9 +69,13 @@ def list_forks(_args: argparse.Namespace) -> None:
     try:
         forks = db.query(UniverseBranch).all()
         for f in forks:
+            try:
+                config_json = json.dumps(f.config, default=str)
+            except TypeError as exc:  # pragma: no cover - unexpected type error
+                config_json = f"<serialization error: {exc}>"
             print(
                 f.id,
-                json.dumps(f.config),
+                config_json,
                 f"consensus={f.consensus:.2f}",
                 f"divergence={f.entropy_divergence:.2f}",
             )
@@ -96,7 +100,10 @@ def fork_info(args: argparse.Namespace) -> None:
             "entropy_divergence": fork.entropy_divergence,
             "consensus": fork.consensus,
         }
-        print(json.dumps(info, indent=2))
+        try:
+            print(json.dumps(info, indent=2, default=str))
+        except TypeError as exc:  # pragma: no cover - unexpected type error
+            print(f"Error serializing fork info: {exc}")
     finally:
         db.close()
 
