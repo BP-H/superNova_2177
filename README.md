@@ -43,9 +43,13 @@ supernova-validate --validations sample_validations.json
    # Windows
    .\venv\Scripts\activate
    ```
-3. **Install the project**:
+3. **Install the project from PyPI**:
    ```bash
-   pip install .
+   pip install supernova-2177
+   ```
+   Or use `pipx` for an isolated install:
+   ```bash
+   pipx install supernova-2177
    ```
 4. You're ready to run the demo commands shown in [Quick Start](#-quick-start).
 
@@ -55,10 +59,15 @@ requires `python-dateutil` for timestamp parsing.
 
 ## 🏁 Getting Started
 
-Set up a Python environment and install the package:
+Set up a Python environment and install the package from PyPI:
 
 ```bash
-pip install .
+pip install supernova-2177
+```
+Or with `pipx`:
+
+```bash
+pipx install supernova-2177
 ```
 
 Run the full test suite to verify your setup:
