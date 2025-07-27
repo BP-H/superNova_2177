@@ -18,6 +18,7 @@ cycler==0.12.1
 ecdsa==0.19.1
 email-validator==2.2.0
 fastapi==0.116.1
+python-multipart==0.0.20
 filelock==3.18.0
 fonttools==4.59.0
 fsspec==2025.7.0

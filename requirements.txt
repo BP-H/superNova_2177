@@ -3,6 +3,7 @@ sqlalchemy>=2.0
 networkx
 python-dateutil
 fastapi
+python-multipart
 uvicorn
 pydantic
 pydantic-settings
