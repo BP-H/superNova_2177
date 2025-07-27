@@ -18,6 +18,7 @@ if "superNova_2177" not in sys.modules:
     from decimal import Decimal
 
     stub_sn = types.ModuleType("superNova_2177")
+    # Mark as a stub so modules can detect and optionally reload the real one.
     stub_sn.__file__ = "superNova_2177_stub"
 
     class Config:
@@ -98,6 +99,107 @@ if "superNova_2177" not in sys.modules:
         (),
         {"c": types.SimpleNamespace(harmonizer_id=None, vibenode_id=None)},
     )
+    class InMemoryStorage:
+        def __init__(self):
+            self.users = {}
+            self.coins = {}
+            self.listings = {}
+
+        def get_user(self, name):
+            return self.users.get(name)
+
+        def set_user(self, name, data):
+            self.users[name] = data
+
+        def get_coin(self, cid):
+            return self.coins.get(cid)
+
+        def set_coin(self, cid, data):
+            self.coins[cid] = data
+
+        def get_marketplace_listing(self, lid):
+            return self.listings.get(lid)
+
+        def set_marketplace_listing(self, lid, data):
+            self.listings[lid] = data
+
+    class SystemStateService:
+        def __init__(self, db):
+            pass
+
+    class CosmicNexus:
+        def __init__(self, session_factory, state_service):
+            self.session_factory = session_factory
+            self.state_service = state_service
+
+    class RemixAgent:
+        def __init__(self, cosmic_nexus, filename=None, snapshot=None):
+            self.cosmic_nexus = cosmic_nexus
+            self.storage = InMemoryStorage()
+            self.config = Config()
+
+        def process_event(self, event):
+            ev = event.get("event")
+            if ev == "ADD_USER":
+                self.storage.set_user(
+                    event["user"],
+                    {
+                        "root_coin_id": event.get("root_coin_id") or "root",
+                        "karma": event.get("karma", "0"),
+                        "consent_given": event.get("consent", True),
+                    },
+                )
+            elif ev == "MINT":
+                self.storage.set_coin(
+                    event["coin_id"],
+                    {"owner": event["user"], "value": event.get("value", "0")},
+                )
+            elif ev == "REVOKE_CONSENT":
+                u = self.storage.get_user(event["user"])
+                if u:
+                    u["consent_given"] = False
+            elif ev == "LIST_COIN_FOR_SALE":
+                self.storage.set_marketplace_listing(
+                    event["listing_id"],
+                    {
+                        "coin_id": event["coin_id"],
+                        "seller": event["seller"],
+                        "price": event.get("price", "0"),
+                    },
+                )
+            elif ev == "BUY_COIN":
+                listing = self.storage.get_marketplace_listing(event["listing_id"])
+                if listing:
+                    coin = self.storage.get_coin(listing["coin_id"])
+                    if coin:
+                        coin["owner"] = event["buyer"]
+            elif ev == "REACT":
+                coin = self.storage.get_coin(event["coin_id"])
+                if coin:
+                    owner = self.storage.get_user(coin["owner"])
+                    if owner:
+                        owner["karma"] = str(float(owner.get("karma", "0")) + 1)
+
+    stub_sn.InMemoryStorage = InMemoryStorage
+    stub_sn.SystemStateService = SystemStateService
+    stub_sn.CosmicNexus = CosmicNexus
+    stub_sn.RemixAgent = RemixAgent
+    stub_sn.LogChain = type("LogChain", (), {"__init__": lambda self, f: None, "add": lambda self, e: None})
+    stub_sn.SessionLocal = lambda *a, **k: None
+    stub_sn.Base = type("Base", (), {"metadata": types.SimpleNamespace(create_all=lambda *a, **k: None, drop_all=lambda *a, **k: None)})
+    stub_sn.USE_IN_MEMORY_STORAGE = True
+    async def _app(scope, receive, send):
+        await send({"type": "http.response.start", "status": 404, "headers": []})
+        await send({"type": "http.response.body", "body": b"", "more_body": False})
+
+    stub_sn.app = _app
+    stub_sn.AddUserPayload = dict
+    stub_sn.MintPayload = dict
+    stub_sn.ReactPayload = dict
+    stub_sn.MarketplaceListPayload = dict
+    stub_sn.MarketplaceBuyPayload = dict
+    stub_sn.RevokeConsentPayload = dict
+    stub_sn.ts = lambda: "1970-01-01T00:00:00Z"
     sys.modules["superNova_2177"] = stub_sn
 
 try:
@@ -128,6 +230,11 @@ for mod_name in [
     "dateutil",
 ]:
     if mod_name not in sys.modules:
+        try:  # Prefer the real library when available
+            __import__(mod_name)
+            continue
+        except Exception:
+            pass
         stub = types.ModuleType(mod_name)
         if mod_name == "fastapi":
             stub.FastAPI = object
