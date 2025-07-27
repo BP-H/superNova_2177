@@ -444,6 +444,7 @@ import secrets
 from dotenv import load_dotenv
 import structlog
 import prometheus_client as prom
+from prometheus_client import REGISTRY
 from sqlalchemy import func
 from scientific_metrics import (
     calculate_influence_score,
@@ -513,7 +514,8 @@ file_handler.setFormatter(
 logging.getLogger().addHandler(console_handler)
 
 # Prometheus metrics
-entropy_gauge = prom.Gauge("system_entropy", "Current system entropy")
+if "system_entropy" not in REGISTRY._names_to_collectors:
+    entropy_gauge = prom.Gauge("system_entropy", "Current system entropy")
 users_counter = prom.Counter("total_users", "Total number of harmonizers")
 vibenodes_gauge = prom.Gauge("total_vibenodes", "Total number of vibenodes")
 prom.start_http_server(Config.METRICS_PORT)  # Metrics endpoint
