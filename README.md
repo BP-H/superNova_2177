@@ -126,7 +126,8 @@ Deploy the demo UI online with Streamlit Cloud:
 1. Fork this repository on GitHub.
 2. Sign in to [Streamlit Cloud](https://streamlit.io/cloud) and select **New app**.
 3. Choose the repo and set `app.py` as the entry point.
-4. Streamlit will install dependencies from `requirements.txt` and launch the app.
+4. Add your `SECRET_KEY` and `DATABASE_URL` under **Secrets** in the app settings.
+5. Streamlit will install dependencies from `requirements.txt` and launch the app.
 
 After the build completes, you'll get a shareable URL to interact with the validation demo in your browser.
 

@@ -1,3 +1,5 @@
+"""Streamlit front-end for hypothesis validation analysis."""
+
 import json
 import streamlit as st
 import networkx as nx
@@ -6,12 +8,24 @@ import matplotlib.pyplot as plt
 from validation_integrity_pipeline import analyze_validation_integrity
 from network.network_coordination_detector import build_validation_graph
 
+
 st.set_page_config(page_title="superNova_2177 Demo")
 st.title("superNova_2177 Validation Analyzer")
 
 st.markdown(
-    "Upload a JSON file with a `validations` array or run the demo to see the pipeline in action."
+    "Upload a JSON file with a `validations` array or enable demo mode to see the pipeline in action."
 )
+
+# Load secrets provided by Streamlit Cloud or local .streamlit/secrets.toml
+SECRET_KEY = st.secrets.get("SECRET_KEY", "not set")
+DATABASE_URL = st.secrets.get("DATABASE_URL", "not set")
+
+st.sidebar.header("Environment")
+st.sidebar.write(f"Database URL: {DATABASE_URL}")
+if SECRET_KEY != "not set":
+    st.sidebar.success("Secret key loaded")
+else:
+    st.sidebar.warning("SECRET_KEY missing")
 
 
 def run_analysis(validations):
@@ -21,6 +35,13 @@ def run_analysis(validations):
 
     with st.spinner("Running analysis..."):
         result = analyze_validation_integrity(validations)
+
+    integrity = result.get("integrity_analysis", {})
+    score = integrity.get("overall_integrity_score")
+
+    if score is not None:
+        st.metric("Integrity Score", score)
+
     st.subheader("Analysis Result")
     st.json(result)
 
@@ -38,13 +59,18 @@ def run_analysis(validations):
         st.pyplot(fig)
 
 
-if st.button("Run Demo"):
-    with open("sample_validations.json") as f:
-        data = json.load(f)
-    run_analysis(data.get("validations", []))
-
+demo_mode = st.checkbox("Demo mode")
 uploaded_file = st.file_uploader("Upload validations JSON", type="json")
-if uploaded_file is not None:
-    data = json.load(uploaded_file)
+
+if st.button("Run Analysis"):
+    if demo_mode:
+        with open("sample_validations.json") as f:
+            data = json.load(f)
+    elif uploaded_file is not None:
+        data = json.load(uploaded_file)
+    else:
+        st.error("Please upload a file or enable demo mode.")
+        st.stop()
+
     run_analysis(data.get("validations", []))
 
