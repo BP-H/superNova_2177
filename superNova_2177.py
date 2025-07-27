@@ -501,7 +501,7 @@ console_handler.setFormatter(
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 )
-logging.getRoot().addHandler(console_handler)
+logging.getLogger().addHandler(console_handler)
 
 file_handler = logging.FileHandler("transcendental_resonance.log", encoding="utf-8")
 file_handler.setLevel(logging.DEBUG)
