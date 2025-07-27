@@ -9,7 +9,7 @@ set -euo pipefail
 
 PYTHON="${PYTHON:-python3}"
 
-"$PYTHON" -m pip install --upgrade pip
+"$PYTHON" -m pip install --upgrade pip >/dev/null
 "$PYTHON" -m pip install --upgrade pyinstaller >/dev/null
 
 echo "Building standalone executable with PyInstaller..."
@@ -26,17 +26,18 @@ echo "Executable created in dist/"
 OS_NAME=$(uname -s)
 case "$OS_NAME" in
     Darwin*)
-        echo "Packaging macOS .app with py2app..."
+        echo "Packaging macOS DMG with py2app..."
         "$PYTHON" -m pip install --upgrade py2app >/dev/null
         "$PYTHON" scripts/py2app_setup.py py2app
+        hdiutil create dist/supernova-cli.dmg -volname "SuperNova2177" -srcfolder "dist/SuperNova 2177.app" >/dev/null
         ;;
     Linux*)
         echo "Packaging AppImage..."
         bash scripts/build_appimage.sh
         ;;
     MINGW*|MSYS*|CYGWIN*|Windows_NT*)
-        echo "Packaging Windows installer with NSIS..."
-        makensis scripts/supernova_installer.nsi
+        echo "Packaging Windows MSI with NSIS..."
+        makensis -DMSI=1 scripts/supernova_installer.nsi
         ;;
     *)
         echo "No additional packaging steps for $OS_NAME"

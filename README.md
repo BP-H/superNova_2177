@@ -199,6 +199,20 @@ After setting the variables, execute the binary directly:
 ./supernova-cli --demo   # on Windows use supernova-cli.exe
 ```
 
+### One-Click Installers
+
+Prebuilt installers for each platform can be found in the `dist/` directory. The
+installer bundles Python 3.12 and all dependencies so it works offline:
+
+* **Windows** – run `SuperNova_2177.msi` to install the CLI.
+* **macOS** – open `supernova-cli.dmg` and drag the app to `Applications`.
+* **Linux** – make the AppImage executable with `chmod +x` and run it directly.
+
+If you prefer to build everything locally, execute `python one_click_install.py`.
+It detects your OS, downloads Python 3.12 if necessary, bundles the
+dependencies into `offline_deps/`, creates a virtual environment, and installs
+the package.
+
 ## ✨ Features
 
 * **🧠 Smart Scoring** — Combines confidence, signal strength, and NLP sentiment
