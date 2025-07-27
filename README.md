@@ -63,10 +63,12 @@ requires `python-dateutil` for timestamp parsing.
 
 ## 🏁 Getting Started
 
-Set up a Python environment and install the package:
+Set up a Python environment and install the package and its dependencies:
 
 ```bash
 pip install .
+# install optional libraries used by the tests
+pip install -r requirements.txt
 ```
 
 Run the full test suite to verify your setup:
