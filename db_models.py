@@ -487,14 +487,35 @@ class SymbolicToken(Base):
 Coin = SymbolicToken
 
 
-class UniverseFork(Base):
-    __tablename__ = "universe_forks"
+class UniverseBranch(Base):
+    """Record representing a forked universe branch."""
+
+    __tablename__ = "universe_branches"
+
     id = Column(String, primary_key=True)
     creator_id = Column(ForeignKey("harmonizers.id"))
     karma_at_fork = Column(Float)
     config = Column(JSON)
     timestamp = Column(DateTime)
     status = Column(String)
+    entropy_divergence = Column(Float, default=0.0)
+    consensus = Column(Float, default=0.0)
+
+
+# Backwards compatibility alias for earlier RFCs
+UniverseFork = UniverseBranch
+
+
+class BranchVote(Base):
+    """Vote for or against a universe branch."""
+
+    __tablename__ = "branch_votes"
+
+    id = Column(Integer, primary_key=True)
+    branch_id = Column(ForeignKey("universe_branches.id"), nullable=False)
+    voter_id = Column(ForeignKey("harmonizers.id"), nullable=False)
+    vote = Column(Boolean, nullable=False)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
 
 class TokenListing(Base):

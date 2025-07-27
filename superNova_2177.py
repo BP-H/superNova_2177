@@ -465,6 +465,8 @@ from scientific_utils import (
     generate_hypotheses,
     refine_hypotheses_from_evidence,
 )
+from db_models import UniverseBranch, BranchVote
+from governance_config import calculate_entropy_divergence, quantum_consensus
 from prediction_manager import PredictionManager
 from resonance_music import generate_midi_from_metrics
 
@@ -2170,6 +2172,7 @@ class CosmicNexus:
     def fork_universe(self, user: Harmonizer, custom_config: Dict[str, Any]) -> str:
         """Fork a new universe with custom config."""
         fork_id = uuid.uuid4().hex
+        divergence = calculate_entropy_divergence(custom_config)
         entropy_thr = custom_config.pop("entropy_threshold", None)
         agent_cls = EntropyTracker if entropy_thr is not None else RemixAgent
         agent_kwargs = {
@@ -2190,6 +2193,23 @@ class CosmicNexus:
         self.hooks.register_hook(
             "cross_remix", lambda data: self.handle_cross_remix(data, fork_id)
         )
+
+        # persist fork info for DAO governance
+        db = self._get_session()
+        try:
+            record = UniverseBranch(
+                id=fork_id,
+                creator_id=user.id,
+                karma_at_fork=user.karma_score,
+                config=custom_config,
+                timestamp=datetime.datetime.utcnow(),
+                status="active",
+                entropy_divergence=divergence,
+            )
+            db.add(record)
+            db.commit()
+        finally:
+            db.close()
         return fork_id
 
     def apply_fork_universe(self, event: "ForkUniversePayload") -> str:
@@ -2833,10 +2853,8 @@ class RemixAgent:
             user_obj.revoke_consent()
             self.storage.set_user(user, user_obj.to_dict())
 
-    # TODO: Centralize this forking logic under CosmicNexus in a future version.
-
     def _apply_FORK_UNIVERSE(self, event: ForkUniversePayload):
-        # Delegate forking to the CosmicNexus
+        # Forking handled by CosmicNexus for unified governance
         self.cosmic_nexus.apply_fork_universe(event)
 
     def _apply_CROSS_REMIX(self, event: CrossRemixPayload):

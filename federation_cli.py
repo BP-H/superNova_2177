@@ -7,8 +7,17 @@ import uuid
 from pathlib import Path
 from datetime import datetime
 
-from db_models import SessionLocal, Harmonizer, UniverseFork
-from governance_config import is_eligible_for_fork
+from db_models import (
+    SessionLocal,
+    Harmonizer,
+    UniverseBranch,
+    BranchVote,
+)
+from governance_config import (
+    is_eligible_for_fork,
+    calculate_entropy_divergence,
+    quantum_consensus,
+)
 from superNova_2177 import Config
 
 OUTBOX = Path(__file__).resolve().parent / "federation" / "outbox.json"
@@ -37,13 +46,15 @@ def create_fork(args: argparse.Namespace) -> None:
         ):
             print("Fork cooldown active. Please wait before forking again.")
             return
-        fork = UniverseFork(
+        divergence = calculate_entropy_divergence(config)
+        fork = UniverseBranch(
             id=str(uuid.uuid4()),
             creator_id=user.id,
             karma_at_fork=user.karma_score,
             config=config,
             timestamp=datetime.utcnow(),
             status="active",
+            entropy_divergence=divergence,
         )
         db.add(fork)
         user.last_passive_aura_timestamp = datetime.utcnow()
@@ -56,9 +67,14 @@ def create_fork(args: argparse.Namespace) -> None:
 def list_forks(_args: argparse.Namespace) -> None:
     db = SessionLocal()
     try:
-        forks = db.query(UniverseFork).all()
+        forks = db.query(UniverseBranch).all()
         for f in forks:
-            print(f.id, json.dumps(f.config))
+            print(
+                f.id,
+                json.dumps(f.config),
+                f"consensus={f.consensus:.2f}",
+                f"divergence={f.entropy_divergence:.2f}",
+            )
     finally:
         db.close()
 
@@ -66,7 +82,7 @@ def list_forks(_args: argparse.Namespace) -> None:
 def fork_info(args: argparse.Namespace) -> None:
     db = SessionLocal()
     try:
-        fork = db.query(UniverseFork).filter_by(id=args.fork_id).first()
+        fork = db.query(UniverseBranch).filter_by(id=args.fork_id).first()
         if not fork:
             print("Fork not found")
             return
@@ -77,10 +93,41 @@ def fork_info(args: argparse.Namespace) -> None:
             "config": fork.config,
             "timestamp": fork.timestamp.isoformat() if fork.timestamp else None,
             "status": fork.status,
+            "entropy_divergence": fork.entropy_divergence,
+            "consensus": fork.consensus,
         }
         print(json.dumps(info, indent=2))
     finally:
         db.close()
+
+
+def vote_fork(args: argparse.Namespace) -> None:
+    """Cast a DAO vote for a universe fork."""
+    db = SessionLocal()
+    try:
+        fork = db.query(UniverseBranch).filter_by(id=args.fork_id).first()
+        voter = db.query(Harmonizer).filter_by(username=args.voter).first()
+        if not fork or not voter:
+            print("Fork or voter not found")
+            return
+        vote_bool = args.vote.lower() == "yes"
+        record = BranchVote(
+            branch_id=fork.id,
+            voter_id=voter.id,
+            vote=vote_bool,
+        )
+        db.add(record)
+        db.commit()
+
+        votes = [v.vote for v in db.query(BranchVote).filter_by(branch_id=fork.id).all()]
+        fork.consensus = quantum_consensus(votes)
+        db.commit()
+        print(
+            f"Vote recorded. Current consensus for {fork.id}: {fork.consensus:.2f}"
+        )
+    finally:
+        db.close()
+    # TODO: Add web UI for vote submission
 
 
 def main() -> None:
@@ -100,6 +147,12 @@ def main() -> None:
     info_p = sub.add_parser("info", help="Show fork info")
     info_p.add_argument("fork_id")
     info_p.set_defaults(func=fork_info)
+
+    vote_p = sub.add_parser("vote", help="Vote on a fork")
+    vote_p.add_argument("fork_id")
+    vote_p.add_argument("--voter", required=True)
+    vote_p.add_argument("--vote", choices=["yes", "no"], required=True)
+    vote_p.set_defaults(func=vote_fork)
 
     args = parser.parse_args()
     if hasattr(args, "func"):
