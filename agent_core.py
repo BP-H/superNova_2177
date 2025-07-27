@@ -67,14 +67,18 @@ class RemixAgent:
     def __init__(
         self,
         cosmic_nexus: "CosmicNexus",
-        filename: str = "remix_logchain.log",
-        snapshot: str = "remix_snapshot.json",
+        filename: str | None = None,
+        snapshot: str | None = None,
     ):
         _load_globals()
         self.cosmic_nexus = cosmic_nexus
         self.config = Config()
         self.quantum_ctx = QuantumContext(self.config.FUZZY_ANALOG_COMPUTATION_ENABLED)
         self.vaccine = Vaccine(self.config)
+        if filename is None:
+            filename = os.environ.get("LOGCHAIN_FILE", "remix_logchain.log")
+        if snapshot is None:
+            snapshot = os.environ.get("SNAPSHOT_FILE", "remix_snapshot.json")
         self.logchain = LogChain(filename)
         self.storage = (
             SQLAlchemyStorage(SessionLocal)
