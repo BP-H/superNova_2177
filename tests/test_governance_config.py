@@ -49,3 +49,17 @@ def test_karma_percentile_cutoff_edge_cases(test_db):
 
     assert high_cutoff == pytest.approx(30.0)
     assert low_cutoff == pytest.approx(10.0)
+
+
+def test_karma_percentile_cutoff_single_user_bounds(test_db):
+    user = Harmonizer(
+        username="solo",
+        email="solo@example.com",
+        hashed_password="x",
+        karma_score=42.0,
+    )
+    test_db.add(user)
+    test_db.commit()
+
+    assert karma_percentile_cutoff(0.0, db=test_db) == pytest.approx(42.0)
+    assert karma_percentile_cutoff(1.0, db=test_db) == pytest.approx(42.0)
