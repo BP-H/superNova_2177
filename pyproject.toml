@@ -26,3 +26,5 @@ dependencies = [
 
 [project.scripts]
 supernova-validate = "validate_hypothesis:main"
+supernova-federate = "federation_cli:main"
+supernova-milestone = "milestone_cli:main"
