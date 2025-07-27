@@ -3,13 +3,25 @@ set -euo pipefail
 
 ENV_DIR="venv"
 
+# Determine Python interpreter
+if command -v python3 >/dev/null 2>&1; then
+    PYTHON_CMD="python3"
+elif command -v python >/dev/null 2>&1; then
+    PYTHON_CMD="python"
+else
+    echo "Python not found. Please install Python 3.12 or newer." >&2
+    exit 1
+fi
+
+# Ensure Python version is >= 3.12
+if ! "$PYTHON_CMD" -c 'import sys; exit(0 if sys.version_info >= (3,12) else 1)'; then
+    echo "Python 3.12 or higher is required. Current version: $($PYTHON_CMD --version 2>&1)" >&2
+    exit 1
+fi
+
 # Create virtual environment if missing
 if [ ! -d "$ENV_DIR" ]; then
-    if command -v python3 >/dev/null 2>&1; then
-        python3 -m venv "$ENV_DIR"
-    else
-        python -m venv "$ENV_DIR"
-    fi
+    "$PYTHON_CMD" -m venv "$ENV_DIR"
 fi
 
 # Activate the virtual environment
