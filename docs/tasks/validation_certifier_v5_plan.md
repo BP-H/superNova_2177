@@ -34,15 +34,7 @@ The tasks below break down these features and suggest initial API endpoints or m
   - Utilize WebSockets for live updates.
   - Reuse NiceGUI or similar framework from `transcendental_resonance_frontend`.
 
-### Priority 3 – External Reputation Integration
-* **Description**: Pull validator reputation data from third‑party systems (e.g., ORCID, Publons) to augment existing scores.
-* **Proposed Module**: `reputation/external_sync.py`.
-* **Initial API Endpoint**: `POST /api/v5/reputation/import` – submit credentials or tokens to fetch and merge external reputation data.
-* **Next Steps**:
-  - Define mapping between external reputation metrics and internal scores.
-  - Schedule periodic sync with background tasks.
-
-### Priority 4 – Semantic Analysis
+### Priority 3 – Semantic Analysis
 * **Description**: Use sentence embeddings to compare validation notes for similarity, contradiction, or novelty.
 * **Proposed Module**: `semantic_analyzer.py`.
 * **Initial API Endpoint**: `POST /api/v5/semantic/analyze` – returns embedding vectors and pairwise similarity metrics.
@@ -50,7 +42,7 @@ The tasks below break down these features and suggest initial API endpoints or m
   - Evaluate libraries like `sentence-transformers`.
   - Integrate with `score_validation` to enhance note sentiment scoring.
 
-### Priority 5 – Validator Onboarding
+### Priority 4 – Validator Onboarding
 * **Description**: Automate validator onboarding with training material recommendations based on expertise gaps and past performance.
 * **Proposed Module**: `onboarding/recommendations.py`.
 * **Initial API Endpoint**: `GET /api/v5/onboarding/tips?validator_id=<id>` – retrieves personalized training suggestions.
