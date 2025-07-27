@@ -219,6 +219,7 @@ CosmicNexus orchestrates the multiverse, coordinating forks, entropy reduction, 
 # Core Imports from all files
 import sys
 import json
+from json import JSONDecodeError
 import uuid
 import datetime
 import hashlib
@@ -300,7 +301,7 @@ from sqlalchemy import (
     JSON,
 )
 from sqlalchemy.orm import sessionmaker, relationship, Session, declarative_base
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 
@@ -356,6 +357,22 @@ def get_settings() -> Settings:
         ) from e
 
 redis_client = None
+
+# Ensure SECRET_KEY is defined at startup
+try:
+    get_settings()
+except RuntimeError as exc:
+    print(exc)
+    raise
+
+# Helper for safer DB commits
+def safe_commit(db: Session) -> None:
+    try:
+        db.commit()
+    except SQLAlchemyError as exc:
+        db.rollback()
+        print(f"Database commit failed: {exc}")
+        raise
 
 # Model for creative leap scoring is loaded lazily to conserve resources
 _creative_leap_model = None
@@ -1206,7 +1223,7 @@ class SystemStateService:
         else:
             state = SystemState(key=key, value=value)
             self.db.add(state)
-        self.db.commit()
+        safe_commit(self.db)
 
 
 class GenerativeAIService:
@@ -2105,7 +2122,7 @@ class CosmicNexus:
                         is_genesis=True,
                     )
                     db.add(system_user)
-                    db.commit()
+                    safe_commit(db)
                     db.refresh(system_user)
                 vibenode = VibeNode(
                     name="Harmony Intervention",
@@ -2113,7 +2130,7 @@ class CosmicNexus:
                     author_id=system_user.id,
                 )
                 db.add(vibenode)
-                db.commit()
+                safe_commit(db)
                 # Reduce entropy
                 new_entropy = system_entropy - Config.ENTROPY_INTERVENTION_STEP
                 self.state_service.set_state("system_entropy", str(new_entropy))
@@ -2253,7 +2270,7 @@ class CosmicNexus:
                     is_genesis=True,
                 )
                 db.add(system_user)
-                db.commit()
+                safe_commit(db)
                 db.refresh(system_user)
             proposal = Proposal(
                 title="Annual Quantum Audit",
@@ -2263,7 +2280,7 @@ class CosmicNexus:
                 payload={"action": "quantum_audit"},
             )
             db.add(proposal)
-            db.commit()
+            safe_commit(db)
         finally:
             db.close()
 
@@ -3048,7 +3065,7 @@ class SystemStateService:
         else:
             state = SystemState(key=key, value=value)
             self.db.add(state)
-        self.db.commit()
+        safe_commit(self.db)
 
 
 class MusicGeneratorService:
@@ -3095,7 +3112,8 @@ def get_config_value(db: Session, key: str, default: Any) -> Any:
     if state:
         try:
             return json.loads(state.value)
-        except Exception:
+        except JSONDecodeError as exc:
+            print(f"Invalid JSON for {override_key}: {exc}")
             return state.value
     return default
 
@@ -3135,7 +3153,7 @@ def register_harmonizer(user: HarmonizerCreate, db: Session = Depends(get_db)):
         },
     )
     db.add(new_user)
-    db.commit()
+    safe_commit(db)
     db.refresh(new_user)
     return new_user
 
@@ -3167,7 +3185,7 @@ def login_for_access_token(
         streaks["daily"] = 1
     streaks["last_login"] = now.isoformat()
     user.engagement_streaks = streaks
-    db.commit()
+    safe_commit(db)
     access_token = create_access_token({"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -3185,7 +3203,7 @@ def get_user_influence_score(
     graph = build_causal_graph(db)
     score = calculate_influence_score(graph.graph, current_user.id)
     current_user.network_centrality = float(score)
-    db.commit()
+    safe_commit(db)
     return {"influence_score": score}
 
 
@@ -3200,7 +3218,7 @@ def update_profile(
         current_user.bio = bio
     if cultural_preferences is not None:
         current_user.cultural_preferences = cultural_preferences
-    db.commit()
+    safe_commit(db)
     db.refresh(current_user)
     return current_user
 
@@ -3226,7 +3244,7 @@ def follow_unfollow_user(
     else:
         current_user.following.append(user_to_follow)
         message = "Followed"
-    db.commit()
+    safe_commit(db)
     return {"message": message, "bonus_applied": f"{bonus_factor:.2f}x"}
 
 
@@ -3506,7 +3524,8 @@ def adaptive_config_status(db: Session = Depends(get_db)):
         key = r.key.split("config_override:", 1)[1]
         try:
             overrides[key] = json.loads(r.value)
-        except Exception:
+        except JSONDecodeError as exc:
+            print(f"Invalid JSON override for {key}: {exc}")
             overrides[key] = r.value
     return {"overrides": overrides}
 
@@ -3525,8 +3544,8 @@ def scientific_discoveries(db: Session = Depends(get_db)):
                         discoveries.append(h)
                 except Exception:
                     continue
-        except Exception:
-            pass
+        except JSONDecodeError as exc:
+            print(f"Invalid JSON in hypotheses: {exc}")
     return {"hypotheses": discoveries}
 
 
@@ -3691,7 +3710,7 @@ def create_vibenode(
         negentropy_score=str(negentropy_bonus),
     )
     db.add(db_vibenode)
-    db.commit()
+    safe_commit(db)
     db.refresh(db_vibenode)
     # Reduce system entropy by injecting negentropy
     new_entropy = Decimal(system_entropy) - Decimal(str(Config.ENTROPY_REDUCTION_STEP))
@@ -3752,7 +3771,7 @@ def like_vibenode(
             influence_factor=current_user.network_centrality,
         )
         agent.quantum_ctx.step()
-    db.commit()
+    safe_commit(db)
     return {"message": message}
 
 
@@ -3838,7 +3857,7 @@ async def passive_aura_resonance_task(db_session_factory):
                 )
                 u.creative_spark = str(Decimal(u.creative_spark) + gain)
                 u.last_passive_aura_timestamp = datetime.datetime.utcnow()
-            db.commit()
+            safe_commit(db)
         finally:
             db.close()
 
@@ -3896,7 +3915,7 @@ async def ai_persona_evolution_task(db_session_factory):
                         base_personas=[persona.id],
                     )
                     db.add(emergent_persona)
-            db.commit()
+            safe_commit(db)
         finally:
             db.close()
 
@@ -3924,7 +3943,7 @@ async def ai_guinness_pursuit_task(db_session_factory):
                         is_genesis=True,
                     )
                     db.add(ai_user)
-                    db.commit()
+                    safe_commit(db)
                     db.refresh(ai_user)
                 # Create proposal
                 proposal = Proposal(
@@ -3935,7 +3954,7 @@ async def ai_guinness_pursuit_task(db_session_factory):
                     payload={"action": "reduce_guild_cost", "value": 0.5},
                 )
                 db.add(proposal)
-                db.commit()
+                safe_commit(db)
         finally:
             db.close()
 
@@ -3970,7 +3989,7 @@ async def update_network_centrality_task(db_session_factory):
                     score = calculate_influence_score(G, uid)
                     u.network_centrality = float(score)
                     u.harmony_score = str(calculate_interaction_entropy(u, db))
-            db.commit()
+            safe_commit(db)
         finally:
             db.close()
         await asyncio.sleep(Config.NETWORK_CENTRALITY_UPDATE_INTERVAL_SECONDS)
@@ -4013,7 +4032,7 @@ async def scientific_reasoning_cycle_task(db_session_factory):
             for r in rows:
                 try:
                     all_predictions.append(json.loads(r.value))
-                except Exception as exc:
+                except JSONDecodeError as exc:
                     logger.error("malformed prediction record", error=str(exc))
             pending = [p for p in all_predictions if p.get("status") == "pending"]
             for pred in pending:
@@ -4054,7 +4073,7 @@ async def scientific_reasoning_cycle_task(db_session_factory):
                     if state:
                         try:
                             existing = json.loads(state.value)
-                        except Exception as exc:
+                        except JSONDecodeError as exc:
                             logger.error("malformed hypotheses", error=str(exc))
                     updated = refine_hypotheses_from_evidence(
                         hypothesis_id,
@@ -4070,7 +4089,7 @@ async def scientific_reasoning_cycle_task(db_session_factory):
                         state.value = json.dumps(updated)
                     else:
                         db.add(SystemState(key="hypotheses", value=json.dumps(updated)))
-                    db.commit()
+                    safe_commit(db)
                 pm.update_prediction_status(prediction_id, "validated", result)
         except asyncio.CancelledError:
             logger.info("scientific_reasoning_cycle_task cancelled")
@@ -4697,7 +4716,7 @@ class SQLAlchemyStorage(AbstractStorage):
         try:
             logging.info("Starting DB transaction")
             yield db
-            db.commit()
+            safe_commit(db)
             logging.info("Transaction committed")
         except Exception:
             db.rollback()
@@ -4709,7 +4728,10 @@ class SQLAlchemyStorage(AbstractStorage):
     def get_user(self, name: str) -> Optional[Dict]:
         cached = redis_client.get(f"user:{name}")
         if cached:
-            return json.loads(cached)
+            try:
+                return json.loads(cached)
+            except JSONDecodeError as exc:
+                print(f"Invalid cached user for {name}: {exc}")
         db = self._get_session()
         try:
             user = db.query(Harmonizer).filter(Harmonizer.username == name).first()
@@ -4733,7 +4755,7 @@ class SQLAlchemyStorage(AbstractStorage):
             else:
                 user = Harmonizer(username=name, **data)
                 db.add(user)
-            db.commit()
+            safe_commit(db)
         finally:
             db.close()
 
@@ -4747,7 +4769,10 @@ class SQLAlchemyStorage(AbstractStorage):
     def get_coin(self, coin_id: str) -> Optional[Dict[str, Any]]:
         cached = redis_client.get(f"coin:{coin_id}")
         if cached:
-            return json.loads(cached)
+            try:
+                return json.loads(cached)
+            except JSONDecodeError as exc:
+                print(f"Invalid cached coin {coin_id}: {exc}")
         db = self._get_session()
         try:
             coin = db.query(Coin).filter(Coin.coin_id == coin_id).first()
@@ -4771,7 +4796,7 @@ class SQLAlchemyStorage(AbstractStorage):
             else:
                 coin = Coin(coin_id=coin_id, **data)
                 db.add(coin)
-            db.commit()
+            safe_commit(db)
         finally:
             db.close()
 
@@ -4781,7 +4806,7 @@ class SQLAlchemyStorage(AbstractStorage):
             user = db.query(Harmonizer).filter(Harmonizer.username == name).first()
             if user:
                 db.delete(user)
-                db.commit()
+                safe_commit(db)
         finally:
             db.close()
 
@@ -4791,7 +4816,7 @@ class SQLAlchemyStorage(AbstractStorage):
             coin = db.query(Coin).filter(Coin.coin_id == coin_id).first()
             if coin:
                 db.delete(coin)
-                db.commit()
+                safe_commit(db)
         finally:
             db.close()
 
@@ -4826,7 +4851,7 @@ class SQLAlchemyStorage(AbstractStorage):
                 data_copy.pop("proposal_id", None)
                 proposal = Proposal(id=int(proposal_id), **data_copy)
                 db.add(proposal)
-            db.commit()
+            safe_commit(db)
         finally:
             db.close()
 
@@ -4856,7 +4881,7 @@ class SQLAlchemyStorage(AbstractStorage):
             else:
                 listing = MarketplaceListing(listing_id=listing_id, **data)
                 db.add(listing)
-            db.commit()
+            safe_commit(db)
         finally:
             db.close()
 
@@ -4870,7 +4895,7 @@ class SQLAlchemyStorage(AbstractStorage):
             )
             if listing:
                 db.delete(listing)
-                db.commit()
+                safe_commit(db)
         finally:
             db.close()
 
