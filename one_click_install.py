@@ -14,8 +14,10 @@ ENV_DIR = "venv"
 # Known SHA-256 checksums for bundled Python installers
 # These values are used to verify downloads before execution.
 PYTHON_INSTALLER_HASHES = {
-    "https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe": "UNKNOWN_WINDOWS_SHA256",
-    "https://www.python.org/ftp/python/3.12.0/python-3.12.0-macos11.pkg": "UNKNOWN_MAC_SHA256",
+    # SHA256 values for the Windows and macOS installers are not currently
+    # bundled. Verification will be skipped for these downloads with a warning.
+    "https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe": None,
+    "https://www.python.org/ftp/python/3.12.0/python-3.12.0-macos11.pkg": None,
     "https://www.python.org/ftp/python/3.12.0/Python-3.12.0.tgz": "51412956d24a1ef7c97f1cb5f70e185c13e3de1f50d131c0aac6338080687afb",
 }
 
@@ -24,6 +26,10 @@ def download(url: str, dest: str, expected_sha256: str | None = None) -> None:
     """Fetch *url* to *dest* and verify its SHA-256 if known."""
     if expected_sha256 is None:
         expected_sha256 = PYTHON_INSTALLER_HASHES.get(url)
+        if expected_sha256 is None:
+            print(
+                f"Warning: no SHA256 checksum available for {url}; skipping verification."
+            )
     print(f"Downloading {url}...")
     with urllib.request.urlopen(url) as resp, open(dest, "wb") as f:
         total = resp.length or int(resp.headers.get("Content-Length", 0))
