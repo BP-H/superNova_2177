@@ -223,12 +223,24 @@ for mod_name in [
                 def __init__(self, *a, **kw):
                     pass
 
+                def hash(self, value: str) -> str:
+                    return f"hashed-{value}"
+
+                def verify(self, value: str, hashed: str) -> bool:
+                    return hashed == f"hashed-{value}"
+
             ctx_mod = types.ModuleType("passlib.context")
             ctx_mod.CryptContext = CryptContext
             stub.context = ctx_mod
             sys.modules["passlib.context"] = ctx_mod
         if mod_name == "jose":
-            stub.jwt = types.SimpleNamespace(encode=lambda *a, **kw: "", decode=lambda *a, **kw: {})
+            def _encode(payload: dict, *a, **kw) -> str:
+                return payload.get("sub", "")
+
+            def _decode(token: str, *a, **kw) -> dict:
+                return {"sub": token}
+
+            stub.jwt = types.SimpleNamespace(encode=_encode, decode=_decode)
             stub.JWTError = type("JWTError", (), {})
         if mod_name == "governance_reviewer":
             def _noop(*_a, **_kw):
