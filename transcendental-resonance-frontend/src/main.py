@@ -4,19 +4,14 @@ from nicegui import ui, background_tasks
 import asyncio
 
 from .utils.api import clear_token, api_call
-from .utils.styles import apply_global_styles, set_theme, get_theme, THEMES
+from .utils.styles import apply_global_styles
 from .pages import *  # register all pages
 from .pages.system_insights_page import system_insights_page  # noqa: F401
+from .layout import build_layout
 
 ui.context.client.on_disconnect(clear_token)
 apply_global_styles()
-
-
-def toggle_theme() -> None:
-    """Switch between light and dark themes."""
-    current = get_theme()
-    new_name = "light" if current is THEMES["dark"] else "dark"
-    set_theme(new_name)
+build_layout()
 
 
 async def keep_backend_awake() -> None:
@@ -24,12 +19,6 @@ async def keep_backend_awake() -> None:
     while True:
         api_call('GET', '/status')
         await asyncio.sleep(300)
-
-
-ui.button(
-    "Toggle Theme",
-    on_click=toggle_theme,
-).classes("fixed top-0 right-0 m-2")
 
 ui.on_startup(lambda: background_tasks.create(keep_backend_awake(), name='backend-pinger'))
 
