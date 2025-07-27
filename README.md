@@ -140,6 +140,12 @@ PyInstaller. Run the helper script:
 scripts/build_executable.sh
 ```
 
+On Windows, use the PowerShell version:
+
+```powershell
+scripts/build_executable.ps1
+```
+
 The generated executable will be placed under `dist/` as `supernova-cli` on
 Unix systems or `supernova-cli.exe` on Windows.
 
