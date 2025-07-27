@@ -14,10 +14,16 @@ sentiment scoring or other bottlenecks::
 """
 
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 from functools import lru_cache
 from datetime import datetime
 from statistics import mean
+from itertools import combinations
+from difflib import SequenceMatcher
+
+from validators.reputation_influence_tracker import compute_validator_reputations
+from temporal_consistency_checker import analyze_temporal_consistency
+from network.network_coordination_detector import detect_score_coordination
 
 logger = logging.getLogger("superNova_2177.certifier")
 
@@ -100,9 +106,19 @@ def compute_diversity_score(validations: List[Dict[str, Any]]) -> Dict[str, Any]
     ids = {v.get("validator_id") for v in validations if v.get("validator_id")}
     specialties = {v.get("specialty") for v in validations if v.get("specialty")}
     affiliations = {v.get("affiliation") for v in validations if v.get("affiliation")}
+    types = {
+        v.get("validator_type") or v.get("type")
+        for v in validations
+        if v.get("validator_type") or v.get("type")
+    }
 
-    ratios = [len(ids) / total, len(specialties) / total, len(affiliations) / total]
-    diversity_score = max(0.0, min(1.0, sum(ratios) / 3.0))
+    ratios = [
+        len(ids) / total,
+        len(specialties) / total,
+        len(affiliations) / total,
+        (len(types) / total) if types else 1.0,
+    ]
+    diversity_score = max(0.0, min(1.0, sum(ratios) / len(ratios)))
 
     flags = []
     if diversity_score < 0.3:
@@ -114,9 +130,36 @@ def compute_diversity_score(validations: List[Dict[str, Any]]) -> Dict[str, Any]
             "unique_validators": len(ids),
             "unique_specialties": len(specialties),
             "unique_affiliations": len(affiliations),
+            "unique_validator_types": len(types),
         },
         "flags": flags,
     }
+
+
+def detect_semantic_contradictions(
+    validations: List[Dict[str, Any]], threshold: float = 0.7
+) -> List[Dict[str, Any]]:
+    """Detect pairs of notes that are semantically similar yet opposing."""
+
+    notes: List[Tuple[str, str]] = [
+        (v.get("validator_id", f"v{i}"), str(v.get("note", "")).lower())
+        for i, v in enumerate(validations)
+        if v.get("note")
+    ]
+
+    contradictions: List[Dict[str, Any]] = []
+
+    for (id1, n1), (id2, n2) in combinations(notes, 2):
+        ratio = SequenceMatcher(None, n1, n2).ratio()
+        if ratio >= threshold:
+            has1 = any(k in n1 for k in Config.CONTRADICTION_KEYWORDS)
+            has2 = any(k in n2 for k in Config.CONTRADICTION_KEYWORDS)
+            if has1 != has2:
+                contradictions.append(
+                    {"validators": [id1, id2], "similarity": round(ratio, 3)}
+                )
+
+    return contradictions
 
 
 def score_validation(val: Dict[str, Any]) -> float:
@@ -195,6 +238,10 @@ def certify_validations(validations: List[Dict[str, Any]]) -> Dict[str, Any]:
         for v in validations
     )
 
+    semantic_contradictions = detect_semantic_contradictions(validations)
+    if semantic_contradictions:
+        contradictory = True
+
     # Determine certification level
     if contradictory:
         certification = "disputed"
@@ -217,6 +264,49 @@ def certify_validations(validations: List[Dict[str, Any]]) -> Dict[str, Any]:
             "flags": ["diversity_analysis_failed"],
         }
 
+    # Reputation tracking
+    try:
+        rep_inputs = []
+        for v, score in zip(validations, scores):
+            item = dict(v)
+            item.setdefault("hypothesis_id", "default")
+            item.setdefault("score", score)
+            rep_inputs.append(item)
+
+        reputation_result = compute_validator_reputations(
+            rep_inputs, {"default": avg_score}
+        )
+    except Exception as e:  # pragma: no cover - unexpected failure
+        logger.warning(f"Reputation computation failed: {e}")
+        reputation_result = {
+            "validator_reputations": {},
+            "flags": ["reputation_failed"],
+            "stats": {},
+        }
+
+    # Temporal consistency analysis
+    try:
+        temporal_result = analyze_temporal_consistency(
+            validations, reputation_result.get("validator_reputations", {})
+        )
+    except Exception as e:
+        logger.warning(f"Temporal analysis failed: {e}")
+        temporal_result = {
+            "flags": ["temporal_analysis_failed"],
+            "avg_delay_hours": 0.0,
+            "consensus_volatility": 0.0,
+            "weighted_volatility": 0.0,
+            "timeline": [],
+            "business_hours_ratio": 0.0,
+        }
+
+    # Cross-validation detection
+    try:
+        cross_validation_result = detect_score_coordination(rep_inputs)
+    except Exception as e:
+        logger.warning(f"Cross-validation detection failed: {e}")
+        cross_validation_result = {"score_clusters": [], "flags": ["cross_val_failed"]}
+
     # Adjust certification based on low diversity
     if diversity_result.get("diversity_score", 0) < 0.3 and certification == "strong":
         certification = "provisional"
@@ -228,14 +318,24 @@ def certify_validations(validations: List[Dict[str, Any]]) -> Dict[str, Any]:
         "recommended_certification": certification,
         "flags": [],
         "diversity": diversity_result,
+        "reputations": reputation_result,
+        "temporal_consistency": temporal_result,
+        "cross_validation": cross_validation_result,
+        "semantic_contradictions": semantic_contradictions,
     }
 
     if contradictory:
         result["flags"].append("has_contradiction")
+    if semantic_contradictions:
+        result["flags"].append("semantic_contradiction")
     if len(validations) < 3:
         result["flags"].append("limited_consensus")
     if "low_diversity" in diversity_result.get("flags", []):
         result["flags"].append("low_diversity")
+    if cross_validation_result.get("flags"):
+        result["flags"].extend(cross_validation_result["flags"])
+    if temporal_result.get("flags"):
+        result["flags"].extend(temporal_result["flags"])
 
     logger.info(
         f"Certified {len(validations)} validations: {certification} (score: {avg_score:.3f})"
@@ -244,12 +344,12 @@ def certify_validations(validations: List[Dict[str, Any]]) -> Dict[str, Any]:
     return result
 
 
-# TODO v4.3 Enhancements:
-# - Add validator reputation tracking
-# - Implement temporal consistency analysis
-# - Add cross-validation detection
-# - Include diversity scoring (multiple validator types)
-# - Add semantic contradiction detection beyond keywords
+# v4.3 Enhancements implemented:
+# - Validator reputation tracking
+# - Temporal consistency analysis
+# - Cross-validation pattern detection
+# - Diversity scoring across validator types
+# - Semantic contradiction checks
 
 # Basic profiling hook. Execute this file directly to profile certification
 # over a ``sample_validations.json`` dataset.
