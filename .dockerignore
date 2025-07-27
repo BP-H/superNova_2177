@@ -1,14 +1,42 @@
+# Ignore virtual environments and development artifacts
 venv/
 .venv/
+
+# Version control
 .git/
+
+# Python cache and compiled artifacts
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 *.db
 *.log
+
+# Runtime configuration files
+*.env
+
+# Docker and compose files themselves
 .dockerignore
 Dockerfile
 docker-compose.yml
-tests/
+
+# Tests and documentation
+/tests/
+/docs/
+
+# IDE settings
+.vscode/
+.idea/
+
+# Auxiliary directories not required at runtime
+transcendental-resonance-frontend/
+transcendental_resonance_frontend/
+demos/
+scripts/
+rfcs/
+network/
+reports/
+introspection/
+federation/
 
