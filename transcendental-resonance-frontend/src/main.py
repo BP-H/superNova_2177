@@ -3,12 +3,12 @@
 from nicegui import ui, background_tasks
 import asyncio
 
-from .utils.api import clear_token, api_call
+from .utils.api import api_call, token_manager
 from .utils.styles import apply_global_styles, set_theme, get_theme, THEMES
 from .pages import *  # register all pages
 from .pages.system_insights_page import system_insights_page  # noqa: F401
 
-ui.context.client.on_disconnect(clear_token)
+ui.context.client.on_disconnect(token_manager.clear_token)
 apply_global_styles()
 
 
@@ -22,7 +22,7 @@ def toggle_theme() -> None:
 async def keep_backend_awake() -> None:
     """Periodically ping the backend to keep data fresh."""
     while True:
-        api_call('GET', '/status')
+        api_call("GET", "/status")
         await asyncio.sleep(300)
 
 
@@ -31,11 +31,13 @@ ui.button(
     on_click=toggle_theme,
 ).classes("fixed top-0 right-0 m-2")
 
-ui.on_startup(lambda: background_tasks.create(keep_backend_awake(), name='backend-pinger'))
+ui.on_startup(
+    lambda: background_tasks.create(keep_backend_awake(), name="backend-pinger")
+)
 
 # Potential future enhancements:
 # - Real-time updates via WebSockets
 # - Internationalization support
 # - Theming options
 
-ui.run(title='Transcendental Resonance', dark=True, favicon='🌌', reload=False)
+ui.run(title="Transcendental Resonance", dark=True, favicon="🌌", reload=False)
