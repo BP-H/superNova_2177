@@ -1,0 +1,53 @@
+name: Build Installers
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install build tools
+        if: runner.os == 'Windows'
+        run: choco install nsis -y
+      - name: Install AppImage tool
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfuse2
+          wget https://github.com/AppImage/AppImageKit/releases/latest/download/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+          sudo mv appimagetool-x86_64.AppImage /usr/local/bin/appimagetool
+      - name: Build executable
+        run: bash scripts/build_executable.sh
+        shell: bash
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}-installer
+          path: |
+            dist/*.msi
+            dist/*.dmg
+            dist/*.AppImage
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          path: ./artifacts
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./artifacts/**
