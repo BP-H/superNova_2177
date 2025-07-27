@@ -6,24 +6,26 @@ from utils.api import api_call
 from utils.styles import get_theme
 
 
-@ui.page('/status')
+@ui.page("/status")
 async def status_page():
     """Display real-time system metrics."""
     THEME = get_theme()
-    with ui.column().classes('w-full p-4').style(
-        f'background: {THEME["gradient"]}; color: {THEME["text"]};'
+    with (
+        ui.column()
+        .classes("w-full p-4")
+        .style(f'background: {THEME["gradient"]}; color: {THEME["text"]};')
     ):
-        ui.label('System Status').classes('text-2xl font-bold mb-4').style(
+        ui.label("System Status").classes("text-2xl font-bold mb-4").style(
             f'color: {THEME["accent"]};'
         )
 
-        status_label = ui.label().classes('mb-2')
-        harmonizers_label = ui.label().classes('mb-2')
-        vibenodes_label = ui.label().classes('mb-2')
-        entropy_label = ui.label().classes('mb-2')
+        status_label = ui.label().classes("mb-2")
+        harmonizers_label = ui.label().classes("mb-2")
+        vibenodes_label = ui.label().classes("mb-2")
+        entropy_label = ui.label().classes("mb-2")
 
         async def refresh_status() -> None:
-            status = api_call('GET', '/status')
+            status = api_call("GET", "/status")
             if status:
                 status_label.text = f"Status: {status['status']}"
                 harmonizers_label.text = (
