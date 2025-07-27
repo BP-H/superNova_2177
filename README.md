@@ -204,6 +204,25 @@ jupyter notebook docs/Validation_Pipeline.ipynb
 jupyter notebook docs/Network_Graph_Visualization.ipynb
 ```
 
+## ☁️ Streamlit Cloud Deployment
+
+The `app.py` script provides a simple web interface for the validation
+pipeline. To deploy it on **Streamlit Cloud**:
+
+1. Fork this repository or push it to your own GitHub account.
+2. Visit [Streamlit Cloud](https://streamlit.io/cloud) and create a **New app**.
+3. Select your repository, choose the branch to deploy, and set `app.py` as the
+   entry point.
+4. Ensure `requirements.txt` is included so dependencies install automatically.
+5. Click **Deploy**. After the build completes you'll receive a public URL for
+   your hosted app.
+
+You can also run the interface locally with:
+
+```bash
+streamlit run app.py
+```
+
 ## 🏗️ Architecture (v4.6)
 
 * `validation_integrity_pipeline.py` — Orchestrator for full validation logic
