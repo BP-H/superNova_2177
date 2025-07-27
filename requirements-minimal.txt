@@ -5,3 +5,9 @@ sqlalchemy>=2.0
 pytest-asyncio
 httpx
 email-validator
+fastapi
+python-multipart
+pydantic
+pydantic-settings
+structlog
+prometheus-client
