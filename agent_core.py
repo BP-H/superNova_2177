@@ -453,13 +453,13 @@ class RemixAgent:
         self, total_voters: int, is_constitutional: bool, avg_yes: Decimal
     ) -> Decimal:
         """
-        Dynamically adjust threshold: for constitutional, increase as engagement (total voters) rises.
+        Dynamically adjust threshold: for constitutional, increase as engagement
+        (total voters) rises.
         - Base: 0.9
         - Medium (>20 voters): 0.92
         - High (>50 voters): 0.95
         Normal proposals stay at 0.5.
         """
-        pass
 
         if not is_constitutional:
             return self.NORMAL_THRESHOLD
