@@ -34,9 +34,22 @@ def create_fork(args: argparse.Namespace) -> None:
             print("Creator not eligible for forking")
             return
         config = dict(pair.split("=", 1) for pair in args.config or [])
-        invalid_keys = [k for k in config if not hasattr(Config, k)]
+        invalid_keys = [k for k in config if not hasattr(Config, k) and k != "entropy_threshold"]
         if invalid_keys:
             print(f"Invalid config keys: {', '.join(invalid_keys)}")
+            return
+
+        numeric_errors = []
+        for key, value in config.items():
+            try:
+                if float(value) <= 0:
+                    numeric_errors.append(key)
+            except ValueError:
+                # Non-numeric values are ignored
+                continue
+        if numeric_errors:
+            joined = ", ".join(numeric_errors)
+            print(f"Parameters must be > 0: {joined}")
             return
         cooldown = Config.FORK_COOLDOWN_SECONDS
         if (
