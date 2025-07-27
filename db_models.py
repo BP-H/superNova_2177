@@ -113,6 +113,7 @@ class Harmonizer(Base):
     cultural_preferences = Column(JSON, default=list)
     engagement_streaks = Column(JSON, default=dict)
     network_centrality = Column(Float, default=0.0)
+    karma_score = Column(Float, default=0.0)
     last_passive_aura_timestamp = Column(DateTime, default=datetime.datetime.utcnow)
     vibenodes = relationship(
         "VibeNode", back_populates="author", cascade="all, delete-orphan"
@@ -360,6 +361,18 @@ class LogEntry(Base):
     previous_hash = Column(String, nullable=False)
     current_hash = Column(String, unique=True, nullable=False)
 
+    def chain_of_remix(self, db: Session) -> list[str]:
+        """Return lineage of remix hashes leading to this entry."""
+        chain = []
+        prev = self.previous_hash
+        while prev:
+            entry = db.query(LogEntry).filter_by(current_hash=prev).first()
+            if not entry:
+                break
+            chain.append(entry.current_hash)
+            prev = entry.previous_hash
+        return chain
+
 
 class SystemState(Base):
     __tablename__ = "system_state"
@@ -433,6 +446,16 @@ class Coin(Base):
     content = Column(Text, default="")
     reactor_escrow = Column(String, default="0.0")
     reactions = Column(JSON, default=list)
+
+
+class UniverseFork(Base):
+    __tablename__ = "universe_forks"
+    id = Column(String, primary_key=True)
+    creator_id = Column(ForeignKey("harmonizers.id"))
+    karma_at_fork = Column(Float)
+    config = Column(JSON)
+    timestamp = Column(DateTime)
+    status = Column(String)
 
 
 class MarketplaceListing(Base):
