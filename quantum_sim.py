@@ -146,7 +146,7 @@ class QuantumContext:
                 settings.FUZZINESS_RANGE_LOW, settings.FUZZINESS_RANGE_HIGH
             )
         else:
-            outcome = 1.0
+            outcome = input_value
 
         # interference from entangled pairs
         interference = sum(self.entangled_pairs.values()) * settings.INTERFERENCE_FACTOR
