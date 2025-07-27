@@ -4,7 +4,7 @@ import random
 from typing import Any, Dict, Optional, List
 
 try:
-    from superNova_2177 import Config
+    from config import Config
 
     FUZZINESS_RANGE_LOW = Config.FUZZINESS_RANGE_LOW
     FUZZINESS_RANGE_HIGH = Config.FUZZINESS_RANGE_HIGH

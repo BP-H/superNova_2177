@@ -1,9 +1,7 @@
 # --- MODULE: config.py ---
-from dataclasses import dataclass
 from decimal import Decimal
 from typing import Dict, List
 
-@dataclass
 class Config:
     ROOT_INITIAL_VALUE: Decimal = Decimal("1000000")
     TREASURY_SHARE: Decimal = Decimal("0.3333")
