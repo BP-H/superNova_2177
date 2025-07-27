@@ -117,14 +117,14 @@ def format_analysis_output(result: Dict[str, Any]) -> str:
         
         risk_emoji = {"low": "🟢", "medium": "🟡", "high": "🔴"}.get(risk_level, "⚪")
         
-        output.append(f"\n🛡️  INTEGRITY ANALYSIS")
+        output.append("\n🛡️  INTEGRITY ANALYSIS")
         output.append(f"{risk_emoji} Risk Level: {risk_level.upper()}")
         output.append(f"🎯 Integrity Score: {integrity_score}/1.0")
         
         # Component scores
         components = integrity.get("component_scores", {})
         if components:
-            output.append(f"\n📈 Component Breakdown:")
+            output.append("\n📈 Component Breakdown:")
             output.append(f"   🎨 Diversity: {components.get('diversity', 0):.2f}")
             output.append(f"   ⭐ Reputation: {components.get('reputation', 0):.2f}")
             output.append(f"   ⏰ Temporal: {components.get('temporal_trust', 0):.2f}")
@@ -142,7 +142,7 @@ def format_analysis_output(result: Dict[str, Any]) -> str:
     # Recommendations
     recommendations = result.get("recommendations", [])
     if recommendations and recommendations != ["No specific recommendations"]:
-        output.append(f"\n💡 RECOMMENDATIONS:")
+        output.append("\n💡 RECOMMENDATIONS:")
         for i, rec in enumerate(recommendations[:3], 1):
             output.append(f"   {i}. {rec}")
     
@@ -303,7 +303,7 @@ For more information: https://github.com/yourusername/superNova_2177
     
     # Show validation data if verbose
     if args.verbose and validations:
-        print(f"\n📋 VALIDATION DATA:")
+        print("\n📋 VALIDATION DATA:")
         print("-" * 30)
         for i, val in enumerate(validations[:3], 1):
             validator = val.get("validator_id", "unknown")
@@ -330,7 +330,7 @@ For more information: https://github.com/yourusername/superNova_2177
                 json.dump(result, f, indent=2, default=str)
             print(f"\n💾 Results saved to {args.output}")
         
-        print(f"\n✨ Analysis complete!")
+        print("\n✨ Analysis complete!")
         return 0
         
     except Exception as e:
