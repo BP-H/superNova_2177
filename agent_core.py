@@ -10,6 +10,8 @@ import logging
 from decimal import Decimal
 from typing import Any, Dict
 
+from moderation_utils import Vaccine
+
 
 def ScientificModel(*args: Any, **kwargs: Any):  # placeholder
     def decorator(func: Any) -> Any:
