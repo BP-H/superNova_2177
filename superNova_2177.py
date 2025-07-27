@@ -481,6 +481,7 @@ from db_models import UniverseBranch, BranchVote
 from governance_config import calculate_entropy_divergence, quantum_consensus
 from prediction_manager import PredictionManager
 from resonance_music import generate_midi_from_metrics
+from hook_manager import HookManager
 
 # Import system configuration early so metrics can be started with the proper
 # port value. Other modules follow the same pattern by exposing a ``CONFIG``
@@ -3969,7 +3970,6 @@ async def proactive_intervention_task(cosmic_nexus: CosmicNexus):
 
 
 # --- MODULE: hook_manager.py ---
-from hook_manager import HookManager
 
 
 if __name__ == "__main__":
