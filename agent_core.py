@@ -37,6 +37,8 @@ if TYPE_CHECKING:
         CrossRemixPayload,
     )
 
+from moderation_utils import Vaccine
+
 
 def ScientificModel(*args: Any, **kwargs: Any):  # placeholder
     def decorator(func: Any) -> Any:
