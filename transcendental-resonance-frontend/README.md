@@ -9,6 +9,17 @@ pip install -r requirements.txt
 nicegui src/main.py
 ```
 
+### Demo mode
+
+To explore the UI without a running backend, load the bundled sample data and
+mock API calls:
+
+```bash
+python -m transcendental_resonance_frontend.demo
+```
+
+This command starts the app using data from `src/utils/sample_data/`.
+
 Replace the backend URL with the `BACKEND_URL` environment variable if your API is not running on `http://localhost:8000`.
 
 ## Structure
