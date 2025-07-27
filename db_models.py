@@ -30,7 +30,7 @@ import datetime # Ensure datetime is imported for default values
 
 # NOTE: In a real project, DATABASE_URL and SessionLocal would typically be imported from a central config/db module.
 # For this extraction, we'll keep it self-contained for clarity, assuming it would be integrated.
-# DATABASE_URL = "postgresql+asyncpg://user:password@localhost/transcendental_resonance" # Original hardcoded line
+# DATABASE_URL = "postgresql+asyncpg://<username>:<password>@<hostname>/<database>"  # Example format
 DB_MODE = os.getenv("DB_MODE", "local")
 UNIVERSE_ID = os.getenv("UNIVERSE_ID", str(uuid.uuid4()))
 
