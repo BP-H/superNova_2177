@@ -242,6 +242,16 @@ The test suite requires packages like `SQLAlchemy`, `networkx`, `numpy`, and
 `python-dateutil`. If `pytest` fails with missing module errors, ensure the
 dependencies from `requirements.txt` (or `requirements.lock`) are installed.
 
+### Test Requirements
+
+Install the packages needed for the tests in one step:
+
+```bash
+pip install -r requirements.txt
+```
+
+With these installed, running `pytest` should succeed (`99 passed`).
+
 ### Makefile Commands
 
 For a quicker workflow you can use the provided `Makefile`:
