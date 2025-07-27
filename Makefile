@@ -7,4 +7,6 @@ test:
 	pytest -q
 
 lint:
+	black --check .
+	ruff .
 	mypy

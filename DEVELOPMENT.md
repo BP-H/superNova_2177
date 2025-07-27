@@ -29,3 +29,14 @@ The GitHub Actions workflows (`.github/workflows/ci.yml` and `pr-tests.yml`) run
 ## Optional Frontend
 
 The `transcendental-resonance-frontend/` directory contains a NiceGUI-based UI. Follow its README to install `pip install -r transcendental-resonance-frontend/requirements.txt` and run the frontend if desired.
+
+## Linting and Formatting
+
+Run the linters before committing changes:
+
+```bash
+make lint
+```
+
+This executes `black --check`, `ruff`, and `mypy` using the configuration in `pyproject.toml`.
+

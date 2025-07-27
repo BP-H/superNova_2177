@@ -33,3 +33,6 @@ midiutil
 torch
 scikit-learn
 streamlit>=1.28
+
+black
+ruff
