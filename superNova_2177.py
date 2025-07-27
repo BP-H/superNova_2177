@@ -3969,19 +3969,7 @@ async def proactive_intervention_task(cosmic_nexus: CosmicNexus):
 
 
 # --- MODULE: hook_manager.py ---
-class HookManager:
-    def __init__(self):
-        self.hooks = defaultdict(list)
-
-    def register_hook(self, event_type: str, callback: Callable):
-        self.hooks[event_type].append(callback)
-
-    def fire_hooks(self, event_type: str, data: Any):
-        for cb in self.hooks[event_type]:
-            try:
-                cb(data)
-            except Exception as e:
-                logging.error(f"Hook callback failed for {event_type}: {e}")
+from hook_manager import HookManager
 
 
 if __name__ == "__main__":
