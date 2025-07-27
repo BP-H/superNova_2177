@@ -5,7 +5,7 @@ import argparse
 import json
 import uuid
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from db_models import (
     SessionLocal,
@@ -69,9 +69,13 @@ def list_forks(_args: argparse.Namespace) -> None:
     try:
         forks = db.query(UniverseBranch).all()
         for f in forks:
+            try:
+                config_str = json.dumps(f.config, default=str)
+            except TypeError:
+                config_str = "<unserializable>"
             print(
                 f.id,
-                json.dumps(f.config),
+                config_str,
                 f"consensus={f.consensus:.2f}",
                 f"divergence={f.entropy_divergence:.2f}",
             )
@@ -96,7 +100,11 @@ def fork_info(args: argparse.Namespace) -> None:
             "entropy_divergence": fork.entropy_divergence,
             "consensus": fork.consensus,
         }
-        print(json.dumps(info, indent=2))
+        try:
+            print(json.dumps(info, indent=2, default=str))
+        except TypeError:
+            info["config"] = "<unserializable>"
+            print(json.dumps(info, indent=2))
     finally:
         db.close()
 
@@ -111,15 +119,29 @@ def vote_fork(args: argparse.Namespace) -> None:
             print("Fork or voter not found")
             return
         vote_bool = args.vote.lower() == "yes"
-        record = BranchVote(
-            branch_id=fork.id,
-            voter_id=voter.id,
-            vote=vote_bool,
+        existing = (
+            db.query(BranchVote)
+            .filter_by(branch_id=fork.id, voter_id=voter.id)
+            .first()
         )
-        db.add(record)
+        if existing:
+            existing.vote = vote_bool
+        else:
+            record = BranchVote(
+                branch_id=fork.id,
+                voter_id=voter.id,
+                vote=vote_bool,
+            )
+            db.add(record)
         db.commit()
 
-        votes = [v.vote for v in db.query(BranchVote).filter_by(branch_id=fork.id).all()]
+        deadline = fork.timestamp + timedelta(hours=Config.VOTING_DEADLINE_HOURS)
+        votes = [
+            v.vote
+            for v in db.query(BranchVote)
+            .filter(BranchVote.branch_id == fork.id, BranchVote.timestamp <= deadline)
+            .all()
+        ]
         fork.consensus = quantum_consensus(votes)
         db.commit()
         print(

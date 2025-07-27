@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+import logging
 
 import numpy as np
 
@@ -83,12 +84,15 @@ def calculate_entropy_divergence(config: dict, base: object | None = None) -> fl
         from superNova_2177 import Config as base
     diffs: list[float] = []
     for k, v in config.items():
-        if hasattr(base, k):
-            try:
-                base_v = float(getattr(base, k))
-                diffs.append(abs(float(v) - base_v))
-            except Exception:
-                continue
+        if not hasattr(base, k):
+            logging.debug("Unknown config key %s skipped in entropy divergence", k)
+            continue
+        try:
+            base_v = float(getattr(base, k))
+            diffs.append(abs(float(v) - base_v))
+        except Exception:
+            logging.warning("Config value for %s=%r is not numeric; skipping", k, v)
+            continue
     if not diffs:
         return 0.0
     arr = np.array(diffs, dtype=float)
