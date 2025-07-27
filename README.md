@@ -174,6 +174,16 @@ On Windows, use the PowerShell version:
 scripts/build_executable.ps1
 ```
 
+To build installers for all supported platforms in one step, execute:
+
+```bash
+scripts/build_all_installers.sh
+```
+
+This wrapper calls `build_executable.sh`, `build_executable.ps1`,
+`build_appimage.sh`, and `supernova_installer.nsi` in sequence to create the
+`.msi`, `.dmg`, and `.AppImage` files inside `dist/`.
+
 The generated executable will be placed under `dist/` as `supernova-cli` on
 Unix systems or `supernova-cli.exe` on Windows.
 
