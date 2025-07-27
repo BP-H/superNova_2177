@@ -2096,7 +2096,10 @@ class CosmicNexus:
     """
 
     def __init__(
-        self, session_factory: Callable[[], Session], state_service: SystemStateService
+        self,
+        session_factory: Callable[[], Session],
+        state_service: SystemStateService,
+        quantum_ctx: QuantumContext,
     ):
         self.session_factory = session_factory
         self.state_service = state_service
@@ -2105,6 +2108,7 @@ class CosmicNexus:
         self.generative_ai = GenerativeAIService(self._get_session())
         self.sub_universes = {}  # Dict of forked universes
         self.hooks = HookManager()
+        self.quantum_ctx = quantum_ctx
 
     def _get_session(self) -> Session:
         return self.session_factory()
@@ -2118,7 +2122,7 @@ class CosmicNexus:
                     "system_entropy", str(Config.SYSTEM_ENTROPY_BASE)
                 )
             )
-            new_decoherence_rate = agent.quantum_ctx.adapt_decoherence_rate(
+            new_decoherence_rate = self.quantum_ctx.adapt_decoherence_rate(
                 system_entropy
             )
             self.state_service.set_state(
@@ -3105,8 +3109,12 @@ def create_app() -> FastAPI:
     os.makedirs(s.UPLOAD_FOLDER, exist_ok=True)
     Base.metadata.create_all(bind=engine)
 
-    cosmic_nexus = CosmicNexus(SessionLocal, SystemStateService(SessionLocal()))
+    quantum_ctx = QuantumContext(Config().FUZZY_ANALOG_COMPUTATION_ENABLED)
+    cosmic_nexus = CosmicNexus(
+        SessionLocal, SystemStateService(SessionLocal()), quantum_ctx
+    )
     agent = RemixAgent(cosmic_nexus=cosmic_nexus)
+    agent.quantum_ctx = quantum_ctx
 
     app.add_middleware(
         CORSMiddleware,
@@ -4229,7 +4237,9 @@ async def startup_event():
     loop.create_task(ai_persona_evolution_task(SessionLocal))
     loop.create_task(ai_guinness_pursuit_task(SessionLocal))
     loop.create_task(proposal_lifecycle_task(agent))
-    cosmic_nexus = CosmicNexus(SessionLocal, SystemStateService(SessionLocal()))
+    cosmic_nexus = CosmicNexus(
+        SessionLocal, SystemStateService(SessionLocal()), agent.quantum_ctx
+    )
     loop.create_task(proactive_intervention_task(cosmic_nexus))
     loop.create_task(annual_audit_task(cosmic_nexus))
     loop.create_task(update_content_entropy_task(SessionLocal))
@@ -4311,9 +4321,10 @@ async def client(test_db):
 @pytest.fixture
 def memory_agent(monkeypatch):
     monkeypatch.setattr(sys.modules[__name__], "USE_IN_MEMORY_STORAGE", True)
-    agent = RemixAgent(
-        cosmic_nexus=CosmicNexus(SessionLocal, SystemStateService(SessionLocal()))
-    )
+    quantum_ctx = QuantumContext(Config().FUZZY_ANALOG_COMPUTATION_ENABLED)
+    cosmic = CosmicNexus(SessionLocal, SystemStateService(SessionLocal()), quantum_ctx)
+    agent = RemixAgent(cosmic_nexus=cosmic)
+    agent.quantum_ctx = quantum_ctx
     return agent
 
 
