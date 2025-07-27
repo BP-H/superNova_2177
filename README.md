@@ -35,17 +35,21 @@ supernova-validate --validations sample_validations.json
 1. **Install Python 3.12** from [python.org](https://www.python.org/) if it isn't
    already on your machine. You can check by running `python --version` in your
    terminal.
-2. **Create a virtual environment** so all required packages stay organized:
+2. **Run the install script** to set up a virtual environment and install all
+   dependencies:
    ```bash
-   python -m venv venv
+   ./install.sh
+   ```
+   On Windows use:
+   ```powershell
+   ./install.ps1
+   ```
+3. **Activate the environment**:
+   ```bash
    # Linux/macOS
    source venv/bin/activate
    # Windows
    .\venv\Scripts\activate
-   ```
-3. **Install the project**:
-   ```bash
-   pip install .
    ```
 4. You're ready to run the demo commands shown in [Quick Start](#-quick-start).
 
