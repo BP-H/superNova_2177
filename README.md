@@ -75,6 +75,16 @@ supernova-validate --validations sample_validations.json
    ```
 4. You're ready to run the demo commands shown in [Quick Start](#-quick-start).
 
+### Makefile Quick Commands
+
+For convenience, the repository includes a `Makefile` with common tasks:
+
+```bash
+make install  # set up the environment
+make test     # run tests
+make lint     # run mypy type checks
+```
+
 ### Platform Quick Commands
 
 **Windows PowerShell**
