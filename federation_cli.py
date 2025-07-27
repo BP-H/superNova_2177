@@ -110,6 +110,13 @@ def vote_fork(args: argparse.Namespace) -> None:
         if not fork or not voter:
             print("Fork or voter not found")
             return
+        # Avoid duplicate votes from the same harmonizer
+        existing = db.query(BranchVote).filter_by(
+            branch_id=fork.id, voter_id=voter.id
+        ).first()
+        if existing:
+            print("Vote already recorded for this fork")
+            return
         vote_bool = args.vote.lower() == "yes"
         record = BranchVote(
             branch_id=fork.id,
