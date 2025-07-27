@@ -1,4 +1,5 @@
 pytest
+pytest-asyncio
 sqlalchemy>=2.0
 networkx
 numpy
@@ -9,3 +10,4 @@ isort
 flake8
 mypy
 bandit
+httpx
