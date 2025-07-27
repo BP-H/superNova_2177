@@ -493,6 +493,21 @@ try:  # pragma: no cover - fallback only used if optional import fails
 except Exception:  # pragma: no cover - extremely defensive
     CONFIG = types.SimpleNamespace(METRICS_PORT=8001)
 
+
+def start_metrics_server() -> None:
+    """Start the Prometheus metrics server if possible.
+
+    The port can be overridden with the ``METRICS_PORT`` environment
+    variable. If the port is already in use, the server will be skipped
+    and a warning will be logged.
+    """
+
+    port = int(os.getenv("METRICS_PORT", Config.METRICS_PORT))
+    try:
+        prom.start_http_server(port)
+    except OSError as exc:  # pragma: no cover - defensive
+        logger.warning("Could not start metrics server on port %s: %s", port, exc)
+
 # --- MODULE: logging_setup.py ---
 # Logging setup with thematic flavor
 logger = structlog.get_logger("TranscendentalResonance")
@@ -547,7 +562,7 @@ if "total_vibenodes" in REGISTRY._names_to_collectors:
     vibenodes_gauge = REGISTRY._names_to_collectors["total_vibenodes"]
 else:
     vibenodes_gauge = prom.Gauge("total_vibenodes", "Total number of vibenodes")
-prom.start_http_server(Config.METRICS_PORT)  # Metrics endpoint
+start_metrics_server()  # Metrics endpoint
 
 # --- MODULE: models.py ---
 # Database setup from FastAPI files

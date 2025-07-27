@@ -206,7 +206,8 @@ Copy `.env.example` to `.env` and set values for `SECRET_KEY` and
 `BACKEND_URL`. Provide your own connection string for `DATABASE_URL` via
 environment variables rather than hard-coding it. Set `DB_MODE=central` if you
 want to use a shared PostgreSQL instance instead of the default local SQLite
-file.
+file. Set `METRICS_PORT` to change the Prometheus metrics server port
+(defaults to `8001`).
 
 ## 🐳 Docker
 
