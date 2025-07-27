@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.request
+import argparse
 
 OFFLINE_DIR = "offline_deps"
 ENV_DIR = "venv"
@@ -15,47 +16,71 @@ def download(url: str, dest: str) -> None:
     urllib.request.urlretrieve(url, dest)
 
 
-def ensure_python312() -> str:
-    """Return path to a Python 3.12 interpreter, installing if necessary."""
-    if sys.version_info >= (3, 12):
+def ensure_python(version: str) -> str:
+    """Return path to a Python ``version`` interpreter, installing if necessary."""
+    target_tuple = tuple(int(v) for v in version.split("."))
+    if sys.version_info >= target_tuple:
         return sys.executable
-    for exe in ("python3.12", "python312", "python3.12.exe", "python.exe"):
+    exes = (
+        f"python{version}",
+        f"python{version.replace('.', '')}",
+        f"python{version}.exe",
+        "python.exe",
+    )
+    for exe in exes:
         path = shutil.which(exe)
         if path:
             try:
                 out = subprocess.check_output([path, "--version"], text=True)
             except Exception:
                 continue
-            if out.startswith("Python 3.12"):
+            if out.startswith(f"Python {version}"):
                 return path
     system = platform.system()
     tmp = tempfile.gettempdir()
     if system == "Windows":
-        installer = os.path.join(tmp, "python312.exe")
-        download("https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe", installer)
+        installer = os.path.join(tmp, f"python{version.replace('.', '')}.exe")
+        py_patch = f"{version}.0"
+        download(
+            f"https://www.python.org/ftp/python/{py_patch}/python-{py_patch}-amd64.exe",
+            installer,
+        )
         subprocess.check_call([installer, "/quiet", "InstallAllUsers=1", "PrependPath=1"])
         os.remove(installer)
     elif system == "Darwin":
-        pkg = os.path.join(tmp, "python312.pkg")
-        download("https://www.python.org/ftp/python/3.12.0/python-3.12.0-macos11.pkg", pkg)
+        pkg = os.path.join(tmp, f"python{version.replace('.', '')}.pkg")
+        py_patch = f"{version}.0"
+        download(
+            f"https://www.python.org/ftp/python/{py_patch}/python-{py_patch}-macos11.pkg",
+            pkg,
+        )
         subprocess.check_call(["sudo", "installer", "-pkg", pkg, "-target", "/"])
         os.remove(pkg)
     else:
         if shutil.which("apt-get"):
             subprocess.check_call(["sudo", "apt-get", "update"])
-            subprocess.check_call(["sudo", "apt-get", "install", "-y", "python3.12", "python3.12-venv"])
+            pkg = f"python{version}"
+            subprocess.check_call(["sudo", "apt-get", "install", "-y", pkg, f"{pkg}-venv"])
         else:
-            tarball = os.path.join(tmp, "Python-3.12.0.tgz")
-            download("https://www.python.org/ftp/python/3.12.0/Python-3.12.0.tgz", tarball)
+            py_patch = f"{version}.0"
+            tarball = os.path.join(tmp, f"Python-{py_patch}.tgz")
+            download(
+                f"https://www.python.org/ftp/python/{py_patch}/Python-{py_patch}.tgz",
+                tarball,
+            )
             build_dir = os.path.join(tmp, "python-build")
             os.makedirs(build_dir, exist_ok=True)
             subprocess.check_call(["tar", "xf", tarball, "-C", build_dir])
-            src = os.path.join(build_dir, "Python-3.12.0")
-            subprocess.check_call(["bash", "-c", f"cd {src} && ./configure --prefix=/usr/local && make -j$(nproc) && sudo make install"])
-    path = shutil.which("python3.12")
+            src = os.path.join(build_dir, f"Python-{py_patch}")
+            subprocess.check_call([
+                "bash",
+                "-c",
+                f"cd {src} && ./configure --prefix=/usr/local && make -j$(nproc) && sudo make install",
+            ])
+    path = shutil.which(f"python{version}")
     if path:
         return path
-    raise RuntimeError("Python 3.12 installation failed")
+    raise RuntimeError(f"Python {version} installation failed")
 
 
 def bundle_dependencies(python: str) -> None:
@@ -78,7 +103,15 @@ def setup_environment(python: str) -> None:
 
 
 def main() -> None:
-    python = ensure_python312()
+    parser = argparse.ArgumentParser(description="Set up the development environment")
+    parser.add_argument(
+        "--python-version",
+        default="3.12",
+        help="Python version to use/install (default: 3.12)",
+    )
+    args = parser.parse_args()
+
+    python = ensure_python(args.python_version)
     bundle_dependencies(python)
     setup_environment(python)
     if os.name == "nt":
