@@ -181,6 +181,13 @@ def test_quantum_context_superposition():
     assert 0.0 <= val["value"] <= 1.0
     assert val["distribution"] is not None
 
+def test_measure_superposition_deterministic():
+    """Measurement should return the input value when fuzziness is disabled."""
+    qc = QuantumContext(fuzzy_enabled=False, simulate=True)
+    val = qc.measure_superposition(0.25)
+    assert val["value"] == pytest.approx(0.25)
+    assert val["distribution"] == [0.75, 0.25]
+
 def test_query_influence():
     if not nx:
         pytest.skip("networkx not installed")
