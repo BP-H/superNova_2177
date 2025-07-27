@@ -4990,6 +4990,8 @@ class InMemoryStorage(AbstractStorage):
     def transaction(self):
         backup_users = copy.deepcopy(self.users)
         backup_coins = copy.deepcopy(self.coins)
+        backup_proposals = copy.deepcopy(self.proposals)
+        backup_listings = copy.deepcopy(self.marketplace_listings)
         try:
             logging.info("Starting in-memory transaction")
             yield
@@ -4997,6 +4999,8 @@ class InMemoryStorage(AbstractStorage):
         except Exception:
             self.users = backup_users
             self.coins = backup_coins
+            self.proposals = backup_proposals
+            self.marketplace_listings = backup_listings
             logging.error("In-memory rollback executed")
             raise
 
