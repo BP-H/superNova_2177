@@ -21,6 +21,7 @@ A modular intelligence pipeline that evaluates hypotheses through evidence-based
 ## 🚀 Quick Start
 
 ```bash
+./scripts/setup_env.sh  # set up environment
 # Try demo mode
 supernova-validate --demo
 
