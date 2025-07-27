@@ -13,4 +13,4 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements-minimal.txt -r requirements-dev.txt
-      - run: pytest -q
+      - run: pytest
