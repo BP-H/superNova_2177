@@ -3,7 +3,7 @@
 from typing import Optional, Dict
 
 import os
-import requests
+import aiohttp
 from nicegui import ui
 
 # Backend API base URL
@@ -11,14 +11,15 @@ BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 TOKEN: Optional[str] = None
 
-def api_call(
+
+async def api_call(
     method: str,
     endpoint: str,
     data: Optional[Dict] = None,
     headers: Optional[Dict] = None,
     files: Optional[Dict] = None,
 ) -> Optional[Dict]:
-    """Wrapper around ``requests`` to interact with the backend API."""
+    """Asynchronous wrapper using ``aiohttp`` to interact with the backend API."""
     url = f"{BACKEND_URL}{endpoint}"
     default_headers = {'Content-Type': 'application/json'} if method != 'multipart' else {}
     if headers:
@@ -27,22 +28,42 @@ def api_call(
         default_headers['Authorization'] = f'Bearer {TOKEN}'
 
     try:
-        if method == 'GET':
-            response = requests.get(url, headers=default_headers, params=data)
-        elif method == 'POST':
-            if files:
-                response = requests.post(url, headers=default_headers, data=data, files=files)
+        async with aiohttp.ClientSession() as session:
+            if method == 'GET':
+                async with session.get(url, headers=default_headers, params=data) as response:
+                    response.raise_for_status()
+                    text = await response.text()
+                    return await response.json() if text else None
+            elif method == 'POST':
+                if files:
+                    form = aiohttp.FormData()
+                    if data:
+                        for key, value in data.items():
+                            form.add_field(key, str(value))
+                    for field, (filename, content, content_type) in files.items():
+                        form.add_field(field, content, filename=filename, content_type=content_type)
+                    async with session.post(url, headers=default_headers, data=form) as response:
+                        response.raise_for_status()
+                        text = await response.text()
+                        return await response.json() if text else None
+                else:
+                    async with session.post(url, headers=default_headers, json=data) as response:
+                        response.raise_for_status()
+                        text = await response.text()
+                        return await response.json() if text else None
+            elif method == 'PUT':
+                async with session.put(url, headers=default_headers, json=data) as response:
+                    response.raise_for_status()
+                    text = await response.text()
+                    return await response.json() if text else None
+            elif method == 'DELETE':
+                async with session.delete(url, headers=default_headers, json=data) as response:
+                    response.raise_for_status()
+                    text = await response.text()
+                    return await response.json() if text else None
             else:
-                response = requests.post(url, headers=default_headers, json=data)
-        elif method == 'PUT':
-            response = requests.put(url, headers=default_headers, json=data)
-        elif method == 'DELETE':
-            response = requests.delete(url, headers=default_headers, json=data)
-        else:
-            raise ValueError(f"Unsupported method: {method}")
-        response.raise_for_status()
-        return response.json() if response.text else None
-    except requests.exceptions.RequestException as exc:
+                raise ValueError(f"Unsupported method: {method}")
+    except aiohttp.ClientError as exc:
         ui.notify(f"API Error: {exc}", color='negative')
         return None
 

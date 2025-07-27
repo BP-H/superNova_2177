@@ -1,6 +1,6 @@
 """Group management page."""
 
-from nicegui import ui
+from nicegui import ui, background_tasks
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
@@ -30,10 +30,14 @@ async def groups_page():
 
         async def create_group():
             data = {'name': g_name.value, 'description': g_desc.value}
-            resp = api_call('POST', '/groups/', data)
-            if resp:
-                ui.notify('Group created!', color='positive')
-                await refresh_groups()
+
+            async def task():
+                resp = await api_call('POST', '/groups/', data)
+                if resp:
+                    ui.notify('Group created!', color='positive')
+                    await refresh_groups()
+
+            background_tasks.create(task())
 
         ui.button('Create Group', on_click=create_group).classes('w-full mb-4').style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
@@ -47,7 +51,7 @@ async def groups_page():
                 params['search'] = search_query.value
             if sort_select.value:
                 params['sort'] = sort_select.value
-            groups = api_call('GET', '/groups/', params) or []
+            groups = await api_call('GET', '/groups/', params) or []
             if search_query.value:
                 groups = [g for g in groups if search_query.value.lower() in g['name'].lower()]
             if sort_select.value:
@@ -62,10 +66,13 @@ async def groups_page():
                         ui.label(g['name']).classes('text-lg')
                         ui.label(g['description']).classes('text-sm')
                         async def join_fn(g_id=g['id']):
-                            api_call('POST', f'/groups/{g_id}/join')
-                            await refresh_groups()
+                            async def task():
+                                await api_call('POST', f'/groups/{g_id}/join')
+                                await refresh_groups()
+
+                            background_tasks.create(task())
                         ui.button('Join/Leave', on_click=join_fn).style(
                             f'background: {THEME["accent"]}; color: {THEME["background"]};'
                         )
 
-        await refresh_groups()
+        background_tasks.create(refresh_groups())

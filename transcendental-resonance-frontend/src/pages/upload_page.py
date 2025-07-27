@@ -1,6 +1,6 @@
 """Media upload page."""
 
-from nicegui import ui
+from nicegui import ui, background_tasks
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
@@ -26,8 +26,12 @@ async def upload_page():
 
         async def handle_upload(content, name):
             files = {'file': (name, content.read(), 'multipart/form-data')}
-            resp = api_call('POST', '/upload/', files=files, method='multipart')
-            if resp:
-                ui.notify(f"Uploaded: {resp['media_url']}", color='positive')
+
+            async def task():
+                resp = await api_call('POST', '/upload/', files=files, method='multipart')
+                if resp:
+                    ui.notify(f"Uploaded: {resp['media_url']}", color='positive')
+
+            background_tasks.create(task())
 
         ui.label('Select file to upload').classes('text-center')
