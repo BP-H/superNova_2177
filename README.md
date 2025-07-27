@@ -67,6 +67,38 @@ supernova-validate --validations sample_validations.json
    ```
 4. You're ready to run the demo commands shown in [Quick Start](#-quick-start).
 
+### Platform Quick Commands
+
+**Windows PowerShell**
+
+```powershell
+./online_install.ps1
+```
+
+**macOS (bash)**
+
+```bash
+./online_install.sh
+```
+
+**Linux (bash)**
+
+```bash
+./online_install.sh
+```
+
+**Docker**
+
+```bash
+docker-compose up --build
+```
+
+**Offline Installer**
+
+```bash
+python one_click_install.py
+```
+
 This project relies on features introduced in **SQLAlchemy 2.x** such as
 `DeclarativeBase`. Ensure you have `sqlalchemy>=2.0` installed. The code also
 requires `python-dateutil` for timestamp parsing.
