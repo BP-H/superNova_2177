@@ -15,4 +15,4 @@ jobs:
           python-version: '3.12'
       - run: pip install -r requirements-minimal.txt mypy
       - run: mypy
-      - run: pytest -q
+      - run: pytest
