@@ -13,6 +13,7 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 from statistics import mean, stdev
 from dateutil import parser
+from jsonschema import validate, ValidationError
 
 logger = logging.getLogger("superNova_2177.temporal")
 
@@ -29,6 +30,27 @@ class Config:
     
     # Chronological ordering
     MAX_OUT_OF_ORDER_TOLERANCE = 0.1   # 10% of validations can be out of order
+
+
+VALIDATION_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "timestamp": {"type": "string", "maxLength": 40},
+        "score": {"type": "number"},
+        "validator_id": {"type": "string"},
+        "note": {"type": "string"},
+    },
+    "required": ["timestamp"],
+}
+
+
+def _validate_entry(entry: Dict[str, Any]) -> bool:
+    try:
+        validate(entry, VALIDATION_SCHEMA)
+        return True
+    except ValidationError as exc:
+        logger.warning("Validation schema error: %s", exc)
+        return False
 
 
 def _safe_parse_timestamp(value: str) -> Optional[datetime]:
@@ -58,8 +80,10 @@ def analyze_temporal_consistency(
     parsed_validations = []
     business_hours_count = 0
     out_of_order_count = 0
-    
+
     for i, v in enumerate(validations):
+        if not _validate_entry(v):
+            continue
         ts_raw = v.get("timestamp")
         ts = _safe_parse_timestamp(ts_raw)
         if ts is None:

@@ -33,3 +33,4 @@ midiutil
 torch
 scikit-learn
 streamlit
+jsonschema

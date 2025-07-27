@@ -16,7 +16,12 @@ def _check_call(node: ast.Call, filename: str, results: list) -> None:
 
 def scan_file(path: pathlib.Path) -> list:
     text = path.read_text()
-    tree = ast.parse(text, filename=str(path))
+    try:
+        tree = ast.parse(text, filename=str(path))
+    except SyntaxError as exc:  # skip files with syntax errors
+        print(f"Skipping {path}: {exc}")
+        return []
+
     results = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):

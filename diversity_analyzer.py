@@ -18,6 +18,7 @@ from typing import List, Dict, Any
 from functools import lru_cache
 from datetime import datetime
 from statistics import mean
+from jsonschema import validate, ValidationError
 
 logger = logging.getLogger("superNova_2177.certifier")
 
@@ -46,6 +47,29 @@ class Config:
     # Reputation system (placeholder)
     DEFAULT_VALIDATOR_REPUTATION = 0.5  # Until reputation tracking implemented
     MAX_NOTE_SCORE = 1.0  # Maximum boost/penalty from note analysis
+
+
+VALIDATION_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "validator_id": {"type": "string"},
+        "specialty": {"type": "string"},
+        "affiliation": {"type": "string"},
+        "confidence": {"type": "number"},
+        "signal_strength": {"type": "number"},
+        "note": {"type": "string"},
+    },
+    "required": ["validator_id"],
+}
+
+
+def _validate_entry(entry: Dict[str, Any]) -> bool:
+    try:
+        validate(entry, VALIDATION_SCHEMA)
+        return True
+    except ValidationError as exc:
+        logger.warning("Validation schema error: %s", exc)
+        return False
 
 
 @lru_cache(maxsize=512)
@@ -95,11 +119,12 @@ def compute_diversity_score(validations: List[Dict[str, Any]]) -> Dict[str, Any]
     # For very large datasets consider numpy vectorization; profile with
     # ``cProfile`` to identify any set-building bottlenecks.
 
-    total = len(validations) or 1
+    valid_entries = [v for v in validations if _validate_entry(v)]
+    total = len(valid_entries) or 1
 
-    ids = {v.get("validator_id") for v in validations if v.get("validator_id")}
-    specialties = {v.get("specialty") for v in validations if v.get("specialty")}
-    affiliations = {v.get("affiliation") for v in validations if v.get("affiliation")}
+    ids = {v.get("validator_id") for v in valid_entries if v.get("validator_id")}
+    specialties = {v.get("specialty") for v in valid_entries if v.get("specialty")}
+    affiliations = {v.get("affiliation") for v in valid_entries if v.get("affiliation")}
 
     ratios = [len(ids) / total, len(specialties) / total, len(affiliations) / total]
     diversity_score = max(0.0, min(1.0, sum(ratios) / 3.0))
@@ -136,6 +161,9 @@ def score_validation(val: Dict[str, Any]) -> float:
         Combines quantitative metrics (confidence, signal) with qualitative
         analysis (note sentiment) using configurable weights.
     """
+    if not _validate_entry(val):
+        return 0.0
+
     try:
         confidence = float(val.get("confidence", 0.5))
         signal = float(val.get("signal_strength", 0.5))

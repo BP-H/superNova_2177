@@ -117,7 +117,7 @@ cp .env.example .env  # set your own secrets
 docker-compose up
 ```
 
-The application will be available at [http://localhost:8000](http://localhost:8000).
+The application will be available at [https://localhost:8000](https://localhost:8000).
 
 ## 🌩️ Streamlit Cloud
 
@@ -186,7 +186,7 @@ is optional because a secure one will be generated if omitted:
 # optional
 export SECRET_KEY="your-secret"
 export DATABASE_URL="postgresql+asyncpg://user:password@localhost/transcendental_resonance"
-export BACKEND_URL="http://localhost:8000"
+export BACKEND_URL="https://localhost:8000"
 ```
 
 To connect to a central database instead of the local file, pass

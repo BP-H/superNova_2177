@@ -3,7 +3,9 @@ import sys
 import shutil
 import subprocess
 import argparse
+import secrets
 from pathlib import Path
+from dotenv import dotenv_values, set_key
 
 ENV_DIR = 'venv'
 
@@ -67,6 +69,13 @@ def main() -> None:
         shutil.copy('.env.example', '.env')
         print('Copied .env.example to .env')
 
+    if os.path.isfile('.env'):
+        env_data = dotenv_values('.env')
+        if not env_data.get('SECRET_KEY'):
+            key = secrets.token_urlsafe(32)
+            set_key('.env', 'SECRET_KEY', key)
+            print('Generated SECRET_KEY in .env')
+
     if args.build_ui:
         build_web_ui(pip)
 
@@ -77,7 +86,7 @@ def main() -> None:
         else:
             activate = f'source {ENV_DIR}/bin/activate'
         print(f'Activate the environment with "{activate}"')
-    print('Set SECRET_KEY in the environment or the .env file before running the app.')
+    print('SECRET_KEY will be generated automatically if not set.')
 
     if args.run_app:
         run_app()

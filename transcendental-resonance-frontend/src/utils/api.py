@@ -8,7 +8,10 @@ import requests
 from nicegui import ui
 
 # Backend API base URL
-BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+BACKEND_URL = os.getenv("BACKEND_URL", "https://localhost:8000")
+if BACKEND_URL.startswith("http://"):
+    logging.warning("Insecure BACKEND_URL detected; forcing HTTPS")
+    BACKEND_URL = BACKEND_URL.replace("http://", "https://", 1)
 
 logger = logging.getLogger(__name__)
 
