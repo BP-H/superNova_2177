@@ -65,6 +65,15 @@ async def login(client, username, password="password123"):
     )
 
 
+async def register_and_get_token(client, username, email=None, password="password123"):
+    """Register ``username`` and return an access token for authenticated calls."""
+    if email is None:
+        email = f"{username}@example.com"
+    await register(client, username, email, password=password)
+    r = await login(client, username, password)
+    return r.json()["access_token"]
+
+
 @pytest.mark.asyncio
 async def test_register_success(client):
     r = await register(client, "user1", "u1@example.com")
@@ -114,8 +123,7 @@ async def test_get_me_requires_auth(client):
 
 @pytest.mark.asyncio
 async def test_get_me_success(client):
-    await register(client, "meuser", "me@example.com")
-    token = (await login(client, "meuser")).json()["access_token"]
+    token = await register_and_get_token(client, "meuser", "me@example.com")
     r = await client.get("/users/me", headers={"Authorization": f"Bearer {token}"})
     assert r.status_code == 200
     assert r.json()["username"] == "meuser"
@@ -135,8 +143,7 @@ async def test_network_analysis_requires_auth(client):
 
 @pytest.mark.asyncio
 async def test_network_analysis_success(client):
-    await register(client, "netuser", "net@example.com")
-    token = (await login(client, "netuser")).json()["access_token"]
+    token = await register_and_get_token(client, "netuser", "net@example.com")
     r = await client.get(
         "/network-analysis/", headers={"Authorization": f"Bearer {token}"}
     )
@@ -145,9 +152,8 @@ async def test_network_analysis_success(client):
 
 @pytest.mark.asyncio
 async def test_follow_unfollow(client):
-    await register(client, "follower", "fol@example.com")
+    token = await register_and_get_token(client, "follower", "fol@example.com")
     await register(client, "target", "tar@example.com")
-    token = (await login(client, "follower")).json()["access_token"]
     r = await client.post(
         "/users/target/follow", headers={"Authorization": f"Bearer {token}"}
     )
