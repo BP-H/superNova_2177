@@ -73,14 +73,22 @@ def export_causal_path(
     highlights = []
 
     for entry in trace:
-        if "node_id" not in entry or "edge" not in entry:
+        if not isinstance(entry, dict):
+            logger.warning("Malformed trace entry (not a dict): %s", entry)
+            continue
+
+        node_id_val = entry.get("node_id")
+        edge = entry.get("edge")
+
+        if node_id_val is None or edge is None:
             logger.warning(
                 "Malformed trace entry missing 'node_id' or 'edge': %s", entry
             )
             continue
 
-        node_id_val = entry["node_id"]
-        edge = entry["edge"]
+        if not isinstance(edge, dict):
+            logger.warning("Malformed trace entry edge not a dict: %s", entry)
+            continue
 
         path_nodes.append(node_id_val)
         edge_list.append(

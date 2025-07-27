@@ -198,6 +198,30 @@ def test_export_causal_path_handles_malformed_entries(monkeypatch, caplog):
     assert any("Malformed trace entry" in rec.message for rec in caplog.records)
 
 
+def test_export_causal_path_handles_non_dict_entries(monkeypatch, caplog):
+    """Non-dict or incomplete entries should be ignored with warnings."""
+    g = InfluenceGraph()
+
+    def fake_trace(_node_id, max_depth=None):
+        return [
+            ["not", "dict"],
+            {"node_id": None, "edge": {"source": "a", "target": "b"}},
+            {"node_id": "x", "edge": "bad"},
+            {"node_id": "y", "edge": {"source": "y", "target": "z"}},
+        ]
+
+    monkeypatch.setattr(g, "trace_to_descendants", fake_trace)
+
+    import logging
+
+    with caplog.at_level(logging.WARNING):
+        result = export_causal_path(g, "y", direction="descendants")
+
+    assert result["path_nodes"] == ["y"]
+    assert result["edge_list"] == [("y", "z", "")]
+    assert any("Malformed trace entry" in rec.message for rec in caplog.records)
+
+
 def test_attach_trace_to_logentry_updates_payload(test_db):
     """attach_trace_to_logentry should persist causal node ids in payload."""
     from audit_bridge import attach_trace_to_logentry
