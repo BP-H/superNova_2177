@@ -9,6 +9,7 @@ from datetime import datetime
 
 from db_models import SessionLocal, Harmonizer, UniverseFork
 from governance_config import is_eligible_for_fork
+from superNova_2177 import Config
 
 OUTBOX = Path(__file__).resolve().parent / "federation" / "outbox.json"
 
@@ -24,6 +25,18 @@ def create_fork(args: argparse.Namespace) -> None:
             print("Creator not eligible for forking")
             return
         config = dict(pair.split("=", 1) for pair in args.config or [])
+        invalid_keys = [k for k in config if not hasattr(Config, k)]
+        if invalid_keys:
+            print(f"Invalid config keys: {', '.join(invalid_keys)}")
+            return
+        cooldown = Config.FORK_COOLDOWN_SECONDS
+        if (
+            user.last_passive_aura_timestamp
+            and (datetime.utcnow() - user.last_passive_aura_timestamp).total_seconds()
+            < cooldown
+        ):
+            print("Fork cooldown active. Please wait before forking again.")
+            return
         fork = UniverseFork(
             id=str(uuid.uuid4()),
             creator_id=user.id,
@@ -33,6 +46,7 @@ def create_fork(args: argparse.Namespace) -> None:
             status="active",
         )
         db.add(fork)
+        user.last_passive_aura_timestamp = datetime.utcnow()
         db.commit()
         print(f"Created fork {fork.id}")
     finally:

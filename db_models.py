@@ -2,6 +2,8 @@
 # Database setup from FastAPI files
 import os  # Added for DATABASE_URL environment variable
 import uuid
+import hashlib
+import logging
 from sqlalchemy import (
     create_engine,
     Column,
@@ -368,10 +370,16 @@ class LogEntry(Base):
         while prev:
             entry = db.query(LogEntry).filter_by(current_hash=prev).first()
             if not entry:
-                break
+                logging.error("Broken remix chain at %s", prev)
+                raise ValueError(f"Missing log entry for hash {prev}")
             chain.append(entry.current_hash)
             prev = entry.previous_hash
         return chain
+
+    def compute_hash(self) -> str:
+        """Return SHA-256 hash for this entry."""
+        data = f"{self.timestamp.isoformat()}|{self.event_type}|{self.payload}|{self.previous_hash}"
+        return hashlib.sha256(data.encode("utf-8")).hexdigest()
 
 
 class SystemState(Base):
@@ -429,13 +437,16 @@ class HypothesisRecord(Base):
         return f"<HypothesisRecord(id={self.id}, status={self.status}, score={self.score})>"
 
 
-# FUSED: Integrated additional models from v01_grok15.py, including Coin and MarketplaceListing
-class Coin(Base):
-    __tablename__ = "coins"
-    coin_id = Column(String, primary_key=True, index=True)
+# FUSED: Integrated additional models from v01_grok15.py, renamed for clarity
+class SymbolicToken(Base):
+    """Purely symbolic artifact used for gameplay mechanics."""
+
+    __tablename__ = "symbolic_tokens"
+
+    token_id = Column(String, primary_key=True, index=True)
     creator = Column(String, nullable=False)
     owner = Column(String, nullable=False)
-    value = Column(String, default="0.0")
+    symbolic_value = Column(String, default="0.0")
     is_root = Column(Boolean, default=False)
     universe_id = Column(String, default="main")
     is_remix = Column(Boolean, default=False)
@@ -444,8 +455,36 @@ class Coin(Base):
     fractional_pct = Column(String, default="0.0")
     ancestors = Column(JSON, default=list)
     content = Column(Text, default="")
-    reactor_escrow = Column(String, default="0.0")
+    reaction_reserve = Column(String, default="0.0")
     reactions = Column(JSON, default=list)
+
+    # compatibility aliases
+    @property
+    def coin_id(self) -> str:  # pragma: no cover - legacy support
+        return self.token_id
+
+    @coin_id.setter
+    def coin_id(self, value: str) -> None:  # pragma: no cover - legacy support
+        self.token_id = value
+
+    @property
+    def value(self) -> str:  # pragma: no cover - legacy support
+        return self.symbolic_value
+
+    @value.setter
+    def value(self, v: str) -> None:  # pragma: no cover - legacy support
+        self.symbolic_value = v
+
+    @property
+    def reactor_escrow(self) -> str:  # pragma: no cover - legacy support
+        return self.reaction_reserve
+
+    @reactor_escrow.setter
+    def reactor_escrow(self, v: str) -> None:  # pragma: no cover - legacy support
+        self.reaction_reserve = v
+
+# Backwards compatibility for existing code references
+Coin = SymbolicToken
 
 
 class UniverseFork(Base):
@@ -458,13 +497,36 @@ class UniverseFork(Base):
     status = Column(String)
 
 
-class MarketplaceListing(Base):
-    __tablename__ = "marketplace_listings"
+class TokenListing(Base):
+    """Listing for trading symbolic tokens within gameplay."""
+
+    __tablename__ = "token_listings"
+
     listing_id = Column(String, primary_key=True)
-    coin_id = Column(String, nullable=False)
+    token_id = Column(String, nullable=False)
     seller = Column(String, nullable=False)
-    price = Column(String, nullable=False)
+    listing_value = Column(String, nullable=False)
     timestamp = Column(String, nullable=False)
+
+    # compatibility aliases
+    @property
+    def coin_id(self) -> str:  # pragma: no cover - legacy support
+        return self.token_id
+
+    @coin_id.setter
+    def coin_id(self, value: str) -> None:  # pragma: no cover - legacy support
+        self.token_id = value
+
+    @property
+    def price(self) -> str:  # pragma: no cover - legacy support
+        return self.listing_value
+
+    @price.setter
+    def price(self, v: str) -> None:  # pragma: no cover - legacy support
+        self.listing_value = v
+
+# Backwards compatibility alias
+MarketplaceListing = TokenListing
 
 
 def init_db() -> None:

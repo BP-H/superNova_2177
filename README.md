@@ -10,6 +10,7 @@
 This repository hosts `superNova_2177.py` — an experimental protocol merging computational sociology, quantum-aware simulation logic, and creative systems engineering. It models symbolic influence, interaction entropy, and network resonance across users and content, with classical compatibility and quantum-readiness.
 
 ⚠️ This is *not* a financial product, cryptocurrency, or tradable asset. All metrics (e.g., Harmony Score, Resonance, Entropy) are symbolic — for modeling, visualization, and creative gameplay only. See legal/disclaimer sections in `superNova_2177.py`, lines 60–88.
+Symbolic tokens and listings introduced in the gameplay modules have **no real-world monetary value**. They exist purely as resonance artifacts used for cooperative storytelling.
 
 ````markdown
 # superNova_2177 🧠

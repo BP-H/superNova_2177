@@ -1158,13 +1158,13 @@ class TokenData(BaseModel):
     username: Optional[str] = None
 
 
-# FUSED: Integrated additional models from v01_grok15.py, including Coin and MarketplaceListing
-class Coin(Base):
-    __tablename__ = "coins"
-    coin_id = Column(String, primary_key=True, index=True)
+# FUSED: Integrated additional models from v01_grok15.py, renamed for clarity
+class SymbolicToken(Base):
+    __tablename__ = "symbolic_tokens"
+    token_id = Column(String, primary_key=True, index=True)
     creator = Column(String, nullable=False)
     owner = Column(String, nullable=False)
-    value = Column(String, default="0.0")
+    symbolic_value = Column(String, default="0.0")
     is_root = Column(Boolean, default=False)
     universe_id = Column(String, default="main")
     is_remix = Column(Boolean, default=False)
@@ -1173,17 +1173,65 @@ class Coin(Base):
     fractional_pct = Column(String, default="0.0")
     ancestors = Column(JSON, default=list)
     content = Column(Text, default="")
-    reactor_escrow = Column(String, default="0.0")
+    reaction_reserve = Column(String, default="0.0")
     reactions = Column(JSON, default=list)
 
+    # compatibility aliases
+    @property
+    def coin_id(self) -> str:  # pragma: no cover - legacy support
+        return self.token_id
 
-class MarketplaceListing(Base):
-    __tablename__ = "marketplace_listings"
+    @coin_id.setter
+    def coin_id(self, value: str) -> None:  # pragma: no cover - legacy support
+        self.token_id = value
+
+    @property
+    def value(self) -> str:  # pragma: no cover - legacy support
+        return self.symbolic_value
+
+    @value.setter
+    def value(self, v: str) -> None:  # pragma: no cover - legacy support
+        self.symbolic_value = v
+
+    @property
+    def reactor_escrow(self) -> str:  # pragma: no cover - legacy support
+        return self.reaction_reserve
+
+    @reactor_escrow.setter
+    def reactor_escrow(self, v: str) -> None:  # pragma: no cover - legacy support
+        self.reaction_reserve = v
+
+# Backwards compatibility
+Coin = SymbolicToken
+
+
+class TokenListing(Base):
+    __tablename__ = "token_listings"
     listing_id = Column(String, primary_key=True)
-    coin_id = Column(String, nullable=False)
+    token_id = Column(String, nullable=False)
     seller = Column(String, nullable=False)
-    price = Column(String, nullable=False)
+    listing_value = Column(String, nullable=False)
     timestamp = Column(String, nullable=False)
+
+    # compatibility aliases
+    @property
+    def coin_id(self) -> str:  # pragma: no cover - legacy support
+        return self.token_id
+
+    @coin_id.setter
+    def coin_id(self, value: str) -> None:  # pragma: no cover - legacy support
+        self.token_id = value
+
+    @property
+    def price(self) -> str:  # pragma: no cover - legacy support
+        return self.listing_value
+
+    @price.setter
+    def price(self, v: str) -> None:  # pragma: no cover - legacy support
+        self.listing_value = v
+
+# Backwards compatibility
+MarketplaceListing = TokenListing
 
 
 # --- MODULE: services.py ---
@@ -1916,6 +1964,9 @@ class Config:
     ANNUAL_AUDIT_INTERVAL_SECONDS: int = 86400 * 365
     METRICS_PORT: int = 8001
 
+    # Cooldown to prevent excessive universe forking
+    FORK_COOLDOWN_SECONDS: int = 3600
+
     # --- Passive influence parameters ---
     INFLUENCE_THRESHOLD_FOR_AURA_GAIN: float = 0.1
     PASSIVE_AURA_GAIN_MULTIPLIER: Decimal = Decimal("10.0")
@@ -2119,13 +2170,22 @@ class CosmicNexus:
     def fork_universe(self, user: Harmonizer, custom_config: Dict[str, Any]) -> str:
         """Fork a new universe with custom config."""
         fork_id = uuid.uuid4().hex
-        fork_agent = RemixAgent(
-            cosmic_nexus=self,
-            filename=f"logchain_{fork_id}.log",
-            snapshot=f"snapshot_{fork_id}.json",
-        )
+        entropy_thr = custom_config.pop("entropy_threshold", None)
+        agent_cls = EntropyTracker if entropy_thr is not None else RemixAgent
+        agent_kwargs = {
+            "cosmic_nexus": self,
+            "filename": f"logchain_{fork_id}.log",
+            "snapshot": f"snapshot_{fork_id}.json",
+        }
+        if entropy_thr is not None:
+            fork_agent = agent_cls(entropy_threshold=float(entropy_thr), **agent_kwargs)
+        else:
+            fork_agent = agent_cls(**agent_kwargs)
         for key, value in custom_config.items():
-            setattr(fork_agent.config, key, value)
+            if hasattr(fork_agent.config, key):
+                setattr(fork_agent.config, key, value)
+            else:
+                logging.warning("Ignoring invalid config key %s", key)
         self.sub_universes[fork_id] = fork_agent
         self.hooks.register_hook(
             "cross_remix", lambda data: self.handle_cross_remix(data, fork_id)
@@ -2963,6 +3023,32 @@ class RemixAgent:
                 logging.info(
                     f"Processed proposal {proposal['proposal_id']} to status {proposal['status']} with threshold {dynamic_threshold}"
                 )
+
+
+class EntropyTracker(RemixAgent):
+    """RemixAgent variant that monitors interaction entropy."""
+
+    def __init__(self, cosmic_nexus: "CosmicNexus", entropy_threshold: float, **kwargs: Any) -> None:
+        super().__init__(cosmic_nexus=cosmic_nexus, **kwargs)
+        self.entropy_threshold = entropy_threshold
+        self.current_entropy = 0.0
+
+    def record_interaction(self, user_id: str) -> None:
+        db = SessionLocal()
+        try:
+            user_data = self.storage.get_user(user_id)
+            if not user_data:
+                return
+            user = User.from_dict(user_data, self.config)
+            info = calculate_interaction_entropy(user, db)
+            self.current_entropy = float(info.get("value", 0.0))
+            if self.current_entropy > self.entropy_threshold:
+                self.cosmic_nexus.hooks.fire_hooks(
+                    "entropy_divergence",
+                    {"universe": id(self), "entropy": self.current_entropy},
+                )
+        finally:
+            db.close()
 
 
 async def proposal_lifecycle_task(agent: RemixAgent):
