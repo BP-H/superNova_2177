@@ -45,11 +45,173 @@ async def client(test_db):
 
 @pytest.fixture
 def memory_agent(monkeypatch):
-    monkeypatch.setattr(sn, "USE_IN_MEMORY_STORAGE", True)
-    agent = sn.RemixAgent(
-        cosmic_nexus=sn.CosmicNexus(sn.SessionLocal, sn.SystemStateService(sn.SessionLocal()))
+    engine = create_engine(
+        "sqlite:///:memory:", connect_args={"check_same_thread": False}
     )
-    return agent
+    Session = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+    sn.Base.metadata.create_all(bind=engine)
+    monkeypatch.setattr(sn, "USE_IN_MEMORY_STORAGE", True)
+    monkeypatch.setattr(sn, "SessionLocal", Session)
+    if getattr(sn, "nn", None) is None:
+        import types
+
+        dummy_nn = types.SimpleNamespace(
+            Sequential=lambda *a, **kw: None,
+            Linear=lambda *a, **kw: None,
+            ReLU=lambda *a, **kw: None,
+        )
+        monkeypatch.setattr(sn, "nn", dummy_nn)
+    if not hasattr(sn, "Vaccine"):
+        class StubVaccine:
+            def __init__(self, _config):
+                pass
+
+            def scan(self, _text: str) -> bool:
+                return True
+
+        monkeypatch.setattr(sn, "Vaccine", StubVaccine, raising=False)
+    if not hasattr(sn, "LogChain"):
+        class StubLogChain:
+            def __init__(self, _filename):
+                self.entries = []
+
+            def add(self, event):
+                self.entries.append(event)
+
+            def replay_events(self, apply_fn, snapshot_timestamp=None):
+                for e in self.entries:
+                    apply_fn(e)
+
+            def verify(self):
+                return True
+
+        monkeypatch.setattr(sn, "LogChain", StubLogChain, raising=False)
+    if not hasattr(sn, "User"):
+        import threading
+        from decimal import Decimal
+
+        class StubUser:
+            def __init__(self, name, is_genesis, species, _config):
+                self.name = name
+                self.is_genesis = is_genesis
+                self.species = species
+                self.karma = Decimal("0")
+                self.root_coin_id = ""
+                self.coins_owned = []
+                self.lock = threading.RLock()
+
+            @classmethod
+            def from_dict(cls, data, config):
+                u = cls(data["name"], data.get("is_genesis", False), data.get("species", "human"), config)
+                u.karma = Decimal(str(data.get("karma", "0")))
+                u.root_coin_id = data.get("root_coin_id", "")
+                u.coins_owned = list(data.get("coins_owned", []))
+                return u
+
+            def to_dict(self):
+                return {
+                    "name": self.name,
+                    "is_genesis": self.is_genesis,
+                    "species": self.species,
+                    "karma": str(self.karma),
+                    "root_coin_id": self.root_coin_id,
+                    "coins_owned": self.coins_owned,
+                }
+
+            def effective_karma(self):
+                return self.karma
+
+            def check_rate_limit(self, _action):
+                return True
+
+            def revoke_consent(self):
+                pass
+
+        monkeypatch.setattr(sn, "User", StubUser, raising=False)
+    if not hasattr(sn, "Coin"):
+        import threading
+        from decimal import Decimal
+
+        class StubCoin:
+            def __init__(
+                self,
+                coin_id,
+                owner,
+                creator,
+                value,
+                _config,
+                *,
+                is_root=False,
+                universe_id="main",
+                is_remix=False,
+                references=None,
+                improvement="",
+                fractional_pct="0.0",
+                ancestors=None,
+                content="",
+            ):
+                self.coin_id = coin_id
+                self.owner = owner
+                self.creator = creator
+                self.value = Decimal(str(value))
+                self.is_root = is_root
+                self.universe_id = universe_id
+                self.is_remix = is_remix
+                self.references = references or []
+                self.improvement = improvement
+                self.fractional_pct = fractional_pct
+                self.ancestors = ancestors or []
+                self.content = content
+                self.reactor_escrow = Decimal("0")
+                self.lock = threading.RLock()
+
+            @classmethod
+            def from_dict(cls, data, config):
+                return cls(
+                    data["coin_id"],
+                    data["owner"],
+                    data["creator"],
+                    data["value"],
+                    config,
+                    is_root=data.get("is_root", False),
+                    universe_id=data.get("universe_id", "main"),
+                    is_remix=data.get("is_remix", False),
+                    references=data.get("references", []),
+                    improvement=data.get("improvement", ""),
+                    fractional_pct=data.get("fractional_pct", "0.0"),
+                    ancestors=data.get("ancestors", []),
+                    content=data.get("content", ""),
+                )
+
+            def to_dict(self):
+                return {
+                    "coin_id": self.coin_id,
+                    "owner": self.owner,
+                    "creator": self.creator,
+                    "value": str(self.value),
+                    "is_root": self.is_root,
+                    "universe_id": self.universe_id,
+                    "is_remix": self.is_remix,
+                    "references": self.references,
+                    "improvement": self.improvement,
+                    "fractional_pct": self.fractional_pct,
+                    "ancestors": self.ancestors,
+                    "content": self.content,
+                    "reactor_escrow": str(self.reactor_escrow),
+                }
+
+            def add_reaction(self, _r):
+                pass
+
+            def release_escrow(self, amount):
+                released = min(self.reactor_escrow, Decimal(str(amount)))
+                self.reactor_escrow -= released
+                return released
+
+        monkeypatch.setattr(sn, "Coin", StubCoin, raising=False)
+    return sn.RemixAgent(
+        cosmic_nexus=sn.CosmicNexus(Session, sn.SystemStateService(Session()))
+    )
 
 
 async def register(client, username, email, password="password123"):
