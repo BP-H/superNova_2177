@@ -47,7 +47,8 @@ def test_tune_system_parameters_high_entropy():
     
     # Assert: The output suggests increasing the ENTROPY_REDUCTION_STEP
     assert "ENTROPY_REDUCTION_STEP" in overrides
-    assert overrides["ENTROPY_REDUCTION_STEP"] == pytest.approx(settings.ENTROPY_REDUCTION_STEP * 1.1)
+    expected_step = float(settings.ENTROPY_REDUCTION_STEP) * 1.1
+    assert overrides["ENTROPY_REDUCTION_STEP"] == pytest.approx(expected_step)
 
 def test_tune_system_parameters_normal_state():
     """

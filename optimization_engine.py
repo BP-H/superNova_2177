@@ -17,11 +17,6 @@ except (ImportError, ModuleNotFoundError):
         ENTROPY_CHAOS_THRESHOLD = 1500.0
         ENTROPY_INTERVENTION_THRESHOLD = 1200.0
 
-# Ensure compatible numeric types for downstream calculations
-try:
-    settings.ENTROPY_REDUCTION_STEP = float(settings.ENTROPY_REDUCTION_STEP)
-except Exception:
-    pass
 
 @ScientificModel(
     source="Control Theory Heuristics",
@@ -51,15 +46,18 @@ def tune_system_parameters(performance_metrics: Dict) -> Dict:
     accuracy = performance_metrics.get("average_prediction_accuracy", 0.7)
     entropy = performance_metrics.get("current_system_entropy", 1000.0)
 
+    influence_multiplier = float(getattr(settings, "INFLUENCE_MULTIPLIER", 1.2))
+    chaos_threshold = float(getattr(settings, "ENTROPY_CHAOS_THRESHOLD", 1500.0))
+
     # Heuristic 1: If prediction accuracy is low, make the model less aggressive.
     if accuracy < 0.6:
         # Suggest a 5% reduction in the influence multiplier
-        overrides["INFLUENCE_MULTIPLIER"] = settings.INFLUENCE_MULTIPLIER * 0.95
+        overrides["INFLUENCE_MULTIPLIER"] = influence_multiplier * 0.95
 
     # Heuristic 2: If system entropy is dangerously high, strengthen countermeasures.
-    if entropy > settings.ENTROPY_CHAOS_THRESHOLD:
+    if entropy > chaos_threshold:
         # Suggest a 10% increase in the entropy reduction step
-        step = float(settings.ENTROPY_REDUCTION_STEP)
+        step = float(getattr(settings, "ENTROPY_REDUCTION_STEP", 0.2))
         overrides["ENTROPY_REDUCTION_STEP"] = step * 1.1
 
     return overrides
@@ -88,9 +86,14 @@ def select_optimal_intervention(system_state: Dict) -> str:
     """
     entropy = system_state.get("system_entropy", 1000.0)
 
-    if entropy > settings.ENTROPY_CHAOS_THRESHOLD:
+    chaos_threshold = float(getattr(settings, "ENTROPY_CHAOS_THRESHOLD", 1500.0))
+    intervention_threshold = float(
+        getattr(settings, "ENTROPY_INTERVENTION_THRESHOLD", 1200.0)
+    )
+
+    if entropy > chaos_threshold:
         return "trigger_emergency_harmonization"
-    elif entropy > settings.ENTROPY_INTERVENTION_THRESHOLD:
+    elif entropy > intervention_threshold:
         return "boost_novel_content"
     else:
         return "maintain_equilibrium"
