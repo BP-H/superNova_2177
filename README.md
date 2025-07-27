@@ -21,7 +21,15 @@ A modular intelligence pipeline that evaluates hypotheses through evidence-based
 ## 🚀 Quick Start
 
 ```bash
-python setup_env.py  # set up environment on any platform
+# create the virtual environment and install dependencies
+python setup_env.py
+
+# optional: launch the API immediately
+# python setup_env.py --run-app
+
+# optional: build the NiceGUI frontend
+# python setup_env.py --build-ui
+
 # Try demo mode
 supernova-validate --demo
 
@@ -36,9 +44,12 @@ supernova-validate --validations sample_validations.json
    already on your machine. You can check by running `python --version` in your
    terminal.
 2. **Run the setup script** to create the virtual environment and install all
-   dependencies locally:
+   dependencies locally. You can also pass `--run-app` or `--build-ui` to
+   automatically start the API or compile the frontend:
    ```bash
    python setup_env.py
+   # python setup_env.py --run-app    # launch API after install
+   # python setup_env.py --build-ui   # build NiceGUI frontend assets
    ```
    Or install the published wheel directly from PyPI:
    ```bash

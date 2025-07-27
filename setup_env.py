@@ -2,6 +2,8 @@ import os
 import sys
 import shutil
 import subprocess
+import argparse
+from pathlib import Path
 
 ENV_DIR = 'venv'
 
@@ -32,16 +34,41 @@ def pip_cmd() -> list:
     return [venv_bin('pip')]
 
 
+def run_app() -> None:
+    """Launch the backend API using the environment's Python."""
+    python_exe = sys.executable if in_virtualenv() else venv_bin('python')
+    subprocess.check_call([python_exe, 'superNova_2177.py'])
+
+
+def build_web_ui(pip: list) -> None:
+    """Install UI deps and build the NiceGUI frontend."""
+    ui_reqs = Path('transcendental-resonance-frontend') / 'requirements.txt'
+    if ui_reqs.is_file():
+        subprocess.check_call(pip + ['install', '-r', str(ui_reqs)])
+    ui_script = Path('transcendental-resonance-frontend') / 'src' / 'main.py'
+    nicegui = [venv_bin('nicegui')] if not in_virtualenv() else ['nicegui']
+    subprocess.check_call(nicegui + ['build', str(ui_script)])
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser(description='Set up the environment')
+    parser.add_argument('--run-app', action='store_true', help='start the API after installation')
+    parser.add_argument('--build-ui', action='store_true', help='build the web UI after installation')
+    args = parser.parse_args()
+
     env_created = ensure_env()
 
     pip = pip_cmd()
     subprocess.check_call(pip + ['install', '--upgrade', 'pip'])
-    subprocess.check_call(pip + ['install', 'supernova-2177'])
+    subprocess.check_call(pip + ['install', '-r', 'requirements.txt'])
+    subprocess.check_call(pip + ['install', '-e', '.'])
 
     if os.path.isfile('.env.example') and not os.path.isfile('.env'):
         shutil.copy('.env.example', '.env')
         print('Copied .env.example to .env')
+
+    if args.build_ui:
+        build_web_ui(pip)
 
     print('Installation complete.')
     if env_created:
@@ -51,6 +78,9 @@ def main() -> None:
             activate = f'source {ENV_DIR}/bin/activate'
         print(f'Activate the environment with "{activate}"')
     print('Set SECRET_KEY in the environment or the .env file before running the app.')
+
+    if args.run_app:
+        run_app()
 
 
 if __name__ == '__main__':
