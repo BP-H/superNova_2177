@@ -510,7 +510,7 @@ file_handler.setFormatter(
         "%(asctime)s | %(levelname)s | %(threadName)s | %(message)s (%(filename)s:%(lineno)d) | 감사합니다!"
     )
 )
-logging.getRoot().addHandler(file_handler)
+logging.getLogger().addHandler(console_handler)
 
 # Prometheus metrics
 entropy_gauge = prom.Gauge("system_entropy", "Current system entropy")
