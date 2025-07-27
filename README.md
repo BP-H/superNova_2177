@@ -68,11 +68,16 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
    ```bash
    python install.py
    ```
-  A PyPI wheel is currently unavailable. Run `python setup_env.py` or use the online installer scripts:
-  ```bash
-  # Linux/macOS
-  ./online_install.sh
-  # Windows
+   If you prefer to manage the environment manually, install the required
+   packages yourself using `requirements.txt`:
+   ```bash
+   pip install -r requirements.txt  # installs numpy, python-dateutil, etc.
+   ```
+   A PyPI wheel is currently unavailable. Run `python setup_env.py` or use the online installer scripts:
+   ```bash
+   # Linux/macOS
+   ./online_install.sh
+   # Windows
   ./online_install.ps1
   ```
 3. **Activate the environment**:
@@ -217,14 +222,13 @@ After the build completes, you'll get a shareable URL to interact with the valid
 Install all dependencies first:
 
 ```bash
-# use requirements.lock for reproducible installs
-pip install -r requirements.lock
+pip install -r requirements.txt  # or use requirements.lock for reproducible installs
 pytest
 ```
 
-The test suite requires packages like `SQLAlchemy`, `networkx`, and `numpy`.
-If `pytest` fails with missing module errors, ensure packages are installed via
-`pip install -r requirements.lock`.
+The test suite requires packages like `SQLAlchemy`, `networkx`, `numpy`, and
+`python-dateutil`. If `pytest` fails with missing module errors, ensure the
+dependencies from `requirements.txt` (or `requirements.lock`) are installed.
 
 ### Makefile Commands
 
