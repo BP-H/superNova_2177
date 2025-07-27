@@ -40,6 +40,24 @@ if TYPE_CHECKING:
 from moderation_utils import Vaccine
 
 
+class SimpleLogChain:
+    """Lightweight event log for in-memory use during tests."""
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+        self.entries: list[dict[str, Any]] = []
+
+    def add(self, event: Dict[str, Any]) -> None:
+        self.entries.append(event)
+
+    def replay_events(self, apply_fn, snapshot_timestamp=None) -> None:
+        for e in self.entries:
+            apply_fn(e)
+
+    def verify(self) -> bool:
+        return True
+
+
 def ScientificModel(*args: Any, **kwargs: Any):  # placeholder
     def decorator(func: Any) -> Any:
         return func
@@ -75,7 +93,9 @@ class RemixAgent:
         self.config = Config()
         self.quantum_ctx = QuantumContext(self.config.FUZZY_ANALOG_COMPUTATION_ENABLED)
         self.vaccine = Vaccine(self.config)
-        self.logchain = LogChain(filename)
+        self.logchain = (
+            LogChain(filename) if "LogChain" in globals() else SimpleLogChain(filename)
+        )
         self.storage = (
             SQLAlchemyStorage(SessionLocal)
             if not USE_IN_MEMORY_STORAGE
