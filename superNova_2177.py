@@ -992,7 +992,7 @@ class ProposalOut(ProposalCreate):
     status: str
     created_at: datetime.datetime
     voting_deadline: datetime.datetime
-    votes_summary: Dict[str, int] = {}
+    votes_summary: Dict[str, int] = Field(default_factory=dict)
 
     class Config:
         from_attributes = True
@@ -1940,14 +1940,15 @@ class Config:
     CREATOR_SHARE: Decimal = Decimal("0.3334")  # To sum to 1
     KARMA_MINT_THRESHOLD: Decimal = Decimal("100")
     MIN_IMPROVEMENT_LEN: int = 50
-    EMOJI_WEIGHTS: Dict[str, Decimal] = {
-        "👍": Decimal("1"),
-        "❤️": Decimal("2"),
-    }  # Add supported emojis
+    EMOJI_WEIGHTS: Dict[str, Decimal] = field(
+        default_factory=lambda: {"👍": Decimal("1"), "❤️": Decimal("2")}
+    )  # Add supported emojis
     DAILY_DECAY: Decimal = Decimal("0.99")
     SNAPSHOT_INTERVAL: int = 100
     MAX_INPUT_LENGTH: int = 10000
-    VAX_PATTERNS: Dict[str, List[str]] = {"block": [r"\b(blocked_word)\b"]}
+    VAX_PATTERNS: Dict[str, List[str]] = field(
+        default_factory=lambda: {"block": [r"\b(blocked_word)\b"]}
+    )
     VAX_FUZZY_THRESHOLD: int = 2
     REACTOR_KARMA_PER_REACT: Decimal = Decimal("1")
     CREATOR_KARMA_PER_REACT: Decimal = Decimal("2")
@@ -1955,7 +1956,9 @@ class Config:
     KARMA_MINT_THRESHOLD: Decimal = Decimal("100")
     MIN_IMPROVEMENT_LEN: int = 50
     DAILY_DECAY: Decimal = Decimal("0.99")
-    VAX_PATTERNS: Dict[str, List[str]] = {"block": [r"\b(blocked_word)\b"]}
+    VAX_PATTERNS: Dict[str, List[str]] = field(
+        default_factory=lambda: {"block": [r"\b(blocked_word)\b"]}
+    )
     MAX_INPUT_LENGTH: int = 10000
 
     # --- Named constants for network effects and simulations ---
@@ -2027,8 +2030,10 @@ class Config:
     GOV_QUORUM_THRESHOLD: Decimal = Decimal("0.5")
     GOV_SUPERMAJORITY_THRESHOLD: Decimal = Decimal("0.9")
     GOV_EXECUTION_TIMELOCK_SEC: int = 259200  # 3 days
-    ALLOWED_POLICY_KEYS: List[str] = ["DAILY_DECAY", "KARMA_MINT_THRESHOLD"]
-    SPECIES: List[str] = ["human", "ai", "company"]
+    ALLOWED_POLICY_KEYS: List[str] = field(
+        default_factory=lambda: ["DAILY_DECAY", "KARMA_MINT_THRESHOLD"]
+    )
+    SPECIES: List[str] = field(default_factory=lambda: ["human", "ai", "company"])
 
     # --- Meta-evaluation tuning ---
     # Minimum number of records required before bias analysis is considered
