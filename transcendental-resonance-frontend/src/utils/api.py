@@ -1,13 +1,16 @@
 """Utility functions for communicating with the Transcendental Resonance backend."""
 
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 
 import os
+import logging
 import requests
 from nicegui import ui
 
 # Backend API base URL
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+
+logger = logging.getLogger(__name__)
 
 TOKEN: Optional[str] = None
 
@@ -17,8 +20,20 @@ def api_call(
     data: Optional[Dict] = None,
     headers: Optional[Dict] = None,
     files: Optional[Dict] = None,
-) -> Optional[Dict]:
-    """Wrapper around ``requests`` to interact with the backend API."""
+    *,
+    return_error: bool = False,
+) -> Optional[Dict[str, Any]]:
+    """Wrapper around ``requests`` to interact with the backend API.
+
+    Args:
+        method: HTTP method ("GET", "POST", etc.).
+        endpoint: API endpoint path.
+        data: Optional data payload.
+        headers: Optional HTTP headers.
+        files: Optional file payload for multipart requests.
+        return_error: If ``True`` return a dict describing the error instead of
+            ``None`` when a request fails.
+    """
     url = f"{BACKEND_URL}{endpoint}"
     default_headers = {'Content-Type': 'application/json'} if method != 'multipart' else {}
     if headers:
@@ -43,7 +58,15 @@ def api_call(
         response.raise_for_status()
         return response.json() if response.text else None
     except requests.exceptions.RequestException as exc:
-        ui.notify(f"API Error: {exc}", color='negative')
+        logger.error(
+            "API request failed: %s %s - %s", method, url, exc, exc_info=True
+        )
+        ui.notify("API request failed", color="negative")
+        if return_error:
+            return {
+                "error": str(exc),
+                "status_code": getattr(exc.response, "status_code", None),
+            }
         return None
 
 
