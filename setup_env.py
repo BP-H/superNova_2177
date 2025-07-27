@@ -72,11 +72,15 @@ def main() -> None:
 
     print('Installation complete.')
     if env_created:
-        if os.name == 'nt':
-            activate = f'{ENV_DIR}\\Scripts\\activate'
-        else:
-            activate = f'source {ENV_DIR}/bin/activate'
-        print(f'Activate the environment with "{activate}"')
+        activate_script = Path(ENV_DIR) / (
+            "Scripts/activate" if os.name == "nt" else "bin/activate"
+        )
+        instruction = (
+            str(activate_script)
+            if os.name == "nt"
+            else f"source {activate_script}"
+        )
+        print(f'Activate the environment with "{instruction}"')
     print('Set SECRET_KEY in the environment or the .env file before running the app.')
 
     if args.run_app:
