@@ -333,17 +333,27 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
             model = SentenceTransformer("paraphrase-MiniLM-L6-v2")
             return model.encode(list(texts))
         except Exception as e:  # pragma: no cover - fallback rarely triggered
-            logger.warning(f"SentenceTransformer unavailable: {e}; using TF-IDF fallback")
+            logger.warning(
+                f"SentenceTransformer unavailable: {e}; using TF-IDF fallback"
+            )
             try:
                 from sklearn.feature_extraction.text import TfidfVectorizer
 
                 vec = TfidfVectorizer().fit(list(texts))
                 return vec.transform(list(texts)).toarray()
             except Exception as tfidf_exc:  # pragma: no cover - minimal fallback
-                logger.error(f"TF-IDF fallback unavailable: {tfidf_exc}; using zeros")
+                logger.error(
+                    f"TF-IDF fallback unavailable: {tfidf_exc}; using simple counts"
+                )
                 import numpy as np
 
-                return np.zeros((len(texts), 1))
+                vocab = sorted({w for t in texts for w in t.split()})
+
+                def to_counts(text: str) -> np.ndarray:
+                    counts = [text.split().count(tok) for tok in vocab]
+                    return np.array(counts, dtype=float)
+
+                return np.stack([to_counts(t) for t in texts])
 
     # Heavy embedding generation can dominate runtime on large datasets.
     # Profile with ``cProfile`` to verify and consider batching strategies.
