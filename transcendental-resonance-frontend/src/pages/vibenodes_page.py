@@ -1,6 +1,6 @@
 """VibeNodes creation and listing."""
 
-from nicegui import ui
+from nicegui import ui, background_tasks
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
@@ -42,10 +42,14 @@ async def vibenodes_page():
                 'tags': [t.strip() for t in tags.value.split(',')] if tags.value else None,
                 'parent_vibenode_id': int(parent_id.value) if parent_id.value else None,
             }
-            resp = api_call('POST', '/vibenodes/', data)
-            if resp:
-                ui.notify('VibeNode created!', color='positive')
-                await refresh_vibenodes()
+
+            async def task():
+                resp = await api_call('POST', '/vibenodes/', data)
+                if resp:
+                    ui.notify('VibeNode created!', color='positive')
+                    await refresh_vibenodes()
+
+            background_tasks.create(task())
 
         ui.button('Create VibeNode', on_click=create_vibenode).classes('w-full mb-4').style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
@@ -59,7 +63,7 @@ async def vibenodes_page():
                 params['search'] = search_query.value
             if sort_select.value:
                 params['sort'] = sort_select.value
-            vibenodes = api_call('GET', '/vibenodes/', params) or []
+            vibenodes = await api_call('GET', '/vibenodes/', params) or []
             if search_query.value:
                 vibenodes = [vn for vn in vibenodes if search_query.value.lower() in vn['name'].lower()]
             if sort_select.value:
@@ -75,10 +79,13 @@ async def vibenodes_page():
                         ui.label(vn['description']).classes('text-sm')
                         ui.label(f"Likes: {vn.get('likes_count', 0)}").classes('text-sm')
                         async def like_fn(vn_id=vn['id']):
-                            api_call('POST', f'/vibenodes/{vn_id}/like')
-                            await refresh_vibenodes()
+                            async def task():
+                                await api_call('POST', f'/vibenodes/{vn_id}/like')
+                                await refresh_vibenodes()
+
+                            background_tasks.create(task())
                         ui.button('Like/Unlike', on_click=like_fn).style(
                             f'background: {THEME["accent"]}; color: {THEME["background"]};'
                         )
 
-        await refresh_vibenodes()
+        background_tasks.create(refresh_vibenodes())

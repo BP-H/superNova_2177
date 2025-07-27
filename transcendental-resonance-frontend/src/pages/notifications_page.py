@@ -1,6 +1,6 @@
 """User notifications page."""
 
-from nicegui import ui
+from nicegui import ui, background_tasks
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
@@ -25,7 +25,7 @@ async def notifications_page():
         notifs_list = ui.column().classes('w-full')
 
         async def refresh_notifs():
-            notifs = api_call('GET', '/notifications/') or []
+            notifs = await api_call('GET', '/notifications/') or []
             notifs_list.clear()
             for n in notifs:
                 with notifs_list:
@@ -33,11 +33,14 @@ async def notifications_page():
                         ui.label(n['message']).classes('text-sm')
                         if not n['is_read']:
                             async def mark_read(n_id=n['id']):
-                                api_call('PUT', f'/notifications/{n_id}/read')
-                                await refresh_notifs()
+                                async def task():
+                                    await api_call('PUT', f'/notifications/{n_id}/read')
+                                    await refresh_notifs()
+
+                                background_tasks.create(task())
                             ui.button('Mark Read', on_click=mark_read).style(
                                 f'background: {THEME["primary"]}; color: {THEME["text"]};'
                             )
 
-        await refresh_notifs()
-        ui.timer(30, refresh_notifs)
+        background_tasks.create(refresh_notifs())
+        ui.timer(30, lambda: background_tasks.create(refresh_notifs()))
