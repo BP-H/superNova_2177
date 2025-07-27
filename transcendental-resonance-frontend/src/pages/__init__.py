@@ -12,6 +12,7 @@ __all__ = [
     "messages_page",
     "ai_assist_page",
     "upload_page",
+    "music_page",
     "status_page",
     "network_page",
 ]
