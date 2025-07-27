@@ -96,3 +96,40 @@ def test_detect_semantic_coordination_embeddings():
     assert result["semantic_clusters"]
     assert result["semantic_clusters"][0]["similarity_score"] >= 0.8
 
+
+def test_detect_semantic_coordination_no_numpy_sklearn(monkeypatch):
+    validations = [
+        {
+            "validator_id": "v1",
+            "hypothesis_id": "h1",
+            "score": 0.8,
+            "timestamp": "2025-01-01T00:00:00Z",
+            "note": "the quick brown fox jumps over the lazy dog",
+        },
+        {
+            "validator_id": "v2",
+            "hypothesis_id": "h2",
+            "score": 0.8,
+            "timestamp": "2025-01-01T00:01:00Z",
+            "note": "the quick brown fox leaps over the lazy dog",
+        },
+    ]
+
+    import builtins, sys
+
+    original_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name.startswith("sentence_transformers") or name.startswith("sklearn") or name == "numpy":
+            raise ImportError("missing")
+        return original_import(name, *args, **kwargs)
+
+    for mod in ["sentence_transformers", "sklearn", "numpy"]:
+        monkeypatch.delitem(sys.modules, mod, raising=False)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+
+    result = detect_semantic_coordination(validations)
+    assert result["semantic_clusters"]
+    assert result["semantic_clusters"][0]["similarity_score"] >= 0.8
+
