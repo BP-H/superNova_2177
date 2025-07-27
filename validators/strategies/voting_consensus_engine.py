@@ -135,7 +135,8 @@ def aggregate_validator_votes(
             "voting_method": method.value,
             "total_validators": len(votes),
             "valid_votes": len(valid_votes),
-            "quorum_met": len(valid_votes) >= Config.MIN_VALIDATORS_FOR_CONSENSUS,
+            "quorum_met": len(valid_votes)
+            >= Config.MIN_VALIDATORS_FOR_CONSENSUS,
             "diversity_score": diversity_score,
             "flags": flags,
         }
@@ -175,7 +176,9 @@ def _weighted_average_consensus(
         confidences.append(confidence * weight)
 
     consensus_score = weighted_sum / total_weight if total_weight > 0 else 0.0
-    consensus_confidence = sum(confidences) / total_weight if total_weight > 0 else 0.0
+    consensus_confidence = (
+        sum(confidences) / total_weight if total_weight > 0 else 0.0
+    )
 
     return {
         "consensus_decision": round(consensus_score, 3),
@@ -183,7 +186,9 @@ def _weighted_average_consensus(
         "vote_breakdown": {
             "method": "weighted_average",
             "total_weight": round(total_weight, 3),
-            "raw_average": round(mean([float(v.get("score", 0.5)) for v in votes]), 3),
+            "raw_average": round(
+                mean([float(v.get("score", 0.5)) for v in votes]), 3
+            ),
         },
     }
 
@@ -214,7 +219,9 @@ def _majority_rule_consensus(
     meets_majority = confidence >= Config.MAJORITY_THRESHOLD
 
     return {
-        "consensus_decision": (winning_decision if meets_majority else "no_consensus"),
+        "consensus_decision": (
+            winning_decision if meets_majority else "no_consensus"
+        ),
         "consensus_confidence": round(confidence, 3),
         "vote_breakdown": {
             "method": "majority_rule",
@@ -237,7 +244,9 @@ def _supermajority_consensus(
     result.update(
         {
             "consensus_decision": (
-                result["consensus_decision"] if meets_supermajority else "no_consensus"
+                result["consensus_decision"]
+                if meets_supermajority
+                else "no_consensus"
             ),
             "vote_breakdown": {
                 **result["vote_breakdown"],
@@ -263,7 +272,9 @@ def _consensus_threshold_vote(
     result.update(
         {
             "consensus_decision": (
-                result["consensus_decision"] if meets_consensus else "no_consensus"
+                result["consensus_decision"]
+                if meets_consensus
+                else "no_consensus"
             ),
             "vote_breakdown": {
                 **result["vote_breakdown"],
@@ -303,12 +314,16 @@ def _reputation_weighted_consensus(
         total_weight += combined_weight
 
     # Calculate consensus score
-    consensus_score = sum(weighted_scores) / total_weight if total_weight > 0 else 0.0
+    consensus_score = (
+        sum(weighted_scores) / total_weight if total_weight > 0 else 0.0
+    )
 
     # Find consensus decision
     if decision_weights:
         consensus_decision = max(decision_weights, key=decision_weights.get)
-        decision_confidence = decision_weights[consensus_decision] / total_weight
+        decision_confidence = (
+            decision_weights[consensus_decision] / total_weight
+        )
     else:
         consensus_decision = "no_decision"
         decision_confidence = 0.0
@@ -319,7 +334,9 @@ def _reputation_weighted_consensus(
         "vote_breakdown": {
             "method": "reputation_weighted",
             "total_weight": round(total_weight, 3),
-            "decision_weights": {k: round(v, 3) for k, v in decision_weights.items()},
+            "decision_weights": {
+                k: round(v, 3) for k, v in decision_weights.items()
+            },
             "top_decision": consensus_decision,
         },
     }
@@ -349,7 +366,9 @@ def validate_voting_integrity(
     flags = []
 
     # Check for duplicate validators
-    validator_ids = [v.get("validator_id") for v in votes if v.get("validator_id")]
+    validator_ids = [
+        v.get("validator_id") for v in votes if v.get("validator_id")
+    ]
     if len(validator_ids) != len(set(validator_ids)):
         flags.append("duplicate_validators")
 
@@ -361,7 +380,9 @@ def validate_voting_integrity(
             flags.append("suspicious_score_clustering")
 
     # Check reputation distribution
-    validator_reputations = [reputations.get(v.get("validator_id"), 0.5) for v in votes]
+    validator_reputations = [
+        reputations.get(v.get("validator_id"), 0.5) for v in votes
+    ]
     high_rep_count = sum(1 for r in validator_reputations if r > 0.8)
     if high_rep_count / len(validator_reputations) > 0.8:
         flags.append("high_reputation_concentration")
@@ -371,7 +392,9 @@ def validate_voting_integrity(
         "vote_count": len(votes),
         "unique_validators": len(set(validator_ids)),
         "avg_reputation": (
-            round(mean(validator_reputations), 3) if validator_reputations else 0.0
+            round(mean(validator_reputations), 3)
+            if validator_reputations
+            else 0.0
         ),
     }
 
