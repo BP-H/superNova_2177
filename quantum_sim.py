@@ -4,20 +4,20 @@ import random
 from typing import Any, Dict, Optional, List
 
 try:
-    from superNova_2177 import Config as settings
+    from superNova_2177 import Config
 
-    FUZZINESS_RANGE_LOW = settings.FUZZINESS_RANGE_LOW
-    FUZZINESS_RANGE_HIGH = settings.FUZZINESS_RANGE_HIGH
-    INTERFERENCE_FACTOR = settings.INTERFERENCE_FACTOR
-    DEFAULT_ENTANGLEMENT_FACTOR = settings.DEFAULT_ENTANGLEMENT_FACTOR
+    FUZZINESS_RANGE_LOW = Config.FUZZINESS_RANGE_LOW
+    FUZZINESS_RANGE_HIGH = Config.FUZZINESS_RANGE_HIGH
+    INTERFERENCE_FACTOR = Config.INTERFERENCE_FACTOR
+    DEFAULT_ENTANGLEMENT_FACTOR = Config.DEFAULT_ENTANGLEMENT_FACTOR
     ENTANGLEMENT_NORMALIZATION_FACTOR = getattr(
-        settings,
+        Config,
         "ENTANGLEMENT_NORMALIZATION_FACTOR",
         DEFAULT_ENTANGLEMENT_FACTOR * 10,
     )
 except Exception:  # pragma: no cover - fallback values
 
-    class settings:
+    class Config:
         FUZZINESS_RANGE_LOW = 0.1
         FUZZINESS_RANGE_HIGH = 0.4
         INTERFERENCE_FACTOR = 0.01
@@ -28,11 +28,11 @@ except Exception:  # pragma: no cover - fallback values
         ENTROPY_INTERVENTION_STEP = 50.0
         ENTROPY_CHAOS_THRESHOLD = 1500.0
 
-    FUZZINESS_RANGE_LOW = settings.FUZZINESS_RANGE_LOW
-    FUZZINESS_RANGE_HIGH = settings.FUZZINESS_RANGE_HIGH
-    INTERFERENCE_FACTOR = settings.INTERFERENCE_FACTOR
-    DEFAULT_ENTANGLEMENT_FACTOR = settings.DEFAULT_ENTANGLEMENT_FACTOR
-    ENTANGLEMENT_NORMALIZATION_FACTOR = settings.ENTANGLEMENT_NORMALIZATION_FACTOR
+    FUZZINESS_RANGE_LOW = Config.FUZZINESS_RANGE_LOW
+    FUZZINESS_RANGE_HIGH = Config.FUZZINESS_RANGE_HIGH
+    INTERFERENCE_FACTOR = Config.INTERFERENCE_FACTOR
+    DEFAULT_ENTANGLEMENT_FACTOR = Config.DEFAULT_ENTANGLEMENT_FACTOR
+    ENTANGLEMENT_NORMALIZATION_FACTOR = Config.ENTANGLEMENT_NORMALIZATION_FACTOR
 
 from scientific_utils import ScientificModel, VerifiedScientificModel
 
@@ -155,13 +155,13 @@ class QuantumContext:
         if self.fuzzy_enabled:
             bias = (input_value - 0.5) * 2
             outcome = 0.5 + bias * random.uniform(
-                settings.FUZZINESS_RANGE_LOW, settings.FUZZINESS_RANGE_HIGH
+                Config.FUZZINESS_RANGE_LOW, Config.FUZZINESS_RANGE_HIGH
             )
         else:
             outcome = input_value
 
         # interference from entangled pairs
-        interference = sum(self.entangled_pairs.values()) * settings.INTERFERENCE_FACTOR
+        interference = sum(self.entangled_pairs.values()) * Config.INTERFERENCE_FACTOR
         outcome = max(0.0, min(1.0, outcome + interference))
 
         if error_rate:
@@ -314,13 +314,13 @@ class QuantumContext:
         validation_notes: monitor long-term system stability metrics after adaptation
         approximation: heuristic
         """
-        if system_entropy > settings.ENTROPY_CHAOS_THRESHOLD:
-            self.decoherence_rate += settings.ENTROPY_INTERVENTION_STEP / (
-                settings.ENTROPY_MODIFIER_SCALE * 5
+        if system_entropy > Config.ENTROPY_CHAOS_THRESHOLD:
+            self.decoherence_rate += Config.ENTROPY_INTERVENTION_STEP / (
+                Config.ENTROPY_MODIFIER_SCALE * 5
             )
-        elif system_entropy < settings.ENTROPY_INTERVENTION_THRESHOLD:
-            self.decoherence_rate -= settings.ENTROPY_INTERVENTION_STEP / (
-                settings.ENTROPY_MODIFIER_SCALE * 10
+        elif system_entropy < Config.ENTROPY_INTERVENTION_THRESHOLD:
+            self.decoherence_rate -= Config.ENTROPY_INTERVENTION_STEP / (
+                Config.ENTROPY_MODIFIER_SCALE * 10
             )
 
         self.decoherence_rate = max(0.001, min(0.1, self.decoherence_rate))

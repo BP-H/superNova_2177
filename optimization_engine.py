@@ -8,10 +8,10 @@ from scientific_utils import ScientificModel
 
 try:
     # Attempt to import the main Config for production values
-    from superNova_2177 import Config as settings
+    from superNova_2177 import Config
 except (ImportError, ModuleNotFoundError):
     # Fallback for isolated testing or environments where the main app isn't available
-    class settings:
+    class Config:
         INFLUENCE_MULTIPLIER = 1.2
         ENTROPY_REDUCTION_STEP = 0.2
         ENTROPY_CHAOS_THRESHOLD = 1500.0
@@ -46,10 +46,10 @@ def tune_system_parameters(performance_metrics: Dict) -> Dict:
     accuracy = performance_metrics.get("average_prediction_accuracy", 0.7)
     entropy = performance_metrics.get("current_system_entropy", 1000.0)
 
-    influence_multiplier_setting = getattr(settings, "INFLUENCE_MULTIPLIER", 1.2)
+    influence_multiplier_setting = getattr(Config, "INFLUENCE_MULTIPLIER", 1.2)
     influence_multiplier = float(influence_multiplier_setting)
 
-    chaos_threshold_setting = getattr(settings, "ENTROPY_CHAOS_THRESHOLD", 1500.0)
+    chaos_threshold_setting = getattr(Config, "ENTROPY_CHAOS_THRESHOLD", 1500.0)
     chaos_threshold = float(chaos_threshold_setting)
 
     # Heuristic 1: If prediction accuracy is low, make the model less aggressive.
@@ -60,7 +60,7 @@ def tune_system_parameters(performance_metrics: Dict) -> Dict:
     # Heuristic 2: If system entropy is dangerously high, strengthen countermeasures.
     if entropy > chaos_threshold:
         # Suggest a 10% increase in the entropy reduction step
-        step_setting = getattr(settings, "ENTROPY_REDUCTION_STEP", 0.2)
+        step_setting = getattr(Config, "ENTROPY_REDUCTION_STEP", 0.2)
         step = float(step_setting)
         overrides["ENTROPY_REDUCTION_STEP"] = step * 1.1
 
@@ -90,11 +90,11 @@ def select_optimal_intervention(system_state: Dict) -> str:
     """
     entropy = system_state.get("system_entropy", 1000.0)
 
-    chaos_threshold_setting = getattr(settings, "ENTROPY_CHAOS_THRESHOLD", 1500.0)
+    chaos_threshold_setting = getattr(Config, "ENTROPY_CHAOS_THRESHOLD", 1500.0)
     chaos_threshold = float(chaos_threshold_setting)
 
     intervention_threshold_setting = getattr(
-        settings, "ENTROPY_INTERVENTION_THRESHOLD", 1200.0
+        Config, "ENTROPY_INTERVENTION_THRESHOLD", 1200.0
     )
     intervention_threshold = float(intervention_threshold_setting)
 
