@@ -9,6 +9,7 @@ tracking in the superNova_2177 scientific reasoning system.
 """
 
 import logging
+from functools import lru_cache
 from typing import List, Dict, Any
 from datetime import datetime
 from statistics import mean
@@ -40,6 +41,13 @@ class Config:
     DEFAULT_VALIDATOR_REPUTATION = 0.5  # Until reputation tracking implemented
     MAX_NOTE_SCORE = 1.0             # Maximum boost/penalty from note analysis
 
+@lru_cache(maxsize=128)
+def _cached_diversity(total: int, id_count: int, spec_count: int, aff_count: int) -> float:
+    """Internal helper for memoized diversity computation."""
+    ratios = [id_count / total, spec_count / total, aff_count / total]
+    return max(0.0, min(1.0, sum(ratios) / 3.0))
+
+
 def compute_diversity_score(validations: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Compute a simple diversity metric for a list of validations.
 
@@ -67,8 +75,8 @@ def compute_diversity_score(validations: List[Dict[str, Any]]) -> Dict[str, Any]
     specialties = {v.get("specialty") for v in validations if v.get("specialty")}
     affiliations = {v.get("affiliation") for v in validations if v.get("affiliation")}
 
-    ratios = [len(ids) / total, len(specialties) / total, len(affiliations) / total]
-    diversity_score = max(0.0, min(1.0, sum(ratios) / 3.0))
+    # Cache diversity computations for repeated inputs
+    diversity_score = _cached_diversity(total, len(ids), len(specialties), len(affiliations))
 
     flags = []
     if diversity_score < 0.3:
@@ -83,6 +91,28 @@ def compute_diversity_score(validations: List[Dict[str, Any]]) -> Dict[str, Any]
         },
         "flags": flags,
     }
+
+@lru_cache(maxsize=1024)
+def _cached_score(confidence: float, signal: float, note: str) -> float:
+    """Internal memoized helper for scoring."""
+    note_score = 0.0
+    for keyword in Config.AGREEMENT_KEYWORDS:
+        if keyword in note:
+            note_score += 0.5
+    for keyword in Config.CONTRADICTION_KEYWORDS:
+        if keyword in note:
+            note_score -= 0.5
+
+    note_score = max(min(note_score, Config.MAX_NOTE_SCORE), -Config.MAX_NOTE_SCORE)
+
+    final_score = (
+        Config.CONFIDENCE_WEIGHT * confidence
+        + Config.SIGNAL_WEIGHT * signal
+        + Config.NOTE_MATCH_WEIGHT * (note_score + 1) / 2
+    )
+
+    return max(0.0, min(1.0, final_score))
+
 
 def score_validation(val: Dict[str, Any]) -> float:
     """
@@ -106,26 +136,9 @@ def score_validation(val: Dict[str, Any]) -> float:
         signal = float(val.get("signal_strength", 0.5))
         note = str(val.get("note", "")).lower()
 
-        # Sentiment analysis on validation note
-        note_score = 0.0
-        for keyword in Config.AGREEMENT_KEYWORDS:
-            if keyword in note:
-                note_score += 0.5
-        for keyword in Config.CONTRADICTION_KEYWORDS:
-            if keyword in note:
-                note_score -= 0.5
-
-        # Clamp note score to reasonable bounds
-        note_score = max(min(note_score, Config.MAX_NOTE_SCORE), -Config.MAX_NOTE_SCORE)
-
-        # Weighted combination of all factors
-        final_score = (
-            Config.CONFIDENCE_WEIGHT * confidence +
-            Config.SIGNAL_WEIGHT * signal +
-            Config.NOTE_MATCH_WEIGHT * (note_score + 1) / 2  # Normalize to 0-1 range
-        )
-
-        return max(0.0, min(1.0, final_score))  # Ensure valid range
+        # Cache scoring for repeated validations
+        # TODO: profile loops for large note datasets; consider NumPy vectorization
+        return _cached_score(confidence, signal, note)
 
     except Exception as e:
         logger.warning(f"Malformed validation dict: {val} — {e}")
@@ -216,9 +229,25 @@ def certify_validations(validations: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     return result
 
+
+def profile_certification(validations: List[Dict[str, Any]], sort_by: str = "cumtime") -> None:
+    """Profile validation certification to identify hotspots."""
+    import cProfile
+    import pstats
+    import io
+
+    pr = cProfile.Profile()
+    pr.enable()
+    certify_validations(validations)
+    pr.disable()
+    s = io.StringIO()
+    pstats.Stats(pr, stream=s).sort_stats(sort_by).print_stats(10)
+    logger.debug("Certification profiling results:\n%s", s.getvalue())
+
 # TODO v4.3 Enhancements:
 # - Add validator reputation tracking
-# - Implement temporal consistency analysis  
+# - Implement temporal consistency analysis
 # - Add cross-validation detection
 # - Include diversity scoring (multiple validator types)
 # - Add semantic contradiction detection beyond keywords
+# - Profile with cProfile to locate NumPy hotspots
