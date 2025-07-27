@@ -165,20 +165,34 @@ def run_full_integrity_analysis(
 ) -> Tuple[Dict[str, Any], List[str], str]:
     """Run integrity analysis modules and update certification."""
 
-    diversity_result = compute_diversity_score(validations)
-
     consensus_scores = {"default_hypothesis": avg_score}
-    reputation_result = compute_validator_reputations(
-        validations,
-        consensus_scores,
-    )
 
-    temporal_result = analyze_temporal_consistency(
-        validations,
-        reputation_result.get("validator_reputations", {}),
-    )
+    # Run diversity, coordination, and reputation analysis concurrently
+    import concurrent.futures
 
-    coordination_result = analyze_coordination_patterns(validations)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        diversity_future = executor.submit(compute_diversity_score, validations)
+        coordination_future = executor.submit(
+            analyze_coordination_patterns, validations
+        )
+        reputation_future = executor.submit(
+            compute_validator_reputations,
+            validations,
+            consensus_scores,
+        )
+
+        # Reputation is needed for temporal analysis
+        reputation_result = reputation_future.result()
+
+        temporal_future = executor.submit(
+            analyze_temporal_consistency,
+            validations,
+            reputation_result.get("validator_reputations", {}),
+        )
+
+        diversity_result = diversity_future.result()
+        coordination_result = coordination_future.result()
+        temporal_result = temporal_future.result()
 
     integrity_analysis = calculate_integrity_score(
         diversity_result,
