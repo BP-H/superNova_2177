@@ -215,3 +215,13 @@ def test_attach_trace_to_logentry_invalid_json_does_not_modify(test_db, caplog):
     refreshed = test_db.query(LogEntry).filter(LogEntry.id == log.id).first()
     assert refreshed.payload == bad_payload
     assert any("Failed to parse JSON payload" in rec.message for rec in caplog.records)
+
+
+def test_generate_commentary_from_trace_missing_path_nodes():
+    """generate_commentary_from_trace should handle missing 'path_nodes' key."""
+    from audit_bridge import generate_commentary_from_trace
+
+    trace = {"highlights": ["A"]}
+    commentary = generate_commentary_from_trace(trace)
+
+    assert commentary == "No significant causal chain found."

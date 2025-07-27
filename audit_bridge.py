@@ -123,10 +123,11 @@ def generate_commentary_from_trace(trace: Dict[str, Any]) -> str:
     """
     Heuristic commentary generation based on node sequence and entropy.
     """
-    if not trace["path_nodes"]:
+    path_nodes = trace.get("path_nodes")
+    if not path_nodes:
         return "No significant causal chain found."
 
-    chain = " → ".join(trace["path_nodes"])
+    chain = " → ".join(path_nodes)
     highlights = trace.get("highlights", [])
     highlight_text = (
         f" Notable nodes: {', '.join(highlights)}." if highlights else ""
