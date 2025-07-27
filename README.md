@@ -122,6 +122,36 @@ make test
 make lint
 ```
 
+## 📦 Building an Executable
+
+You can package the command line interface into a standalone binary using
+PyInstaller. Run the helper script:
+
+```bash
+scripts/build_executable.sh
+```
+
+The generated executable will be placed under `dist/` as `supernova-cli` on
+Unix systems or `supernova-cli.exe` on Windows.
+
+### Running the Installer
+
+If you're on Windows, download `supernova-cli.exe` from the GitHub Releases page
+or build it yourself with the script above. Before launching, set the required
+environment variables so the application can connect to its services:
+
+```bash
+export SECRET_KEY="your-secret"
+export DATABASE_URL="postgresql+asyncpg://user:password@localhost/transcendental_resonance"
+export BACKEND_URL="http://localhost:8000"
+```
+
+After setting the variables, execute the binary directly:
+
+```bash
+./supernova-cli --demo   # on Windows use supernova-cli.exe
+```
+
 ## ✨ Features
 
 * **🧠 Smart Scoring** — Combines confidence, signal strength, and NLP sentiment
