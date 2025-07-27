@@ -53,7 +53,8 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
    if it isn't already on your machine. This project requires Python 3.12+.
    You can check by running `python --version` in your terminal.
 2. **Run the setup script** to create the virtual environment and install all
-   dependencies locally. You can also pass `--locked` to install packages from
+   dependencies locally. Install any missing system libraries first (see
+   [System Packages](#system-packages)). You can also pass `--locked` to install packages from
    `requirements.lock` for deterministic builds. Additional flags `--run-app`
    and `--build-ui` can automatically start the API or compile the frontend:
    ```bash
@@ -82,6 +83,22 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
    .\venv\Scripts\activate
    ```
 4. You're ready to run the demo commands shown in [Quick Start](#-quick-start).
+
+### System Packages
+
+Install these system dependencies if they're missing on your platform:
+
+**Ubuntu**
+
+```bash
+sudo apt-get install build-essential libsnappy-dev libsdl2-dev …
+```
+
+**macOS**
+
+```bash
+brew install snappy sdl2 …
+```
 
 ### Makefile Quick Commands
 
