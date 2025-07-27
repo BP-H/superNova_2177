@@ -68,14 +68,13 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
   ```bash
   python install.py
   ```
-  This project depends on `numpy`, `python-dateutil`, and
-  `sqlalchemy>=2.0`. These packages are listed in `requirements.txt` and
+  This project depends on `numpy`, `python-dateutil`, `sqlalchemy>=2.0`, and `email-validator`. These packages are listed in `requirements.txt` and
   also in a pared-down `requirements-minimal.txt` that is sufficient for
   running the unit tests.
   If you prefer to manage the environment manually, install the required
   packages yourself using `requirements.txt`:
   ```bash
-  pip install -r requirements.txt  # installs numpy, python-dateutil, etc.
+  pip install -r requirements.txt  # installs numpy, python-dateutil, email-validator, etc.
   ```
    A PyPI wheel is currently unavailable. Run `python setup_env.py` or use the online installer scripts:
    ```bash
