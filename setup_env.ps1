@@ -8,7 +8,9 @@ if (-not (Test-Path $envDir)) {
 & "$envDir/Scripts/Activate.ps1"
 
 pip install --upgrade pip
-if (Test-Path 'requirements.txt') {
+if (Test-Path 'requirements.lock') {
+    pip install -r requirements.lock
+} elseif (Test-Path 'requirements.txt') {
     pip install -r requirements.txt
 }
 

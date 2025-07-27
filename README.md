@@ -72,7 +72,11 @@ Set up a Python environment and install the package and its dependencies:
 ```bash
 pip install .
 # install optional libraries used by the tests
-pip install -r requirements.txt
+if [ -f requirements.lock ]; then
+  pip install -r requirements.lock
+else
+  pip install -r requirements.txt
+fi
 ```
 
 Run the full test suite to verify your setup:
@@ -116,12 +120,16 @@ The application will be available at [http://localhost:8000](http://localhost:80
 Install all dependencies first:
 
 ```bash
-pip install -r requirements.txt
+if [ -f requirements.lock ]; then
+  pip install -r requirements.lock
+else
+  pip install -r requirements.txt
+fi
 pytest
 ```
 
 The test suite requires packages like `SQLAlchemy`, `networkx`, and `numpy`.
-If `pytest` fails with missing module errors, run `pip install -r requirements.txt` again.
+If `pytest` fails with missing module errors, run the above install command again.
 
 ### Makefile Commands
 

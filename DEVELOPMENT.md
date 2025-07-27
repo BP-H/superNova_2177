@@ -13,7 +13,11 @@ This repository targets **Python 3.12** and uses standard tooling for managing d
 3. Install the package and its dependencies:
    ```bash
    pip install .
-   pip install -r requirements.txt
+   if [ -f requirements.lock ]; then
+       pip install -r requirements.lock
+   else
+       pip install -r requirements.txt
+   fi
    ```
 
 ## Running Tests
@@ -28,4 +32,4 @@ The GitHub Actions workflows (`.github/workflows/ci.yml` and `pr-tests.yml`) run
 
 ## Optional Frontend
 
-The `transcendental-resonance-frontend/` directory contains a NiceGUI-based UI. Follow its README to install `pip install -r transcendental-resonance-frontend/requirements.txt` and run the frontend if desired.
+The `transcendental-resonance-frontend/` directory contains a NiceGUI-based UI. Follow its README to install dependencies (using `requirements.lock` if present) and run the frontend if desired.

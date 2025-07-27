@@ -21,7 +21,9 @@ fi
 
 # Upgrade pip and install dependencies
 pip install --upgrade pip
-if [ -f "requirements.txt" ]; then
+if [ -f "requirements.lock" ]; then
+    pip install -r requirements.lock
+elif [ -f "requirements.txt" ]; then
     pip install -r requirements.txt
 fi
 pip install .

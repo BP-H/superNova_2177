@@ -6,8 +6,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 WORKDIR /install
-COPY requirements.txt ./
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+COPY requirements.txt requirements.lock ./
+RUN if [ -f requirements.lock ]; then \
+        pip install --no-cache-dir --prefix=/install -r requirements.lock; \
+    else \
+        pip install --no-cache-dir --prefix=/install -r requirements.txt; \
+    fi
 
 # Final stage
 FROM python:3.12-slim

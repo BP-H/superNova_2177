@@ -5,7 +5,11 @@ A minimalist social metaverse UI built with [NiceGUI](https://nicegui.io/) for i
 ## Setup
 
 ```bash
-pip install -r requirements.txt
+if [ -f requirements.lock ]; then
+  pip install -r requirements.lock
+else
+  pip install -r requirements.txt
+fi
 nicegui src/main.py
 ```
 

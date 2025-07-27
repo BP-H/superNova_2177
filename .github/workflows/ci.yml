@@ -13,6 +13,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install -r requirements.txt mypy
+      - run: |
+          if [ -f requirements.lock ]; then
+            pip install -r requirements.lock mypy
+          else
+            pip install -r requirements.txt mypy
+          fi
       - run: mypy
       - run: pytest -q
