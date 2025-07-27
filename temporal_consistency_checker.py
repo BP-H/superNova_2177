@@ -12,6 +12,7 @@ import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from statistics import mean, stdev
+from dateutil import parser
 
 logger = logging.getLogger("superNova_2177.temporal")
 
@@ -28,6 +29,17 @@ class Config:
     
     # Chronological ordering
     MAX_OUT_OF_ORDER_TOLERANCE = 0.1   # 10% of validations can be out of order
+
+
+def _safe_parse_timestamp(value: str) -> Optional[datetime]:
+    """Parse an ISO timestamp string to ``datetime`` safely."""
+    if not value or len(value) > 40:
+        return None
+    try:
+        ts = parser.isoparse(value)
+        return ts
+    except (ValueError, OverflowError, TypeError):
+        return None
 
 def analyze_temporal_consistency(
     validations: List[Dict[str, Any]], 
@@ -49,8 +61,11 @@ def analyze_temporal_consistency(
     
     for i, v in enumerate(validations):
         ts_raw = v.get("timestamp")
+        ts = _safe_parse_timestamp(ts_raw)
+        if ts is None:
+            logger.warning(f"Invalid timestamp in validation {i}: {ts_raw}")
+            continue
         try:
-            ts = datetime.fromisoformat(ts_raw.replace('Z', '+00:00') if ts_raw else '')
             score = float(v.get("score", 0.5))
             validator_id = v.get("validator_id", f"unknown_{i}")
             
@@ -65,8 +80,10 @@ def analyze_temporal_consistency(
             if Config.BUSINESS_START_HOUR <= ts.hour <= Config.BUSINESS_END_HOUR:
                 business_hours_count += 1
                 
-        except Exception as e:
-            logger.warning(f"Invalid timestamp in validation {i}: {ts_raw} - {e}")
+        except (ValueError, TypeError) as e:
+            logger.warning(
+                f"Invalid validation data in entry {i}: {ts_raw} - {e}"
+            )
             continue
 
     if len(parsed_validations) < 2:

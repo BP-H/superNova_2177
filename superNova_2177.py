@@ -320,9 +320,10 @@ class Settings(BaseSettings):
     # PRODUCTION WARNING: Avoid using SQLite here; it cannot handle concurrent writes in a multi-user environment.
     # Configure a PostgreSQL database URL before deploying.
 
-    # SECRET_KEY must be provided via environment variables for security
-    # Using Field(..., env="SECRET_KEY") ensures there is no insecure default
-    SECRET_KEY: str = Field(..., env="SECRET_KEY")
+    # SECRET_KEY is loaded from the environment or generated securely if absent
+    SECRET_KEY: str = Field(
+        default_factory=lambda: secrets.token_urlsafe(32), env="SECRET_KEY"
+    )
 
     ALGORITHM: str = "HS256"
     ALLOWED_ORIGINS: List[str] = [
@@ -347,13 +348,8 @@ from functools import lru_cache
 
 @lru_cache()
 def get_settings() -> Settings:
-    """Return cached application settings, loading from environment when first called."""
-    try:
-        return Settings()
-    except ValidationError as e:
-        raise RuntimeError(
-            "SECRET_KEY environment variable missing. Set SECRET_KEY before running the application."
-        ) from e
+    """Return cached application settings, generating defaults when needed."""
+    return Settings()
 
 redis_client = None
 
