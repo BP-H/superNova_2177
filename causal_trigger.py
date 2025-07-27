@@ -12,11 +12,16 @@ from governance_reviewer import evaluate_governance_risks, apply_governance_acti
 logger = logging.getLogger("superNova_2177.trigger")
 
 
-def safe_json_loads(json_str: str, default: Optional[Any] = None) -> Any:
+from exceptions import DataParseError
+
+
+def safe_json_loads(json_str: str, default: Optional[Any] = None, *, raise_on_error: bool = False) -> Any:
     try:
         return json.loads(json_str) if json_str else (default or {})
-    except (json.JSONDecodeError, TypeError):
+    except (json.JSONDecodeError, TypeError) as exc:
         logger.exception(f"JSON decode failed: {json_str}")
+        if raise_on_error:
+            raise DataParseError(str(exc)) from exc
         return default or {}
 
 

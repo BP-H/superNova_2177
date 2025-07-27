@@ -19,7 +19,10 @@ import hypothesis_tracker as ht # hypothesis_tracker is now ORM-based internally
 logger = logging.getLogger(__name__)
 
 
-def safe_json_loads(json_str: str, default=None):
+from exceptions import DataParseError
+
+
+def safe_json_loads(json_str: str, default=None, *, raise_on_error: bool = False):
     """Safely parse a JSON string.
 
     Args:
@@ -31,8 +34,10 @@ def safe_json_loads(json_str: str, default=None):
     """
     try:
         return json.loads(json_str) if json_str else (default or {})
-    except (json.JSONDecodeError, TypeError):
+    except (json.JSONDecodeError, TypeError) as exc:
         logger.exception(f"JSON decode failed: {json_str}")
+        if raise_on_error:
+            raise DataParseError(str(exc)) from exc
         return default or {}
 
 
@@ -89,14 +94,15 @@ def run_full_audit(hypothesis_id: str, db: Session) -> Dict[str, Any]:
         parsed_logs: List[Dict[str, Any]] = []
         for log_entry in log_entries_for_hyp:
             try:
-                # CORRECTED: Access LogEntry.payload as it's the TEXT column storing JSON
-                log_value_payload = safe_json_loads(cast(str, log_entry.payload))
+                log_value_payload = safe_json_loads(
+                    cast(str, log_entry.payload), raise_on_error=True
+                )
                 parsed_logs.append({
                     "id": log_entry.id,
                     "timestamp": log_entry.timestamp,
                     "causal_audit_ref": log_value_payload.get("causal_audit_ref")
                 })
-            except json.JSONDecodeError:
+            except DataParseError:
                 logger.warning(
                     "Skipping malformed log entry %s: %s",
                     getattr(log_entry, "id", "<unknown>"),
