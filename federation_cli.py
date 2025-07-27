@@ -6,6 +6,7 @@ import json
 import uuid
 from pathlib import Path
 from datetime import datetime
+from sqlalchemy.exc import IntegrityError
 
 from db_models import (
     SessionLocal,
@@ -41,7 +42,9 @@ def create_fork(args: argparse.Namespace) -> None:
         cooldown = Config.FORK_COOLDOWN_SECONDS
         if (
             user.last_passive_aura_timestamp
-            and (datetime.utcnow() - user.last_passive_aura_timestamp).total_seconds()
+            and (
+                datetime.utcnow() - user.last_passive_aura_timestamp
+            ).total_seconds()
             < cooldown
         ):
             print("Fork cooldown active. Please wait before forking again.")
@@ -58,7 +61,12 @@ def create_fork(args: argparse.Namespace) -> None:
         )
         db.add(fork)
         user.last_passive_aura_timestamp = datetime.utcnow()
-        db.commit()
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            print("Failed to create fork due to database constraint")
+            return
         print(f"Created fork {fork.id}")
     finally:
         db.close()
@@ -71,7 +79,8 @@ def list_forks(_args: argparse.Namespace) -> None:
         for f in forks:
             try:
                 config_json = json.dumps(f.config, default=str)
-            except TypeError as exc:  # pragma: no cover - unexpected type error
+            except TypeError as exc:
+                # pragma: no cover - unexpected type error
                 config_json = f"<serialization error: {exc}>"
             print(
                 f.id,
@@ -95,7 +104,9 @@ def fork_info(args: argparse.Namespace) -> None:
             "creator_id": fork.creator_id,
             "karma_at_fork": fork.karma_at_fork,
             "config": fork.config,
-            "timestamp": fork.timestamp.isoformat() if fork.timestamp else None,
+            "timestamp": (
+                fork.timestamp.isoformat() if fork.timestamp else None
+            ),
             "status": fork.status,
             "entropy_divergence": fork.entropy_divergence,
             "consensus": fork.consensus,
@@ -131,7 +142,12 @@ def vote_fork(args: argparse.Namespace) -> None:
             vote=vote_bool,
         )
         db.add(record)
-        db.commit()
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            print("Vote already recorded for this fork")
+            return
 
         fork.vote_count += 1
         if vote_bool:
@@ -143,7 +159,8 @@ def vote_fork(args: argparse.Namespace) -> None:
             fork.consensus = (expectation + 1) / 2
         db.commit()
         print(
-            f"Vote recorded. Current consensus for {fork.id}: {fork.consensus:.2f}"
+            f"Vote recorded. Current consensus for {fork.id}: "
+            f"{fork.consensus:.2f}"
         )
     finally:
         db.close()
@@ -151,7 +168,9 @@ def vote_fork(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Federation and fork utilities")
+    parser = argparse.ArgumentParser(
+        description="Federation and fork utilities"
+    )
     sub = parser.add_subparsers(dest="command")
 
     parser.add_argument("--send", help="Path to message JSON", required=False)
