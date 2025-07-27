@@ -95,6 +95,13 @@ docker-compose up
 
 The application will be available at [http://localhost:8000](http://localhost:8000).
 
+To build and run the container without `docker-compose`:
+
+```bash
+docker build -t supernova .
+docker run --env-file .env -p 8000:8000 supernova
+```
+
 ## 🧪 Running Tests
 
 Install all dependencies first:
