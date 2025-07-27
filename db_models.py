@@ -13,6 +13,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     ForeignKey,
+    UniqueConstraint,
     Table,
     Float,
     JSON,
@@ -516,6 +517,10 @@ class BranchVote(Base):
     voter_id = Column(ForeignKey("harmonizers.id"), nullable=False)
     vote = Column(Boolean, nullable=False)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("branch_id", "voter_id", name="unique_branch_voter"),
+    )
 
 
 class TokenListing(Base):
