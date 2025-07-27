@@ -68,10 +68,10 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
   ```bash
   python install.py
   ```
-  This project depends on `numpy`, `python-dateutil`, and
-  `sqlalchemy>=2.0`. These packages are listed in `requirements.txt` and
-  also in a pared-down `requirements-minimal.txt` that is sufficient for
-  running the unit tests.
+  This project depends on `numpy`, `python-dateutil`,
+  `sqlalchemy>=2.0`, and `networkx`. These packages are listed in
+  `requirements.txt` and also in a pared-down `requirements-minimal.txt`
+  that is sufficient for running the unit tests.
   If you prefer to manage the environment manually, install the required
   packages yourself using `requirements.txt`:
   ```bash
@@ -248,17 +248,19 @@ pytest
 ```
 
 This file includes `pytest`, `sqlalchemy`, `networkx`, `numpy`, and
-`python-dateutil`.
-For a lightweight setup you can instead install the reduced set from
-`requirements-minimal.txt` or use `requirements.txt`/`requirements.lock`
-for the full development environment.
+`python-dateutil`. Install the runtime packages from
+`requirements-minimal.txt` or `requirements.txt` in addition to this
+file before running the tests.
 
 ### Test Requirements
 
 Install the packages needed for the tests in one step:
 
 ```bash
+# full environment
 pip install -r requirements.txt
+# or use the lightweight set
+pip install -r requirements-minimal.txt
 ```
 
 With these installed, running `pytest` should succeed (`99 passed`).
