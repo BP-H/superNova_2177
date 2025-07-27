@@ -4,7 +4,7 @@ import builtins
 import pytest
 
 from governance_config import calculate_entropy_divergence, karma_percentile_cutoff
-from superNova_2177 import Config
+from config import Config
 from db_models import Harmonizer
 
 

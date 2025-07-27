@@ -5,17 +5,7 @@ suggest parameter changes and select optimal actions based on performance metric
 """
 from typing import Dict, List
 from scientific_utils import ScientificModel
-
-try:
-    # Attempt to import the main Config for production values
-    from superNova_2177 import Config
-except (ImportError, ModuleNotFoundError):
-    # Fallback for isolated testing or environments where the main app isn't available
-    class Config:
-        INFLUENCE_MULTIPLIER = 1.2
-        ENTROPY_REDUCTION_STEP = 0.2
-        ENTROPY_CHAOS_THRESHOLD = 1500.0
-        ENTROPY_INTERVENTION_THRESHOLD = 1200.0
+from config import Config
 
 
 @ScientificModel(

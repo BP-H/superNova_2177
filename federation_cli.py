@@ -18,7 +18,7 @@ from governance_config import (
     calculate_entropy_divergence,
     basis,
 )
-from superNova_2177 import Config
+from config import Config
 
 OUTBOX = Path(__file__).resolve().parent / "federation" / "outbox.json"
 

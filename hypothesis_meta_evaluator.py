@@ -33,8 +33,8 @@ class TempConfig:
 
 
 try:
-    from superNova_2177 import Config as SystemConfig
-except ImportError:
+    from config import Config as SystemConfig
+except Exception:
     SystemConfig = TempConfig  # type: ignore[misc]
 
 CONFIG: Any = SystemConfig

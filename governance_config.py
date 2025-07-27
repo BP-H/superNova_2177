@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 import numpy as np
 import logging
+from config import Config
 
 try:  # optional quantum consensus engine
     from qutip import basis, tensor, sigmaz, expect
@@ -106,12 +107,7 @@ def is_eligible_for_fork(user: Harmonizer, db: Session | None = None) -> bool:
 def calculate_entropy_divergence(config: dict, base: object | None = None) -> float:
     """Return mean absolute deviation from base Config values."""
     if base is None:
-        try:
-            from superNova_2177 import Config as base
-        except Exception as exc:  # pragma: no cover - optional dependency
-            raise ImportError(
-                "Cannot import superNova_2177.Config for entropy divergence calculation"
-            ) from exc
+        base = Config
     diffs: list[float] = []
     for k, v in config.items():
         if hasattr(base, k):

@@ -65,9 +65,9 @@ class TempConfig:
 
 
 try:
-    from superNova_2177 import Config as SystemConfig
+    from config import Config as SystemConfig
     CONFIG = SystemConfig
-except ImportError:
+except Exception:
     CONFIG = TempConfig
 
 
