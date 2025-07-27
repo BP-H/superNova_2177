@@ -88,7 +88,7 @@ def test_causal_graph_node_structure_and_metadata():
         "n1",
         source_module="tester",
         trigger_event="ADD",
-        entity_type="Coin",
+        entity_type="SymbolicToken",
         entity_id="c1",
         system_entropy_at_creation=0.5,
         node_specific_entropy=0.1,
@@ -98,7 +98,7 @@ def test_causal_graph_node_structure_and_metadata():
     data = g.graph.nodes["n1"]
     assert data["source_module"] == "tester"
     assert data["trigger_event"] == "ADD"
-    assert data["entity_type"] == "Coin"
+    assert data["entity_type"] == "SymbolicToken"
     assert data["entity_id"] == "c1"
     assert data["system_entropy_at_creation"] == 0.5
     assert data["node_specific_entropy"] == 0.1
