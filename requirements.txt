@@ -32,3 +32,4 @@ mido
 midiutil
 torch
 scikit-learn
+streamlit
