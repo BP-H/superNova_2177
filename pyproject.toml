@@ -17,6 +17,7 @@ dependencies = [
     "uvicorn",
     "pydantic",
     "pydantic-settings",
+    "email-validator",
     "redis",
     "passlib[bcrypt]",
     "python-jose[cryptography]",
