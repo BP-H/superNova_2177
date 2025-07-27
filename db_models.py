@@ -401,6 +401,16 @@ class ValidatorReputation(Base):
                         onupdate=datetime.datetime.utcnow)
 
 
+class ValidatorProfile(Base):
+    """Stores specialty and affiliation metadata for validators."""
+
+    __tablename__ = "validator_profiles"
+
+    validator_id = Column(String, primary_key=True)
+    specialty = Column(String, nullable=True)
+    affiliation = Column(String, nullable=True)
+
+
 # Add this below the SystemState class but before Coin to maintain ordering:
 class HypothesisRecord(Base):
     """
