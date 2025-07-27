@@ -26,6 +26,21 @@ pytest
 
 The GitHub Actions workflows (`.github/workflows/ci.yml` and `pr-tests.yml`) run these commands automatically whenever you push or open a pull request.
 
+## Pre-commit Hooks
+
+Install the development tools and enable the git hooks so code is automatically formatted and linted:
+
+```bash
+pip install -r requirements-dev.txt
+pre-commit install
+```
+
+Run all hooks manually with:
+
+```bash
+pre-commit run --all-files
+```
+
 ## Optional Frontend
 
 The `transcendental-resonance-frontend/` directory contains a NiceGUI-based UI. Follow its README to install `pip install -r transcendental-resonance-frontend/requirements.txt` and run the frontend if desired.

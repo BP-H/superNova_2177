@@ -119,6 +119,21 @@ make test     # run tests
 make lint     # run mypy type checks
 ```
 
+### Pre-commit Hooks
+
+Set up pre-commit to automatically format and lint the code:
+
+```bash
+pip install -r requirements-dev.txt
+pre-commit install
+```
+
+You can run all checks manually with:
+
+```bash
+pre-commit run --all-files
+```
+
 ### Platform Quick Commands
 
 **Windows PowerShell**

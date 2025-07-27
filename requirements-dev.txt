@@ -3,3 +3,9 @@ sqlalchemy>=2.0
 networkx
 numpy
 python-dateutil
+pre-commit
+black
+isort
+flake8
+mypy
+bandit
