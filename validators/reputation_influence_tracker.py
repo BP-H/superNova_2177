@@ -83,6 +83,8 @@ def compute_validator_reputations(
     diversity_scores = diversity_scores or {}
     current_time = current_time or datetime.utcnow()
     half_life = half_life_days or Config.DECAY_HALF_LIFE_DAYS
+    if half_life <= 0:
+        half_life = Config.DECAY_HALF_LIFE_DAYS
 
     validator_scores = defaultdict(list)
     validator_deviations = defaultdict(list)

@@ -25,3 +25,14 @@ def test_reputation_decays_with_age():
     rep_old = old["validator_reputations"].get("a")
 
     assert rep_recent > rep_old
+
+
+def test_half_life_zero_defaults_to_config():
+    now = datetime.datetime.utcnow().replace(microsecond=0)
+    vals = _build_validations(now)
+    consensus = {"h1": 0.8}
+
+    default_result = compute_validator_reputations(vals, consensus, current_time=now)
+    zero_result = compute_validator_reputations(vals, consensus, current_time=now, half_life_days=0)
+
+    assert zero_result["validator_reputations"] == default_result["validator_reputations"]
