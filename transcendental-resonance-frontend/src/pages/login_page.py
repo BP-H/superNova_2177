@@ -41,6 +41,11 @@ async def login_page():
             lambda: ui.open(register_page)
         )
 
+        ui.label(
+            'This experimental social platform is not a financial product. '
+            'All metrics are symbolic with no real-world value.'
+        ).classes('text-xs text-center opacity-70 mt-2')
+
 
 @ui.page('/register')
 async def register_page():
