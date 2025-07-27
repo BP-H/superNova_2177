@@ -22,10 +22,10 @@ A modular intelligence pipeline that evaluates hypotheses through evidence-based
 
 ```bash
 # Try demo mode
-python validate_hypothesis.py --demo
+supernova-validate --demo
 
 # Run your own validation set
-python validate_hypothesis.py --validations sample_validations.json
+supernova-validate --validations sample_validations.json
 ````
 ## 📦 Installation
 
@@ -42,9 +42,9 @@ python validate_hypothesis.py --validations sample_validations.json
    # Windows
    .\venv\Scripts\activate
    ```
-3. **Install the project requirements**:
+3. **Install the project**:
    ```bash
-   pip install -r requirements.txt
+   pip install .
    ```
 4. You're ready to run the demo commands shown in [Quick Start](#-quick-start).
 
@@ -54,10 +54,10 @@ requires `python-dateutil` for timestamp parsing.
 
 ## 🏁 Getting Started
 
-Set up a Python environment and install the required packages:
+Set up a Python environment and install the package:
 
 ```bash
-pip install -r requirements.txt
+pip install .
 ```
 
 Run the full test suite to verify your setup:
