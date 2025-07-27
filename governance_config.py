@@ -94,7 +94,11 @@ def calculate_entropy_divergence(config: dict, base: object | None = None) -> fl
                 base_v = float(getattr(base, k))
                 v_val = float(v)
             except ValueError:
-                logging.warning("Ignoring non-numeric configuration for key %s", k)
+                logging.warning(
+                    "Ignoring non-numeric configuration for key %s with value %r",
+                    k,
+                    v,
+                )
                 continue
             diffs.append(abs(v_val - base_v))
     if not diffs:
