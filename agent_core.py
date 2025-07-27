@@ -8,7 +8,34 @@ import threading
 import time
 import logging
 from decimal import Decimal
-from typing import Any, Dict
+from typing import Any, Dict, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from superNova_2177 import (
+        CosmicNexus,
+        Config,
+        QuantumContext,
+        Vaccine,
+        LogChain,
+        SQLAlchemyStorage,
+        SessionLocal,
+        InMemoryStorage,
+        Coin,
+        User,
+        acquire_multiple_locks,
+        AddUserPayload,
+        MintPayload,
+        ReactPayload,
+        MarketplaceListPayload,
+        MarketplaceBuyPayload,
+        ProposalPayload,
+        VoteProposalPayload,
+        StakeKarmaPayload,
+        UnstakeKarmaPayload,
+        RevokeConsentPayload,
+        ForkUniversePayload,
+        CrossRemixPayload,
+    )
 
 
 def ScientificModel(*args: Any, **kwargs: Any):  # placeholder
