@@ -223,24 +223,18 @@ After the build completes, you'll get a shareable URL to interact with the valid
 
 ## 🧪 Running Tests
 
-Install all dependencies first. For a lightweight setup you can install
-the minimal set from `requirements-minimal.txt`:
+Install the testing requirements first using `requirements-dev.txt`:
 
 ```bash
-pip install -r requirements-minimal.txt
+pip install -r requirements-dev.txt
 pytest
 ```
 
-If you need the full development environment use `requirements.txt` or
-`requirements.lock` instead:
-```bash
-pip install -r requirements.txt  # or use requirements.lock for reproducible installs
-pytest
-```
-
-The test suite requires packages like `SQLAlchemy`, `networkx`, `numpy`, and
-`python-dateutil`. If `pytest` fails with missing module errors, ensure the
-dependencies from `requirements.txt` (or `requirements.lock`) are installed.
+This file includes `pytest`, `sqlalchemy`, `networkx`, `numpy`, and
+`python-dateutil`.
+For a lightweight setup you can instead install the reduced set from
+`requirements-minimal.txt` or use `requirements.txt`/`requirements.lock`
+for the full development environment.
 
 ### Makefile Commands
 
