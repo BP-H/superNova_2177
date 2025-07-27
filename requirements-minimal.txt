@@ -2,3 +2,6 @@ numpy
 python-dateutil
 networkx
 sqlalchemy>=2.0
+pytest-asyncio
+httpx
+email-validator
