@@ -228,7 +228,18 @@ for mod_name in [
             stub.context = ctx_mod
             sys.modules["passlib.context"] = ctx_mod
         if mod_name == "jose":
-            stub.jwt = types.SimpleNamespace(encode=lambda *a, **kw: "", decode=lambda *a, **kw: {})
+            def _encode(payload, *_a, **_kw):
+                """Return a predictable token for tests."""
+                return f"token-{payload['sub']}"
+
+            def _decode(token, *_a, **_kw):
+                """Reverse ``_encode`` back to a payload."""
+                prefix = "token-"
+                if token.startswith(prefix):
+                    return {"sub": token[len(prefix):]}
+                return {}
+
+            stub.jwt = types.SimpleNamespace(encode=_encode, decode=_decode)
             stub.JWTError = type("JWTError", (), {})
         if mod_name == "governance_reviewer":
             def _noop(*_a, **_kw):
