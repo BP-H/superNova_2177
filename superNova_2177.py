@@ -300,7 +300,7 @@ from sqlalchemy import (
     JSON,
 )
 from sqlalchemy.orm import sessionmaker, relationship, Session, declarative_base
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 
@@ -355,6 +355,8 @@ redis_client = None
 
 # Model for creative leap scoring is loaded lazily to conserve resources
 _creative_leap_model = None
+
+
 
 
 def get_password_hash(password: str) -> str:
@@ -1250,7 +1252,12 @@ class SystemStateService:
         else:
             state = SystemState(key=key, value=value)
             self.db.add(state)
-        self.db.commit()
+        try:
+            self.db.commit()
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            print(f"DB commit failed in set_state: {e}")
+            raise
 
 
 class GenerativeAIService:
@@ -3130,7 +3137,12 @@ class SystemStateService:
         else:
             state = SystemState(key=key, value=value)
             self.db.add(state)
-        self.db.commit()
+        try:
+            self.db.commit()
+        except SQLAlchemyError as e:
+            self.db.rollback()
+            print(f"DB commit failed in set_state: {e}")
+            raise
 
 
 class MusicGeneratorService:
@@ -3217,7 +3229,12 @@ def register_harmonizer(user: HarmonizerCreate, db: Session = Depends(get_db)):
         },
     )
     db.add(new_user)
-    db.commit()
+    try:
+        db.commit()
+    except SQLAlchemyError as e:
+        db.rollback()
+        print(f"DB error in register_harmonizer: {e}")
+        raise HTTPException(status_code=500, detail="Database error")
     db.refresh(new_user)
     return new_user
 
@@ -3249,7 +3266,12 @@ def login_for_access_token(
         streaks["daily"] = 1
     streaks["last_login"] = now.isoformat()
     user.engagement_streaks = streaks
-    db.commit()
+    try:
+        db.commit()
+    except SQLAlchemyError as e:
+        db.rollback()
+        print(f"DB error in login_for_access_token: {e}")
+        raise HTTPException(status_code=500, detail="Database error")
     access_token = create_access_token({"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -3282,7 +3304,12 @@ def update_profile(
         current_user.bio = bio
     if cultural_preferences is not None:
         current_user.cultural_preferences = cultural_preferences
-    db.commit()
+    try:
+        db.commit()
+    except SQLAlchemyError as e:
+        db.rollback()
+        print(f"DB error in update_profile: {e}")
+        raise HTTPException(status_code=500, detail="Database error")
     db.refresh(current_user)
     return current_user
 

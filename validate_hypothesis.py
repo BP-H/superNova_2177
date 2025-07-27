@@ -21,6 +21,7 @@ import random
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import SQLAlchemyError
 from db_models import HypothesisRecord, LogEntry
 
 # Import the unified validation pipeline
@@ -271,7 +272,11 @@ For more information: https://github.com/yourusername/superNova_2177
         Session = sessionmaker(bind=engine)
         session = Session()
         try:
-            record = session.query(HypothesisRecord).filter_by(id=args.hypothesis).first()
+            try:
+                record = session.query(HypothesisRecord).filter_by(id=args.hypothesis).first()
+            except SQLAlchemyError as e:
+                print(f"❌ Database query failed: {e}")
+                return 1
             if not record:
                 print(f"❌ Hypothesis {args.hypothesis} not found in database")
                 return 1
@@ -281,11 +286,16 @@ For more information: https://github.com/yourusername/superNova_2177
                 print(f"❌ No validations found for hypothesis {args.hypothesis}")
                 return 1
 
-            log_entries = session.query(LogEntry).filter(LogEntry.id.in_(log_ids)).all()
+            try:
+                log_entries = session.query(LogEntry).filter(LogEntry.id.in_(log_ids)).all()
+            except SQLAlchemyError as e:
+                print(f"❌ Failed to load validation logs: {e}")
+                return 1
             for entry in log_entries:
                 try:
                     payload = json.loads(entry.payload) if entry.payload else {}
-                except json.JSONDecodeError:
+                except json.JSONDecodeError as e:
+                    print(f"⚠️  Skipping invalid JSON payload for log {entry.id}: {e}")
                     continue
 
                 validation = payload.get("validation", payload)
