@@ -547,7 +547,15 @@ if "total_vibenodes" in REGISTRY._names_to_collectors:
     vibenodes_gauge = REGISTRY._names_to_collectors["total_vibenodes"]
 else:
     vibenodes_gauge = prom.Gauge("total_vibenodes", "Total number of vibenodes")
-prom.start_http_server(Config.METRICS_PORT)  # Metrics endpoint
+
+try:
+    prom.start_http_server(Config.METRICS_PORT)  # Metrics endpoint
+except OSError as exc:  # pragma: no cover - system specific
+    logger.warning(
+        "Prometheus metrics server could not start on port %s: %s",
+        Config.METRICS_PORT,
+        exc,
+    )
 
 # --- MODULE: models.py ---
 # Database setup from FastAPI files
