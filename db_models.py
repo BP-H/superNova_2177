@@ -501,6 +501,8 @@ class UniverseBranch(Base):
     status = Column(String)
     entropy_divergence = Column(Float, default=0.0)
     consensus = Column(Float, default=0.0)
+    vote_count = Column(Integer, default=0)
+    yes_count = Column(Integer, default=0)
 
 
 # Backwards compatibility alias for earlier RFCs

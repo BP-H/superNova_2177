@@ -16,7 +16,7 @@ from db_models import (
 from governance_config import (
     is_eligible_for_fork,
     calculate_entropy_divergence,
-    quantum_consensus,
+    basis,
 )
 from superNova_2177 import Config
 
@@ -133,8 +133,14 @@ def vote_fork(args: argparse.Namespace) -> None:
         db.add(record)
         db.commit()
 
-        votes = [v.vote for v in db.query(BranchVote).filter_by(branch_id=fork.id).all()]
-        fork.consensus = quantum_consensus(votes)
+        fork.vote_count += 1
+        if vote_bool:
+            fork.yes_count += 1
+        if basis is None:
+            fork.consensus = fork.yes_count / fork.vote_count
+        else:  # parity-based quantum consensus
+            expectation = 1.0 if fork.yes_count % 2 == 0 else -1.0
+            fork.consensus = (expectation + 1) / 2
         db.commit()
         print(
             f"Vote recorded. Current consensus for {fork.id}: {fork.consensus:.2f}"
