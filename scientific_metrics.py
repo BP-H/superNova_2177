@@ -14,22 +14,14 @@ except Exception:  # pragma: no cover - optional dependency
 from sqlalchemy.orm import Session
 from scientific_utils import ScientificModel, VerifiedScientificModel
 from causal_graph import InfluenceGraph, build_causal_graph as _build
+from config import Config
 
-try:
-    from superNova_2177 import Config
-    BOOTSTRAP_Z_SCORE = Config.BOOTSTRAP_Z_SCORE
-    CREATE_CAP = Config.CREATE_PROBABILITY_CAP
-    LIKE_CAP = Config.LIKE_PROBABILITY_CAP
-    FOLLOW_CAP = Config.FOLLOW_PROBABILITY_CAP
-    INFLUENCE_MULT = Config.INFLUENCE_MULTIPLIER
-    ENTROPY_MULT = Config.ENTROPY_MULTIPLIER
-except Exception:  # pragma: no cover - fallback during circular import
-    BOOTSTRAP_Z_SCORE = 1.96
-    CREATE_CAP = 0.9
-    LIKE_CAP = 0.8
-    FOLLOW_CAP = 0.6
-    INFLUENCE_MULT = 1.2
-    ENTROPY_MULT = 0.8
+BOOTSTRAP_Z_SCORE = Config.BOOTSTRAP_Z_SCORE
+CREATE_CAP = Config.CREATE_PROBABILITY_CAP
+LIKE_CAP = Config.LIKE_PROBABILITY_CAP
+FOLLOW_CAP = Config.FOLLOW_PROBABILITY_CAP
+INFLUENCE_MULT = Config.INFLUENCE_MULTIPLIER
+ENTROPY_MULT = Config.ENTROPY_MULTIPLIER
 
 if TYPE_CHECKING:
     from db_models import Harmonizer
