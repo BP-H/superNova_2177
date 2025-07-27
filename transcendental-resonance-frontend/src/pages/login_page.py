@@ -1,6 +1,6 @@
 """Login and registration pages for Transcendental Resonance."""
 
-from nicegui import ui
+from nicegui import ui, background_tasks
 
 from utils.api import api_call, set_token
 from utils.styles import get_theme
@@ -24,14 +24,18 @@ async def login_page():
 
         async def handle_login():
             data = {'username': username.value, 'password': password.value}
-            resp = api_call('POST', '/token', data=data)
-            if resp and 'access_token' in resp:
-                set_token(resp['access_token'])
-                ui.notify('Login successful!', color='positive')
-                from .profile_page import profile_page  # lazy import to avoid circular dependency
-                ui.open(profile_page)
-            else:
-                ui.notify('Login failed', color='negative')
+
+            async def task():
+                resp = await api_call('POST', '/token', data=data)
+                if resp and 'access_token' in resp:
+                    set_token(resp['access_token'])
+                    ui.notify('Login successful!', color='positive')
+                    from .profile_page import profile_page  # lazy import
+                    ui.open(profile_page)
+                else:
+                    ui.notify('Login failed', color='negative')
+
+            background_tasks.create(task())
 
         ui.button('Login', on_click=handle_login).classes('w-full mb-4').style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
@@ -63,12 +67,16 @@ async def register_page():
                 'email': email.value,
                 'password': password.value,
             }
-            resp = api_call('POST', '/users/register', data)
-            if resp:
-                ui.notify('Registration successful! Please login.', color='positive')
-                ui.open(login_page)
-            else:
-                ui.notify('Registration failed', color='negative')
+
+            async def task():
+                resp = await api_call('POST', '/users/register', data)
+                if resp:
+                    ui.notify('Registration successful! Please login.', color='positive')
+                    ui.open(login_page)
+                else:
+                    ui.notify('Registration failed', color='negative')
+
+            background_tasks.create(task())
 
         ui.button('Register', on_click=handle_register).classes('w-full mb-4').style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'

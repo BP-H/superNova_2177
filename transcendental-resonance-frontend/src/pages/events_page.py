@@ -1,6 +1,6 @@
 """Event management page."""
 
-from nicegui import ui
+from nicegui import ui, background_tasks
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
@@ -37,10 +37,14 @@ async def events_page():
                 'start_time': e_start.value,
                 'group_id': int(group_id.value),
             }
-            resp = api_call('POST', '/events/', data)
-            if resp:
-                ui.notify('Event created!', color='positive')
-                await refresh_events()
+
+            async def task():
+                resp = await api_call('POST', '/events/', data)
+                if resp:
+                    ui.notify('Event created!', color='positive')
+                    await refresh_events()
+
+            background_tasks.create(task())
 
         ui.button('Create Event', on_click=create_event).classes('w-full mb-4').style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
@@ -54,7 +58,7 @@ async def events_page():
                 params['search'] = search_query.value
             if sort_select.value:
                 params['sort'] = sort_select.value
-            events = api_call('GET', '/events/', params) or []
+            events = await api_call('GET', '/events/', params) or []
             if search_query.value:
                 events = [e for e in events if search_query.value.lower() in e['name'].lower()]
             if sort_select.value:
@@ -70,10 +74,13 @@ async def events_page():
                         ui.label(e['description']).classes('text-sm')
                         ui.label(f"Start: {e['start_time']}").classes('text-sm')
                         async def attend_fn(e_id=e['id']):
-                            api_call('POST', f'/events/{e_id}/attend')
-                            await refresh_events()
+                            async def task():
+                                await api_call('POST', f'/events/{e_id}/attend')
+                                await refresh_events()
+
+                            background_tasks.create(task())
                         ui.button('Attend/Leave', on_click=attend_fn).style(
                             f'background: {THEME["accent"]}; color: {THEME["background"]};'
                         )
 
-        await refresh_events()
+        background_tasks.create(refresh_events())

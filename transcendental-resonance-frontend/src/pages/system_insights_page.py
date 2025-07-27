@@ -1,6 +1,6 @@
 """Detailed system insights metrics page."""
 
-from nicegui import ui
+from nicegui import ui, background_tasks
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
@@ -27,8 +27,8 @@ async def system_insights_page():
         hypotheses_label = ui.label().classes('mb-2')
 
         async def refresh_metrics() -> None:
-            state = api_call('GET', '/api/global-epistemic-state') or {}
-            details = api_call('GET', '/system/entropy-details') or {}
+            state = await api_call('GET', '/api/global-epistemic-state') or {}
+            details = await api_call('GET', '/system/entropy-details') or {}
 
             entropy_label.text = (
                 f"Entropy: {details.get('current_entropy', 'N/A')}"
@@ -40,5 +40,5 @@ async def system_insights_page():
                 f"Active Hypotheses: {state.get('active_hypotheses', 'N/A')}"
             )
 
-        await refresh_metrics()
-        ui.timer(10, refresh_metrics)
+        background_tasks.create(refresh_metrics())
+        ui.timer(10, lambda: background_tasks.create(refresh_metrics()))

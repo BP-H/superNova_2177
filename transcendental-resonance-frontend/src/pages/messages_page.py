@@ -1,6 +1,6 @@
 """Messaging system page."""
 
-from nicegui import ui
+from nicegui import ui, background_tasks
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
@@ -27,10 +27,14 @@ async def messages_page():
 
         async def send_message():
             data = {'content': content.value}
-            resp = api_call('POST', f'/messages/{recipient.value}', data)
-            if resp:
-                ui.notify('Message sent!', color='positive')
-                await refresh_messages()
+
+            async def task():
+                resp = await api_call('POST', f'/messages/{recipient.value}', data)
+                if resp:
+                    ui.notify('Message sent!', color='positive')
+                    await refresh_messages()
+
+            background_tasks.create(task())
 
         ui.button('Send', on_click=send_message).classes('w-full mb-4').style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
@@ -39,7 +43,7 @@ async def messages_page():
         messages_list = ui.column().classes('w-full')
 
         async def refresh_messages():
-            messages = api_call('GET', '/messages/') or []
+            messages = await api_call('GET', '/messages/') or []
             messages_list.clear()
             for m in messages:
                 with messages_list:
@@ -47,5 +51,5 @@ async def messages_page():
                         ui.label(f"From: {m['sender_id']}").classes('text-sm')
                         ui.label(m['content']).classes('text-sm')
 
-        await refresh_messages()
-        ui.timer(30, refresh_messages)
+        background_tasks.create(refresh_messages())
+        ui.timer(30, lambda: background_tasks.create(refresh_messages()))

@@ -1,6 +1,6 @@
 """Governance proposals page."""
 
-from nicegui import ui
+from nicegui import ui, background_tasks
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
@@ -34,10 +34,14 @@ async def proposals_page():
                 'proposal_type': p_type.value,
                 'group_id': int(p_group_id.value) if p_group_id.value else None,
             }
-            resp = api_call('POST', '/proposals/', data)
-            if resp:
-                ui.notify('Proposal created!', color='positive')
-                await refresh_proposals()
+
+            async def task():
+                resp = await api_call('POST', '/proposals/', data)
+                if resp:
+                    ui.notify('Proposal created!', color='positive')
+                    await refresh_proposals()
+
+            background_tasks.create(task())
 
         ui.button('Create Proposal', on_click=create_proposal).classes('w-full mb-4').style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
@@ -46,7 +50,7 @@ async def proposals_page():
         proposals_list = ui.column().classes('w-full')
 
         async def refresh_proposals():
-            proposals = api_call('GET', '/proposals/') or []
+            proposals = await api_call('GET', '/proposals/') or []
             proposals_list.clear()
             for p in proposals:
                 with proposals_list:
@@ -56,13 +60,20 @@ async def proposals_page():
                         ui.label(f"Status: {p['status']}").classes('text-sm')
                         if p['status'] == 'open':
                             async def vote_yes(p_id=p['id']):
-                                api_call('POST', f'/proposals/{p_id}/vote', {'vote': 'yes'})
-                                await refresh_proposals()
+                                async def task():
+                                    await api_call('POST', f'/proposals/{p_id}/vote', {'vote': 'yes'})
+                                    await refresh_proposals()
+
+                                background_tasks.create(task())
+
                             async def vote_no(p_id=p['id']):
-                                api_call('POST', f'/proposals/{p_id}/vote', {'vote': 'no'})
-                                await refresh_proposals()
+                                async def task():
+                                    await api_call('POST', f'/proposals/{p_id}/vote', {'vote': 'no'})
+                                    await refresh_proposals()
+
+                                background_tasks.create(task())
                             ui.row().classes('justify-between')
                             ui.button('Yes', on_click=vote_yes).style('background: green; color: white;')
                             ui.button('No', on_click=vote_no).style('background: red; color: white;')
 
-        await refresh_proposals()
+        background_tasks.create(refresh_proposals())

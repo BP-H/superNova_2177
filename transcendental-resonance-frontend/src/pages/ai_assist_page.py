@@ -1,6 +1,6 @@
 """AI assistance for VibeNodes."""
 
-from nicegui import ui
+from nicegui import ui, background_tasks
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
@@ -26,10 +26,14 @@ async def ai_assist_page(vibenode_id: int):
 
         async def get_ai_response():
             data = {'prompt': prompt.value}
-            resp = api_call('POST', f'/ai-assist/{vibenode_id}', data)
-            if resp:
-                ui.label('AI Response:').classes('mb-2')
-                ui.label(resp['response']).classes('text-sm break-words')
+
+            async def task():
+                resp = await api_call('POST', f'/ai-assist/{vibenode_id}', data)
+                if resp:
+                    ui.label('AI Response:').classes('mb-2')
+                    ui.label(resp['response']).classes('text-sm break-words')
+
+            background_tasks.create(task())
 
         ui.button('Get AI Help', on_click=get_ai_response).classes('w-full').style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'

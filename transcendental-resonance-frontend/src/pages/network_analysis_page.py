@@ -1,7 +1,7 @@
 """Network analysis visualization page."""
 
 import json
-from nicegui import ui
+from nicegui import ui, background_tasks
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
@@ -37,13 +37,17 @@ async def network_page():
                 'label': node_label.value,
                 'type': node_type.value,
             }
-            resp = api_call('POST', '/network-analysis/nodes', data)
-            if resp is not None:
-                ui.notify('Node created', color='positive')
-                node_id.value = ''
-                node_label.value = ''
-                node_type.value = ''
-                await refresh_network()
+
+            async def task():
+                resp = await api_call('POST', '/network-analysis/nodes', data)
+                if resp is not None:
+                    ui.notify('Node created', color='positive')
+                    node_id.value = ''
+                    node_label.value = ''
+                    node_type.value = ''
+                    await refresh_network()
+
+            background_tasks.create(task())
 
         ui.button('Add Node', on_click=create_node).classes('w-full mb-4').style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
@@ -60,13 +64,17 @@ async def network_page():
                 'target': edge_target.value,
                 'type': edge_type.value,
             }
-            resp = api_call('POST', '/network-analysis/edges', data)
-            if resp is not None:
-                ui.notify('Edge created', color='positive')
-                edge_source.value = ''
-                edge_target.value = ''
-                edge_type.value = ''
-                await refresh_network()
+
+            async def task():
+                resp = await api_call('POST', '/network-analysis/edges', data)
+                if resp is not None:
+                    ui.notify('Edge created', color='positive')
+                    edge_source.value = ''
+                    edge_target.value = ''
+                    edge_type.value = ''
+                    await refresh_network()
+
+            background_tasks.create(task())
 
         ui.button('Add Edge', on_click=create_edge).classes('w-full mb-4').style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
@@ -75,7 +83,7 @@ async def network_page():
         graph = ui.html('').classes('w-full h-96')
 
         async def refresh_network() -> None:
-            analysis = api_call('GET', '/network-analysis/')
+            analysis = await api_call('GET', '/network-analysis/')
             if analysis:
                 nodes_label.text = f"Nodes: {analysis['metrics']['node_count']}"
                 edges_label.text = f"Edges: {analysis['metrics']['edge_count']}"
@@ -93,5 +101,5 @@ async def network_page():
                 """
                 graph.set_content(graph_html)
 
-        await refresh_network()
-        ui.timer(10, refresh_network)
+        background_tasks.create(refresh_network())
+        ui.timer(10, lambda: background_tasks.create(refresh_network()))
