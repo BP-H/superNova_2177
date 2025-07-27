@@ -35,3 +35,4 @@ scikit-learn
 streamlit>=1.28
 qrcode
 asyncpg
+email-validator
