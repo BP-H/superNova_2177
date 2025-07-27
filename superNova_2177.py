@@ -217,6 +217,13 @@ RemixAgent handles event-sourced logic and state management for a single univers
 CosmicNexus orchestrates the multiverse, coordinating forks, entropy reduction, and cross-universe bridges.
 """
 # Core Imports from all files
+try:
+    from config import Config as SystemConfig
+    CONFIG = SystemConfig
+except ImportError:
+    class TempConfig:
+        METRICS_PORT = 8001
+    CONFIG = TempConfig
 import sys
 import json
 import uuid
