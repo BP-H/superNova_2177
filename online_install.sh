@@ -18,7 +18,7 @@ if [[ -z "${VIRTUAL_ENV:-}" ]]; then
 fi
 
 pip install --upgrade pip
-pip install supernova-2177
+pip install .
 
 if [ -f ".env.example" ] && [ ! -f ".env" ]; then
     cp .env.example .env
