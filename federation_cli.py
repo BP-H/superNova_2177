@@ -69,9 +69,14 @@ def list_forks(_args: argparse.Namespace) -> None:
     try:
         forks = db.query(UniverseBranch).all()
         for f in forks:
+            try:
+                config_str = json.dumps(f.config)
+            except TypeError as exc:  # pragma: no cover - rare edge
+                print(f"Warning: failed to serialize config for {f.id}: {exc}")
+                config_str = repr(f.config)
             print(
                 f.id,
-                json.dumps(f.config),
+                config_str,
                 f"consensus={f.consensus:.2f}",
                 f"divergence={f.entropy_divergence:.2f}",
             )
@@ -96,7 +101,12 @@ def fork_info(args: argparse.Namespace) -> None:
             "entropy_divergence": fork.entropy_divergence,
             "consensus": fork.consensus,
         }
-        print(json.dumps(info, indent=2))
+        try:
+            print(json.dumps(info, indent=2))
+        except TypeError as exc:  # pragma: no cover - rare edge
+            print(f"Warning: failed to serialize info: {exc}")
+            info["config"] = repr(fork.config)
+            print(json.dumps(info, indent=2))
     finally:
         db.close()
 
