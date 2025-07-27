@@ -12,7 +12,10 @@ import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from statistics import mean, stdev
-from dateutil import parser
+try:
+    from dateutil import parser
+except Exception:  # pragma: no cover - optional dependency may be missing
+    parser = None  # type: ignore[assignment]
 
 logger = logging.getLogger("superNova_2177.temporal")
 
@@ -36,8 +39,9 @@ def _safe_parse_timestamp(value: str) -> Optional[datetime]:
     if not value or len(value) > 40:
         return None
     try:
-        ts = parser.isoparse(value)
-        return ts
+        if parser is not None:
+            return parser.isoparse(value)
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
     except (ValueError, OverflowError, TypeError):
         return None
 
