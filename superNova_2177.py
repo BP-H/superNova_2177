@@ -368,11 +368,17 @@ _creative_leap_model = None
 
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    if hasattr(pwd_context, "hash"):
+        return pwd_context.hash(password)
+    import hashlib
+    return hashlib.sha256(password.encode()).hexdigest()
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    if hasattr(pwd_context, "verify"):
+        return pwd_context.verify(plain_password, hashed_password)
+    import hashlib
+    return hashlib.sha256(plain_password.encode()).hexdigest() == hashed_password
 
 
 def create_access_token(data: Dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -2103,7 +2109,11 @@ def create_app() -> FastAPI:
     Base.metadata.create_all(bind=engine)
 
     cosmic_nexus = CosmicNexus(SessionLocal, SystemStateService(SessionLocal()))
-    agent = RemixAgent(cosmic_nexus=cosmic_nexus)
+    agent = RemixAgent(
+        cosmic_nexus=cosmic_nexus,
+        filename="logchain_main.log",
+        snapshot="snapshot_main.json",
+    )
 
     app.add_middleware(
         CORSMiddleware,
