@@ -103,6 +103,11 @@ def calculate_entropy_divergence(config: dict, base: object | None = None) -> fl
     return float(arr.mean())
 
 
+# TODO: explore entanglement-based consensus metrics
+# Implementing a more realistic quantum model would allow
+# contributors to simulate entangled voter states. This is
+# currently a simple toy calculation and should be replaced
+# or extended with a full entanglement simulation.
 def quantum_consensus(votes: list[bool]) -> float:
     """Compute consensus level using a simple quantum-inspired model."""
     if not votes:
