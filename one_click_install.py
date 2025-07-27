@@ -6,7 +6,12 @@ import sys
 import tempfile
 import urllib.request
 import hashlib
-from tqdm import tqdm
+
+try:
+    from tqdm import tqdm
+except ImportError:  # pragma: no cover - only triggered in rare cases
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "tqdm"])
+    from tqdm import tqdm
 
 OFFLINE_DIR = "offline_deps"
 ENV_DIR = "venv"

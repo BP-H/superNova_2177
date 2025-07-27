@@ -117,6 +117,9 @@ docker-compose up --build
 python one_click_install.py
 ```
 
+This script automatically installs the `tqdm` package if it isn't available so
+that progress bars work out of the box.
+
 This project relies on features introduced in **SQLAlchemy 2.x** such as
 `DeclarativeBase`. Ensure you have `sqlalchemy>=2.0` installed. The code also
 requires `python-dateutil` for timestamp parsing.
