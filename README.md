@@ -40,10 +40,13 @@ supernova-validate --validations sample_validations.json
    ```bash
    python setup_env.py
    ```
-   Or install the published wheel directly from PyPI:
-   ```bash
-   ./online_install.sh
-   ```
+  Or install the published wheel directly from PyPI:
+  ```bash
+  # Linux/macOS
+  ./online_install.sh
+  # Windows
+  ./online_install.ps1
+  ```
 3. **Activate the environment**:
    ```bash
    # Linux/macOS
