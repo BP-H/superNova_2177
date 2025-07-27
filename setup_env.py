@@ -76,6 +76,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description='Set up the environment')
     parser.add_argument('--run-app', action='store_true', help='start the API after installation')
     parser.add_argument('--build-ui', action='store_true', help='build the web UI after installation')
+    parser.add_argument('--locked', action='store_true',
+                        help='install dependencies from requirements.lock')
     args = parser.parse_args()
 
     env_created = ensure_env()
@@ -83,7 +85,8 @@ def main() -> None:
     pip = pip_cmd()
     try:
         subprocess.check_call(pip + ['install', '--upgrade', 'pip'])
-        subprocess.check_call(pip + ['install', '-r', 'requirements.txt'])
+        req_file = 'requirements.lock' if args.locked and os.path.isfile('requirements.lock') else 'requirements.txt'
+        subprocess.check_call(pip + ['install', '-r', req_file])
         subprocess.check_call(pip + ['install', '-e', '.'])
     except subprocess.CalledProcessError as exc:
         logging.error('Dependency installation failed: %s', exc)
