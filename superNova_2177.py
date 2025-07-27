@@ -2388,8 +2388,12 @@ class RemixAgent:
                     n
                     for n, t in self.processed_nonces.items()
                     if (
-                        datetime.datetime.fromisoformat(now)
-                        - datetime.datetime.fromisoformat(t)
+                        datetime.datetime.fromisoformat(
+                            now.replace("Z", "+00:00")
+                        )
+                        - datetime.datetime.fromisoformat(
+                            t.replace("Z", "+00:00")
+                        )
                     ).total_seconds()
                     > self.config.NONCE_EXPIRATION_SECONDS
                 ]
