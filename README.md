@@ -68,9 +68,7 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
   ```bash
   python install.py
   ```
-  This project depends on `numpy`, `python-dateutil`, `sqlalchemy>=2.0`, and `email-validator`. These packages are listed in `requirements.txt` and
-  also in a pared-down `requirements-minimal.txt` that is sufficient for
-  running the unit tests.
+ This project depends on libraries such as `fastapi`, `pydantic-settings`, `structlog`, `prometheus-client`, and core packages like `numpy`, `python-dateutil`, `sqlalchemy>=2.0`, and `email-validator`. The full list lives in `requirements.txt`. A pared-down `requirements-minimal.txt` installs only what is necessary to run the unit tests.
   If you prefer to manage the environment manually, install the required
   packages yourself using `requirements.txt`:
   ```bash
@@ -253,11 +251,10 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-This file includes `pytest`, `sqlalchemy`, `networkx`, `numpy`, and
-`python-dateutil`.
+This file includes `pytest` and all libraries required for development.
 For a lightweight setup you can instead install the reduced set from
 `requirements-minimal.txt` or use `requirements.txt`/`requirements.lock`
-for the full development environment.
+for the full environment.
 
 Before running the tests, ensure the packages from `requirements.txt` (or the
 expanded minimal file) are installed. You can install them using the setup
@@ -276,9 +273,12 @@ Install the minimal set of packages required for running the tests:
 pip install -r requirements-minimal.txt
 ```
 
-This file installs `numpy`, `python-dateutil`, `networkx` and
-`sqlalchemy` so that `pytest` can import all modules. With these
-installed, running `pytest` should succeed (`99 passed`).
+`requirements-minimal.txt` installs `fastapi`, `pydantic`,
+`pydantic-settings`, `python-multipart`, `structlog`,
+`prometheus-client` and the core scientific packages (`numpy`,
+`python-dateutil`, `sqlalchemy`, `networkx`, `pytest-asyncio`, `httpx`,
+`email-validator`). With these installed, running `pytest` should
+succeed (`99 passed`).
 
 ### Makefile Commands
 
