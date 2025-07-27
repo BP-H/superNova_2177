@@ -75,10 +75,11 @@ pytest
 
 ## 🔧 Configuration
 
-`SECRET_KEY` **must** be supplied via environment variables for JWT signing.  A
-strong random value is recommended:
+`SECRET_KEY` can be supplied via environment variables for JWT signing. If it is
+not set, a secure random value will be generated automatically:
 
 ```bash
+# optional
 export SECRET_KEY="your-random-secret"
 ```
 
@@ -147,9 +148,11 @@ Unix systems or `supernova-cli.exe` on Windows.
 
 If you're on Windows, download `supernova-cli.exe` from the GitHub Releases page
 or build it yourself with the script above. Before launching, set the required
-environment variables so the application can connect to its services:
+environment variables so the application can connect to its services. `SECRET_KEY`
+is optional because a secure one will be generated if omitted:
 
 ```bash
+# optional
 export SECRET_KEY="your-secret"
 export DATABASE_URL="postgresql+asyncpg://user:password@localhost/transcendental_resonance"
 export BACKEND_URL="http://localhost:8000"
