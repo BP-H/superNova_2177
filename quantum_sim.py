@@ -77,6 +77,18 @@ class QuantumContext:
             f"QuantumContext initialized with fuzzy_enabled={fuzzy_enabled}, decoherence_rate={decoherence_rate}, simulate={simulate}"
         )
 
+        if FUZZINESS_RANGE_LOW > FUZZINESS_RANGE_HIGH:
+            logging.error(
+                "Invalid fuzziness range",
+                extra={
+                    "FUZZINESS_RANGE_LOW": FUZZINESS_RANGE_LOW,
+                    "FUZZINESS_RANGE_HIGH": FUZZINESS_RANGE_HIGH,
+                },
+            )
+            raise ValueError(
+                "FUZZINESS_RANGE_LOW must be <= FUZZINESS_RANGE_HIGH"
+            )
+
     def step(self, dt: float = 1.0) -> None:
         """Apply decoherence decay over ``dt`` time units."""
         decay = math.exp(-self.decoherence_rate * dt)
