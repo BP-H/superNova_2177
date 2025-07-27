@@ -15,7 +15,9 @@ contourpy==1.3.3
 cramjam==2.10.0
 cryptography==45.0.5
 cycler==0.12.1
+dnspython==2.7.0
 ecdsa==0.19.1
+email_validator==2.2.0
 fastapi==0.116.1
 filelock==3.18.0
 fonttools==4.59.0

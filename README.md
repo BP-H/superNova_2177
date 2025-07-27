@@ -68,9 +68,9 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
   ```bash
   python install.py
   ```
-  This project depends on `numpy`, `python-dateutil`, and
-  `sqlalchemy>=2.0`. These packages are listed in `requirements.txt` and
-  also in a pared-down `requirements-minimal.txt` that is sufficient for
+   This project depends on `numpy`, `python-dateutil`, `email-validator`, and
+   `sqlalchemy>=2.0`. These packages are listed in `requirements.txt` and
+   also in a pared-down `requirements-minimal.txt` that is sufficient for
   running the unit tests.
   If you prefer to manage the environment manually, install the required
   packages yourself using `requirements.txt`:
