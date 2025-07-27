@@ -10,6 +10,24 @@ new RFC:
 3. Update the table below with your RFC number and title.
 4. Open a pull request so the community can review it.
 
+## RFC Template
+
+Create your RFC README using the following structure:
+
+```markdown
+## Problem Statement
+Describe the issue or limitation motivating the proposal.
+
+## Proposed Solution
+Detail the recommended approach and any implementation notes.
+
+## Alternatives
+Summarize other options that were considered.
+
+## Impact
+Explain the expected benefits and any potential downsides.
+```
+
 ## Index
 
 ### Validators
@@ -30,4 +48,4 @@ new RFC:
 
 | Number | Title |
 |-------|-------|
-| _None yet_ |
+| [001](001-gui-integration/README.md) | Streamlit GUI Integration |
