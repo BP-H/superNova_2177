@@ -52,7 +52,13 @@ FORKING_KARMA_PERCENTILE = 0.75  # Default value if no setting stored
 
 
 def karma_percentile_cutoff(percentile: float, db: Session | None = None) -> float:
-    """Return karma score cutoff for given percentile."""
+    """Return karma score cutoff for given percentile.
+
+    Attempts to compute the percentile directly in SQL using
+    ``func.percentile_cont``. If the database or dialect does not support the
+    percentile window function, falls back to loading all karma values into
+    memory and sorting them.
+    """
     close_session = False
     if db is None:
         db = SessionLocal()
@@ -60,6 +66,22 @@ def karma_percentile_cutoff(percentile: float, db: Session | None = None) -> flo
     try:
         if not 0 <= percentile <= 1:
             raise ValueError("percentile must be between 0 and 1")
+
+        # Try native percentile support first.
+        try:
+            result = (
+                db.query(
+                    func.percentile_cont(1 - percentile).within_group(
+                        Harmonizer.karma_score
+                    )
+                ).scalar()
+            )
+            if result is not None:
+                return float(result)
+        except Exception:
+            # Dialect may not support percentile_cont; fall back to manual method.
+            pass
+
         values = [h.karma_score for h in db.query(Harmonizer.karma_score).all()]
         if not values:
             return 0.0
