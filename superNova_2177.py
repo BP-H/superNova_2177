@@ -445,6 +445,7 @@ from dotenv import load_dotenv
 import structlog
 import prometheus_client as prom
 from prometheus_client import REGISTRY
+from config import Config
 from sqlalchemy import func
 from scientific_metrics import (
     calculate_influence_score,
@@ -528,7 +529,7 @@ if "total_vibenodes" in REGISTRY._names_to_collectors:
     vibenodes_gauge = REGISTRY._names_to_collectors["total_vibenodes"]
 else:
     vibenodes_gauge = prom.Gauge("total_vibenodes", "Total number of vibenodes")
-prom.start_http_server(CONFIG.METRICS_PORT)  # Metrics endpoint
+prom.start_http_server(Config.METRICS_PORT)  # Metrics endpoint
 
 # --- MODULE: models.py ---
 # Database setup from FastAPI files
