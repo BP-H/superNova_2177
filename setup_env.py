@@ -3,6 +3,7 @@ import sys
 import shutil
 import subprocess
 import argparse
+import logging
 from pathlib import Path
 
 ENV_DIR = 'venv'
@@ -22,8 +23,13 @@ def ensure_env() -> bool:
     if in_virtualenv():
         return False
     if not os.path.isdir(ENV_DIR):
-        print(f'Creating virtual environment in {ENV_DIR}...')
-        subprocess.check_call([sys.executable, '-m', 'venv', ENV_DIR])
+        logging.info('Creating virtual environment in %s...', ENV_DIR)
+        try:
+            subprocess.check_call([sys.executable, '-m', 'venv', ENV_DIR])
+        except subprocess.CalledProcessError as exc:
+            logging.error('Failed to create virtual environment: %s', exc)
+            logging.error('Ensure the venv module is available and you have write permissions.')
+            raise
         return True
     return False
 
@@ -37,20 +43,36 @@ def pip_cmd() -> list:
 def run_app() -> None:
     """Launch the backend API using the environment's Python."""
     python_exe = sys.executable if in_virtualenv() else venv_bin('python')
-    subprocess.check_call([python_exe, 'superNova_2177.py'])
+    try:
+        subprocess.check_call([python_exe, 'superNova_2177.py'])
+    except subprocess.CalledProcessError as exc:
+        logging.error('Failed to start the API: %s', exc)
+        logging.error('Verify that dependencies are installed and try again.')
+        raise
 
 
 def build_web_ui(pip: list) -> None:
     """Install UI deps and build the NiceGUI frontend."""
     ui_reqs = Path('transcendental-resonance-frontend') / 'requirements.txt'
     if ui_reqs.is_file():
-        subprocess.check_call(pip + ['install', '-r', str(ui_reqs)])
+        try:
+            subprocess.check_call(pip + ['install', '-r', str(ui_reqs)])
+        except subprocess.CalledProcessError as exc:
+            logging.error('Failed to install UI dependencies: %s', exc)
+            logging.error('Check your internet connection and try again.')
+            raise
     ui_script = Path('transcendental-resonance-frontend') / 'src' / 'main.py'
     nicegui = [venv_bin('nicegui')] if not in_virtualenv() else ['nicegui']
-    subprocess.check_call(nicegui + ['build', str(ui_script)])
+    try:
+        subprocess.check_call(nicegui + ['build', str(ui_script)])
+    except subprocess.CalledProcessError as exc:
+        logging.error('Failed to build the web UI: %s', exc)
+        logging.error('Ensure Node.js and NiceGUI are properly installed.')
+        raise
 
 
 def main() -> None:
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     parser = argparse.ArgumentParser(description='Set up the environment')
     parser.add_argument('--run-app', action='store_true', help='start the API after installation')
     parser.add_argument('--build-ui', action='store_true', help='build the web UI after installation')
@@ -59,9 +81,14 @@ def main() -> None:
     env_created = ensure_env()
 
     pip = pip_cmd()
-    subprocess.check_call(pip + ['install', '--upgrade', 'pip'])
-    subprocess.check_call(pip + ['install', '-r', 'requirements.txt'])
-    subprocess.check_call(pip + ['install', '-e', '.'])
+    try:
+        subprocess.check_call(pip + ['install', '--upgrade', 'pip'])
+        subprocess.check_call(pip + ['install', '-r', 'requirements.txt'])
+        subprocess.check_call(pip + ['install', '-e', '.'])
+    except subprocess.CalledProcessError as exc:
+        logging.error('Dependency installation failed: %s', exc)
+        logging.error('Check your internet connection and ensure pip is available.')
+        raise
 
     if os.path.isfile('.env.example') and not os.path.isfile('.env'):
         shutil.copy('.env.example', '.env')
@@ -84,7 +111,11 @@ def main() -> None:
     print('Set SECRET_KEY in the environment or the .env file before running the app.')
 
     if args.run_app:
-        run_app()
+        try:
+            run_app()
+        except subprocess.CalledProcessError:
+            logging.error('Failed to run the application.')
+            logging.error('Resolve the errors above and re-run with --run-app.')
 
 
 if __name__ == '__main__':
