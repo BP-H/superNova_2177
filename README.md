@@ -52,6 +52,7 @@ supernova-validate --validations sample_validations.json
    ```bash
    ./online_install.sh
    ```
+   These installers also copy `.env.example` to `.env` if it is missing.
 3. **Activate the environment**:
    ```bash
    # Linux/macOS
@@ -90,7 +91,8 @@ strong random value is recommended:
 export SECRET_KEY="your-random-secret"
 ```
 
-Copy `.env.example` to `.env` and set values for `SECRET_KEY`, `DATABASE_URL`,
+The installer creates `.env` from `.env.example` if needed.
+Edit the placeholder values for `SECRET_KEY`, `DATABASE_URL`,
 and `BACKEND_URL` before running the app.
 
 ## 🐳 Docker

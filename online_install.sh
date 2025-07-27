@@ -7,3 +7,8 @@ else
     pip install supernova-2177
 fi
 
+# Copy example environment file if needed
+if [ -f ".env.example" ] && [ ! -f ".env" ]; then
+    cp .env.example .env
+fi
+
