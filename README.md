@@ -63,16 +63,20 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
    # python setup_env.py --locked     # install from requirements.lock
    # python setup_env.py --build-ui   # build NiceGUI frontend assets
    ```
-   You can also let `install.py` choose the appropriate installer for your
-   platform:
-   ```bash
-   python install.py
-   ```
-   If you prefer to manage the environment manually, install the required
-   packages yourself using `requirements.txt`:
-   ```bash
-   pip install -r requirements.txt  # installs numpy, python-dateutil, etc.
-   ```
+  You can also let `install.py` choose the appropriate installer for your
+  platform:
+  ```bash
+  python install.py
+  ```
+  This project depends on `numpy`, `python-dateutil`, and
+  `sqlalchemy>=2.0`. These packages are listed in `requirements.txt` and
+  also in a pared-down `requirements-minimal.txt` that is sufficient for
+  running the unit tests.
+  If you prefer to manage the environment manually, install the required
+  packages yourself using `requirements.txt`:
+  ```bash
+  pip install -r requirements.txt  # installs numpy, python-dateutil, etc.
+  ```
    A PyPI wheel is currently unavailable. Run `python setup_env.py` or use the online installer scripts:
    ```bash
    # Linux/macOS
@@ -219,8 +223,16 @@ After the build completes, you'll get a shareable URL to interact with the valid
 
 ## 🧪 Running Tests
 
-Install all dependencies first:
+Install all dependencies first. For a lightweight setup you can install
+the minimal set from `requirements-minimal.txt`:
 
+```bash
+pip install -r requirements-minimal.txt
+pytest
+```
+
+If you need the full development environment use `requirements.txt` or
+`requirements.lock` instead:
 ```bash
 pip install -r requirements.txt  # or use requirements.lock for reproducible installs
 pytest
