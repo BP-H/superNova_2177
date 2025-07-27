@@ -16,3 +16,6 @@ env/
 .idea/
 # OS files
 .DS_Store
+
+# Local test databases
+universe_*.db
