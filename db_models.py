@@ -16,6 +16,7 @@ from sqlalchemy import (
     Table,
     Float,
     JSON,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import sessionmaker, relationship, Session
 
@@ -510,6 +511,10 @@ class BranchVote(Base):
     """Vote for or against a universe branch."""
 
     __tablename__ = "branch_votes"
+
+    __table_args__ = (
+        UniqueConstraint("branch_id", "voter_id", name="uix_branch_vote"),
+    )
 
     id = Column(Integer, primary_key=True)
     branch_id = Column(ForeignKey("universe_branches.id"), nullable=False)
