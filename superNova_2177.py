@@ -2103,7 +2103,11 @@ def create_app() -> FastAPI:
     Base.metadata.create_all(bind=engine)
 
     cosmic_nexus = CosmicNexus(SessionLocal, SystemStateService(SessionLocal()))
-    agent = RemixAgent(cosmic_nexus=cosmic_nexus)
+    agent = RemixAgent(
+        cosmic_nexus=cosmic_nexus,
+        filename="logchain_main.log",
+        snapshot="snapshot_main.json",
+    )
 
     app.add_middleware(
         CORSMiddleware,
