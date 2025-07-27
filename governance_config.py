@@ -87,6 +87,7 @@ def karma_percentile_cutoff(percentile: float, db: Session | None = None) -> flo
             return 0.0
         values.sort()
         index = int((1 - percentile) * len(values))
+        index = max(0, min(index, len(values) - 1))
         return values[index]
     finally:
         if close_session:
