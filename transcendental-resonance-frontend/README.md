@@ -22,6 +22,10 @@ This command starts the app using data from `src/utils/sample_data/`.
 
 Replace the backend URL with the `BACKEND_URL` environment variable if your API is not running on `http://localhost:8000`.
 
+### Backend connection
+
+The frontend obtains the base API address from the `BACKEND_URL` environment variable.  If it is not set, the default `http://localhost:8000` is used. When running with Docker Compose the variable should point to `http://backend:8000` so the container can reach the backend service.
+
 ## Structure
 
 - `src/pages/` – individual UI pages (login, profile, VibeNodes, etc.)
