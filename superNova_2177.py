@@ -474,6 +474,17 @@ from governance_config import calculate_entropy_divergence, quantum_consensus
 from prediction_manager import PredictionManager
 from resonance_music import generate_midi_from_metrics
 
+# Import system configuration early so metrics can be started with the proper
+# port value. Other modules follow the same pattern by exposing a ``CONFIG``
+# variable pointing at ``config.Config``.  Without this, ``CONFIG`` is undefined
+# when Prometheus metrics are initialised below, leading to a ``NameError`` at
+# runtime on Streamlit Cloud.
+try:  # pragma: no cover - fallback only used if optional import fails
+    from config import Config as SystemConfig
+    CONFIG = SystemConfig
+except Exception:  # pragma: no cover - extremely defensive
+    CONFIG = types.SimpleNamespace(METRICS_PORT=8001)
+
 # --- MODULE: logging_setup.py ---
 # Logging setup with thematic flavor
 logger = structlog.get_logger("TranscendentalResonance")
