@@ -39,7 +39,8 @@ dependencies = [
     "mido",
     "midiutil",
     "torch",
-    "scikit-learn"
+    "scikit-learn",
+    "streamlit"
 ]
 
 [project.scripts]
