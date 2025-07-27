@@ -480,16 +480,8 @@ from scientific_utils import (
 import db_models
 from db_models import (
     Base,
-    SessionLocal,
     engine,
-    UniverseBranch,
-    BranchVote,
-    harmonizer_follows,
-    vibenode_likes,
-    group_members,
-    event_attendees,
-    vibenode_entanglements,
-    proposal_votes,
+    SessionLocal,
     Harmonizer,
     VibeNode,
     CreativeGuild,
@@ -507,8 +499,14 @@ from db_models import (
     SystemState,
     SymbolicToken,
     TokenListing,
-    Coin,
-    MarketplaceListing,
+    UniverseBranch,
+    BranchVote,
+    harmonizer_follows,
+    vibenode_likes,
+    group_members,
+    event_attendees,
+    vibenode_entanglements,
+    proposal_votes,
 )
 from governance_config import calculate_entropy_divergence, quantum_consensus
 
@@ -1941,7 +1939,7 @@ class CosmicNexus:
         if not root_coin_data:
             logging.warning(f"Root coin for {user} missing in {source_universe}")
             return
-        root_coin = Coin.from_dict(root_coin_data, source_agent.config)
+        root_coin = SymbolicToken.from_dict(root_coin_data, source_agent.config)
 
         ref_coin_data = target_agent.storage.get_coin(reference_coin)
         if not ref_coin_data:
@@ -1949,7 +1947,7 @@ class CosmicNexus:
                 f"Reference coin {reference_coin} missing in {reference_universe}"
             )
             return
-        ref_coin = Coin.from_dict(ref_coin_data, target_agent.config)
+        ref_coin = SymbolicToken.from_dict(ref_coin_data, target_agent.config)
 
         creator_data = target_agent.storage.get_user(ref_coin.creator)
         if not creator_data:
@@ -1962,7 +1960,7 @@ class CosmicNexus:
         if not creator_root_data:
             logging.warning(f"Creator root coin missing in {reference_universe}")
             return
-        creator_root = Coin.from_dict(creator_root_data, target_agent.config)
+        creator_root = SymbolicToken.from_dict(creator_root_data, target_agent.config)
 
         locks = [user_obj.lock, root_coin.lock, creator_root.lock]
         with acquire_multiple_locks(locks):
@@ -1978,7 +1976,7 @@ class CosmicNexus:
             creator_root.value += creator_share
             source_agent.treasury += treasury_share
 
-            new_coin = Coin(
+            new_coin = SymbolicToken(
                 data["coin_id"],
                 user,
                 user,
@@ -3411,7 +3409,7 @@ class SQLAlchemyStorage(AbstractStorage):
             return json.loads(cached)
         db = self._get_session()
         try:
-            coin = db.query(Coin).filter(Coin.coin_id == coin_id).first()
+            coin = db.query(SymbolicToken).filter(SymbolicToken.token_id == coin_id).first()
             if coin:
                 data = coin.__dict__.copy()
                 data.pop("_sa_instance_state", None)
@@ -3425,12 +3423,12 @@ class SQLAlchemyStorage(AbstractStorage):
         redis_client.delete(f"coin:{coin_id}")
         db = self._get_session()
         try:
-            coin = db.query(Coin).filter(Coin.coin_id == coin_id).first()
+            coin = db.query(SymbolicToken).filter(SymbolicToken.token_id == coin_id).first()
             if coin:
                 for k, v in data.items():
                     setattr(coin, k, v)
             else:
-                coin = Coin(coin_id=coin_id, **data)
+                coin = SymbolicToken(token_id=coin_id, **data)
                 db.add(coin)
             db.commit()
         finally:
@@ -3449,7 +3447,7 @@ class SQLAlchemyStorage(AbstractStorage):
     def delete_coin(self, coin_id: str):
         db = self._get_session()
         try:
-            coin = db.query(Coin).filter(Coin.coin_id == coin_id).first()
+            coin = db.query(SymbolicToken).filter(SymbolicToken.token_id == coin_id).first()
             if coin:
                 db.delete(coin)
                 db.commit()
@@ -3495,8 +3493,8 @@ class SQLAlchemyStorage(AbstractStorage):
         db = self._get_session()
         try:
             listing = (
-                db.query(MarketplaceListing)
-                .filter(MarketplaceListing.listing_id == listing_id)
+                db.query(TokenListing)
+                .filter(TokenListing.listing_id == listing_id)
                 .first()
             )
             return listing.__dict__ if listing else None
@@ -3507,15 +3505,15 @@ class SQLAlchemyStorage(AbstractStorage):
         db = self._get_session()
         try:
             listing = (
-                db.query(MarketplaceListing)
-                .filter(MarketplaceListing.listing_id == listing_id)
+                db.query(TokenListing)
+                .filter(TokenListing.listing_id == listing_id)
                 .first()
             )
             if listing:
                 for k, v in data.items():
                     setattr(listing, k, v)
             else:
-                listing = MarketplaceListing(listing_id=listing_id, **data)
+                listing = TokenListing(listing_id=listing_id, **data)
                 db.add(listing)
             db.commit()
         finally:
@@ -3525,8 +3523,8 @@ class SQLAlchemyStorage(AbstractStorage):
         db = self._get_session()
         try:
             listing = (
-                db.query(MarketplaceListing)
-                .filter(MarketplaceListing.listing_id == listing_id)
+                db.query(TokenListing)
+                .filter(TokenListing.listing_id == listing_id)
                 .first()
             )
             if listing:
