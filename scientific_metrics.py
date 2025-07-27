@@ -106,15 +106,24 @@ def calculate_influence_score(graph: nx.DiGraph, user_id: int, *, iterations: in
         base_score = scores.get(user_id, 0.0)
 
         # Bootstrap confidence by perturbing edge weights
-        samples = []
-        for _ in range(iterations):
+        def _perturb(_):
             g2 = graph
             if hasattr(graph, "copy"):
                 g2 = graph.copy()
             for u, v, data in list(g2.edges(data=True)):
                 data["weight"] = data.get("weight", 1.0) * random.uniform(0.9, 1.1)
             pr = nx.pagerank(g2)
-            samples.append(pr.get(user_id, 0.0))
+            return pr.get(user_id, 0.0)
+
+        samples = []
+        try:
+            from concurrent.futures import ThreadPoolExecutor
+
+            with ThreadPoolExecutor() as ex:
+                samples = list(ex.map(_perturb, range(iterations)))
+        except Exception:
+            for i in range(iterations):
+                samples.append(_perturb(i))
         conf = None
         if len(samples) > 1:
             std = statistics.stdev(samples)
@@ -348,27 +357,33 @@ def query_influence(
 
         # optional perturbation-based confidence refinement
         if perturb_iterations > 0 and nx is not None and path_count > 0:
-            samples = []
-            for _ in range(perturb_iterations):
+            def _p_iter(_):
                 g2 = graph.graph.copy() if isinstance(graph, InfluenceGraph) else graph.copy()
                 for u, v, data in g2.edges(data=True):
                     data["weight"] = data.get("weight", 1.0) * random.uniform(0.9, 1.1)
                 if isinstance(graph, InfluenceGraph):
                     s_prob = InfluenceGraph(); s_prob.graph = g2
-                    val = s_prob.query_influence(source_id, target_id)
-                else:
-                    if nx.has_path(g2, source_id, target_id):
-                        paths = list(nx.all_simple_paths(g2, source_id, target_id))
-                        st = []
-                        for p in paths:
-                            w = 1.0
-                            for u2, v2 in zip(p[:-1], p[1:]):
-                                w *= g2[u2][v2].get("weight", 1.0)
-                            st.append(w)
-                        val = max(st) if st else 0.0
-                    else:
-                        val = 0.0
-                samples.append(val)
+                    return s_prob.query_influence(source_id, target_id)
+                if nx.has_path(g2, source_id, target_id):
+                    paths = list(nx.all_simple_paths(g2, source_id, target_id))
+                    st = []
+                    for p in paths:
+                        w = 1.0
+                        for u2, v2 in zip(p[:-1], p[1:]):
+                            w *= g2[u2][v2].get("weight", 1.0)
+                        st.append(w)
+                    return max(st) if st else 0.0
+                return 0.0
+
+            samples = []
+            try:
+                from concurrent.futures import ThreadPoolExecutor
+
+                with ThreadPoolExecutor() as ex:
+                    samples = list(ex.map(_p_iter, range(perturb_iterations)))
+            except Exception:
+                for i in range(perturb_iterations):
+                    samples.append(_p_iter(i))
             if len(samples) > 1:
                 std = statistics.stdev(samples)
                 perturb_conf = max(0.0, min(1.0, 1 - BOOTSTRAP_Z_SCORE * std))
