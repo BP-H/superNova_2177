@@ -243,6 +243,7 @@ import signal
 import immutable_tri_species_adjust
 import random
 import optimization_engine
+from annual_audit import annual_audit_task
 from collections import defaultdict, deque, Counter
 from decimal import (
     Decimal,
@@ -4212,22 +4213,6 @@ async def adaptive_optimization_task(db_session_factory):
                 db.close()
             except Exception:
                 pass
-
-
-async def annual_audit_task(cosmic_nexus: CosmicNexus):
-    """Trigger a yearly quantum audit proposal."""
-    while True:
-        try:
-            await asyncio.sleep(Config.ANNUAL_AUDIT_INTERVAL_SECONDS)
-            cosmic_nexus.quantum_audit()
-        except asyncio.CancelledError:
-            logger.info("annual_audit_task cancelled")
-            break
-        except Exception as exc:
-            logger.error("annual_audit_task error", exc_info=True)
-
-
-@app.on_event("startup")
 async def startup_event():
     loop = asyncio.get_event_loop()
     loop.create_task(passive_aura_resonance_task(SessionLocal))
