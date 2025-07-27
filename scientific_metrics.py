@@ -784,55 +784,41 @@ def generate_system_predictions(db: Session, timeframe_hours: int) -> Dict[str, 
     approximation: heuristic
     """
 
-    try:
-        graph = build_causal_graph(db)
-        try:
-            from superNova_2177 import Harmonizer as HarmonizerModel  # pragma: no cover - runtime
-        except Exception:  # pragma: no cover - fallback during tests
-            from db_models import Harmonizer as HarmonizerModel
+    graph = build_causal_graph(db)
+    from db_models import Harmonizer as HarmonizerModel
 
-        users = db.query(HarmonizerModel).all()
-        influence_scores: list[tuple[int, float]] = []
-        entropies: list[float] = []
+    users = db.query(HarmonizerModel).all()
+    influence_scores: list[tuple[int, float]] = []
+    entropies: list[float] = []
 
-        for u in users:
-            inf = calculate_influence_score(graph.graph, u.id)
-            influence_scores.append((u.id, inf["value"]))
-            ent = calculate_interaction_entropy(u, db)
-            entropies.append(ent["value"])
+    for u in users:
+        inf = calculate_influence_score(graph.graph, u.id)
+        influence_scores.append((u.id, inf["value"]))
+        ent = calculate_interaction_entropy(u, db)
+        entropies.append(ent["value"])
 
-        avg_entropy = sum(entropies) / len(entropies) if entropies else 0.0
-        negentropy = 1.0 - avg_entropy
-        entropy_std = statistics.stdev(entropies) if len(entropies) > 1 else 0.0
+    avg_entropy = sum(entropies) / len(entropies) if entropies else 0.0
+    negentropy = 1.0 - avg_entropy
+    entropy_std = statistics.stdev(entropies) if len(entropies) > 1 else 0.0
 
-        top_influencers = [uid for uid, _ in sorted(influence_scores, key=lambda x: x[1], reverse=True)[:3]]
+    top_influencers = [uid for uid, _ in sorted(influence_scores, key=lambda x: x[1], reverse=True)[:3]]
 
-        return {
-            "timeframe_hours": timeframe_hours,
-            "predicted_system_entropy": {
-                "value": avg_entropy,
-                "unit": "bits",
-                "confidence_interval": max(0.0, 1.0 - entropy_std),
-            },
-            "predicted_content_diversity": {
-                "value": negentropy,
-                "unit": "diversity",
-                "confidence_interval": max(0.0, 1.0 - entropy_std),
-            },
-            "top_influencers_next_day": top_influencers,
-            "falsifiability_criteria": "compare predicted metrics with observed metrics after timeframe",
-            "generated_at": datetime.datetime.utcnow().isoformat(),
-        }
-    except Exception as exc:  # pragma: no cover - safety
-        logging.error("generate_system_predictions failed: %s", exc)
-        return {
-            "timeframe_hours": timeframe_hours,
-            "predicted_system_entropy": {"value": 0.0, "unit": "bits", "confidence_interval": None},
-            "predicted_content_diversity": {"value": 0.0, "unit": "diversity", "confidence_interval": None},
-            "top_influencers_next_day": [],
-            "falsifiability_criteria": "compare predicted metrics with observed metrics after timeframe",
-            "generated_at": datetime.datetime.utcnow().isoformat(),
-        }
+    return {
+        "timeframe_hours": timeframe_hours,
+        "predicted_system_entropy": {
+            "value": avg_entropy,
+            "unit": "bits",
+            "confidence_interval": max(0.0, 1.0 - entropy_std),
+        },
+        "predicted_content_diversity": {
+            "value": negentropy,
+            "unit": "diversity",
+            "confidence_interval": max(0.0, 1.0 - entropy_std),
+        },
+        "top_influencers_next_day": top_influencers,
+        "falsifiability_criteria": "compare predicted metrics with observed metrics after timeframe",
+        "generated_at": datetime.datetime.utcnow().isoformat(),
+    }
 
 
 @VerifiedScientificModel(

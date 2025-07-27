@@ -477,8 +477,43 @@ from scientific_utils import (
     generate_hypotheses,
     refine_hypotheses_from_evidence,
 )
-from db_models import UniverseBranch, BranchVote
+import db_models
+from db_models import (
+    Base,
+    SessionLocal,
+    engine,
+    UniverseBranch,
+    BranchVote,
+    harmonizer_follows,
+    vibenode_likes,
+    group_members,
+    event_attendees,
+    vibenode_entanglements,
+    proposal_votes,
+    Harmonizer,
+    VibeNode,
+    CreativeGuild,
+    GuinnessClaim,
+    AIPersona,
+    Group,
+    Comment,
+    Event,
+    Proposal,
+    ProposalVote,
+    Notification,
+    Message,
+    SimulationLog,
+    LogEntry,
+    SystemState,
+    SymbolicToken,
+    TokenListing,
+    Coin,
+    MarketplaceListing,
+)
 from governance_config import calculate_entropy_divergence, quantum_consensus
+
+# Database engine URL resolved at runtime
+DB_ENGINE_URL = None
 from prediction_manager import PredictionManager
 from resonance_music import generate_midi_from_metrics
 from hook_manager import HookManager
@@ -557,327 +592,6 @@ except OSError as exc:  # pragma: no cover - system specific
         Config.METRICS_PORT,
         exc,
     )
-
-# --- MODULE: models.py ---
-# Database setup from FastAPI files
-engine = None
-SessionLocal = None
-DB_ENGINE_URL = None
-Base = declarative_base()
-
-# Association Tables from FastAPI files
-harmonizer_follows = Table(
-    "harmonizer_follows",
-    Base.metadata,
-    Column("follower_id", Integer, ForeignKey("harmonizers.id"), primary_key=True),
-    Column("followed_id", Integer, ForeignKey("harmonizers.id"), primary_key=True),
-)
-vibenode_likes = Table(
-    "vibenode_likes",
-    Base.metadata,
-    Column("harmonizer_id", Integer, ForeignKey("harmonizers.id"), primary_key=True),
-    Column("vibenode_id", Integer, ForeignKey("vibenodes.id"), primary_key=True),
-)
-group_members = Table(
-    "group_members",
-    Base.metadata,
-    Column("harmonizer_id", Integer, ForeignKey("harmonizers.id"), primary_key=True),
-    Column("group_id", Integer, ForeignKey("groups.id"), primary_key=True),
-)
-event_attendees = Table(
-    "event_attendees",
-    Base.metadata,
-    Column("harmonizer_id", Integer, ForeignKey("harmonizers.id"), primary_key=True),
-    Column("event_id", Integer, ForeignKey("events.id"), primary_key=True),
-)
-vibenode_entanglements = Table(
-    "vibenode_entanglements",
-    Base.metadata,
-    Column("source_id", Integer, ForeignKey("vibenodes.id"), primary_key=True),
-    Column("target_id", Integer, ForeignKey("vibenodes.id"), primary_key=True),
-    Column("strength", Float, default=1.0),
-)
-proposal_votes = Table(
-    "proposal_votes",
-    Base.metadata,
-    Column("harmonizer_id", Integer, ForeignKey("harmonizers.id"), primary_key=True),
-    Column("proposal_id", Integer, ForeignKey("proposals.id"), primary_key=True),
-    Column("vote", String, nullable=False),
-)
-
-
-# ORM Models from all files
-class Harmonizer(Base):
-    __tablename__ = "harmonizers"
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-    bio = Column(Text, default="")
-    profile_pic = Column(String, default="default.jpg")
-    is_active = Column(Boolean, default=True)
-    is_admin = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    species = Column(String, default="human", nullable=False)
-    harmony_score = Column(String, default="100.0")
-    creative_spark = Column(String, default="1000000.0")
-    is_genesis = Column(Boolean, default=False)
-    consent_given = Column(Boolean, default=True)
-    cultural_preferences = Column(JSON, default=list)
-    engagement_streaks = Column(JSON, default=dict)
-    network_centrality = Column(Float, default=0.0)
-    last_passive_aura_timestamp = Column(DateTime, default=datetime.datetime.utcnow)
-    vibenodes = relationship(
-        "VibeNode", back_populates="author", cascade="all, delete-orphan"
-    )
-    comments = relationship(
-        "Comment", back_populates="author", cascade="all, delete-orphan"
-    )
-    notifications = relationship(
-        "Notification", back_populates="harmonizer", cascade="all, delete-orphan"
-    )
-    messages_sent = relationship(
-        "Message",
-        foreign_keys="[Message.sender_id]",
-        back_populates="sender",
-        cascade="all, delete-orphan",
-    )
-    messages_received = relationship(
-        "Message",
-        foreign_keys="[Message.receiver_id]",
-        back_populates="receiver",
-        cascade="all, delete-orphan",
-    )
-    groups = relationship("Group", secondary=group_members, back_populates="groups")
-    events = relationship("Event", secondary=event_attendees, back_populates="events")
-    following = relationship(
-        "Harmonizer",
-        secondary=harmonizer_follows,
-        primaryjoin=(harmonizer_follows.c.follower_id == id),
-        secondaryjoin=(harmonizer_follows.c.followed_id == id),
-        backref="followers",
-    )
-    node_companies = relationship("CreativeGuild", back_populates="owner")
-    simulations = relationship(
-        "SimulationLog", back_populates="harmonizer", cascade="all, delete-orphan"
-    )
-
-
-class VibeNode(Base):
-    __tablename__ = "vibenodes"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True, nullable=False)
-    description = Column(Text)
-    author_id = Column(Integer, ForeignKey("harmonizers.id"), nullable=False)
-    parent_vibenode_id = Column(Integer, ForeignKey("vibenodes.id"), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    media_type = Column(String, default="text")
-    media_url = Column(String, nullable=True)
-    fractal_depth = Column(Integer, default=0)
-    echo = Column(String, default="0.0")
-    engagement_catalyst = Column(String, default="0.0")
-    negentropy_score = Column(String, default="0.0")
-    tags = Column(JSON, default=list)
-    patron_saint_id = Column(Integer, ForeignKey("ai_personas.id"), nullable=True)
-    author = relationship("Harmonizer", back_populates="vibenodes")
-    sub_nodes = relationship(
-        "VibeNode",
-        backref="parent_vibenode",
-        remote_side=[id],
-        cascade="all, delete-orphan",
-    )
-    comments = relationship(
-        "Comment", back_populates="vibenode", cascade="all, delete-orphan"
-    )
-    likes = relationship(
-        "Harmonizer", secondary=vibenode_likes, backref="liked_vibenodes"
-    )
-    entangled_with = relationship(
-        "VibeNode",
-        secondary=vibenode_entanglements,
-        primaryjoin=(vibenode_entanglements.c.source_id == id),
-        secondaryjoin=(vibenode_entanglements.c.target_id == id),
-        backref="entangled_from",
-    )
-    creative_guild = relationship(
-        "CreativeGuild", back_populates="vibenode", uselist=False
-    )
-    patron_saint = relationship("AIPersona", back_populates="vibenodes")
-
-
-class CreativeGuild(Base):
-    __tablename__ = "creative_guilds"
-    id = Column(Integer, primary_key=True, index=True)
-    vibenode_id = Column(
-        Integer, ForeignKey("vibenodes.id"), unique=True, nullable=False
-    )
-    owner_id = Column(Integer, ForeignKey("harmonizers.id"), nullable=False)
-    legal_name = Column(String, nullable=False)
-    guild_type = Column(String, default="art_collective")
-    registration_timestamp = Column(DateTime, default=datetime.datetime.utcnow)
-    vibenode = relationship("VibeNode", back_populates="creative_guild")
-    owner = relationship("Harmonizer", back_populates="node_companies")
-
-
-class GuinnessClaim(Base):
-    __tablename__ = "guinness_claims"
-    id = Column(Integer, primary_key=True, index=True)
-    claimant_id = Column(Integer, ForeignKey("harmonizers.id"), nullable=False)
-    claim_type = Column(String, nullable=False)
-    evidence_details = Column(Text)
-    status = Column(String, default="pending")
-    submission_timestamp = Column(DateTime, default=datetime.datetime.utcnow)
-
-
-class AIPersona(Base):
-    __tablename__ = "ai_personas"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, nullable=False)
-    description = Column(Text)
-    base_personas = Column(JSON, default=list)
-    is_emergent = Column(Boolean, default=False)
-    vibenodes = relationship("VibeNode", back_populates="patron_saint")
-
-
-class Group(Base):
-    __tablename__ = "groups"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True, nullable=False)
-    description = Column(Text)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    members = relationship(
-        "Harmonizer", secondary=group_members, back_populates="groups"
-    )
-    events = relationship("Event", back_populates="group", cascade="all, delete-orphan")
-    proposals = relationship(
-        "Proposal", back_populates="group", cascade="all, delete-orphan"
-    )
-
-
-class Comment(Base):
-    __tablename__ = "comments"
-    id = Column(Integer, primary_key=True, index=True)
-    content = Column(Text, nullable=False)
-    author_id = Column(Integer, ForeignKey("harmonizers.id"), nullable=False)
-    vibenode_id = Column(
-        Integer, ForeignKey("vibenodes.id"), nullable=False, index=True
-    )
-    parent_comment_id = Column(
-        Integer, ForeignKey("comments.id"), nullable=True, index=True
-    )
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    author = relationship("Harmonizer", back_populates="comments")
-    vibenode = relationship("VibeNode", back_populates="comments")
-    replies = relationship(
-        "Comment",
-        backref="parent_comment",
-        remote_side=[id],
-        cascade="all, delete-orphan",
-    )
-
-
-class Event(Base):
-    __tablename__ = "events"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False, index=True)
-    description = Column(Text)
-    group_id = Column(Integer, ForeignKey("groups.id"), nullable=False, index=True)
-    start_time = Column(DateTime(timezone=True), nullable=False)
-    end_time = Column(DateTime(timezone=True), nullable=True)
-    synchronization_potential = Column(Float, default=0.0)
-    organizer_id = Column(Integer, ForeignKey("harmonizers.id"), nullable=False)
-    group = relationship("Group", back_populates="events")
-    attendees = relationship(
-        "Harmonizer", secondary=event_attendees, back_populates="events"
-    )
-
-
-class Proposal(Base):
-    __tablename__ = "proposals"
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
-    description = Column(Text)
-    group_id = Column(Integer, ForeignKey("groups.id"), nullable=True, index=True)
-    author_id = Column(Integer, ForeignKey("harmonizers.id"), nullable=False)
-    status = Column(String, default="open", index=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    voting_deadline = Column(DateTime(timezone=True), nullable=False)
-    payload = Column(JSON, nullable=True)
-    group = relationship("Group", back_populates="proposals")
-    votes = relationship(
-        "ProposalVote", back_populates="proposal", cascade="all, delete-orphan"
-    )
-
-
-class ProposalVote(Base):
-    __tablename__ = "proposal_votes_records"
-    id = Column(Integer, primary_key=True, index=True)
-    proposal_id = Column(
-        Integer, ForeignKey("proposals.id"), nullable=False, index=True
-    )
-    harmonizer_id = Column(Integer, ForeignKey("harmonizers.id"), nullable=False)
-    vote = Column(String, nullable=False)
-    proposal = relationship("Proposal", back_populates="votes")
-
-
-class Notification(Base):
-    __tablename__ = "notifications"
-    id = Column(Integer, primary_key=True, index=True)
-    harmonizer_id = Column(
-        Integer, ForeignKey("harmonizers.id"), nullable=False, index=True
-    )
-    message = Column(Text, nullable=False)
-    is_read = Column(Boolean, default=False, index=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    harmonizer = relationship("Harmonizer", back_populates="notifications")
-
-
-class Message(Base):
-    __tablename__ = "messages"
-    id = Column(Integer, primary_key=True, index=True)
-    sender_id = Column(
-        Integer, ForeignKey("harmonizers.id"), nullable=False, index=True
-    )
-    receiver_id = Column(
-        Integer, ForeignKey("harmonizers.id"), nullable=False, index=True
-    )
-    content = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    sender = relationship(
-        "Harmonizer", foreign_keys=[sender_id], back_populates="messages_sent"
-    )
-    receiver = relationship(
-        "Harmonizer", foreign_keys=[receiver_id], back_populates="messages_received"
-    )
-
-
-class SimulationLog(Base):
-    __tablename__ = "simulation_logs"
-    id = Column(Integer, primary_key=True, index=True)
-    harmonizer_id = Column(Integer, ForeignKey("harmonizers.id"), nullable=False)
-    sim_type = Column(String, nullable=False, index=True)
-    parameters = Column(JSON)
-    results = Column(JSON)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    harmonizer = relationship("Harmonizer", back_populates="simulations")
-
-
-class LogEntry(Base):
-    __tablename__ = "log_chain"
-    id = Column(Integer, primary_key=True, index=True)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
-    event_type = Column(String, nullable=False)
-    payload = Column(Text)
-    previous_hash = Column(String, nullable=False)
-    current_hash = Column(String, unique=True, nullable=False)
-
-
-class SystemState(Base):
-    __tablename__ = "system_state"
-    id = Column(Integer, primary_key=True)
-    key = Column(String, unique=True, nullable=False)
-    value = Column(String, nullable=False)
-
 
 
 
@@ -1203,80 +917,6 @@ class TokenData(BaseModel):
     username: Optional[str] = None
 
 
-# FUSED: Integrated additional models from v01_grok15.py, renamed for clarity
-class SymbolicToken(Base):
-    __tablename__ = "symbolic_tokens"
-    token_id = Column(String, primary_key=True, index=True)
-    creator = Column(String, nullable=False)
-    owner = Column(String, nullable=False)
-    symbolic_value = Column(String, default="0.0")
-    is_root = Column(Boolean, default=False)
-    universe_id = Column(String, default="main")
-    is_remix = Column(Boolean, default=False)
-    references = Column(JSON, default=list)
-    improvement = Column(Text, default="")
-    fractional_pct = Column(String, default="0.0")
-    ancestors = Column(JSON, default=list)
-    content = Column(Text, default="")
-    reaction_reserve = Column(String, default="0.0")
-    reactions = Column(JSON, default=list)
-
-    # compatibility aliases
-    @property
-    def coin_id(self) -> str:  # pragma: no cover - legacy support
-        return self.token_id
-
-    @coin_id.setter
-    def coin_id(self, value: str) -> None:  # pragma: no cover - legacy support
-        self.token_id = value
-
-    @property
-    def value(self) -> str:  # pragma: no cover - legacy support
-        return self.symbolic_value
-
-    @value.setter
-    def value(self, v: str) -> None:  # pragma: no cover - legacy support
-        self.symbolic_value = v
-
-    @property
-    def reactor_escrow(self) -> str:  # pragma: no cover - legacy support
-        return self.reaction_reserve
-
-    @reactor_escrow.setter
-    def reactor_escrow(self, v: str) -> None:  # pragma: no cover - legacy support
-        self.reaction_reserve = v
-
-# Backwards compatibility
-Coin = SymbolicToken
-
-
-class TokenListing(Base):
-    __tablename__ = "token_listings"
-    listing_id = Column(String, primary_key=True)
-    token_id = Column(String, nullable=False)
-    seller = Column(String, nullable=False)
-    listing_value = Column(String, nullable=False)
-    timestamp = Column(String, nullable=False)
-
-    # compatibility aliases
-    @property
-    def coin_id(self) -> str:  # pragma: no cover - legacy support
-        return self.token_id
-
-    @coin_id.setter
-    def coin_id(self, value: str) -> None:  # pragma: no cover - legacy support
-        self.token_id = value
-
-    @property
-    def price(self) -> str:  # pragma: no cover - legacy support
-        return self.listing_value
-
-    @price.setter
-    def price(self, v: str) -> None:  # pragma: no cover - legacy support
-        self.listing_value = v
-
-# Backwards compatibility
-MarketplaceListing = TokenListing
 
 
 # --- MODULE: services.py ---
@@ -2452,11 +2092,13 @@ def create_app() -> FastAPI:
     redis_client = redis.from_url(s.REDIS_URL, decode_responses=True)
     engine_url = s.engine_url
     DB_ENGINE_URL = engine_url
-    engine = create_engine(
+    db_models.engine = create_engine(
         engine_url,
         connect_args={"check_same_thread": False} if "sqlite" in engine_url else {},
     )
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    db_models.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_models.engine)
+    engine = db_models.engine
+    SessionLocal = db_models.SessionLocal
     os.makedirs(s.UPLOAD_FOLDER, exist_ok=True)
     Base.metadata.create_all(bind=engine)
 

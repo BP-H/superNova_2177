@@ -350,12 +350,8 @@ def build_causal_graph(db) -> "InfluenceGraph":
         Populated graph of user interactions.
     """
 
-    # Import models from the main application when available. Fall back to the
-    # lightweight ``db_models`` definitions during testing.
-    try:
-        from superNova_2177 import Harmonizer, VibeNode, vibenode_likes
-    except Exception:  # pragma: no cover - optional dependency
-        from db_models import Harmonizer, VibeNode, vibenode_likes
+    # Import ORM models
+    from db_models import Harmonizer, VibeNode, vibenode_likes
 
     g = InfluenceGraph()
 
