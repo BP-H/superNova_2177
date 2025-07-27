@@ -6,6 +6,11 @@ patterns, timestamp proximity, and semantic similarity. Helps flag clusters
 that may indicate bias, manipulation, or non-independent validation.
 
 Part of superNova_2177's audit resilience system.
+
+This module can be profiled with ``cProfile`` to identify heavy NumPy or
+NetworkX sections when analyzing large validation graphs::
+
+    python -m cProfile -s time network/network_coordination_detector.py
 """
 
 import logging
@@ -14,6 +19,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from statistics import mean
 import itertools
+from functools import lru_cache
 from concurrent.futures import ProcessPoolExecutor
 import os
 import math
@@ -43,6 +49,12 @@ class Config:
     TEMPORAL_WEIGHT = 0.4
     SCORE_WEIGHT = 0.4
     SEMANTIC_WEIGHT = 0.2
+
+
+@lru_cache(maxsize=1024)
+def _parse_timestamp(ts: str) -> datetime:
+    """Memoized ISO8601 parser used by temporal coordination."""
+    return datetime.fromisoformat(ts.replace("Z", "+00:00"))
 
 
 def build_validation_graph(validations: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -97,6 +109,8 @@ def detect_graph_communities(
 ) -> List[Set[str]]:
     """
     Simple community detection using connected components.
+    For larger graphs consider using ``networkx`` community functions and
+    profile with ``cProfile`` to locate bottlenecks.
 
     Args:
         edges: List of (validator1, validator2, weight) tuples
@@ -195,7 +209,7 @@ def detect_temporal_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
         if not validator_id or not timestamp_str:
             continue
         try:
-            timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+            timestamp = _parse_timestamp(timestamp_str)
             validator_timestamps[validator_id].append(timestamp)
         except Exception as e:
             logger.warning(f"Invalid timestamp for validator {validator_id}: {e}")
@@ -310,22 +324,26 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
 
     all_notes = [text for notes in validator_texts.values() for text in notes]
 
-    def _compute_embeddings(texts: List[str]):
+    @lru_cache(maxsize=128)
+    def _compute_embeddings(texts: Tuple[str, ...]):
+        """Heavy embedding computation cached for reuse."""
         try:
             from sentence_transformers import SentenceTransformer
 
             model = SentenceTransformer("paraphrase-MiniLM-L6-v2")
-            return model.encode(texts)
+            return model.encode(list(texts))
         except Exception as e:  # pragma: no cover - fallback rarely triggered
             logger.warning(
                 f"SentenceTransformer unavailable: {e}; using TF-IDF fallback"
             )
             from sklearn.feature_extraction.text import TfidfVectorizer
 
-            vec = TfidfVectorizer().fit(texts)
-            return vec.transform(texts).toarray()
+            vec = TfidfVectorizer().fit(list(texts))
+            return vec.transform(list(texts)).toarray()
 
-    embeddings = _compute_embeddings(all_notes)
+    # Heavy embedding generation can dominate runtime on large datasets.
+    # Profile with ``cProfile`` to verify and consider batching strategies.
+    embeddings = _compute_embeddings(tuple(all_notes))
 
     idx = 0
     validator_embeddings = {}
@@ -362,6 +380,7 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
     }
 
 
+@lru_cache(maxsize=256)
 def calculate_sophisticated_risk_score(
     temporal_flags: int, score_flags: int, semantic_flags: int, total_validators: int
 ) -> float:
@@ -487,3 +506,26 @@ def analyze_coordination_patterns(validations: List[Dict[str, Any]]) -> Dict[str
 # - Add validator organization/affiliation cross-reference
 # - Include validation outcome correlation analysis
 # - Add time-series analysis for evolving coordination patterns
+
+# Profiling entry point. Run this file directly to profile the main analysis
+# routine and inspect potential NumPy/NetworkX hotspots.
+if __name__ == "__main__":  # pragma: no cover - manual profiling
+    import cProfile
+    import pstats
+    from pathlib import Path
+
+    sample_path = Path("sample_validations.json")
+    if sample_path.exists():
+        import json
+
+        with sample_path.open() as fh:
+            sample_data = json.load(fh)
+    else:
+        sample_data = []
+
+    profiler = cProfile.Profile()
+    profiler.enable()
+    analyze_coordination_patterns(sample_data)
+    profiler.disable()
+    stats = pstats.Stats(profiler).sort_stats("cumtime")
+    stats.print_stats(10)
