@@ -212,6 +212,8 @@ If you prefer to build everything locally, execute `python one_click_install.py`
 It detects your OS, downloads Python 3.12 if necessary, bundles the
 dependencies into `offline_deps/`, creates a virtual environment, and installs
 the package.
+Pass `--skip-bundle` if the dependencies are already downloaded and use
+`--force-env` to recreate the virtual environment even if it exists.
 
 ## ✨ Features
 

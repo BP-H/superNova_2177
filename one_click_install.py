@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.request
+import argparse
 
 OFFLINE_DIR = "offline_deps"
 ENV_DIR = "venv"
@@ -58,34 +59,76 @@ def ensure_python312() -> str:
     raise RuntimeError("Python 3.12 installation failed")
 
 
-def bundle_dependencies(python: str) -> None:
+def bundle_dependencies(python: str, skip: bool) -> None:
+    """Download required packages into OFFLINE_DIR unless skipped."""
+    if skip:
+        return
     if not os.path.isdir(OFFLINE_DIR):
         print("Downloading dependencies for offline use...")
-        subprocess.check_call([python, "-m", "pip", "download", "-r", "requirements.txt", "-d", OFFLINE_DIR])
+        subprocess.check_call([
+            python,
+            "-m",
+            "pip",
+            "download",
+            "-r",
+            "requirements.txt",
+            "-d",
+            OFFLINE_DIR,
+        ])
         subprocess.check_call([python, "-m", "pip", "download", ".", "-d", OFFLINE_DIR])
 
 
-def setup_environment(python: str) -> None:
-    if not os.path.isdir(ENV_DIR):
-        subprocess.check_call([python, "-m", "venv", ENV_DIR])
+def setup_environment(python: str, force: bool) -> None:
+    """Create and populate the virtual environment.
+
+    If ``force`` is False and the environment already exists, the step is
+    skipped entirely.
+    """
+    if os.path.isdir(ENV_DIR):
+        if not force:
+            print("Virtual environment already exists; skipping setup.")
+            return
+        shutil.rmtree(ENV_DIR)
+    subprocess.check_call([python, "-m", "venv", ENV_DIR])
     pip = os.path.join(ENV_DIR, "Scripts" if os.name == "nt" else "bin", "pip")
-    subprocess.check_call([pip, "install", "--no-index", "--find-links", OFFLINE_DIR, "--upgrade", "pip"])
-    subprocess.check_call([pip, "install", "--no-index", "--find-links", OFFLINE_DIR, "-r", "requirements.txt"])
-    subprocess.check_call([pip, "install", "--no-index", "--find-links", OFFLINE_DIR, "-e", "."])
+    subprocess.check_call(
+        [pip, "install", "--no-index", "--find-links", OFFLINE_DIR, "--upgrade", "pip"]
+    )
+    subprocess.check_call(
+        [pip, "install", "--no-index", "--find-links", OFFLINE_DIR, "-r", "requirements.txt"]
+    )
+    subprocess.check_call(
+        [pip, "install", "--no-index", "--find-links", OFFLINE_DIR, "-e", "."]
+    )
     if os.path.isfile(".env.example") and not os.path.isfile(".env"):
         shutil.copy(".env.example", ".env")
         print("Copied .env.example to .env")
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Install superNova_2177")
+    parser.add_argument(
+        "--skip-bundle",
+        action="store_true",
+        help="skip downloading dependencies into offline_deps",
+    )
+    parser.add_argument(
+        "--force-env",
+        action="store_true",
+        help="recreate the virtual environment even if it already exists",
+    )
+    args = parser.parse_args()
+
     python = ensure_python312()
-    bundle_dependencies(python)
-    setup_environment(python)
+    bundle_dependencies(python, args.skip_bundle)
+    setup_environment(python, args.force_env)
     if os.name == "nt":
         activate = f"{ENV_DIR}\\Scripts\\activate"
     else:
         activate = f"source {ENV_DIR}/bin/activate"
-    print("Installation complete. Activate the environment with '\"%s\"'" % activate)
+    print(
+        "Installation complete. Activate the environment with '\"%s\"'" % activate
+    )
 
 
 if __name__ == "__main__":
