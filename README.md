@@ -238,6 +238,15 @@ For a lightweight setup you can instead install the reduced set from
 `requirements-minimal.txt` or use `requirements.txt`/`requirements.lock`
 for the full development environment.
 
+Before running the tests, ensure the packages from `requirements.txt` (or the
+expanded minimal file) are installed. You can install them using the setup
+script with locked versions or via `pip` directly:
+
+```bash
+python setup_env.py --locked  # install from requirements.lock
+pip install -r requirements.txt
+```
+
 ### Test Requirements
 
 Install the packages needed for the tests in one step:
