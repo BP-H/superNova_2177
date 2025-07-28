@@ -14,7 +14,7 @@ def _run_async(coro):
         return asyncio.run(coro)
     else:
         if loop.is_running():
-            return asyncio.run(coro)
+            return asyncio.run_coroutine_threadsafe(coro, loop).result()
         return loop.run_until_complete(coro)
 
 
