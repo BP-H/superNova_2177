@@ -55,3 +55,19 @@ from consensus_forecaster_agent_ui_hook import forecast_consensus_ui
 
 register_route("rank_hypotheses_by_confidence", rank_hypotheses_by_confidence_ui)
 register_route("detect_conflicting_hypotheses", detect_conflicting_hypotheses_ui)
+
+# Prediction-related routes
+from predictions.ui_hook import (
+    store_prediction_ui,
+    get_prediction_ui,
+    update_prediction_status_ui,
+)
+
+from optimization.ui_hook import tune_parameters_ui
+
+register_route("store_prediction", store_prediction_ui)
+register_route("get_prediction", get_prediction_ui)
+register_route("update_prediction_status", update_prediction_status_ui)
+
+# Optimization-related route
+register_route("tune_parameters", tune_parameters_ui)
