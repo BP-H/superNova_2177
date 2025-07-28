@@ -592,7 +592,7 @@ def main() -> None:
                 alert("Invalid backend selected", "error")
                 st.session_state["agent_output"] = None
                 st.stop()
-            agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get("cls")
+            agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get("class")
             if agent_cls is None:
                 alert("Unknown agent selected", "error")
             else:

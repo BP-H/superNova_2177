@@ -16,62 +16,62 @@ from .agents.codex_agent import CodexAgent
 # Mapping of agent names to metadata dictionaries
 AGENT_REGISTRY = {
     "CI_PRProtectorAgent": {
-        "cls": CI_PRProtectorAgent,
+        "class": CI_PRProtectorAgent,
         "description": "Repairs CI/PR failures by proposing patches.",
         "llm_capable": True,
     },
     "GuardianInterceptorAgent": {
-        "cls": GuardianInterceptorAgent,
+        "class": GuardianInterceptorAgent,
         "description": "Inspects LLM suggestions for risky content.",
         "llm_capable": True,
     },
     "MetaValidatorAgent": {
-        "cls": MetaValidatorAgent,
+        "class": MetaValidatorAgent,
         "description": "Audits patches and adjusts trust scores.",
         "llm_capable": True,
     },
     "ObserverAgent": {
-        "cls": ObserverAgent,
+        "class": ObserverAgent,
         "description": "Monitors agent outputs and suggests forks when needed.",
         "llm_capable": False,
     },
     "CollaborativePlannerAgent": {
-        "cls": CollaborativePlannerAgent,
+        "class": CollaborativePlannerAgent,
         "description": "Coordinates tasks and delegates to the best agent.",
         "llm_capable": False,
     },
     "CoordinationSentinelAgent": {
-        "cls": CoordinationSentinelAgent,
+        "class": CoordinationSentinelAgent,
         "description": "Detects suspicious validator coordination patterns.",
         "llm_capable": False,
     },
     "HarmonySynthesizerAgent": {
-        "cls": HarmonySynthesizerAgent,
+        "class": HarmonySynthesizerAgent,
         "description": "Transforms metrics into short MIDI snippets.",
         "llm_capable": False,
     },
     "TemporalAuditAgent": {
-        "cls": TemporalAuditAgent,
+        "class": TemporalAuditAgent,
         "description": "Audits timestamps for suspicious gaps or disorder.",
         "llm_capable": False,
     },
     "CrossUniverseBridgeAgent": {
-        "cls": CrossUniverseBridgeAgent,
+        "class": CrossUniverseBridgeAgent,
         "description": "Validates cross-universe remix provenance.",
         "llm_capable": True,
     },
     "AnomalySpotterAgent": {
-        "cls": AnomalySpotterAgent,
+        "class": AnomalySpotterAgent,
         "description": "Flags anomalies in metrics streams.",
         "llm_capable": True,
     },
     "QuantumResonanceAgent": {
-        "cls": QuantumResonanceAgent,
+        "class": QuantumResonanceAgent,
         "description": "Tracks resonance via quantum simulation.",
         "llm_capable": True,
     },
     "CodexAgent": {
-        "cls": CodexAgent,
+        "class": CodexAgent,
         "description": "Base agent with in-memory utilities.",
         "llm_capable": False,
     },

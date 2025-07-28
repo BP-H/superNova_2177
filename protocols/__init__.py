@@ -11,9 +11,9 @@ from .utils.remote import handshake, ping_agent  # noqa: F401
 
 # Expose agent classes for convenience
 for _name, _info in AGENT_REGISTRY.items():
-    globals()[_name] = _info["cls"]
+    globals()[_name] = _info["class"]
 
-__all__ = [
+__all__ = (
     "AgentProfile",
     "AgentTaskContract",
     "self_reflect",
@@ -22,4 +22,4 @@ __all__ = [
     "fork_agent",
     "ValidatorElf",
     "DreamWeaver",
-] + list(AGENT_REGISTRY.keys()) + ["AGENT_REGISTRY"]
+) + tuple(AGENT_REGISTRY.keys()) + ("AGENT_REGISTRY",)
