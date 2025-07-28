@@ -29,6 +29,23 @@ def test_publish_invokes_callbacks():
         assert msg.data == expected  # nosec B101
 
 
+def test_unsubscribe_stops_callbacks():
+    hub = MessageHub()
+    received = []
+
+    def handler(msg: Message) -> None:
+        received.append(msg)
+
+    hub.subscribe("task", handler)
+    hub.publish("task", {"n": 1})
+
+    hub.unsubscribe("task", handler)
+    hub.publish("task", {"n": 2})
+
+    assert len(received) == 1  # nosec B101
+    assert received[0].data == {"n": 1}  # nosec B101
+
+
 def test_get_messages_history_and_filtering():
     hub = MessageHub()
     hub.publish("a", {"n": 1})

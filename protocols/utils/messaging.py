@@ -1,18 +1,23 @@
 """Publish/subscribe message hub for agents."""
-from typing import Callable, Dict, List
+
 import uuid
 from collections import defaultdict
+from typing import Callable, Dict, List
+
 
 class Message:
     """A versioned agent message with metadata."""
+
     def __init__(self, topic: str, data: dict, version: str = "1.0"):
         self.id = str(uuid.uuid4())
         self.topic = topic
         self.version = version
         self.data = data
 
+
 class MessageHub:
     """Shared communication hub for agents, tools, and diagnostics."""
+
     def __init__(self):
         self.subscribers: Dict[str, List[Callable[[Message], None]]] = defaultdict(list)
         self.history: List[Message] = []
@@ -26,6 +31,10 @@ class MessageHub:
 
     def subscribe(self, topic: str, handler: Callable[[Message], None]) -> None:
         self.subscribers[topic].append(handler)
+
+    def unsubscribe(self, topic: str, handler: Callable[[Message], None]) -> None:
+        if handler in self.subscribers.get(topic, []):
+            self.subscribers[topic].remove(handler)
 
     def get_messages(self, topic: str | None = None) -> List[Message]:
         if topic:
