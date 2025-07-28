@@ -40,6 +40,9 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     update_validator_reputations = None
 
+from protocols import AGENT_REGISTRY
+from llm_backends import get_backend
+
 
 def summarize_text(text: str, max_len: int = 150) -> str:
     """Basic text summarizer placeholder."""
@@ -360,6 +363,8 @@ def main() -> None:
         st.session_state["last_result"] = None
     if "last_run" not in st.session_state:
         st.session_state["last_run"] = None
+    if "agent_output" not in st.session_state:
+        st.session_state["agent_output"] = None
     if "theme" not in st.session_state:
         st.session_state["theme"] = "light"
 
@@ -454,6 +459,30 @@ def main() -> None:
         )
         st.divider()
 
+        st.subheader("Agent Playground")
+        agent_names = list(AGENT_REGISTRY.keys())
+        agent_choice = st.selectbox("Agent", agent_names)
+        backend_choice = st.selectbox(
+            "LLM Backend",
+            ["dummy", "GPT-4o", "Claude-3", "Gemini"],
+            index=0,
+        )
+        key_map = {
+            "GPT-4o": "OPENAI_API_KEY",
+            "Claude-3": "ANTHROPIC_API_KEY",
+            "Gemini": "GOOGLE_API_KEY",
+        }
+        api_key = ""
+        if backend_choice in key_map:
+            api_key = st.text_input(
+                f"{backend_choice} API Key",
+                value=st_secrets.get(key_map[backend_choice], ""),
+                type="password",
+            )
+        event_type = st.text_input("Event", value="LLM_INCOMING")
+        payload_txt = st.text_area("Payload JSON", value="{}", height=100)
+        run_agent_clicked = st.button("Run Agent")
+
     if run_clicked or rerun_clicked:
         if run_clicked:
             if validations_input.strip():
@@ -509,6 +538,38 @@ def main() -> None:
         if diff:
             st.subheader("Result Diff vs Previous Run")
             st.code(diff)
+
+    if run_agent_clicked:
+        try:
+            payload = json.loads(payload_txt or "{}")
+        except Exception as exc:
+            st.error(f"Invalid payload: {exc}")
+        else:
+            backend_fn = get_backend(backend_choice.lower(), api_key or None)
+            agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get("cls")
+            if agent_cls is None:
+                st.error("Unknown agent selected")
+            else:
+                try:
+                    if agent_choice == "CI_PRProtectorAgent":
+                        talker = backend_fn or (lambda p: p)
+                        agent = agent_cls(talker, llm_backend=backend_fn)
+                    elif agent_choice == "MetaValidatorAgent":
+                        agent = agent_cls({}, llm_backend=backend_fn)
+                    elif agent_choice == "GuardianInterceptorAgent":
+                        agent = agent_cls(llm_backend=backend_fn)
+                    else:
+                        agent = agent_cls(llm_backend=backend_fn)
+                    result = agent.process_event({"event": event_type, "payload": payload})
+                    st.session_state["agent_output"] = result
+                    st.success("Agent executed")
+                except Exception as exc:
+                    st.session_state["agent_output"] = {"error": str(exc)}
+                    st.error(f"Agent error: {exc}")
+
+    if st.session_state.get("agent_output") is not None:
+        st.subheader("Agent Output")
+        st.json(st.session_state["agent_output"])
 
     st.subheader("Virtual Diary")
     with st.expander("📘 Notes", expanded=False):
