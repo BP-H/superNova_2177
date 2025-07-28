@@ -7,7 +7,6 @@ import os
 import asyncio
 from datetime import datetime
 from pathlib import Path
-import asyncio
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -77,7 +76,7 @@ except Exception:  # pragma: no cover - optional dependency
     update_validator_reputations = None
 
 from typing import Any, cast
-from frontend_bridge import dispatch_route, ROUTE_INFO
+
 
 from llm_backends import get_backend
 from protocols import AGENT_REGISTRY
@@ -166,16 +165,6 @@ def diff_results(old: dict | None, new: dict) -> str:
     return "\n".join(diff)
 
 
-def _run_async(coro):
-    """Execute an async coroutine and return the result."""
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        return asyncio.run(coro)
-    else:
-        if loop.is_running():
-            return asyncio.run(coro)
-        return loop.run_until_complete(coro)
 
 
 def render_pyvis_to_html(net: Any) -> str:
