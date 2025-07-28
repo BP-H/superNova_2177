@@ -716,12 +716,19 @@ def _setup_sqlite(monkeypatch, db_path):
 
     monkeypatch.setattr(db_models, "engine", engine, raising=False)
     monkeypatch.setattr(db_models, "SessionLocal", Session, raising=False)
+    if getattr(db_models.Base.metadata, "bind", None) is not engine:
+        monkeypatch.setattr(db_models.Base.metadata, "bind", engine, raising=False)
 
     for mod in list(sys.modules.values()):
         if getattr(mod, "engine", None) is old_engine:
             monkeypatch.setattr(mod, "engine", engine, raising=False)
         if getattr(mod, "SessionLocal", None) is old_session:
             monkeypatch.setattr(mod, "SessionLocal", Session, raising=False)
+        base = getattr(mod, "Base", None)
+        if base is not None:
+            metadata = getattr(base, "metadata", None)
+            if getattr(metadata, "bind", None) is old_engine:
+                monkeypatch.setattr(metadata, "bind", engine, raising=False)
 
     db_models.Base.metadata.create_all(bind=engine)
     return engine, Session, db_models
