@@ -11,6 +11,9 @@ python-multipart
 pydantic
 pydantic-settings
 structlog
+redis
+passlib[bcrypt]
+python-jose[cryptography]
 prometheus-client
 streamlit
 requests
