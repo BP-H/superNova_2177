@@ -23,3 +23,12 @@ async def dispatch_route(name: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(result, Awaitable):
         result = await result
     return result
+
+# Built-in hypothesis-related routes
+from hypothesis.ui_hook import (
+    rank_hypotheses_by_confidence_ui,
+    detect_conflicting_hypotheses_ui,
+)
+
+register_route("rank_hypotheses_by_confidence", rank_hypotheses_by_confidence_ui)
+register_route("detect_conflicting_hypotheses", detect_conflicting_hypotheses_ui)
