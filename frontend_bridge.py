@@ -59,6 +59,13 @@ register_route("rank_hypotheses_by_confidence", rank_hypotheses_by_confidence_ui
 register_route("detect_conflicting_hypotheses", detect_conflicting_hypotheses_ui)
 register_route("register_hypothesis", register_hypothesis_ui)
 register_route("update_hypothesis_score", update_hypothesis_score_ui)
+register_route("rank_hypotheses", rank_hypotheses_ui)
+register_route("synthesize_consensus", synthesize_consensus_ui)
+register_route("trigger_meta_evaluation", trigger_meta_evaluation_ui)
+register_route("auto_flag_stale", auto_flag_stale_ui)
+register_route("run_integrity_analysis", run_integrity_analysis_ui)
+register_route("update_reputations", update_reputations_ui)
+register_route("forecast_consensus", forecast_consensus_ui)
 
 # Prediction-related routes
 from predictions.ui_hook import (
