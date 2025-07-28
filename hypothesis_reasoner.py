@@ -16,7 +16,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, select
 
 # Assuming these modules are available in the same directory or Python path
 from db_models import SystemState # For accessing hypothesis records
@@ -39,11 +39,12 @@ except ImportError:
 
 def _get_all_hypotheses(db: Session) -> List[Dict[str, Any]]:
     """Helper to retrieve all hypothesis records from SystemState."""
-    all_hypotheses = db.query(SystemState).filter(
-        SystemState.key.like("hypothesis_HYP_%") # Assuming prefix from hypothesis_tracker
-    ).all()
+    stmt = select(SystemState).where(
+        SystemState.key.like("hypothesis_HYP_%")  # Assuming prefix from hypothesis_tracker
+    )
+    rows = db.execute(stmt).scalars().all()
     parsed_hypotheses = []
-    for entry in all_hypotheses:
+    for entry in rows:
         try:
             parsed_hypotheses.append(json.loads(entry.value))
         except json.JSONDecodeError:
