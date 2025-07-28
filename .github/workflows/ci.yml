@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 name: CI
 
 on:
@@ -8,6 +11,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
     env:
       PYTHONPATH: ${{ github.workspace }}/transcendental_resonance_frontend/src
     steps:
@@ -16,7 +22,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python-version }}
       - name: Check patch compliance
         if: github.event_name == 'pull_request'
         run: |
