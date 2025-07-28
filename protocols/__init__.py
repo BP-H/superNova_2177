@@ -11,7 +11,8 @@ from .utils.remote import handshake, ping_agent
 
 # Expose agent classes for convenience
 for _name, _info in AGENT_REGISTRY.items():
-    globals()[_name] = _info["cls"]
+    # Registry entries are tuples: (cls, description, metadata)
+    globals()[_name] = _info[0]
 
 __all__ = [
     "AgentProfile",

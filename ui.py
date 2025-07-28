@@ -558,7 +558,8 @@ def main() -> None:
             st.error(f"Invalid payload: {exc}")
         else:
             backend_fn = get_backend(backend_choice.lower(), api_key or None)
-            agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get("cls")
+            agent_info = AGENT_REGISTRY.get(agent_choice)
+            agent_cls = agent_info[0] if agent_info else None
             if agent_cls is None:
                 st.error("Unknown agent selected")
             else:
