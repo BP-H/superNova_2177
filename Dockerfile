@@ -11,6 +11,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /install
 COPY requirements.txt ./
+# Install build tools and Python dependencies, including Streamlit
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         build-essential \
@@ -44,5 +45,5 @@ USER appuser
 # Expose Streamlit port
 EXPOSE 8501
 
-# Launch the Streamlit UI
-CMD ["streamlit", "run", "ui.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Launch Streamlit UI explicitly
+CMD ["streamlit", "run", "streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
