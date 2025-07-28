@@ -59,6 +59,30 @@ class ProposalEngine:
             proposals.append(p)
         return proposals
 
+    # ------------------------------------------------------------------
+    def list_proposals(self, karma: int, state: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Return proposals for a user with ``karma`` given ``state``."""
+
+        if karma < self.min_karma:
+            return []
+
+        proposals: List[Dict[str, Any]] = []
+        for base in DEFAULT_PROPOSALS:
+            p = dict(base)
+            entropy = state.get("entropy", 0.0)
+            popularity = state.get("popularity", 0.5)
+            p.update(
+                {
+                    "urgency": "high" if entropy > 1.0 else "low",
+                    "popularity": popularity,
+                    "entropy": entropy,
+                }
+            )
+            if self.universe_metadata:
+                p["universe"] = self.universe_metadata
+            proposals.append(p)
+        return proposals
+
 
 # Convenience function -------------------------------------------------
 
@@ -69,7 +93,7 @@ def generate_proposals(
     min_karma: int = 0,
     requires_certification: bool = False,
     universe_metadata: Optional[Dict[str, Any]] = None,
-) -> List[Dict[str, Any]]:
+    ) -> List[Dict[str, Any]]:
     """Generate proposals filtered by ``user`` attributes."""
 
     engine = ProposalEngine(
@@ -78,3 +102,21 @@ def generate_proposals(
         universe_metadata=universe_metadata,
     )
     return engine.generate(user, universe_state)
+
+
+def list_proposals(
+    user: Dict[str, Any],
+    universe_state: Dict[str, Any],
+    *,
+    min_karma: int = 0,
+    requires_certification: bool = False,
+    universe_metadata: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
+    """List proposals for ``user`` using their karma and ``universe_state``."""
+
+    engine = ProposalEngine(
+        min_karma=min_karma,
+        requires_certification=requires_certification,
+        universe_metadata=universe_metadata,
+    )
+    return engine.list_proposals(user.get("karma", 0), universe_state)
