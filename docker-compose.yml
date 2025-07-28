@@ -1,4 +1,7 @@
 version: "3.9"
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 services:
   app:
     build: .

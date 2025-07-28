@@ -267,6 +267,7 @@ docker-compose up
 
 The application will be available at [http://localhost:8501](http://localhost:8501).
 
+
 ## Authentication
 
 Register first using `POST /users/register` then obtain a token with `POST /login`.
