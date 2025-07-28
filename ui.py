@@ -4,6 +4,8 @@ from pathlib import Path
 
 import os
 from pathlib import Path
+import io
+import math
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
@@ -32,6 +34,10 @@ except Exception:  # pragma: no cover - optional in dev/CI
 
 from network.network_coordination_detector import build_validation_graph
 from validation_integrity_pipeline import analyze_validation_integrity
+try:
+    from validator_reputation_tracker import update_validator_reputations
+except Exception:  # pragma: no cover - optional dependency
+    update_validator_reputations = None
 
 
 def summarize_text(text: str, max_len: int = 150) -> str:
@@ -99,7 +105,7 @@ if HarmonyScanner is None:
             return {"dummy": True}
 
 
-def run_analysis(validations):
+def run_analysis(validations, *, layout: str = "force"):
     """Execute the validation integrity pipeline and display results."""
     if not validations:
         try:
@@ -148,7 +154,24 @@ def run_analysis(validations):
         G = nx.Graph()
         for v1, v2, w in edges:
             G.add_edge(v1, v2, weight=w)
-        pos = nx.spring_layout(G, seed=42)
+
+        # Determine layout
+        if layout == "circular":
+            pos = nx.circular_layout(G)
+        elif layout == "grid":
+            side = math.ceil(math.sqrt(len(G)))
+            pos = {n: (i % side, i // side) for i, n in enumerate(G.nodes())}
+        else:
+            pos = nx.spring_layout(G, seed=42)
+
+        # Load validator reputations if available
+        reputations = {}
+        if update_validator_reputations:
+            try:
+                rep_result = update_validator_reputations(validations)
+                reputations = rep_result.get("reputations", {})
+            except Exception as exc:  # pragma: no cover - optional
+                logger.warning(f"Reputation calc failed: {exc}")
 
         if go is not None:
             edge_x = []
@@ -169,11 +192,17 @@ def run_analysis(validations):
             node_x = []
             node_y = []
             texts = []
+            node_sizes = []
+            node_colors = []
+            max_rep = max(reputations.values()) if reputations else 1.0
             for node in G.nodes():
                 x, y = pos[node]
                 node_x.append(x)
                 node_y.append(y)
                 texts.append(str(node))
+                rep = reputations.get(node)
+                node_sizes.append(10 + (rep or 0) * 20)
+                node_colors.append(rep if rep is not None else 0.5)
 
             node_trace = go.Scatter(
                 x=node_x,
@@ -181,17 +210,53 @@ def run_analysis(validations):
                 mode="markers+text",
                 text=texts,
                 hoverinfo="text",
-                marker=dict(size=10, color="#4da6ff"),
+                marker=dict(
+                    size=node_sizes,
+                    color=node_colors,
+                    colorscale="Viridis",
+                    cmin=0,
+                    cmax=max_rep,
+                    showscale=bool(reputations),
+                ),
             )
 
             fig = go.Figure(data=[edge_trace, node_trace])
             st.subheader("Validator Coordination Graph")
             st.plotly_chart(fig, use_container_width=True)
+
+            img_buf = io.BytesIO()
+            try:
+                fig.write_image(img_buf, format="png")
+                img_buf.seek(0)
+                st.download_button(
+                    "Download Graph Image",
+                    img_buf.getvalue(),
+                    file_name="graph.png",
+                )
+            except Exception as exc:  # pragma: no cover - optional
+                logger.warning(f"Image export failed: {exc}")
+
+            gm_buf = io.BytesIO()
+            try:
+                nx.write_graphml(G, gm_buf)
+                gm_buf.seek(0)
+                st.download_button(
+                    "Download GraphML",
+                    gm_buf.getvalue(),
+                    file_name="graph.graphml",
+                )
+            except Exception as exc:  # pragma: no cover - optional
+                logger.warning(f"GraphML export failed: {exc}")
         elif Network is not None:
             net = Network(height="450px", width="100%")
+            max_rep = max(reputations.values()) if reputations else 1.0
             for u, v, w in edges:
-                net.add_node(u, label=u)
-                net.add_node(v, label=v)
+                for node in (u, v):
+                    if node not in net.node_ids:
+                        rep = reputations.get(node)
+                        size = 15 + (rep or 0) * 20
+                        color = "#4da6ff"
+                        net.add_node(node, label=node, size=size, color=color)
                 net.add_edge(u, v, value=w)
             st.subheader("Validator Coordination Graph")
             net.show("graph.html")
@@ -199,13 +264,17 @@ def run_analysis(validations):
                 st.components.v1.html(f.read(), height=500)
         else:
             weights = [G[u][v]["weight"] * 3 for u, v in G.edges()]
+            node_sizes = [300 + (reputations.get(n, 0) * 600) for n in G.nodes()]
+            node_colors = [reputations.get(n, 0.5) for n in G.nodes()]
             fig, ax = plt.subplots()
             nx.draw(
                 G,
                 pos,
                 with_labels=True,
                 width=weights,
-                node_color="#4da6ff",
+                node_size=node_sizes,
+                node_color=node_colors,
+                cmap=plt.cm.viridis,
                 ax=ax,
             )
             st.subheader("Validator Coordination Graph")
@@ -246,7 +315,7 @@ def boot_diagnostic_ui():
             st.error(f"Dummy scan error: {exc}")
 
     st.subheader("Validation Analysis")
-    run_analysis([])
+    run_analysis([], layout="force")
 
 
 def main() -> None:
@@ -290,6 +359,8 @@ def main() -> None:
         f"<span title='{disclaimer}'><em>{disclaimer}</em></span>",
         unsafe_allow_html=True,
     )
+
+    view = st.selectbox("View", ["force", "circular", "grid"], index=0)
 
     if "validations_json" not in st.session_state:
         st.session_state["validations_json"] = ""
@@ -378,7 +449,7 @@ def main() -> None:
         else:
             st.error("Please upload a file, paste JSON, or enable demo mode.")
             st.stop()
-        result = run_analysis(data.get("validations", []))
+        result = run_analysis(data.get("validations", []), layout=view)
         st.session_state["run_count"] += 1
         st.session_state["last_result"] = result
         st.session_state["last_run"] = datetime.utcnow().isoformat(timespec="seconds")
