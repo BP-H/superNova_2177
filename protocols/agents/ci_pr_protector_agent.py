@@ -11,7 +11,8 @@ Components:
 - writes safe response directly into PR comment or diff patch
 """
 
-from protocols.agent_protocols_suite import InternalAgentProtocol, Skill
+from protocols.core.internal_protocol import InternalAgentProtocol
+from protocols.utils.skills import Skill
 import subprocess
 import json
 import uuid
