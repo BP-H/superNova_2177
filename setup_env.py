@@ -77,14 +77,6 @@ def run_ui() -> None:
 def build_frontend(pip: list) -> None:
     """Install UI deps and build the Transcendental Resonance frontend."""
     frontend_dir = Path('transcendental_resonance_frontend')
-    if not frontend_dir.exists():
-        legacy = Path('web_ui')
-        if legacy.exists():
-            print(
-                "Warning: 'web_ui' is deprecated; using it for compatibility.",
-                file=sys.stderr,
-            )
-            frontend_dir = legacy
     ui_reqs = frontend_dir / 'requirements.txt'
     if ui_reqs.is_file():
         try:
