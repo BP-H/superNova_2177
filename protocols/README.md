@@ -7,6 +7,7 @@ This package contains modular agents and supporting utilities used for automated
 - **GuardianInterceptorAgent** – inspects LLM suggestions for risky content.
 - **MetaValidatorAgent** – audits patches and adjusts trust scores.
 - **ObserverAgent** – monitors agent outputs and suggests forks when needed.
+- **AnomalySpotterAgent** – detects unusual metrics to catch risks early.
 
 Utilities, core interfaces, and prebuilt profiles are organized under corresponding subfolders for easy extension.
 

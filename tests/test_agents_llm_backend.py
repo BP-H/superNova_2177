@@ -5,6 +5,7 @@ from protocols.agents.ci_pr_protector_agent import CI_PRProtectorAgent
 from protocols.agents.guardian_interceptor_agent import GuardianInterceptorAgent
 from protocols.agents.meta_validator_agent import MetaValidatorAgent
 from protocols.agents.observer_agent import ObserverAgent
+from protocols.agents.anomaly_spotter_agent import AnomalySpotterAgent
 
 
 def test_ci_pr_protector_uses_llm_backend():
@@ -74,4 +75,17 @@ def test_observer_agent_llm_backend_called():
     agent.observe(msg)
 
     assert calls and "agent a" in calls[0]
+
+
+def test_anomaly_spotter_llm_backend_usage():
+    calls = []
+
+    def backend(text):
+        calls.append(text)
+        return text
+
+    agent = AnomalySpotterAgent(llm_backend=backend)
+    agent.process_event({"event": "DATA_METRICS", "payload": {"metrics": [1, 2, 3]}})
+
+    assert calls and calls[0] == "[1, 2, 3]"
 
