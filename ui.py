@@ -11,6 +11,11 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
+
+# Basic page setup so Streamlit responds immediately on load
+st.set_page_config(page_title="superNova_2177", layout="wide")
+st.title("superNova_2177")
+st.success("\u2705 Streamlit loaded!")
 from streamlit_helpers import (
     alert,
     header,
