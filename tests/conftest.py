@@ -166,11 +166,13 @@ if "superNova_2177" not in sys.modules:
                 )
             elif ev == "MINT":
                 user = self.storage.get_user(event["user"])
-                if user and float(user.get("karma", "0")) >= float(self.config.KARMA_MINT_THRESHOLD):
-                    self.storage.set_coin(
-                        event["coin_id"],
-                        {"owner": event["user"], "value": event.get("value", "0")},
-                    )
+                if user:
+                    karma = Decimal(user.get("karma", "0"))
+                    if karma >= self.config.KARMA_MINT_THRESHOLD:
+                        self.storage.set_coin(
+                            event["coin_id"],
+                            {"owner": event["user"], "value": event.get("value", "0")},
+                        )
             elif ev == "REVOKE_CONSENT":
                 u = self.storage.get_user(event["user"])
                 if u:
