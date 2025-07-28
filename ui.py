@@ -15,6 +15,15 @@ except Exception:  # pragma: no cover - optional in dev/CI
 from network.network_coordination_detector import build_validation_graph
 from validation_integrity_pipeline import analyze_validation_integrity
 
+
+try:
+    st_secrets = st.secrets
+except Exception:  # pragma: no cover - fallback for environments w/o secrets
+    st_secrets = {
+        "SECRET_KEY": "dev",
+        "DATABASE_URL": "sqlite:///:memory:",
+    }
+
 try:
     from config import Config
     from superNova_2177 import HarmonyScanner
@@ -23,10 +32,13 @@ except Exception:  # pragma: no cover - optional debug dependencies
     Config = None  # type: ignore
 
 if Config is None:
+
     class Config:
         METRICS_PORT = 1234
 
+
 if HarmonyScanner is None:
+
     class HarmonyScanner:
         def __init__(self, *_a, **_k):
             pass
@@ -131,9 +143,7 @@ def main() -> None:
             except FileNotFoundError:
                 st.warning("Demo file not found, using default dataset.")
                 data = {
-                    "validations": [
-                        {"validator": "A", "target": "B", "score": 0.9}
-                    ]
+                    "validations": [{"validator": "A", "target": "B", "score": 0.9}]
                 }
         elif uploaded_file is not None:
             data = json.load(uploaded_file)

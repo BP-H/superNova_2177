@@ -9,6 +9,15 @@ from validation_integrity_pipeline import analyze_validation_integrity
 from network.network_coordination_detector import build_validation_graph
 
 
+try:
+    st_secrets = st.secrets
+except Exception:  # pragma: no cover - fallback for environments w/o secrets
+    st_secrets = {
+        "SECRET_KEY": "dev",
+        "DATABASE_URL": "sqlite:///:memory:",
+    }
+
+
 st.set_page_config(page_title="superNova_2177 Demo")
 st.title("superNova_2177 Validation Analyzer")
 
@@ -18,8 +27,8 @@ st.markdown(
 )
 
 # Load secrets provided by Streamlit Cloud or local .streamlit/secrets.toml
-SECRET_KEY = st.secrets.get("SECRET_KEY", "not set")
-DATABASE_URL = st.secrets.get("DATABASE_URL", "not set")
+SECRET_KEY = st_secrets.get("SECRET_KEY", "not set")
+DATABASE_URL = st_secrets.get("DATABASE_URL", "not set")
 
 st.sidebar.header("Environment")
 st.sidebar.write(f"Database URL: {DATABASE_URL}")
