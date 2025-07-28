@@ -6,6 +6,7 @@ from typing import Any, Dict
 from frontend_bridge import register_route
 from hook_manager import HookManager
 from validator_reputation_tracker import update_validator_reputations
+from diversity_analyzer import compute_diversity_score
 
 from .reputation_influence_tracker import compute_validator_reputations
 
@@ -46,14 +47,35 @@ async def update_reputations_ui(payload: Dict[str, Any], db) -> Dict[str, Any]:
     validations = payload.get("validations", [])
     result = update_validator_reputations(validations, db=db)
 
-    try:
-        hook_manager.fire_hooks("validator_reputations", result)
-    except Exception:  # pragma: no cover - logging only
-        logging.exception("Failed to fire validator_reputations hook")
+    minimal = {
+        "reputations": result.get("reputations", {}),
+        "diversity": result.get("diversity", {}),
+    }
 
-    return result
+    try:
+        hook_manager.fire_hooks("reputations_updated", minimal)
+    except Exception:  # pragma: no cover - logging only
+        logging.exception("Failed to fire reputations_updated hook")
+
+    return minimal
+
+
+async def compute_diversity_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Compute diversity score from a UI payload."""
+
+    validations = payload.get("validations", [])
+    result = compute_diversity_score(validations)
+
+    minimal = {
+        "diversity_score": result.get("diversity_score", 0.0),
+        "flags": result.get("flags", []),
+    }
+
+    await ui_hook_manager.trigger("diversity_score_computed", minimal)
+    return minimal
 
 
 # Register with the central frontend router
 register_route("reputation_analysis", compute_reputation_ui)
 register_route("update_validator_reputations", update_reputations_ui)
+register_route("compute_diversity", compute_diversity_ui)
