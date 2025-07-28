@@ -1,3 +1,9 @@
+"""Deprecated compatibility shim for the old ``web_ui`` package.
+
+This module forwards imports to :mod:`transcendental_resonance_frontend` and
+emits a :class:`DeprecationWarning`. It will be removed in a future release.
+"""
+
 import warnings
 from importlib import import_module
 
