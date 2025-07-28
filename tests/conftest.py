@@ -704,7 +704,10 @@ def _setup_sqlite(monkeypatch, db_path):
     """Return engine, sessionmaker and db_models bound to a temporary SQLite file."""
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
-    import db_models, sys
+    import db_models, sys, pytest
+
+    if getattr(create_engine, "__module__", "") == "stubs.sqlalchemy_stub":
+        pytest.skip("SQLAlchemy not available")
 
     engine = create_engine(
         f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
