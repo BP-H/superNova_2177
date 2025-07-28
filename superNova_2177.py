@@ -2742,17 +2742,62 @@ def get_network_analysis(
 
 def run_validation_cycle() -> None:
     """Periodically re-evaluate all decorated models and store validation delta."""
-    dummy_db = types.SimpleNamespace(
-        query=lambda *a, **kw: types.SimpleNamespace(
-            all=lambda: [],
-            filter=lambda *a, **kw: types.SimpleNamespace(first=lambda: None),
+    engine = None
+    db: Session | Any
+    try:
+        engine = create_engine(
+            "sqlite:///:memory:", connect_args={"check_same_thread": False}
         )
-    )
-    dummy_user = types.SimpleNamespace(
-        id=0, vibenodes=[], comments=[], liked_vibenodes=[], following=[]
+        SessionMem = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+        Base.metadata.create_all(bind=engine)
+        db = SessionMem()
+    except Exception:  # pragma: no cover - extremely defensive fallback
+        class _MockDB:
+            def query(self, *a, **kw):
+                class _Q:
+                    def all(self):
+                        return []
+
+                    def filter(self, *a, **kw):
+                        class _F:
+                            def first(self):
+                                return None
+
+                        return _F()
+
+                return _Q()
+
+            def execute(self, *a, **kw):
+                class _R:
+                    def scalars(self):
+                        class _S:
+                            def all(self):
+                                return []
+
+                        return _S()
+
+                    def scalar_one_or_none(self):
+                        return None
+
+                return _R()
+
+            def scalars(self, *a, **kw):
+                class _S:
+                    def all(self):
+                        return []
+
+                return _S()
+
+        db = _MockDB()
+
+    dummy_user = Harmonizer(
+        id=0,
+        username="dummy",
+        email="dummy@example.com",
+        hashed_password="x",
     )
     dummy_graph = InfluenceGraph()
-    type_map = {Session: dummy_db, Harmonizer: dummy_user, InfluenceGraph: dummy_graph}
+    type_map = {Session: db, Harmonizer: dummy_user, InfluenceGraph: dummy_graph}
     for func, meta in SCIENTIFIC_REGISTRY:
         try:
             sig = inspect.signature(func)
@@ -2777,8 +2822,10 @@ def run_validation_cycle() -> None:
                     model=func.__name__,
                     notes=meta.get("validation_notes"),
                 )
-
-
+    if isinstance(db, Session):
+        db.close()
+        if engine is not None:
+            engine.dispose()
 @app.get("/api/epistemic-audit", tags=["System"])
 def epistemic_audit():
     """Return JSON catalog of all models with citation and last validation."""

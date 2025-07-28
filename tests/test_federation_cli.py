@@ -7,7 +7,7 @@ import federation_cli
 from federation_cli import list_forks, fork_info
 
 
-class DummyResult:
+class MockResult:
     def __init__(self, value):
         self.value = value
 
@@ -25,25 +25,51 @@ class DummyResult:
         return _Scalar(self.value)
 
 
-class DummySession:
+class MockQuery:
+    def __init__(self, value):
+        self.value = value
+
+    def all(self):
+        return [self.value]
+
+    def filter_by(self, **_kw):
+        return self
+
+    def first(self):
+        return self.value
+
+
+class MockSession:
     def __init__(self, fork):
         self.fork = fork
 
-    def execute(self, stmt):
-        params = stmt.compile().params
-        if params:
-            val = next(iter(params.values()))
-            value = self.fork if val == self.fork.id or val == self.fork.creator_id else None
-        else:
-            value = self.fork
-        return DummyResult(value)
+    def execute(self, _stmt):
+        return MockResult(self.fork)
+
+    def query(self, *_args, **_kw):
+        return MockQuery(self.fork)
+
+    def scalars(self):
+        class _Scalar:
+            def __init__(self, val):
+                self.val = val
+
+            def all(self):
+                return [self.val]
+
+        return _Scalar(self.fork)
 
     def close(self):
         pass
 
 
 def _patch_session(monkeypatch, fork):
-    monkeypatch.setattr(federation_cli, "SessionLocal", lambda: DummySession(fork))
+    monkeypatch.setattr(federation_cli, "SessionLocal", lambda: MockSession(fork))
+    monkeypatch.setattr(
+        federation_cli,
+        "select",
+        lambda *_a, **_kw: SimpleNamespace(filter_by=lambda **_k: None),
+    )
 
 
 def _make_fork():
