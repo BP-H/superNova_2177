@@ -253,6 +253,21 @@ module falls back to a development setup equivalent to:
 {"SECRET_KEY": "dev", "DATABASE_URL": "sqlite:///:memory:"}
 ```
 
+## 📊 Dashboard Overview
+
+The Streamlit UI now presents a lightweight dashboard displaying your
+validation metrics. After launching `ui.py`, use the sidebar to either enable
+**Demo mode** or upload a JSON file containing a `validations` array. Press
+**Run Analysis** to generate the integrity score, flags, and coordination graph.
+You can make changes directly in the uploaded JSON and rerun the analysis to see
+updated results. The dashboard relies on `streamlit`, `networkx`, and
+`matplotlib`, all listed in `requirements.txt`.
+
+The setup scripts (`setup_env.py`, `one_click_install.py`, or the online
+installers) automatically create a virtual environment and install these
+packages if they are missing. Simply execute the installer and it will fetch all
+required dependencies before launching the app.
+
 ## 🌩️ Streamlit Cloud
 
 Deploy the demo UI online with Streamlit Cloud:
