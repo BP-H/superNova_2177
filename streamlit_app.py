@@ -9,11 +9,13 @@ from streamlit_helpers import apply_theme, header
 def _run_async(coro):
     """Execute ``coro`` or schedule it if a loop is already running."""
     try:
-        asyncio.get_running_loop()
+        loop = asyncio.get_running_loop()
     except RuntimeError:
         return asyncio.run(coro)
     else:
-        return asyncio.create_task(coro)
+        if loop.is_running():
+            return asyncio.run_coroutine_threadsafe(coro, loop).result()
+        return loop.run_until_complete(coro)
 
 
 def main() -> None:
