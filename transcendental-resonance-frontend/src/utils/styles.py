@@ -55,7 +55,7 @@ def apply_global_styles() -> None:
     ui.add_head_html(
         f"""
         <style id="global-theme">
-            body {{ background: {theme['background']}; color: {theme['text']}; }}
+            body {{ background: {theme['background']}; color: {theme['text']}; padding-top: 3.5rem; }}
             .q-btn:hover {{ border: 1px solid {theme['accent']}; }}
             .futuristic-gradient {{ background: {theme['gradient']}; }}
         </style>
