@@ -12,6 +12,7 @@ from .profiles.validator_elf import ValidatorElf
 from .utils.forking import fork_agent
 from .utils.reflection import self_reflect
 from .utils.remote import handshake, ping_agent
+from .llm_backends import default_gpt_backend, claude_backend, gemini_backend
 
 __all__ = [
     "AgentProfile",
@@ -27,4 +28,7 @@ __all__ = [
     "MetaValidatorAgent",
     "ObserverAgent",
     "AGENT_REGISTRY",
+    "default_gpt_backend",
+    "claude_backend",
+    "gemini_backend",
 ]
