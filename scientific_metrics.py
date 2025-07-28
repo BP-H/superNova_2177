@@ -12,6 +12,7 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     nx = None
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 from scientific_utils import ScientificModel, VerifiedScientificModel
 from causal_graph import InfluenceGraph, build_causal_graph as _build
 
@@ -995,9 +996,8 @@ def log_metric_change(
         "delta": _compute_delta(old_value, new_value),
     }
 
-    state = (
-        db.query(SystemState).filter(SystemState.key == "metric_audit_log").first()
-    )
+    stmt = select(SystemState).where(SystemState.key == "metric_audit_log")
+    state = db.execute(stmt).scalar_one_or_none()
     log: list[Any]
     if state:
         try:
