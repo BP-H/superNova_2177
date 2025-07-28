@@ -653,12 +653,18 @@ def main() -> None:
 
         rfc_paths = sorted(rfc_dir.rglob("rfc-*.md"))
         rfc_entries: list[dict[str, Any]] = []
+        rfc_index: dict[str, dict[str, Any]] = {}
         for path in rfc_paths:
             text = path.read_text()
             summary = parse_summary(text)
-            rfc_entries.append(
-                {"id": path.stem, "summary": summary, "text": text, "path": path}
-            )
+            entry = {
+                "id": path.stem,
+                "summary": summary,
+                "text": text,
+                "path": path,
+            }
+            rfc_entries.append(entry)
+            rfc_index[path.stem.lower()] = entry
 
         diary_mentions: dict[str, list[int]] = {e["id"]: [] for e in rfc_entries}  # type: ignore[misc]
         for i, entry in enumerate(st.session_state.get("diary", [])):
@@ -672,6 +678,14 @@ def main() -> None:
                     or rid in ids
                 ):
                     diary_mentions.setdefault(rfc["id"], []).append(i)
+                    continue
+                keywords = {
+                    w.strip(".,()[]{}:").lower()
+                    for w in str(rfc["summary"]).split()
+                    if len(w) > 4
+                }
+                if any(k in note_lower for k in keywords):
+                    diary_mentions.setdefault(rfc["id"], []).append(i)
 
         for rfc in rfc_entries:
             if (
@@ -680,9 +694,12 @@ def main() -> None:
                 and filter_text.lower() not in rfc["id"].lower()
             ):
                 continue
-            st.markdown(f"### {rfc['id']}")
-            st.write(summarize_text(str(rfc["summary"])))
             mentions = diary_mentions.get(rfc["id"], [])
+            heading = (
+                f"<mark>{rfc['id']}</mark>" if mentions else rfc["id"]
+            )
+            st.markdown(f"### {heading}", unsafe_allow_html=True)
+            st.write(summarize_text(str(rfc["summary"])))
             if mentions:
                 links = ", ".join(
                     [f"[entry {idx + 1}](#diary-{idx})" for idx in mentions]
