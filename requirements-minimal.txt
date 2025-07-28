@@ -12,6 +12,8 @@ pydantic-settings
 structlog
 prometheus-client
 streamlit
+requests
+types-requests
 
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
