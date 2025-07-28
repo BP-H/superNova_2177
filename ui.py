@@ -4,6 +4,8 @@ from pathlib import Path
 
 import os
 from pathlib import Path
+import re
+from collections import Counter
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
@@ -39,6 +41,18 @@ def summarize_text(text: str, max_len: int = 150) -> str:
     if len(text) <= max_len:
         return text
     return text[: max_len - 3] + "..."
+
+
+def extract_keywords(validations, top_n: int = 5):
+    """Extract simple keyword list from validation notes."""
+    words = []
+    for v in validations:
+        note = str(v.get("note", "")).lower()
+        words.extend(re.findall(r"[a-zA-Z]{3,}", note))
+    if not words:
+        return []
+    counts = Counter(words)
+    return [w for w, _ in counts.most_common(top_n)]
 
 try:
     from validation_certifier import Config as VCConfig
@@ -226,6 +240,12 @@ def main() -> None:
         st.session_state["diary"] = []
     if "run_count" not in st.session_state:
         st.session_state["run_count"] = 0
+    if "note_draft" not in st.session_state:
+        st.session_state["note_draft"] = ""
+    if "auto_summary" not in st.session_state:
+        st.session_state["auto_summary"] = ""
+    if "latest_keywords" not in st.session_state:
+        st.session_state["latest_keywords"] = []
     if "theme" not in st.session_state:
         st.session_state["theme"] = "light"
 
@@ -342,29 +362,49 @@ def main() -> None:
         result = run_analysis(data.get("validations", []))
         st.session_state["run_count"] += 1
         st.session_state["last_result"] = result
-        st.session_state["diary"].append(
-            {
-                "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
-                "note": f"Run {st.session_state['run_count']} completed",
-            }
+        st.session_state["latest_keywords"] = extract_keywords(
+            data.get("validations", [])
         )
+        st.session_state["auto_summary"] = summarize_text(json.dumps(result, indent=2))
+        st.session_state["note_draft"] = st.session_state["auto_summary"]
 
     st.subheader("Virtual Diary")
     with st.expander("📘 Notes", expanded=False):
-        diary_note = st.text_input("Add note")
+        diary_note = st.text_input(
+            "Agent note",
+            value=st.session_state.get("note_draft", ""),
+            key="agent_note_input",
+        )
         if st.button("Append Note"):
             st.session_state["diary"].append(
                 {
                     "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
                     "note": diary_note,
+                    "run_count": st.session_state.get("run_count", 0),
+                    "keywords": st.session_state.get("latest_keywords", []),
+                    "agent_summary": st.session_state.get("auto_summary", ""),
                 }
             )
+            st.session_state["note_draft"] = ""
         for entry in st.session_state["diary"]:
-            st.write(f"{entry['timestamp']}: {entry['note']}")
+            kw = ", ".join(entry.get("keywords", []))
+            st.write(
+                f"{entry['timestamp']} (Run {entry.get('run_count', '-')}) - {entry['note']}"
+            )
+            if entry.get("agent_summary"):
+                st.write(f"Summary: {entry['agent_summary']}")
+            if kw:
+                st.write(f"Keywords: {kw}")
+            st.divider()
         if st.download_button(
             "Export Diary as Markdown",
             "\n".join(
-                [f"* {e['timestamp']}: {e['note']}" for e in st.session_state["diary"]]
+                [
+                    f"* {e['timestamp']} (Run {e.get('run_count', '-')}) - {e['note']}"
+                    f" | Keywords: {', '.join(e.get('keywords', []))}"
+                    f" | Summary: {e.get('agent_summary', '')}"
+                    for e in st.session_state["diary"]
+                ]
             ),
             file_name="diary.md",
         ):
