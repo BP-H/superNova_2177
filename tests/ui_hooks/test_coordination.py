@@ -1,6 +1,6 @@
 import pytest
 
-from frontend_bridge import dispatch_route
+from frontend_bridge import dispatch
 from network.ui_hook import ui_hook_manager
 
 
@@ -25,7 +25,7 @@ async def test_coordination_analysis_via_router():
         ]
     }
 
-    result = await dispatch_route("coordination_analysis", payload)
+    result = await dispatch("network.run", payload)
 
     assert "overall_risk_score" in result  # nosec B101
     assert "graph" in result  # nosec B101

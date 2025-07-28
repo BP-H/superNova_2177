@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from audit_bridge import log_hypothesis_with_trace, attach_trace_to_logentry
 from hook_manager import HookManager
+from frontend_bridge import register_action
 
 
 logger = logging.getLogger(__name__)
@@ -55,4 +56,9 @@ async def attach_trace_ui(payload: Dict[str, Any], db: Session) -> None:
         "audit_log",
         {"action": "attach_trace", "log_id": int(payload["log_id"])},
     )
+
+
+# Register actions with the frontend bridge
+register_action("audit.log", log_hypothesis_ui)
+register_action("audit.attach_trace", attach_trace_ui)
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from frontend_bridge import register_route
+from frontend_bridge import register_action
 from hook_manager import HookManager
 
 from .network_coordination_detector import analyze_coordination_patterns
@@ -36,4 +36,4 @@ async def trigger_coordination_analysis_ui(payload: Dict[str, Any]) -> Dict[str,
 
 
 # Register with the central frontend router
-register_route("coordination_analysis", trigger_coordination_analysis_ui)
+register_action("network.run", trigger_coordination_analysis_ui)

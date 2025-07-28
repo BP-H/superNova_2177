@@ -1,25 +1,45 @@
-"""Lightweight router for UI callbacks."""
+"""Entry point for UI actions triggered by the frontend."""
 
 from __future__ import annotations
 
-from typing import Any, Awaitable, Callable, Dict, Union
+import asyncio
+import inspect
+from typing import Any, Awaitable, Callable, Dict, Optional
 
-Handler = Callable[[Dict[str, Any]], Union[Dict[str, Any], Awaitable[Dict[str, Any]]]]
+from hook_manager import HookManager
 
-ROUTES: Dict[str, Handler] = {}
-
-
-def register_route(name: str, func: Handler) -> None:
-    """Register a handler for ``name`` events."""
-    ROUTES[name] = func
+# Central action registry powered by :class:`HookManager`
+action_manager = HookManager()
 
 
-async def dispatch_route(name: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Dispatch ``payload`` to the registered handler."""
-    if name not in ROUTES:
-        raise KeyError(name)
-    handler = ROUTES[name]
-    result = handler(payload)
-    if isinstance(result, Awaitable):
-        result = await result
+def register_action(name: str, func: Callable[..., Any]) -> None:
+    """Register ``func`` under the given action ``name``."""
+    action_manager.register_hook(name, func)
+
+
+async def _invoke(func: Callable[..., Any], payload: Dict[str, Any], db: Any) -> Any:
+    """Invoke ``func`` handling sync/async semantics."""
+    if db is not None:
+        result = func(payload, db)
+    else:
+        result = func(payload)
+    if inspect.isawaitable(result):
+        return await result
     return result
+
+
+async def dispatch(action: str, payload: Dict[str, Any], db: Optional[Any] = None, *, background: bool = False) -> Any:
+    """Dispatch ``payload`` to the handler registered for ``action``."""
+
+    handlers = action_manager.hooks.get(action)
+    if not handlers:
+        raise KeyError(action)
+
+    func = handlers[0]
+
+    if background:
+        loop = asyncio.get_running_loop()
+        return loop.create_task(_invoke(func, payload, db))
+
+    return await _invoke(func, payload, db)
+
