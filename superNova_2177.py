@@ -2506,6 +2506,10 @@ def register_harmonizer(user: HarmonizerCreate, db: Session = Depends(get_db)):
 
 
 
+from login_router import router as login_router
+
+app.include_router(login_router)
+
 
 @app.get("/users/me", response_model=HarmonizerOut, tags=["Harmonizers"])
 def read_users_me(current_user: Harmonizer = Depends(get_current_active_user)):

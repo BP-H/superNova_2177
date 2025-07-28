@@ -1,3 +1,4 @@
+
 """
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
@@ -23,6 +24,7 @@ from superNova_2177 import (
 from universe_manager import UniverseManager
 
 router = APIRouter()
+
 
 
 @router.post("/token", response_model=Token, tags=["Harmonizers"])
