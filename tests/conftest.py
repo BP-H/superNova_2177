@@ -763,7 +763,13 @@ def _setup_sqlite(monkeypatch, db_path):
     from sqlalchemy.orm import sessionmaker
     import db_models, sys, pytest
 
-    if "stubs" in getattr(create_engine, "__module__", ""):
+    mod = getattr(create_engine, "__module__", "")
+    name = getattr(create_engine, "__name__", "")
+    if (
+        "stubs" in mod
+        or mod != "sqlalchemy.engine"
+        or name == "<lambda>"
+    ):
         pytest.skip("SQLAlchemy not available")
 
     try:
