@@ -245,6 +245,8 @@ directly as that bypasses Streamlit's runtime.
 
 Open [http://localhost:8501](http://localhost:8501) in your browser to interact with the demo.
 
+After running an analysis, use the **Download Result** button to save the JSON output for offline inspection.
+
 `ui.py` reads configuration from `st.secrets` when running under Streamlit. If
 the secrets dictionary is unavailable (such as during local development), the
 module falls back to a development setup equivalent to:

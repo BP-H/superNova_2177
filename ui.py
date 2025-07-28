@@ -16,8 +16,10 @@ except Exception:  # pragma: no cover - optional in dev/CI
         "DATABASE_URL": "sqlite:///:memory:",
     }
 
-from network.network_coordination_detector import build_validation_graph
-from validation_integrity_pipeline import analyze_validation_integrity
+from network.network_coordination_detector import \
+    build_validation_graph  # noqa: E402
+from validation_integrity_pipeline import \
+    analyze_validation_integrity  # noqa: E402
 
 try:
     from config import Config
@@ -27,16 +29,23 @@ except Exception:  # pragma: no cover - optional debug dependencies
     Config = None  # type: ignore
 
 if Config is None:
-    class Config:
+
+    class Config:  # type: ignore[no-redef]
         METRICS_PORT = 1234
 
+
 if HarmonyScanner is None:
-    class HarmonyScanner:
+
+    class HarmonyScanner:  # type: ignore[no-redef]
         def __init__(self, *_a, **_k):
             pass
 
         def scan(self, _data):
             return {"dummy": True}
+
+
+# Global variable to hold the most recent analysis output
+analysis_result = None
 
 
 def run_analysis(validations):
@@ -54,6 +63,10 @@ def run_analysis(validations):
     with st.spinner("Running analysis..."):
         result = analyze_validation_integrity(validations)
 
+    # Store the analysis result for potential future use
+    global analysis_result
+    analysis_result = result
+
     integrity = result.get("integrity_analysis", {})
     score = integrity.get("overall_integrity_score")
     if score is not None:
@@ -61,6 +74,12 @@ def run_analysis(validations):
 
     st.subheader("Analysis Result")
     st.json(result)
+    st.download_button(
+        "Download Result",
+        json.dumps(result),
+        file_name="analysis_result.json",
+        mime="application/json",
+    )
 
     graph_data = build_validation_graph(validations)
     edges = graph_data.get("edges", [])
@@ -144,9 +163,7 @@ def main() -> None:
             except FileNotFoundError:
                 st.warning("Demo file not found, using default dataset.")
                 data = {
-                    "validations": [
-                        {"validator": "A", "target": "B", "score": 0.9}
-                    ]
+                    "validations": [{"validator": "A", "target": "B", "score": 0.9}]
                 }
         elif uploaded_file is not None:
             data = json.load(uploaded_file)
