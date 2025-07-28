@@ -95,7 +95,9 @@ async def export_causal_path_ui(payload: Dict[str, Any], **_: Any) -> Dict[str, 
 
 
 # Register causal audit route
-async def causal_audit_ui(payload: Dict[str, Any], db: Session, **_: Any) -> Dict[str, Any]:
+async def causal_audit_ui(
+    payload: Dict[str, Any], db: Session, **_: Any
+) -> Dict[str, Any]:
     """Run :func:`trigger_causal_audit` from UI payload.
 
     Parameters
@@ -133,15 +135,32 @@ async def causal_audit_ui(payload: Dict[str, Any], db: Session, **_: Any) -> Dic
     await hook_manager.trigger(
         events.AUDIT_LOG, {"action": "causal_audit", "log_id": log_id}
     )
-    message_hub.publish(
-        "audit_log", {"action": "causal_audit", "log_id": log_id}
-    )
+    message_hub.publish("audit_log", {"action": "causal_audit", "log_id": log_id})
     return minimal
 
 
 # Register routes with the frontend bridge
-register_route_once("causal_audit", causal_audit_ui)
-register_route_once("log_hypothesis", log_hypothesis_ui)
-register_route_once("attach_trace", attach_trace_ui)
-register_route_once("export_causal_path", export_causal_path_ui)
-
+register_route_once(
+    "causal_audit",
+    causal_audit_ui,
+    "Run a causal audit",
+    "audit",
+)
+register_route_once(
+    "log_hypothesis",
+    log_hypothesis_ui,
+    "Log a hypothesis for auditing",
+    "audit",
+)
+register_route_once(
+    "attach_trace",
+    attach_trace_ui,
+    "Attach audit trace data",
+    "audit",
+)
+register_route_once(
+    "export_causal_path",
+    export_causal_path_ui,
+    "Export causal path information",
+    "audit",
+)

@@ -105,7 +105,27 @@ async def trigger_reputation_update_ui(payload: Dict[str, Any]) -> Dict[str, Any
 
 
 # Register with the central frontend router
-register_route_once("reputation_analysis", compute_reputation_ui)
-register_route_once("update_validator_reputations", update_reputations_ui)
-register_route_once("reputation_update", trigger_reputation_update_ui)
-register_route_once("compute_diversity", compute_diversity_ui)
+register_route_once(
+    "reputation_analysis",
+    compute_reputation_ui,
+    "Compute validator reputations",
+    "validators",
+)
+register_route_once(
+    "update_validator_reputations",
+    update_reputations_ui,
+    "Persist validator reputation updates",
+    "validators",
+)
+register_route_once(
+    "reputation_update",
+    trigger_reputation_update_ui,
+    "Update reputations from payload",
+    "validators",
+)
+register_route_once(
+    "compute_diversity",
+    compute_diversity_ui,
+    "Compute diversity metrics",
+    "validators",
+)

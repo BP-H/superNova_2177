@@ -19,4 +19,9 @@ async def tune_parameters_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # Register with the central frontend router
-register_route_once("tune_parameters", tune_parameters_ui)
+register_route_once(
+    "tune_parameters",
+    tune_parameters_ui,
+    "Tune system parameters",
+    "optimization",
+)

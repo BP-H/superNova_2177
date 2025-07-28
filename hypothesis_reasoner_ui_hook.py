@@ -22,6 +22,9 @@ async def auto_flag_stale_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
-register_route_once("auto_flag_stale", auto_flag_stale_ui)
-
-
+register_route_once(
+    "auto_flag_stale",
+    auto_flag_stale_ui,
+    "Auto-flag stale hypotheses",
+    "hypothesis",
+)
