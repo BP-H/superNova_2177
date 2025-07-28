@@ -15,13 +15,9 @@ Components:
 - writes safe response directly into PR comment or diff patch
 """
 
-import json
 import logging
-import subprocess
-import uuid
 
 from protocols.core.internal_protocol import InternalAgentProtocol
-from protocols.utils.skills import Skill
 
 logger = logging.getLogger("CI_PR_PROTECTOR")
 
@@ -31,17 +27,15 @@ class CI_PRProtectorAgent(InternalAgentProtocol):
 
     Parameters
     ----------
-    talk_to_llm_fn : callable
-        Default function used to query the LLM when ``llm_backend`` is not
-        provided.
     llm_backend : callable, optional
-        Optional override used for all LLM requests.
+        Optional override used for all LLM requests. When omitted,
+        ``talk_to_llm_fn`` is used instead.
     """
 
-    def __init__(self, talk_to_llm_fn, llm_backend=None):
+    def __init__(self, llm_backend=None):
         super().__init__()
         self.name = "CI_PRProtector"
-        self.talk_to_llm = talk_to_llm_fn  # Function to call LLM
+        self.talk_to_llm = talk_to_llm_fn  # default function to call LLM
         self.llm_backend = llm_backend
         self.receive("CI_FAILURE", self.handle_ci_failure)
         self.receive("PR_DIFF_FAIL", self.handle_pr_error)
@@ -101,7 +95,7 @@ Explanation:
 # --- Hook to LLM (example) ---
 
 
-def dummy_llm_talker(prompt):
+def talk_to_llm_fn(prompt):
     # Replace with real API call to GPT/Claude etc.
     return """```python
 # patch
@@ -114,5 +108,5 @@ This is a dummy patch. Replace me.
 
 
 # Usage:
-# agent = CI_PRProtectorAgent(dummy_llm_talker)
+# agent = CI_PRProtectorAgent(llm_backend=talk_to_llm_fn)
 # agent.send("CI_FAILURE", {"repo": "superNova_2177", "branch": "main", "logs": "Traceback..."})
