@@ -1,6 +1,7 @@
 """Delegation helpers for multi-agent collaboration."""
 from protocols.core.profiles import AgentProfile
 
+
 class AgentNegotiation:
     @staticmethod
     def propose_delegation(from_agent, to_agent: AgentProfile, task: str, payload: dict):

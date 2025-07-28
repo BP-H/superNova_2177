@@ -13,13 +13,17 @@ from protocols.utils.messaging import MessageHub, Message
 bus = MessageHub()
 all_agents: list['EvolvableAgent'] = []
 
+
 def dummy_analyze(data: str) -> dict[str, str]:
     return {"analysis": f"len={len(str(data))}"}
+
 
 def dummy_patch(data: dict[str, str]) -> dict[str, str]:
     return {"patch": f"fixed_{data.get('bug', 'issue')}"}
 
 # --- Evolving Agent Class ---
+
+
 class EvolvableAgent(EmbodiedAgent, FatigueMemoryMixin):
     def __init__(self, name: str) -> None:
         EmbodiedAgent.__init__(self, name)
@@ -36,6 +40,7 @@ class EvolvableAgent(EmbodiedAgent, FatigueMemoryMixin):
         if success:
             self.memory['success'] += 1
 
+
 # --- Create Founders ---
 founder1 = EvolvableAgent("AgentAlpha")
 founder1.register_skill(Skill("analyze", dummy_analyze))
@@ -45,6 +50,8 @@ founder2.register_skill(Skill("patch", dummy_patch))
 all_agents.extend([founder1, founder2])
 
 # --- Message Flow ---
+
+
 def on_new_task(msg: Message) -> None:
     task_type = msg.data.get("type")
     for agent in all_agents:
@@ -59,9 +66,10 @@ def on_new_task(msg: Message) -> None:
 
                 # evolution
                 if agent.success_rate() > 0.9 and agent.memory['runs'] >= 5:
-                    clone = fork_agent(agent, {"name": f"{agent.name}_v{random.randint(2,9)}"})
+                    clone = fork_agent(agent, {"name": f"{agent.name}_v{random.randint(2, 9)}"})
                     all_agents.append(clone)
                     print(f"🌱 {clone.name} forked from {agent.name}")
+
 
 bus.subscribe("task:new", on_new_task)
 

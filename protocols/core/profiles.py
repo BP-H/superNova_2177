@@ -1,6 +1,7 @@
 """Agent profile structures describing traits and powers."""
 from typing import List
 
+
 class AgentProfile:
     """Defines traits and capabilities of autonomous agents."""
     def __init__(self, name: str, traits: List[str], powers: List[str]):

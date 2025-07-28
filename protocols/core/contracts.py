@@ -1,6 +1,7 @@
 """Attachable missions or tasks agents may attempt."""
 from typing import Callable, Dict
 
+
 class AgentTaskContract:
     def __init__(self, task_name: str, criteria: Callable[[dict], bool], action: Callable[[dict], dict]):
         self.task_name = task_name

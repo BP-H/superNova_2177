@@ -14,7 +14,6 @@ analysis when inspecting or proposing fixes.
 
 from typing import Dict, List
 import uuid
-import time  # retained for potential future hooks
 
 from protocols.core.internal_protocol import InternalAgentProtocol
 
