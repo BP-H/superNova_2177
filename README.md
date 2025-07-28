@@ -1,6 +1,6 @@
 # superNova_2177/ ⚡️🌌🎶🚀🌸🔬
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/BP-H/community_guidelines/blob/main/LICENSE)
-[![Python 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3120/)
+[![Python 3.11](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
 [![Open Source](https://img.shields.io/badge/Open%20Source-%E2%9D%A4-red.svg)](https://opensource.org/)
 [![Contributors Welcome](https://img.shields.io/badge/Contributors-Welcome-brightgreen.svg)](https://github.com/BP-H/community_guidelines/issues)
 [![Stars](https://img.shields.io/github/stars/BP-H/community_guidelines?style=social)](https://github.com/BP-H/superNova_2177)
@@ -49,8 +49,8 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
 
 ### Step-by-Step
 
-1. **Install Python 3.12 or newer** from [python.org](https://www.python.org/)
-   if it isn't already on your machine. This project requires Python 3.12+.
+1. **Install Python 3.11 or newer** from [python.org](https://www.python.org/)
+   if it isn't already on your machine. This project requires Python 3.11+.
    You can check by running `python --version` in your terminal.
 2. **Run the setup script** to create the virtual environment and install all
    dependencies locally. Install any missing system libraries first (see
@@ -379,7 +379,7 @@ After setting the variables, execute the binary directly:
 ### One-Click Installers
 
 Prebuilt installers for each platform are published under the [Releases page](https://github.com/BP-H/superNova_2177/releases).
-Each installer bundles Python 3.12 and all dependencies so it works offline:
+Each installer bundles Python 3.11 and all dependencies so it works offline:
 
 * **Windows** – download [`SuperNova_2177.msi`](dist/SuperNova_2177.msi) and run
   it to install the CLI.
@@ -410,7 +410,7 @@ If you prefer to build everything locally, run:
 python one_click_install.py
 ```
 
-The script detects your OS, downloads Python 3.12 if necessary, bundles the
+The script detects your OS, downloads Python 3.11 if necessary, bundles the
 dependencies into `offline_deps/`, creates a virtual environment, and installs
 the package.
 
