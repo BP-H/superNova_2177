@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 from __future__ import annotations
 
 from typing import Any, Dict
@@ -5,7 +8,8 @@ from typing import Any, Dict
 from frontend_bridge import register_route_once
 from hook_manager import HookManager
 
-from . import record_vote as _record_vote, load_votes as _load_votes
+from . import load_votes as _load_votes
+from . import record_vote as _record_vote
 
 # Exposed hook manager so other modules can listen for vote events
 ui_hook_manager = HookManager()

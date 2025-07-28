@@ -1,15 +1,17 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 from __future__ import annotations
 
 from typing import Any, Dict
 
-from frontend_bridge import register_route_once
-from db_models import SessionLocal
-from protocols.core import JobQueueAgent
-
 from sqlalchemy.orm import Session
 
+from db_models import SessionLocal
+from frontend_bridge import register_route_once
 from hook_manager import HookManager
 from hooks import events
+from protocols.core import JobQueueAgent
 
 from .introspection_pipeline import run_full_audit
 

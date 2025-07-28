@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Streamlit UI helper utilities.
 
 This module provides small helpers used across the Streamlit
@@ -6,8 +9,9 @@ applications to keep the UI code concise and consistent.
 
 from __future__ import annotations
 
-from typing import Literal
 import html
+from typing import Literal
+
 import streamlit as st
 
 
@@ -78,6 +82,7 @@ def centered_container(max_width: str = "900px") -> "st.delta_generator.DeltaGen
     )
     return st.container()
 
+
 __all__ = [
     "alert",
     "header",
@@ -85,4 +90,3 @@ __all__ = [
     "theme_selector",
     "centered_container",
 ]
-
