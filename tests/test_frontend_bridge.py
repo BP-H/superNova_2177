@@ -25,6 +25,9 @@ async def test_new_routes_exposed():
         "run_integrity_analysis",
         "update_reputations",
         "forecast_consensus_agent",
+        "get_universe_overview",
+        "list_available_proposals",
+        "submit_universe_proposal",
     ]:
         assert name in result["routes"]
 

@@ -262,6 +262,7 @@ import audit.ui_hook  # noqa: F401,E402 - exposes audit utilities
 import audit.explainer_ui_hook  # noqa: F401,E402 - audit explanation utilities
 import introspection.ui_hook  # noqa: F401,E402 - registers introspection routes
 import protocols.ui_hook  # noqa: F401,E402 - registers cross-universe bridge routes
+import ui_hooks.universe_ui  # noqa: F401,E402 - registers universe management routes
 import temporal.ui_hook  # noqa: F401,E402 - temporal consistency routes
 import protocols.agents.guardian_ui_hook  # noqa: F401,E402 - guardian agent routes
 import protocols.agents.harmony_ui_hook  # noqa: F401,E402 - harmony synth route
