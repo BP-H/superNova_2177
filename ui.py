@@ -3,7 +3,6 @@ import logging
 from pathlib import Path
 
 import os
-from pathlib import Path
 import io
 import math
 import matplotlib.pyplot as plt
@@ -470,23 +469,33 @@ def main() -> None:
     st.subheader("Virtual Diary")
     with st.expander("📘 Notes", expanded=False):
         diary_note = st.text_input("Add note")
+        rfc_input = st.text_input("Referenced RFC IDs (comma separated)")
         if st.button("Append Note"):
-            st.session_state["diary"].append(
-                {
-                    "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
-                    "note": diary_note,
-                }
-            )
+            entry = {
+                "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+                "note": diary_note,
+            }
+            rfc_ids = [r.strip() for r in rfc_input.split(",") if r.strip()]
+            if rfc_ids:
+                entry["rfc_ids"] = rfc_ids
+            st.session_state["diary"].append(entry)
         for i, entry in enumerate(st.session_state["diary"]):
             anchor = f"diary-{i}"
+            note = entry.get("note", "")
+            rfc_list = entry.get("rfc_ids")
+            extra = f" (RFCs: {', '.join(rfc_list)})" if rfc_list else ""
             st.markdown(
-                f"<p id='{anchor}'><strong>{entry['timestamp']}</strong>: {entry['note']}</p>",
+                f"<p id='{anchor}'><strong>{entry['timestamp']}</strong>: {note}{extra}</p>",
                 unsafe_allow_html=True,
             )
         if st.download_button(
             "Export Diary as Markdown",
             "\n".join(
-                [f"* {e['timestamp']}: {e['note']}" for e in st.session_state["diary"]]
+                [
+                    f"* {e['timestamp']}: {e.get('note','')}"
+                    + (f" (RFCs: {', '.join(e['rfc_ids'])})" if e.get("rfc_ids") else "")
+                    for e in st.session_state["diary"]
+                ]
             ),
             file_name="diary.md",
         ):
@@ -525,8 +534,10 @@ def main() -> None:
         diary_mentions: dict[str, list[int]] = {e["id"]: [] for e in rfc_entries}
         for i, entry in enumerate(st.session_state.get("diary", [])):
             note_lower = entry.get("note", "").lower()
+            ids = set(e.strip().lower() for e in entry.get("rfc_ids", []) if e)
             for rfc in rfc_entries:
-                if rfc["id"].lower() in note_lower or rfc["id"].replace("-", " ") in note_lower:
+                rid = rfc["id"].lower()
+                if rid in note_lower or rid.replace("-", " ") in note_lower or rid in ids:
                     diary_mentions.setdefault(rfc["id"], []).append(i)
 
         for rfc in rfc_entries:
@@ -543,6 +554,13 @@ def main() -> None:
             st.markdown(f"[Read RFC]({rfc['path'].as_posix()})")
             if preview_all or st.checkbox("Show details", key=f"show_{rfc['id']}"):
                 st.markdown(rfc["text"], unsafe_allow_html=True)
+
+    st.subheader("Protocols")
+    with st.expander("Repository Protocols", expanded=False):
+        proto_dir = Path("protocols")
+        files = sorted([p for p in proto_dir.glob("*.py") if p.is_file()])
+        for file in files:
+            st.markdown(f"- [{file.name}]({file.as_posix()})")
 
     notes_path = Path("AgentNotes.md")
     if notes_path.exists():

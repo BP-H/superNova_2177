@@ -1,4 +1,10 @@
-"""Minimal virtual diary interface."""
+"""Minimal virtual diary interface.
+
+Diary entries are stored as dictionaries in ``virtual_diary.json``. Each entry
+may contain a ``timestamp`` and free form ``note`` text.  The optional
+``rfc_ids`` field stores a list of referenced RFC identifiers.  This module only
+provides a lightweight loader used by the tests and the Streamlit UI.
+"""
 
 import json
 import logging
