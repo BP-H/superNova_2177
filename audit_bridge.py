@@ -12,6 +12,7 @@ from causal_graph import InfluenceGraph
 from db_models import SystemState, LogEntry
 
 logger = logging.getLogger(__name__)
+logger.propagate = False
 
 
 from exceptions import DataParseError

@@ -18,6 +18,7 @@ except Exception:  # pragma: no cover - optional dependency may be missing
     parser = None  # type: ignore[assignment]
 
 logger = logging.getLogger("superNova_2177.temporal")
+logger.propagate = False
 
 class Config:
     MAX_VALIDATION_GAP_HOURS = 96       # Warn if large time gaps appear

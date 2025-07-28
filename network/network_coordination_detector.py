@@ -25,6 +25,7 @@ import os
 import math
 
 logger = logging.getLogger("superNova_2177.coordination")
+logger.propagate = False
 
 
 class Config:

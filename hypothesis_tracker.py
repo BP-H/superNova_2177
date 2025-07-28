@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 logger = logging.getLogger(__name__)
+logger.propagate = False
 
 
 from exceptions import DataParseError

@@ -10,6 +10,7 @@ from audit_explainer import trace_causal_chain
 from governance_reviewer import evaluate_governance_risks, apply_governance_actions
 
 logger = logging.getLogger("superNova_2177.trigger")
+logger.propagate = False
 
 
 from exceptions import DataParseError

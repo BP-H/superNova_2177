@@ -15,6 +15,7 @@ import textwrap # Added for text summarization
 import logging
 
 logger = logging.getLogger(__name__)
+logger.propagate = False
 from sqlalchemy.orm import Session
 from sqlalchemy import func, select
 

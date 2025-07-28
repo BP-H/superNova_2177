@@ -17,6 +17,7 @@ from enum import Enum
 from datetime import datetime
 
 logger = logging.getLogger("superNova_2177.voting")
+logger.propagate = False
 
 
 class VotingMethod(Enum):

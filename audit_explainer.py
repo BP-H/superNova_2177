@@ -21,6 +21,7 @@ from db_models import SystemState, LogEntry # For accessing logs and hypothesis 
 import hypothesis_tracker as ht # For getting hypothesis records
 
 logger = logging.getLogger(__name__)
+logger.propagate = False
 
 
 from exceptions import DataParseError

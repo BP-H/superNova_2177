@@ -18,6 +18,7 @@ from semantic_contradiction_resolver import semantic_contradiction_resolver
 
 
 logger = logging.getLogger("superNova_2177.reputation")
+logger.propagate = False
 
 # --- Configuration ---
 class Config:
