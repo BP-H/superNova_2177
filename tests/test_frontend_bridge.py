@@ -2,7 +2,12 @@ import asyncio
 import pytest
 
 import frontend_bridge
-from frontend_bridge import dispatch_route, ROUTES, register_route, long_running
+from frontend_bridge import (
+    dispatch_route,
+    ROUTES,
+    register_route_once as register_route,
+    long_running,
+)
 
 
 @pytest.mark.asyncio

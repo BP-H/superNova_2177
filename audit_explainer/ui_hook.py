@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 from sqlalchemy.orm import Session
 
-from frontend_bridge import register_route
+from frontend_bridge import register_route_once
 from hook_manager import HookManager
 from . import explain_validation_reasoning
 
@@ -24,4 +24,4 @@ async def _explain_validation_route(payload: Dict[str, Any], db: Session) -> Dic
     return await explain_validation_ui(payload, db)
 
 
-register_route("explain_validation_reasoning", _explain_validation_route)
+register_route_once("explain_validation_reasoning", _explain_validation_route)

@@ -5,7 +5,7 @@ from typing import Any, Dict
 from sqlalchemy.orm import Session
 
 from audit_bridge import generate_commentary_from_trace
-from frontend_bridge import register_route
+from frontend_bridge import register_route_once
 from hook_manager import HookManager
 
 # Exposed hook manager so external listeners can react to commentary events
@@ -39,4 +39,4 @@ async def _explain_audit_route(payload: Dict[str, Any]) -> str:
 
 
 # Register route with the central frontend bridge
-register_route("explain_audit", _explain_audit_route)
+register_route_once("explain_audit", _explain_audit_route)

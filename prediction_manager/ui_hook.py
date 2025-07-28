@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from frontend_bridge import register_route
+from frontend_bridge import register_route_once
 from hook_manager import HookManager
 from . import PredictionManager
 
@@ -53,6 +53,6 @@ async def update_prediction_status_ui(payload: Dict[str, Any]) -> Dict[str, Any]
     return {"prediction_id": prediction_id, "status": new_status}
 
 
-register_route("store_prediction", store_prediction_ui)
-register_route("get_prediction", get_prediction_ui)
-register_route("update_prediction_status", update_prediction_status_ui)
+register_route_once("store_prediction", store_prediction_ui)
+register_route_once("get_prediction", get_prediction_ui)
+register_route_once("update_prediction_status", update_prediction_status_ui)

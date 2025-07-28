@@ -1,7 +1,7 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-"""Universe lifecycle management utilities.
+"""Universe lifecycle management utilities."""
 
 from __future__ import annotations
 import uuid

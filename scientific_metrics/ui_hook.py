@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from frontend_bridge import register_route
+from frontend_bridge import register_route_once
 from hook_manager import HookManager
 from scientific_metrics import (
     predict_user_interactions,
@@ -50,5 +50,5 @@ async def calculate_influence_ui(
 
 
 # Register routes for the UI
-register_route("predict_user_interactions", predict_user_interactions_ui)
-register_route("calculate_influence", calculate_influence_ui)
+register_route_once("predict_user_interactions", predict_user_interactions_ui)
+register_route_once("calculate_influence", calculate_influence_ui)

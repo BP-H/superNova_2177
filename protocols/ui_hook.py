@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
-from frontend_bridge import register_route
+from frontend_bridge import register_route_once
 from hook_manager import HookManager
 from hooks import events
 
@@ -28,5 +28,5 @@ async def get_provenance_ui(payload: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 # Register with the central frontend router
-register_route("cross_universe_register_bridge", register_bridge_ui)
-register_route("cross_universe_get_provenance", get_provenance_ui)
+register_route_once("cross_universe_register_bridge", register_bridge_ui)
+register_route_once("cross_universe_get_provenance", get_provenance_ui)

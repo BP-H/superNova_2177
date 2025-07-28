@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from frontend_bridge import register_route
+from frontend_bridge import register_route_once
 from hook_manager import HookManager
 from validation_certifier import analyze_validation_integrity
 
@@ -23,6 +23,6 @@ async def run_integrity_analysis_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return minimal
 
 
-register_route("run_integrity_analysis", run_integrity_analysis_ui)
+register_route_once("run_integrity_analysis", run_integrity_analysis_ui)
 
 

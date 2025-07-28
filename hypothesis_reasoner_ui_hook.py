@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 from db_models import SessionLocal
 from hook_manager import HookManager
-from frontend_bridge import register_route
+from frontend_bridge import register_route_once
 from hypothesis_reasoner import auto_flag_stale_or_redundant
 
 ui_hook_manager = HookManager()
@@ -22,6 +22,6 @@ async def auto_flag_stale_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
-register_route("auto_flag_stale", auto_flag_stale_ui)
+register_route_once("auto_flag_stale", auto_flag_stale_ui)
 
 

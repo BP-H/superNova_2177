@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict
 from sqlalchemy.orm import Session
 
-from frontend_bridge import register_route
+from frontend_bridge import register_route_once
 from hook_manager import HookManager
 from . import log_event
 
@@ -29,4 +29,4 @@ async def log_event_ui(payload: Dict[str, Any], db: Session, **_: Any) -> Dict[s
     return {"category": category, **event_payload}
 
 
-register_route("log_event", log_event_ui)
+register_route_once("log_event", log_event_ui)

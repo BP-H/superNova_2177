@@ -4,7 +4,7 @@ from typing import Any, Dict
 
 from sqlalchemy.orm import Session
 
-from frontend_bridge import register_route
+from frontend_bridge import register_route_once
 from hook_manager import HookManager
 
 try:  # pragma: no cover - optional heavy dependency
@@ -32,4 +32,4 @@ async def simulate_entanglement_ui(
 
 
 # Register route with the frontend router
-register_route("simulate_entanglement", simulate_entanglement_ui)
+register_route_once("simulate_entanglement", simulate_entanglement_ui)
