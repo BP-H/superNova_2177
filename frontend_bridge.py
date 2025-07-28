@@ -23,3 +23,15 @@ async def dispatch_route(name: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(result, Awaitable):
         result = await result
     return result
+
+
+# Register network UI hooks
+from network.ui_hook import trigger_coordination_analysis
+
+
+async def _coordination_wrapper(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Adapter to run coordination analysis from a standard payload."""
+    return await trigger_coordination_analysis(payload.get("validations", []))
+
+
+register_route("coordination_analysis", _coordination_wrapper)

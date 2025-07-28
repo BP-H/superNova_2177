@@ -1,39 +1,27 @@
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import List, Dict, Any
 
-from frontend_bridge import register_route
 from hook_manager import HookManager
-
 from .network_coordination_detector import analyze_coordination_patterns
 
-# Exposed hook manager for external subscribers
+# Hook manager allowing observers to react to coordination analysis events
 ui_hook_manager = HookManager()
 
 
-async def trigger_coordination_analysis_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Run coordination analysis from UI payload.
+async def trigger_coordination_analysis(data: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Run ``analyze_coordination_patterns`` on ``data`` and emit a hook.
 
     Parameters
     ----------
-    payload : dict
-        JSON payload containing ``"validations"`` list.
+    data:
+        List of validation dictionaries passed from the UI layer.
 
     Returns
     -------
     dict
-        Minimal result with ``overall_risk_score`` and ``graph``.
+        The full coordination analysis result.
     """
-    validations = payload.get("validations", [])
-    result = analyze_coordination_patterns(validations)
-    minimal = {
-        "overall_risk_score": result.get("overall_risk_score", 0.0),
-        "graph": result.get("graph", {}),
-    }
-    # Emit event for observers
-    await ui_hook_manager.trigger("coordination_analysis_run", minimal)
-    return minimal
-
-
-# Register with the central frontend router
-register_route("coordination_analysis", trigger_coordination_analysis_ui)
+    result = analyze_coordination_patterns(data)
+    await ui_hook_manager.trigger("coordination_analysis_run", result)
+    return result
