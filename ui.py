@@ -151,6 +151,15 @@ def main() -> None:
         "Upload a JSON file with a `validations` array, paste JSON below, "
         "or enable demo mode to see the pipeline in action."
     )
+    disclaimer = (
+        "\u26a0\ufe0f Metrics like Harmony Score and Resonance are purely symbolic "
+        "and carry no monetary value. See README.md lines 12–13 for the full "
+        "disclaimer."
+    )
+    st.markdown(
+        f"<span title='{disclaimer}'><em>{disclaimer}</em></span>",
+        unsafe_allow_html=True,
+    )
 
     if "validations_json" not in st.session_state:
         st.session_state["validations_json"] = ""
