@@ -239,7 +239,15 @@ streamlit run ui.py
 ```
 Or run `make ui` from the repository root to start the demo.
 `ui.py` replaces the previous `app.py` script and is now the canonical entry
-point for the Streamlit interface.
+point for the Streamlit interface.  Common UI patterns like alerts, theme
+switching and layout containers live in `streamlit_helpers.py`:
+
+```python
+from streamlit_helpers import header, alert, theme_selector, centered_container
+```
+
+Import these helpers at the top of your Streamlit files to keep the UI code
+clean and consistent.
 Run these commands from the repository root. **Do not** execute `python ui.py`
 directly as that bypasses Streamlit's runtime.
 

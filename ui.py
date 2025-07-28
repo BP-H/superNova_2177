@@ -10,7 +10,13 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
-from streamlit_helpers import alert, header
+from streamlit_helpers import (
+    alert,
+    header,
+    theme_selector,
+    centered_container,
+    apply_theme,
+)
 
 try:
     import plotly.graph_objects as go
@@ -389,16 +395,8 @@ def main() -> None:
         st.session_state["agent_output"] = None
     if "theme" not in st.session_state:
         st.session_state["theme"] = "light"
-
-    if st.session_state["theme"] == "dark":
-        st.markdown(
-            """
-            <style>
-            body, .stApp { background-color: #1e1e1e; color: #f0f0f0; }
-            </style>
-            """,
-            unsafe_allow_html=True,
-        )
+    apply_theme(st.session_state["theme"])
+    centered_container()
 
     st.markdown(
         "Upload a JSON file with a `validations` array, paste JSON below, "
@@ -452,8 +450,7 @@ def main() -> None:
         st.subheader("Settings")
         demo_mode_choice = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
         demo_mode = demo_mode_choice == "Demo"
-        theme_choice = st.radio("Theme", ["Light", "Dark"], index=(1 if st.session_state["theme"]=="dark" else 0), horizontal=True)
-        st.session_state["theme"] = theme_choice.lower()
+        theme_selector("Theme")
 
         VCConfig.HIGH_RISK_THRESHOLD = st.slider(
             "High Risk Threshold", 0.1, 1.0, float(VCConfig.HIGH_RISK_THRESHOLD), 0.05
