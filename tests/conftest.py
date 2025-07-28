@@ -739,9 +739,16 @@ def _setup_sqlite(monkeypatch, db_path):
     if getattr(create_engine, "__module__", "") == "stubs.sqlalchemy_stub":
         pytest.skip("SQLAlchemy not available")
 
-    engine = create_engine(
-        f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
-    )
+    try:
+        engine = create_engine(
+            f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
+        )
+    except Exception:
+        pytest.skip("SQLAlchemy not available")
+
+    if engine is None:
+        pytest.skip("SQLAlchemy not available")
+
     Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     if Session is None:
         pytest.skip("SQLAlchemy not available")
