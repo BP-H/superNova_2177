@@ -94,12 +94,16 @@ def build_validation_graph(validations: List[Dict[str, Any]]) -> Dict[str, Any]:
         if normalized_weight >= 0.1:
             edges.append((v1, v2, normalized_weight))
 
+    # Collect node list explicitly for use by callers expecting an ordered
+    # sequence rather than a set.
+    nodes = list(validator_data.keys())
+
     # Detect communities using simple clustering
-    communities = detect_graph_communities(edges, set(validator_data.keys()))
+    communities = detect_graph_communities(edges, set(nodes))
 
     return {
         "edges": edges,
-        "nodes": list(validator_data.keys()),
+        "nodes": nodes,
         "hypothesis_coverage": dict(hypothesis_validators),
         "communities": [list(c) for c in communities],
     }
