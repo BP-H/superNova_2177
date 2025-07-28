@@ -6,7 +6,10 @@ import json
 import uuid
 from pathlib import Path
 from datetime import datetime
-from sqlalchemy.orm import select
+# SQLAlchemy 2.x exposes `select` at the top level. Importing from
+# `sqlalchemy.orm` is no longer valid, so we import from the main package
+# for compatibility with newer versions.
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from db_models import (

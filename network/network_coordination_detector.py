@@ -11,6 +11,11 @@ This module can be profiled with ``cProfile`` to identify heavy NumPy or
 NetworkX sections when analyzing large validation graphs::
 
     python -m cProfile -s time network/network_coordination_detector.py
+
+To avoid issues when running under Streamlit, the detection functions use
+``ThreadPoolExecutor`` by default instead of spawning new processes. Set the
+``COORDINATION_USE_PROCESS_POOL`` environment variable to ``1`` to force the
+use of ``ProcessPoolExecutor`` when true concurrency is desirable.
 """
 
 import itertools
@@ -18,7 +23,7 @@ import logging
 import math
 import os
 from collections import defaultdict
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from datetime import datetime, timedelta
 from functools import lru_cache
 from multiprocessing import get_context
@@ -27,6 +32,11 @@ from typing import Any, Dict, List, Set, Tuple
 
 logger = logging.getLogger("superNova_2177.coordination")
 logger.propagate = False
+
+# Use threads by default because spawning new processes can fail in
+# restricted environments like Streamlit. Set the environment variable
+# ``COORDINATION_USE_PROCESS_POOL=1`` to force ``ProcessPoolExecutor``.
+USE_PROCESS_POOL = os.environ.get("COORDINATION_USE_PROCESS_POOL") == "1"
 
 
 class Config:
@@ -241,7 +251,9 @@ def detect_temporal_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
         for i in range(0, len(pairs), chunk_size)
     ]
 
-    with ProcessPoolExecutor(mp_context=get_context("spawn")) as executor:
+    executor_cls = ProcessPoolExecutor if USE_PROCESS_POOL else ThreadPoolExecutor
+    ctx = {"mp_context": get_context("spawn")} if USE_PROCESS_POOL else {}
+    with executor_cls(**ctx) as executor:
         results = executor.map(_temporal_worker, chunks, itertools.repeat(window))
         for clusters, chunk_flags in results:
             temporal_clusters.extend(clusters)
@@ -297,7 +309,9 @@ def detect_score_coordination(validations: List[Dict[str, Any]]) -> Dict[str, An
         for i in range(0, len(items), chunk_size)
     ]
 
-    with ProcessPoolExecutor(mp_context=get_context("spawn")) as executor:
+    executor_cls = ProcessPoolExecutor if USE_PROCESS_POOL else ThreadPoolExecutor
+    ctx = {"mp_context": get_context("spawn")} if USE_PROCESS_POOL else {}
+    with executor_cls(**ctx) as executor:
         results = executor.map(_score_worker, chunks)
         for clusters, chunk_flags in results:
             score_clusters.extend(clusters)
