@@ -5,6 +5,8 @@ import logging
 import math
 import os
 import asyncio
+import sys
+import traceback
 from datetime import datetime
 from pathlib import Path
 
@@ -13,9 +15,14 @@ import networkx as nx
 import streamlit as st
 
 # Basic page setup so Streamlit responds immediately on load
-st.set_page_config(page_title="superNova_2177", layout="wide")
-st.title("superNova_2177")
-st.success("\u2705 Streamlit loaded!")
+try:
+    st.set_page_config(page_title="superNova_2177", layout="wide")
+except Exception:
+    logging.exception("Failed to set Streamlit page config")
+    print("Failed to set Streamlit page config", file=sys.stderr)
+else:
+    st.title("superNova_2177")
+    st.success("\u2705 Streamlit loaded!")
 from streamlit_helpers import (
     alert,
     header,
@@ -1007,8 +1014,14 @@ def main() -> None:
         render_agent_insights_tab()
 if __name__ == "__main__":
     logger.info("\u2705 Streamlit UI started. Launching main()...")
+    print("Starting Streamlit UI...", file=sys.stderr)
     try:
         main()
+    except Exception:
+        logger.exception("UI startup failed")
+        print("Startup failed", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+        raise
+    else:
         st.success("\u2705 UI Booted")
-    except Exception as e:
-        st.error(f"Startup failed: {e}")
+        print("Startup successful", file=sys.stderr)
