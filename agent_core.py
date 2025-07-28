@@ -268,11 +268,31 @@ class RemixAgent:
                 },
             )
         elif ev == "MINT":
-            if self.storage.get_user(event["user"]):
-                self.storage.set_coin(
-                    event["coin_id"],
-                    {"owner": event["user"], "value": event.get("value", "0")},
-                )
+            user = event.get("user")
+            user_data = self.storage.get_user(user)
+            if not user_data:
+                return
+
+            root_coin_id = event.get("root_coin_id")
+            root_coin = self.storage.get_coin(root_coin_id)
+            if not root_coin or root_coin.get("owner") != user:
+                return
+
+            try:
+                root_value = Decimal(str(root_coin.get("value", "0")))
+                mint_value = Decimal(str(event.get("value", "0")))
+            except Exception:
+                return
+
+            if mint_value > root_value:
+                return
+
+            root_coin["value"] = str(root_value - mint_value)
+            self.storage.set_coin(root_coin_id, root_coin)
+            self.storage.set_coin(
+                event["coin_id"],
+                {"owner": user, "value": event.get("value", "0")},
+            )
         elif ev == "REVOKE_CONSENT":
             u = self.storage.get_user(event["user"])
             if u:
