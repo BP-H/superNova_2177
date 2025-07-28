@@ -30,6 +30,8 @@ def test_db(tmp_path, monkeypatch):
     test_url = f"sqlite:///{tmp_path}/test.db"
     engine = create_engine(test_url, connect_args={"check_same_thread": False})
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    if TestingSessionLocal is None:
+        pytest.skip("SQLAlchemy not available")
     sn.Base.metadata.create_all(bind=engine)
     monkeypatch.setattr(sn, "SessionLocal", TestingSessionLocal)
     db = TestingSessionLocal()
