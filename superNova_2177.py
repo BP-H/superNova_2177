@@ -233,6 +233,7 @@ import threading
 import base64
 import re
 import logging
+import socket
 import time
 import html
 import os
@@ -627,6 +628,24 @@ file_handler.setFormatter(
 logging.getLogger().addHandler(console_handler)
 
 # Prometheus metrics
+def _start_metrics_server() -> int:
+    port = getattr(Config, "_METRIC_PORT", Config.METRICS_PORT)
+    if getattr(Config, "_metrics_started", False):
+        return port
+    try:
+        prom.start_http_server(port)
+        Config._metrics_started = True
+        Config._METRIC_PORT = port
+        return port
+    except OSError:
+        with socket.socket() as s:
+            s.bind(("", 0))
+            alt_port = s.getsockname()[1]
+        prom.start_http_server(alt_port)
+        Config._metrics_started = True
+        Config._METRIC_PORT = alt_port
+        logger.warning("Prometheus metrics server using alternate port %s", alt_port)
+        return alt_port
 if "system_entropy" in REGISTRY._names_to_collectors:
     entropy_gauge = REGISTRY._names_to_collectors["system_entropy"]
 else:
@@ -642,14 +661,7 @@ if "total_vibenodes" in REGISTRY._names_to_collectors:
 else:
     vibenodes_gauge = prom.Gauge("total_vibenodes", "Total number of vibenodes")
 
-try:
-    prom.start_http_server(Config.METRICS_PORT)  # Metrics endpoint
-except OSError as exc:  # pragma: no cover - system specific
-    logger.warning(
-        "Prometheus metrics server could not start on port %s: %s",
-        Config.METRICS_PORT,
-        exc,
-    )
+_start_metrics_server()
 
 
 
@@ -1152,8 +1164,15 @@ def is_valid_username(name: str) -> bool:
     return name.lower() not in reserved
 
 
-def is_valid_emoji(emoji: str, config: "Config") -> bool:
-    return emoji in config.EMOJI_WEIGHTS
+def is_valid_emoji(emoji: str | None, config: "Config") -> bool:
+    if emoji is None:
+        return False
+    weights = (
+        config.get_emoji_weights()
+        if hasattr(config, "get_emoji_weights")
+        else config.EMOJI_WEIGHTS
+    )
+    return emoji in weights
 
 
 def sanitize_text(text: str, config: "Config") -> str:
@@ -1192,6 +1211,14 @@ class LogChain:
 async def async_add_event(logchain: "LogChain", event: Dict[str, Any]) -> None:
     loop = asyncio.get_event_loop()
     await loop.run_in_executor(None, logchain.add, event)
+
+
+def schedule_add_event(logchain: "LogChain", event: Dict[str, Any]) -> None:
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(async_add_event(logchain, event))
+    except RuntimeError:
+        asyncio.run(async_add_event(logchain, event))
 
 
 # Added for scientific visualization enhancement
@@ -1358,7 +1385,7 @@ def validate_event_payload(event: Dict[str, Any], payload_type: type) -> bool:
     validation_notes="counts within 24h window",
     approximation="heuristic",
 )
-def calculate_content_entropy(db: Session) -> float:
+def calculate_content_entropy(db: Session | None) -> float:
     r"""Calculate Shannon entropy of tags from VibeNodes created in the
     last ``Config.CONTENT_ENTROPY_WINDOW_HOURS`` hours.
 
@@ -1369,7 +1396,10 @@ def calculate_content_entropy(db: Session) -> float:
     assumptions: tags independent
     validation_notes: counts within Config.CONTENT_ENTROPY_WINDOW_HOURS-hour window
     """
-    time_threshold = datetime.datetime.utcnow() - datetime.timedelta(
+    if db is None:
+        return 0.0
+    now = datetime.datetime.now(datetime.timezone.utc)
+    time_threshold = now - datetime.timedelta(
         hours=Config.CONTENT_ENTROPY_WINDOW_HOURS
     )
     nodes = db.query(VibeNode).filter(VibeNode.created_at >= time_threshold).all()

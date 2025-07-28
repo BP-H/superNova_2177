@@ -265,7 +265,7 @@ def is_valid_username(name: str) -> bool:
     approximation="exact",
 )
 @ScientificModel(source="Application configuration", model_type="string validation")
-def is_valid_emoji(emoji: str, config: "Config") -> bool:
+def is_valid_emoji(emoji: str | None, config: "Config") -> bool:
     """Check whether ``emoji`` is allowed by the application configuration.
 
     Parameters
@@ -285,7 +285,14 @@ def is_valid_emoji(emoji: str, config: "Config") -> bool:
     validation_notes: unit tests ensure only configured emoji allowed
     approximation: exact
     """
-    return emoji in config.EMOJI_WEIGHTS
+    if emoji is None:
+        return False
+    weights = (
+        config.get_emoji_weights()
+        if hasattr(config, "get_emoji_weights")
+        else config.EMOJI_WEIGHTS
+    )
+    return emoji in weights
 
 
 @VerifiedScientificModel(
@@ -380,6 +387,15 @@ async def async_add_event(logchain: "LogChain", event: Dict[str, Any]) -> None:
     await loop.run_in_executor(None, logchain.add, event)
 
 
+def schedule_add_event(logchain: "LogChain", event: Dict[str, Any]) -> None:
+    """Schedule :func:`async_add_event` from synchronous code."""
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(async_add_event(logchain, event))
+    except RuntimeError:
+        asyncio.run(async_add_event(logchain, event))
+
+
 @VerifiedScientificModel(
     citation_uri="https://en.wikipedia.org/wiki/Exponential_decay",
     assumptions="linear decay to zero after ``decay_years`` years",
@@ -389,7 +405,7 @@ async def async_add_event(logchain: "LogChain", event: Dict[str, Any]) -> None:
 )
 @ScientificModel(source="Linear decay", model_type="time-decay", approximation="exact")
 def calculate_genesis_bonus_decay(
-    join_time: datetime.datetime, decay_years: int
+    join_time: datetime.datetime | None, decay_years: int
 ) -> Decimal:
     """Calculate remaining genesis bonus weight for a user.
 
@@ -411,6 +427,8 @@ def calculate_genesis_bonus_decay(
     approximation: exact
     value_bounds: (0.0, 1.0)
     """
+    if join_time is None:
+        return Decimal("0")
     years_passed = (now_utc() - join_time).total_seconds() / (365.25 * 24 * 3600)
     if years_passed >= decay_years:
         return Decimal("0")

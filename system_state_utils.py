@@ -2,7 +2,7 @@
 """Helper utilities for SystemState management."""
 
 import json
-import datetime
+from datetime import datetime, UTC
 from typing import Any, Dict
 
 from sqlalchemy import select
@@ -21,7 +21,8 @@ def log_event(db: Session, category: str, payload: Dict[str, Any]) -> None:
             events = json.loads(state.value)
         except Exception:
             events = []
-    entry = {"timestamp": datetime.datetime.utcnow().isoformat(), **payload}
+    now = datetime.now(UTC)
+    entry = {"timestamp": now.isoformat(), **payload}
     events.append(entry)
     if state:
         state.value = json.dumps(events)

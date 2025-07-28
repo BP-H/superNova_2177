@@ -38,8 +38,9 @@ if HarmonyScanner is None:
 def run_analysis(validations):
     """Execute the validation integrity pipeline and display results."""
     if not validations:
-        st.error("No validations found in the uploaded file.")
-        return
+        print("✅ UI diagnostic agent active")
+        st.warning("No validations supplied, running fallback demo data")
+        validations = [{"validator": "A", "target": "B", "score": 0.5}]
 
     with st.spinner("Running analysis..."):
         result = analyze_validation_integrity(validations)

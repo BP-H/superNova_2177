@@ -10,10 +10,16 @@ class Config:
     CREATOR_SHARE: Decimal = Decimal("0.3334")  # To sum to 1
     KARMA_MINT_THRESHOLD: Decimal = Decimal("100")
     MIN_IMPROVEMENT_LEN: int = 50
-    EMOJI_WEIGHTS: Dict[str, Decimal] = {
-        "👍": Decimal("1"),
-        "❤️": Decimal("2"),
-    }  # Add supported emojis
+    EMOJI_WEIGHTS: Dict[str, Decimal] | None = None
+
+    @classmethod
+    def get_emoji_weights(cls) -> Dict[str, Decimal]:
+        if cls.EMOJI_WEIGHTS is None:
+            cls.EMOJI_WEIGHTS = {
+                "👍": Decimal("1"),
+                "❤️": Decimal("2"),
+            }
+        return cls.EMOJI_WEIGHTS
     DAILY_DECAY: Decimal = Decimal("0.99")
     SNAPSHOT_INTERVAL: int = 100
     MAX_INPUT_LENGTH: int = 10000

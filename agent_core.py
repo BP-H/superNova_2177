@@ -459,9 +459,14 @@ class RemixAgent:
         if not coin_data:
             return
         coin = Coin.from_dict(coin_data, self.config)
-        if event["emoji"] not in self.config.EMOJI_WEIGHTS:
+        weights = (
+            self.config.get_emoji_weights()
+            if hasattr(self.config, "get_emoji_weights")
+            else self.config.EMOJI_WEIGHTS
+        )
+        if event["emoji"] not in weights:
             return
-        weight = self.config.EMOJI_WEIGHTS[event["emoji"]]
+        weight = weights[event["emoji"]]
         locks = [reactor_obj.lock, coin.lock]
         with acquire_multiple_locks(locks):
             coin.add_reaction(
