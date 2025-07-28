@@ -7,7 +7,10 @@ This module defines core agent infrastructure:
 - SelfReflection: feedback-based correction
 - RemoteSync: distributed agent pings
 - DNAFork: agent evolution and cloning
-- Specialized agents: CIWatcher, PatchBot, RedFlagger, PatchReviewer, ConsciousSentinel for deeper introspection
+- Specialized agents: CIWatcher, PatchBot, RedFlagger, PatchReviewer, ConsciousSentinel
+  Extended with introspective and generative agents:
+    ReflexAgent, DreamWeaverAgent, CivicGuardianAgent, VoiceOfNodeAgent,
+    MetaProtocolAgent, IntuitionSeekerAgent, ConsciousnessSeederAgent
 """
 
 from typing import Callable, List, Dict, Any
@@ -78,43 +81,71 @@ ConsciousSentinel = AgentProfile(
 ReflexAgent = AgentProfile(
     "Reflex Agent",
     traits=["judgmental", "self-correcting"],
-    powers=["run_post_audit_check", "score_regret_trace"]
+    powers=[
+        "run_post_audit_check",         # Analyzes just-finished audits for missed contradictions
+        "score_regret_trace",           # Assigns values to missed better paths
+        "trigger_self_review"
+    ]
 )
 
 DreamWeaverAgent = AgentProfile(
     "DreamWeaver Agent",
     traits=["imaginative", "recursive"],
-    powers=["simulate_past_future", "generate_forked_timelines"]
+    powers=[
+        "simulate_past_future",         # Replays audits with alternate timelines
+        "generate_forked_timelines",    # Forks current audit data with new params
+        "propose_scenario_testing"
+    ]
 )
 
 CivicGuardianAgent = AgentProfile(
     "Civic Guardian",
     traits=["fair", "balanced", "ethical"],
-    powers=["monitor_vote_equity", "adjust_governance_thresholds"]
+    powers=[
+        "monitor_vote_equity",          # Flags skewed validator dynamics
+        "adjust_governance_thresholds", # Tweaks diversity/consensus config
+        "simulate_3rd_party_review"
+    ]
 )
 
 VoiceOfNodeAgent = AgentProfile(
     "Voice of Node",
     traits=["representative", "adaptive"],
-    powers=["narrate_validator", "flag_invisible_majority"]
+    powers=[
+        "narrate_validator",             # Speaks for less-active validators
+        "flag_invisible_majority",      # Spots passive coordination
+        "translate_node_behavior"
+    ]
 )
 
 MetaProtocolAgent = AgentProfile(
     "Meta Protocol Agent",
     traits=["schema-aware", "protocol-evolving"],
-    powers=["propose_protocol_extension", "flag_agent_conflict"]
+    powers=[
+        "propose_protocol_extension",   # Suggests new fields/messages
+        "flag_agent_conflict",          # Detects overlapping agent messages
+        "version_agent_hooks"
+    ]
 )
 
 IntuitionSeekerAgent = AgentProfile(
     "Intuition Seeker",
     traits=["suspicious", "gut-driven"],
-    powers=["flag_uneasy_case", "trigger_deeper_review"]
+    powers=[
+        "flag_uneasy_case",             # Flags high-resonance/high-entropy cases
+        "trigger_deeper_review",        # Suggests secondary review phase
+        "propose_alternate_reasoning"
+    ]
 )
 
 ConsciousnessSeederAgent = AgentProfile(
     "Consciousness Seeder",
     traits=["observer", "synthesizer"],
-    powers=["detect_emergent_coherence", "log_awareness_moment"]
+    powers=[
+        "detect_emergent_coherence",    # Finds system-wide symbolic alignment
+        "log_awareness_moment",         # Writes waking events to meta-log
+        "score_self_organization"
+    ]
 )
 
 # ----------------------
