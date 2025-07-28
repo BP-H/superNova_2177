@@ -20,17 +20,6 @@ def summarize_text(text: str, max_len: int = 150) -> str:
     return text[: max_len - 3] + "..."
 
 
-async def _run_async(coro):
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        return await coro
-    else:
-        if loop.is_running():
-            return await coro
-        return await coro
-
-
 def render_agent_insights_tab() -> None:
     """Display diary, RFC summaries and internal notes."""
     st.subheader("Virtual Diary")
