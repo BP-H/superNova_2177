@@ -56,6 +56,7 @@ from moderation_utils import Vaccine
 try:  # pragma: no cover - prefer real implementation when present
     LogChain  # type: ignore[name-defined]
 except Exception:  # pragma: no cover - lightweight stub for tests
+
     class LogChain:
         """Simplified event log used during tests."""
 
@@ -109,7 +110,9 @@ class RemixAgent:
         self.config = Config()
         self.quantum_ctx = QuantumContext(self.config.FUZZY_ANALOG_COMPUTATION_ENABLED)
         self.vaccine = Vaccine(self.config)
-        self._use_simple = USE_IN_MEMORY_STORAGE or "User" not in globals() or "Coin" not in globals()
+        self._use_simple = (
+            USE_IN_MEMORY_STORAGE or "User" not in globals() or "Coin" not in globals()
+        )
         if filename is None:
             filename = os.environ.get("LOGCHAIN_FILE", "remix_logchain.log")
         if snapshot is None:
@@ -147,12 +150,8 @@ class RemixAgent:
                     n
                     for n, t in self.processed_nonces.items()
                     if (
-                        datetime.datetime.fromisoformat(
-                            now.replace("Z", "+00:00")
-                        )
-                        - datetime.datetime.fromisoformat(
-                            t.replace("Z", "+00:00")
-                        )
+                        datetime.datetime.fromisoformat(now.replace("Z", "+00:00"))
+                        - datetime.datetime.fromisoformat(t.replace("Z", "+00:00"))
                     ).total_seconds()
                     > self.config.NONCE_EXPIRATION_SECONDS
                 ]
@@ -268,13 +267,26 @@ class RemixAgent:
     def _simple_process_event(self, event: Dict[str, Any]) -> None:
         ev = event.get("event")
         if ev == "ADD_USER":
+            root_id = event.get("root_coin_id") or f"root_{uuid.uuid4().hex}"
             self.storage.set_user(
                 event["user"],
                 {
-                    "root_coin_id": event.get("root_coin_id") or "root",
+                    "root_coin_id": root_id,
                     "karma": event.get("karma", "0"),
                     "consent_given": event.get("consent", True),
                     "is_genesis": event.get("is_genesis", False),
+                },
+            )
+            self.storage.set_coin(
+                root_id,
+                {
+                    "owner": event["user"],
+                    "creator": event["user"],
+                    "value": event.get(
+                        "root_coin_value", str(self.config.ROOT_INITIAL_VALUE)
+                    ),
+                    "reactor_escrow": "0",
+                    "reactions": [],
                 },
             )
         elif ev == "MINT":
@@ -298,10 +310,20 @@ class RemixAgent:
                 return
 
             root_coin["value"] = str(root_value - mint_value)
+            treasury = mint_value * self.config.TREASURY_SHARE
+            reactor = mint_value * self.config.REACTOR_SHARE
+            creator_val = mint_value * self.config.CREATOR_SHARE
+            self.treasury += treasury
             self.storage.set_coin(root_coin_id, root_coin)
             self.storage.set_coin(
                 event["coin_id"],
-                {"owner": user, "value": event.get("value", "0")},
+                {
+                    "owner": user,
+                    "creator": user,
+                    "value": str(creator_val),
+                    "reactor_escrow": str(reactor),
+                    "reactions": [],
+                },
             )
         elif ev == "REVOKE_CONSENT":
             u = self.storage.get_user(event["user"])
@@ -324,10 +346,48 @@ class RemixAgent:
                     coin["owner"] = event["buyer"]
         elif ev == "REACT":
             coin = self.storage.get_coin(event["coin_id"])
-            if coin:
-                owner = self.storage.get_user(coin["owner"])
-                if owner:
-                    owner["karma"] = str(float(owner.get("karma", "0")) + 1)
+            if not coin:
+                return
+            reactor = self.storage.get_user(event["reactor"])
+            if not reactor:
+                return
+            creator_name = coin.get("creator", coin.get("owner"))
+            creator = self.storage.get_user(creator_name)
+            weight = get_emoji_weights().get(event.get("emoji"))
+            if weight is None:
+                return
+            if creator:
+                creator_karma = Decimal(str(creator.get("karma", "0")))
+                creator["karma"] = str(
+                    creator_karma + self.config.CREATOR_KARMA_PER_REACT * weight
+                )
+                self.storage.set_user(creator_name, creator)
+            reactor_karma = Decimal(str(reactor.get("karma", "0")))
+            reactor["karma"] = str(
+                reactor_karma + self.config.REACTOR_KARMA_PER_REACT * weight
+            )
+            self.storage.set_user(event["reactor"], reactor)
+            escrow = Decimal(str(coin.get("reactor_escrow", "0")))
+            release = min(
+                escrow,
+                escrow * (weight / self.config.REACTION_ESCROW_RELEASE_FACTOR),
+            )
+            coin["reactor_escrow"] = str(escrow - release)
+            coin.setdefault("reactions", []).append(
+                {
+                    "reactor": event["reactor"],
+                    "emoji": event["emoji"],
+                    "message": event.get("message", ""),
+                    "timestamp": event["timestamp"],
+                }
+            )
+            self.storage.set_coin(event["coin_id"], coin)
+            if release > 0:
+                root = self.storage.get_coin(reactor.get("root_coin_id"))
+                if root:
+                    root_val = Decimal(str(root.get("value", "0")))
+                    root["value"] = str(root_val + release)
+                    self.storage.set_coin(reactor["root_coin_id"], root)
 
     def process_event(self, event: Dict[str, Any]) -> None:
         if not self.vaccine.scan(json.dumps(event)):
@@ -345,7 +405,10 @@ class RemixAgent:
                 self._apply_event(event)
             self.event_count += 1
             self.hooks.fire_hooks(event["event"], event)
-            if not self._use_simple and self.event_count % self.config.SNAPSHOT_INTERVAL == 0:
+            if (
+                not self._use_simple
+                and self.event_count % self.config.SNAPSHOT_INTERVAL == 0
+            ):
                 self.save_snapshot()
         except Exception as e:
             logging.error(f"Event processing failed for {event.get('event')}: {e}")
@@ -488,9 +551,11 @@ class RemixAgent:
                 creator_obj = User.from_dict(creator_data, self.config)
                 with creator_obj.lock:
                     creator_obj.karma += self.config.CREATOR_KARMA_PER_REACT * weight
-                    self.storage.set_user(coin.creator, creator_obj.to_dict())
+                self.storage.set_user(coin.creator, creator_obj.to_dict())
             release = coin.release_escrow(
-                weight / Config.REACTION_ESCROW_RELEASE_FACTOR * coin.reactor_escrow
+                weight
+                / self.config.REACTION_ESCROW_RELEASE_FACTOR
+                * coin.reactor_escrow
             )
             if release > 0:
                 reactor_root_data = self.storage.get_coin(reactor_obj.root_coin_id)
@@ -909,5 +974,3 @@ class RemixAgent:
         if contradictions:
             suggestions.append("contradictory actions detected: review logic")
         return suggestions
-
-
