@@ -31,4 +31,6 @@ Replace the backend URL with the `BACKEND_URL` environment variable if your API 
 
 ## Notes
 
-This UI is mobile-first with a futuristic aesthetic (dark mode and neon accents). A theme toggle is built in so you can switch between light and dark palettes. Future improvements include real-time notifications and internationalization.
+This UI is mobile-first with a futuristic aesthetic. A theme selector cycles between
+dark, light, and a new **modern** palette powered by the Inter font.
+Future improvements include real-time notifications and internationalization.
