@@ -3611,7 +3611,10 @@ class SQLAlchemyStorage(AbstractStorage):
             db.close()
 
     def get_user(self, name: str) -> Optional[Dict]:
-        cached = redis_client.get(f"user:{name}")
+        try:
+            cached = redis_client.get(f"user:{name}")
+        except Exception:  # redis unavailable
+            cached = None
         if cached:
             return json.loads(cached)
         db = self._get_session()
@@ -3620,14 +3623,20 @@ class SQLAlchemyStorage(AbstractStorage):
             if user:
                 data = user.__dict__.copy()
                 data.pop("_sa_instance_state", None)
-                redis_client.setex(f"user:{name}", 300, json.dumps(data))
+                try:
+                    redis_client.setex(f"user:{name}", 300, json.dumps(data))
+                except Exception:
+                    pass
                 return data
             return None
         finally:
             db.close()
 
     def set_user(self, name: str, data: Dict):
-        redis_client.delete(f"user:{name}")
+        try:
+            redis_client.delete(f"user:{name}")
+        except Exception:
+            pass
         db = self._get_session()
         try:
             user = db.query(Harmonizer).filter(Harmonizer.username == name).first()
@@ -3649,7 +3658,10 @@ class SQLAlchemyStorage(AbstractStorage):
             db.close()
 
     def get_coin(self, coin_id: str) -> Optional[Dict[str, Any]]:
-        cached = redis_client.get(f"coin:{coin_id}")
+        try:
+            cached = redis_client.get(f"coin:{coin_id}")
+        except Exception:
+            cached = None
         if cached:
             return json.loads(cached)
         db = self._get_session()
@@ -3658,14 +3670,20 @@ class SQLAlchemyStorage(AbstractStorage):
             if coin:
                 data = coin.__dict__.copy()
                 data.pop("_sa_instance_state", None)
-                redis_client.setex(f"coin:{coin_id}", 300, json.dumps(data))
+                try:
+                    redis_client.setex(f"coin:{coin_id}", 300, json.dumps(data))
+                except Exception:
+                    pass
                 return data
             return None
         finally:
             db.close()
 
     def set_coin(self, coin_id: str, data: Dict[str, Any]):
-        redis_client.delete(f"coin:{coin_id}")
+        try:
+            redis_client.delete(f"coin:{coin_id}")
+        except Exception:
+            pass
         db = self._get_session()
         try:
             coin = db.query(Coin).filter(Coin.coin_id == coin_id).first()
