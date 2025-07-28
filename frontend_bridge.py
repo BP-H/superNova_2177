@@ -90,3 +90,8 @@ register_route("temporal_consistency", analyze_temporal_ui)
 
 # Optimization-related route
 register_route("tune_parameters", tune_parameters_ui)
+
+# Social simulation route
+from social.ui_hook import simulate_entanglement_ui
+
+register_route("simulate_entanglement", simulate_entanglement_ui)
