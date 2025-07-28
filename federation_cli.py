@@ -154,9 +154,9 @@ def vote_fork(args: argparse.Namespace) -> None:
             print("Vote already recorded for this fork")
             return
 
-        fork.vote_count += 1
+        fork.vote_count = (fork.vote_count or 0) + 1
         if vote_bool:
-            fork.yes_count += 1
+            fork.yes_count = (fork.yes_count or 0) + 1
         if basis is None:
             fork.consensus = fork.yes_count / fork.vote_count
         else:  # parity-based quantum consensus
