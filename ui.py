@@ -1,10 +1,11 @@
 import json
-import streamlit as st
-import networkx as nx
-import matplotlib.pyplot as plt
 
-from validation_integrity_pipeline import analyze_validation_integrity
+import matplotlib.pyplot as plt
+import networkx as nx
+import streamlit as st
+
 from network.network_coordination_detector import build_validation_graph
+from validation_integrity_pipeline import analyze_validation_integrity
 
 try:
     from config import Config
@@ -104,8 +105,37 @@ def main() -> None:
 
     if run_clicked:
         if demo_mode:
-            with open("sample_validations.json") as f:
-                data = json.load(f)
+            try:
+                with open("sample_validations.json") as f:
+                    data = json.load(f)
+            except FileNotFoundError:
+                st.warning(
+                    "sample_validations.json not found, loading fallback demo data"
+                )
+                data = {
+                    "validations": [
+                        {
+                            "validator_id": "demo_user",
+                            "score": 0.9,
+                            "confidence": 0.8,
+                            "signal_strength": 0.75,
+                            "note": "Example validation",
+                            "timestamp": "2025-01-01T00:00:00Z",
+                            "specialty": "example",
+                            "affiliation": "DemoOrg",
+                        },
+                        {
+                            "validator_id": "demo_partner",
+                            "score": 0.85,
+                            "confidence": 0.7,
+                            "signal_strength": 0.65,
+                            "note": "Another validation",
+                            "timestamp": "2025-01-02T00:00:00Z",
+                            "specialty": "example",
+                            "affiliation": "DemoOrg",
+                        },
+                    ]
+                }
         elif uploaded_file is not None:
             data = json.load(uploaded_file)
         else:
