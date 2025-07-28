@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from frontend_bridge import register_route
 from db_models import SessionLocal
 from protocols.core import JobQueueAgent
 
@@ -69,5 +68,3 @@ async def poll_full_audit_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return queue_agent.get_status(job_id)
 
 
-register_route("queue_full_audit", queue_full_audit_ui)
-register_route("poll_full_audit", poll_full_audit_ui)

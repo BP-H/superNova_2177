@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from frontend_bridge import register_route
 from hook_manager import HookManager
 from hooks import events
 
@@ -27,6 +26,3 @@ async def propose_fix_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
-# Register with the central frontend router
-register_route("inspect_suggestion", inspect_suggestion_ui)
-register_route("propose_fix", propose_fix_ui)

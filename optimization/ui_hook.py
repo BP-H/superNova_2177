@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from frontend_bridge import register_route
 from hook_manager import HookManager
 from optimization_engine import tune_system_parameters
 
@@ -18,5 +17,3 @@ async def tune_parameters_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return overrides
 
 
-# Register with the central frontend router
-register_route("tune_parameters", tune_parameters_ui)

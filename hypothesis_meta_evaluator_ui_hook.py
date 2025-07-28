@@ -4,7 +4,6 @@ from typing import Any, Dict
 
 from db_models import SessionLocal
 from hook_manager import HookManager
-from frontend_bridge import register_route
 from hypothesis_meta_evaluator import run_meta_evaluation
 
 ui_hook_manager = HookManager()

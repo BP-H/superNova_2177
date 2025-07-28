@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from frontend_bridge import register_route
 from hook_manager import HookManager
 from hooks import events
 from protocols.core import JobQueueAgent
@@ -60,7 +59,3 @@ async def poll_consensus_forecast_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return queue_agent.get_status(job_id)
 
 
-# Register route with the frontend bridge
-register_route("forecast_consensus", forecast_consensus_ui)
-register_route("queue_consensus_forecast", queue_consensus_forecast_ui)
-register_route("poll_consensus_forecast", poll_consensus_forecast_ui)

@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict
 
-from frontend_bridge import register_route
 from hook_manager import HookManager
 from hooks import events
 from validator_reputation_tracker import update_validator_reputations
@@ -104,8 +103,3 @@ async def trigger_reputation_update_ui(payload: Dict[str, Any]) -> Dict[str, Any
     return summary
 
 
-# Register with the central frontend router
-register_route("reputation_analysis", compute_reputation_ui)
-register_route("update_validator_reputations", update_reputations_ui)
-register_route("reputation_update", trigger_reputation_update_ui)
-register_route("compute_diversity", compute_diversity_ui)

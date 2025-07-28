@@ -4,7 +4,6 @@ from typing import Any, Dict
 
 from db_models import SessionLocal
 from hook_manager import HookManager
-from frontend_bridge import register_route
 from hypothesis_reasoner import auto_flag_stale_or_redundant
 
 ui_hook_manager = HookManager()

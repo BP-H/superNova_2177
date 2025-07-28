@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
-from frontend_bridge import register_route
 from hook_manager import HookManager
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
@@ -54,6 +53,3 @@ async def submit_universe_proposal(payload: Dict[str, Any]) -> Dict[str, Any]:
     return {"proposal_id": proposal_id}
 
 
-register_route("get_universe_overview", get_universe_overview)
-register_route("list_available_proposals", list_available_proposals)
-register_route("submit_universe_proposal", submit_universe_proposal)

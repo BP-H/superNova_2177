@@ -3,7 +3,6 @@ from __future__ import annotations
 import base64
 from typing import Any, Callable, Dict, Optional
 
-from frontend_bridge import register_route
 from hook_manager import HookManager
 from hooks import events
 
@@ -27,5 +26,3 @@ async def generate_midi_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return {"midi_base64": encoded}
 
 
-# Register route with the central frontend router
-register_route("generate_midi", generate_midi_ui)

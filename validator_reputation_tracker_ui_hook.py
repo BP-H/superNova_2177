@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from frontend_bridge import register_route
 from hook_manager import HookManager
 from validator_reputation_tracker import update_validator_reputations
 

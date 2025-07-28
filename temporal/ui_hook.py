@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from frontend_bridge import register_route
 from hook_manager import HookManager
 from temporal_consistency_checker import analyze_temporal_consistency
 
@@ -26,4 +25,3 @@ async def analyze_temporal_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return minimal
 
 
-register_route("temporal_consistency", analyze_temporal_ui)
