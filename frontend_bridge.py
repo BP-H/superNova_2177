@@ -68,10 +68,12 @@ from predictions.ui_hook import (
 )
 
 from optimization.ui_hook import tune_parameters_ui
+from quantum_sim.ui_hook import quantum_prediction_ui
 
 register_route("store_prediction", store_prediction_ui)
 register_route("get_prediction", get_prediction_ui)
 register_route("update_prediction_status", update_prediction_status_ui)
+register_route("quantum_prediction", quantum_prediction_ui)
 
 # Protocol agent management routes
 from protocols.api_bridge import (
