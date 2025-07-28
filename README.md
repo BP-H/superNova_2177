@@ -72,7 +72,7 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
   If you prefer to manage the environment manually, install the required
   packages yourself using `requirements.txt`:
   ```bash
-  pip install -r requirements.txt  # installs numpy, python-dateutil, email-validator, streamlit_json, streamlit-ace, etc.
+  pip install -r requirements.txt  # installs numpy, python-dateutil, email-validator, streamlit-ace, etc.
   ```
    A PyPI wheel is currently unavailable. Run `python setup_env.py` or use the online installer scripts:
    ```bash
@@ -177,7 +177,7 @@ Set up a Python environment and install the package and its dependencies:
 ```bash
 pip install .
 # install optional libraries used by the tests
-pip install -r requirements.txt  # includes streamlit_json and streamlit-ace
+pip install -r requirements.txt  # includes streamlit-ace
 # To install the exact versions used during development,
 # use the generated `requirements.lock` file instead:
 # pip install -r requirements.lock
@@ -294,7 +294,7 @@ Before running the tests, install the packages from `requirements.txt` (or the e
 
 ```bash
 python setup_env.py --locked  # install from requirements.lock
-pip install -r requirements.txt  # installs streamlit_json and streamlit-ace
+pip install -r requirements.txt  # installs streamlit-ace
 ```
 
 ### Test Requirements
