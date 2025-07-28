@@ -17,6 +17,7 @@ __all__ = [
     "network_page",
     "system_insights_page",
     "forks_page",
+    "validator_graph_page",
 ]
 
 
