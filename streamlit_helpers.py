@@ -1,4 +1,8 @@
-"""Streamlit UI helper utilities."""
+"""Streamlit UI helper utilities.
+
+This module provides small helpers used across the Streamlit
+applications to keep the UI code concise and consistent.
+"""
 
 from __future__ import annotations
 
@@ -23,5 +27,15 @@ def alert(message: str, level: Literal["warning", "error", "info"] = "info") -> 
         unsafe_allow_html=True,
     )
 
-__all__ = ["alert"]
+
+def header(title: str, *, layout: str = "centered") -> None:
+    """Render a standard page header and apply base styling."""
+    st.set_page_config(page_title=title, layout=layout)
+    st.markdown(
+        "<style>.app-container{padding:1rem 2rem;}" "</style>",
+        unsafe_allow_html=True,
+    )
+    st.header(title)
+
+__all__ = ["alert", "header"]
 
