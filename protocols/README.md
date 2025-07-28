@@ -9,3 +9,9 @@ This package contains modular agents and supporting utilities used for automated
 - **ObserverAgent** – monitors agent outputs and suggests forks when needed.
 
 Utilities, core interfaces, and prebuilt profiles are organized under corresponding subfolders for easy extension.
+
+```python
+from protocols import GuardianInterceptorAgent, CI_PRProtectorAgent
+```
+
+See `protocols/_registry.py` for a programmatic listing of available agents.
