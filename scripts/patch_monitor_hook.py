@@ -8,14 +8,14 @@ from governance.patch_monitor import check_patch_compliance  # noqa: E402
 
 
 def main() -> int:
-    git_cmd = which("git")
-    if git_cmd is None:
-        print("git executable not found")
-        return 1
+    git_cmd = which("git") or "git"
     try:
         diff = subprocess.check_output(  # nosec B607,B603
             [git_cmd, "diff", "--cached"], text=True
         )
+    except FileNotFoundError:
+        print("git executable not found")
+        return 1
     except subprocess.CalledProcessError as e:
         print(f"Failed to generate diff: {e}")
         return 1

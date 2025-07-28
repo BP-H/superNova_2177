@@ -7,6 +7,11 @@ from scripts import patch_monitor_hook
 
 def test_main_git_missing(monkeypatch, capsys):
     monkeypatch.setattr(patch_monitor_hook, "which", lambda cmd: None)
+    monkeypatch.setattr(
+        patch_monitor_hook.subprocess,
+        "check_output",
+        lambda *a, **k: (_ for _ in ()).throw(FileNotFoundError()),
+    )
     assert patch_monitor_hook.main() == 1
     out = capsys.readouterr().out.strip()
     assert "git executable not found" in out
