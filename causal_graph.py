@@ -517,7 +517,8 @@ class InfluenceGraph(CausalGraph):
             return ""
 
         key = f"{key_prefix}_{int(datetime.utcnow().timestamp())}"
-        state = db_session.query(SystemState).filter(SystemState.key == key).first()
+        stmt = select(SystemState).where(SystemState.key == key)
+        state = db_session.execute(stmt).scalar_one_or_none()
         if state:
             state.value = data
         else:
