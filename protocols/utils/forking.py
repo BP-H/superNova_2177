@@ -1,4 +1,6 @@
-"""Create mutated copies of existing agents."""
+"""Utilities for creating mutated copies of agents."""
+
+__all__ = ["fork_agent"]
 from typing import Any, Dict
 import copy
 
