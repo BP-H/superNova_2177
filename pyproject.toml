@@ -43,7 +43,11 @@ dependencies = [
     "scikit-learn",
     "streamlit",
     "asyncpg",
-    "email-validator"
+    "email-validator",
+    "altair>=0",
+    "streamlit_json>=0",
+    "streamlit-ace>=0",
+    "streamlit-lottie>=0",
 ]
 
 [project.scripts]

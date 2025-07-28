@@ -39,3 +39,8 @@ qrcode
 asyncpg
 email-validator
 httpx==0.27.0
+pandas>=0
+altair>=0
+streamlit_json>=0
+streamlit-ace>=0
+streamlit-lottie>=0
