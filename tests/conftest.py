@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 import importlib.util
+import types
 
 _orig_find_spec = importlib.util.find_spec
 
@@ -165,6 +166,33 @@ if "superNova_2177" not in sys.modules:
         def __init__(self, session_factory, state_service):
             self.session_factory = session_factory
             self.state_service = state_service
+            self.sub_universes = {}
+
+        def fork_universe(self, user, custom_config):
+            """Create a minimal fork record and child agent."""
+            from db_models import UniverseBranch
+            import datetime
+
+            fork_id = uuid.uuid4().hex
+            agent = RemixAgent(self)
+            self.sub_universes[fork_id] = agent
+
+            session = self.session_factory()
+            try:
+                branch = UniverseBranch(
+                    id=fork_id,
+                    creator_id=getattr(user, "id", None),
+                    karma_at_fork=float(getattr(user, "karma_score", 0.0)),
+                    config=custom_config,
+                    timestamp=datetime.datetime.utcnow(),
+                    status="active",
+                    entropy_divergence=0.0,
+                )
+                session.add(branch)
+                session.commit()
+            finally:
+                session.close()
+            return fork_id
 
     class RemixAgent:
         def __init__(self, cosmic_nexus, filename=None, snapshot=None):
