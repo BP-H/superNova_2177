@@ -36,6 +36,12 @@ def register_route(name: str, func: Handler) -> None:
     ROUTES[name] = func
 
 
+def register_route_once(name: str, func: Handler) -> None:
+    """Register ``func`` under ``name`` only if it isn't already set."""
+    if name not in ROUTES:
+        register_route(name, func)
+
+
 async def dispatch_route(
     name: str, payload: Dict[str, Any], **kwargs: Any
 ) -> Dict[str, Any]:
@@ -69,22 +75,44 @@ register_route("detect_conflicting_hypotheses", detect_conflicting_hypotheses_ui
 register_route("register_hypothesis", register_hypothesis_ui)
 register_route("update_hypothesis_score", update_hypothesis_score_ui)
 
-# Prediction routes
-register_route("store_prediction", store_prediction_ui)
-register_route("get_prediction", get_prediction_ui)
-register_route("update_prediction_status", update_prediction_status_ui)
+
+# Prediction-related routes
+from predictions.ui_hook import (
+    store_prediction_ui,
+    get_prediction_ui,
+    update_prediction_status_ui,
+)
+
+from optimization.ui_hook import tune_parameters_ui
+from virtual_diary.ui_hook import fetch_entries_ui, add_entry_ui
+from quantum_sim.ui_hook import simulate_entanglement_ui
+
+register_route_once("store_prediction", store_prediction_ui)
+register_route_once("get_prediction", get_prediction_ui)
+register_route_once("update_prediction_status", update_prediction_status_ui)
 
 # Protocol agent management routes
 register_route("list_agents", list_agents_api)
 register_route("launch_agents", launch_agents_api)
 register_route("step_agents", step_agents_api)
 
-# Temporal analysis route
-register_route("temporal_consistency", analyze_temporal_ui)
+
+register_route_once("temporal_consistency", analyze_temporal_ui)
 
 # Optimization route
 register_route("tune_parameters", tune_parameters_ui)
 
-# Debugging helpers
-register_route("list_routes", _list_routes)
-register_route("describe_routes", describe_routes)
+register_route("fetch_diary_entries", fetch_entries_ui)
+register_route("add_diary_entry", add_entry_ui)
+register_route("simulate_entanglement", simulate_entanglement_ui)
+
+# Universe UI routes
+from ui_hooks.universe_ui import (
+    get_universe_overview,
+    list_available_proposals,
+    submit_universe_proposal,
+)
+
+register_route("get_universe_overview", get_universe_overview)
+register_route("list_available_proposals", list_available_proposals)
+register_route("submit_universe_proposal", submit_universe_proposal)
