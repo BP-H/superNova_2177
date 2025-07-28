@@ -2314,6 +2314,10 @@ def create_app() -> FastAPI:
     s = get_settings()
     try:
         redis_client = redis.from_url(s.REDIS_URL, decode_responses=True)
+        try:
+            redis_client.ping()
+        except Exception:
+            raise
         if not hasattr(redis_client, "get"):
             raise AttributeError
     except Exception:  # pragma: no cover - fallback for test stubs
