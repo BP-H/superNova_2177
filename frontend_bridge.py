@@ -90,3 +90,12 @@ register_route("temporal_consistency", analyze_temporal_ui)
 
 # Optimization-related route
 register_route("tune_parameters", tune_parameters_ui)
+
+# Import additional UI hooks so they register their routes on import
+import introspection.ui_hook  # noqa: F401
+import network.ui_hook  # noqa: F401
+import validators.ui_hook  # noqa: F401
+import audit.ui_hook  # noqa: F401
+import audit.explainer_ui_hook  # noqa: F401
+import consensus.ui_hook  # noqa: F401
+import protocols.ui_hook  # noqa: F401
