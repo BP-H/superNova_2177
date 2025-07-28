@@ -631,7 +631,7 @@ file_handler.setFormatter(
         "%(asctime)s | %(levelname)s | %(threadName)s | %(message)s (%(filename)s:%(lineno)d) | 감사합니다!"
     )
 )
-logging.getLogger().addHandler(console_handler)
+logging.getLogger().addHandler(file_handler)
 
 try:  # pragma: no cover - optional in some environments
     import streamlit as st  # type: ignore
