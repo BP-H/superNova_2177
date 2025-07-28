@@ -445,3 +445,29 @@ async def test_add_user_atomicity_and_rollback(test_db, monkeypatch):
 def test_entropy_calc(test_db):
     entropy = sn.calculate_content_entropy(test_db)
     assert entropy >= 0.0
+
+
+@pytest.mark.asyncio
+async def test_vibenode_remix(client):
+    token = await register_and_get_token(client, "remixer", "remix@example.com")
+    create = await client.post(
+        "/vibenodes/",
+        json={
+            "name": "orig",
+            "description": "desc",
+            "media_type": "text",
+            "tags": None,
+        },
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert create.status_code == 201
+    orig = create.json()
+
+    remix_resp = await client.post(
+        f"/vibenodes/{orig['id']}/remix",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert remix_resp.status_code == 201
+    remix = remix_resp.json()
+    assert remix["parent_vibenode_id"] == orig["id"]
+    assert remix["id"] != orig["id"]
