@@ -2,6 +2,7 @@ import re
 
 from hypothesis_tracker import register_hypothesis
 from db_models import HypothesisRecord
+from sqlalchemy import select
 
 
 def test_register_hypothesis_generates_unique_id(test_db):
@@ -26,7 +27,11 @@ def test_metadata_json_persistence_new_session(test_db):
 
     new_session = SessionLocal()
     try:
-        record = new_session.query(HypothesisRecord).filter_by(id=hid).first()
+        record = (
+            new_session.execute(select(HypothesisRecord).filter_by(id=hid))
+            .scalars()
+            .first()
+        )
         assert record is not None
         assert record.metadata_json == metadata
     finally:
