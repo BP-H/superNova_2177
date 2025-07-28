@@ -37,3 +37,29 @@ async def test_reputation_analysis_via_router():
     assert "validator_reputations" in result
     assert "stats" in result
     assert calls == [result]
+
+
+@pytest.mark.asyncio
+async def test_reputation_update_via_router(monkeypatch):
+    events = []
+
+    async def listener(data):
+        events.append(data)
+
+    ui_hook_manager.register_hook("reputation_update_run", listener)
+
+    called = {}
+
+    def fake_update(vals):
+        called["vals"] = vals
+        return {"reputations": {"v1": 0.7}, "diversity": {"validator_count": 1}}
+
+    monkeypatch.setattr("validators.ui_hook.update_validator_reputations", fake_update)
+
+    payload = {"validations": [{"validator_id": "v1", "score": 0.5}]}
+
+    result = await dispatch_route("reputation_update", payload)
+
+    assert result == {"reputations": {"v1": 0.7}, "diversity": {"validator_count": 1}}
+    assert called["vals"] == payload["validations"]
+    assert events == [result]
