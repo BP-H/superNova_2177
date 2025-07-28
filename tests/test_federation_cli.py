@@ -7,28 +7,36 @@ import federation_cli
 from federation_cli import list_forks, fork_info
 
 
+class DummyResult:
+    def __init__(self, value):
+        self.value = value
+
+    def scalar_one_or_none(self):
+        return self.value
+
+    def scalars(self):
+        class _Scalar:
+            def __init__(self, val):
+                self.val = val
+
+            def all(self):
+                return [self.val]
+
+        return _Scalar(self.value)
+
+
 class DummySession:
     def __init__(self, fork):
         self.fork = fork
-        self.filter_id = None
 
-    def query(self, _model):
-        session = self
-
-        class DummyQuery:
-            def all(self):
-                return [session.fork]
-
-            def filter_by(self, **kw):
-                session.filter_id = kw.get("id")
-                return self
-
-            def first(self):
-                if session.filter_id is None or session.filter_id == session.fork.id:
-                    return session.fork
-                return None
-
-        return DummyQuery()
+    def execute(self, stmt):
+        params = stmt.compile().params
+        if params:
+            val = next(iter(params.values()))
+            value = self.fork if val == self.fork.id or val == self.fork.creator_id else None
+        else:
+            value = self.fork
+        return DummyResult(value)
 
     def close(self):
         pass

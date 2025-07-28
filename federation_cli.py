@@ -6,6 +6,7 @@ import json
 import uuid
 from pathlib import Path
 from datetime import datetime
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from db_models import (
@@ -27,7 +28,8 @@ OUTBOX = Path(__file__).resolve().parent / "federation" / "outbox.json"
 def create_fork(args: argparse.Namespace) -> None:
     db = SessionLocal()
     try:
-        user = db.query(Harmonizer).filter_by(username=args.creator).first()
+        stmt = select(Harmonizer).filter_by(username=args.creator)
+        user = db.execute(stmt).scalar_one_or_none()
         if not user:
             print("Creator not found")
             return
@@ -75,7 +77,8 @@ def create_fork(args: argparse.Namespace) -> None:
 def list_forks(_args: argparse.Namespace) -> None:
     db = SessionLocal()
     try:
-        forks = db.query(UniverseBranch).all()
+        stmt = select(UniverseBranch)
+        forks = db.execute(stmt).scalars().all()
         for f in forks:
             try:
                 config_json = json.dumps(f.config, default=str)
@@ -95,7 +98,8 @@ def list_forks(_args: argparse.Namespace) -> None:
 def fork_info(args: argparse.Namespace) -> None:
     db = SessionLocal()
     try:
-        fork = db.query(UniverseBranch).filter_by(id=args.fork_id).first()
+        stmt = select(UniverseBranch).filter_by(id=args.fork_id)
+        fork = db.execute(stmt).scalar_one_or_none()
         if not fork:
             print("Fork not found")
             return
@@ -123,15 +127,16 @@ def vote_fork(args: argparse.Namespace) -> None:
     """Cast a DAO vote for a universe fork."""
     db = SessionLocal()
     try:
-        fork = db.query(UniverseBranch).filter_by(id=args.fork_id).first()
-        voter = db.query(Harmonizer).filter_by(username=args.voter).first()
+        stmt = select(UniverseBranch).filter_by(id=args.fork_id)
+        fork = db.execute(stmt).scalar_one_or_none()
+        stmt = select(Harmonizer).filter_by(username=args.voter)
+        voter = db.execute(stmt).scalar_one_or_none()
         if not fork or not voter:
             print("Fork or voter not found")
             return
         # Avoid duplicate votes from the same harmonizer
-        existing = db.query(BranchVote).filter_by(
-            branch_id=fork.id, voter_id=voter.id
-        ).first()
+        stmt = select(BranchVote).filter_by(branch_id=fork.id, voter_id=voter.id)
+        existing = db.execute(stmt).scalar_one_or_none()
         if existing:
             print("Vote already recorded for this fork")
             return
