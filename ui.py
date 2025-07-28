@@ -1,6 +1,7 @@
 import json
 import logging
 from pathlib import Path
+import random
 
 import os
 from pathlib import Path
@@ -40,6 +41,7 @@ def summarize_text(text: str, max_len: int = 150) -> str:
         return text
     return text[: max_len - 3] + "..."
 
+
 try:
     from validation_certifier import Config as VCConfig
 except Exception:  # pragma: no cover - optional debug dependencies
@@ -53,15 +55,20 @@ except Exception:  # pragma: no cover - optional debug dependencies
     Config = None  # type: ignore
 
 if Config is None:
+
     class Config:
         METRICS_PORT = 1234
 
+
 if VCConfig is None:
+
     class VCConfig:
         HIGH_RISK_THRESHOLD = 0.7
         MEDIUM_RISK_THRESHOLD = 0.4
 
+
 if HarmonyScanner is None:
+
     class HarmonyScanner:
         def __init__(self, *_a, **_k):
             pass
@@ -228,6 +235,10 @@ def main() -> None:
         st.session_state["run_count"] = 0
     if "theme" not in st.session_state:
         st.session_state["theme"] = "light"
+    if "mode" not in st.session_state:
+        st.session_state["mode"] = "Demo"
+    if "profile" not in st.session_state:
+        st.session_state["profile"] = "spectator"
 
     if st.session_state["theme"] == "dark":
         st.markdown(
@@ -279,7 +290,9 @@ def main() -> None:
         st.header("Environment")
         st.write(f"Database URL: {database_url or 'not set'}")
         st.write(f"ENV: {os.getenv('ENV', 'dev')}")
-        st.write(f"Session start: {datetime.utcnow().isoformat(timespec='seconds')} UTC")
+        st.write(
+            f"Session start: {datetime.utcnow().isoformat(timespec='seconds')} UTC"
+        )
 
         if secret_key:
             st.success("Secret key loaded")
@@ -288,8 +301,25 @@ def main() -> None:
 
         st.divider()
         st.subheader("Settings")
-        demo_mode = st.checkbox("Demo mode")
-        st.session_state["theme"] = "dark" if st.checkbox("Dark theme") else "light"
+        st.session_state["profile"] = st.radio(
+            "Profile",
+            ["dev", "agent", "spectator"],
+            index=["dev", "agent", "spectator"].index(st.session_state["profile"]),
+            horizontal=True,
+        )
+        st.session_state["mode"] = st.radio(
+            "Mode",
+            ["Demo", "Live"],
+            index=0 if st.session_state["mode"] == "Demo" else 1,
+            horizontal=True,
+        )
+        st.session_state["theme"] = st.radio(
+            "Theme",
+            ["light", "dark"],
+            index=0 if st.session_state["theme"] == "light" else 1,
+            horizontal=True,
+        )
+        demo_mode = st.session_state["mode"] == "Demo"
         VCConfig.HIGH_RISK_THRESHOLD = st.slider(
             "High Risk Threshold", 0.1, 1.0, float(VCConfig.HIGH_RISK_THRESHOLD), 0.05
         )
@@ -299,9 +329,7 @@ def main() -> None:
         )
         run_clicked = st.button("Run Analysis")
 
-        st.markdown(
-            f"**Runs this session:** {st.session_state['run_count']}"
-        )
+        st.markdown(f"**Runs this session:** {st.session_state['run_count']}")
         if st.button("Clear Memory"):
             st.session_state["diary"] = []
         if st.button("Export Report"):
@@ -328,9 +356,7 @@ def main() -> None:
             except FileNotFoundError:
                 st.warning("Demo file not found, using default dataset.")
                 data = {
-                    "validations": [
-                        {"validator": "A", "target": "B", "score": 0.9}
-                    ]
+                    "validations": [{"validator": "A", "target": "B", "score": 0.9}]
                 }
             st.session_state["validations_json"] = json.dumps(data, indent=2)
         elif uploaded_file is not None:
@@ -348,6 +374,22 @@ def main() -> None:
                 "note": f"Run {st.session_state['run_count']} completed",
             }
         )
+
+    profile = st.session_state.get("profile", "spectator")
+    if profile in ("dev", "agent"):
+        entropy_val = st.session_state.get("last_entropy")
+        if entropy_val is None:
+            entropy_val = random.random()
+            st.session_state["last_entropy"] = entropy_val
+        st.sidebar.metric("Entropy", f"{entropy_val:.2f}")
+    if profile == "dev":
+        with st.expander("Debug Logs"):
+            try:
+                with open("transcendental_resonance.log") as f:
+                    logs = f.readlines()[-20:]
+                st.text("".join(logs))
+            except FileNotFoundError:
+                st.write("No log file found.")
 
     st.subheader("Virtual Diary")
     with st.expander("📘 Notes", expanded=False):
