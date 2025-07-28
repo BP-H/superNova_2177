@@ -1,3 +1,5 @@
+"""Immutable tri-species governance enforcement for Remix agents."""
+
 from typing import Dict, Any, List
 from collections import defaultdict
 from decimal import Decimal

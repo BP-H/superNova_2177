@@ -1,35 +1,37 @@
-# simulation_loop.py
+from __future__ import annotations
+
+"""Example simulation loop showing agent evolution via skill reuse."""
 
 import random
 import time
 from protocols.utils.skills import EmbodiedAgent, Skill
 from protocols.utils.forking import fork_agent
 from protocols.utils.fatigue import FatigueMemoryMixin
-from protocols.utils.messaging import MessageHub
+from protocols.utils.messaging import MessageHub, Message
 
 # --- Setup ---
 bus = MessageHub()
-all_agents = []
+all_agents: list['EvolvableAgent'] = []
 
-def dummy_analyze(data):
+def dummy_analyze(data: str) -> dict[str, str]:
     return {"analysis": f"len={len(str(data))}"}
 
-def dummy_patch(data):
+def dummy_patch(data: dict[str, str]) -> dict[str, str]:
     return {"patch": f"fixed_{data.get('bug', 'issue')}"}
 
 # --- Evolving Agent Class ---
 class EvolvableAgent(EmbodiedAgent, FatigueMemoryMixin):
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         EmbodiedAgent.__init__(self, name)
         FatigueMemoryMixin.__init__(self)
         self.memory['success'] = 0
         self.memory['runs'] = 0
 
-    def success_rate(self):
+    def success_rate(self) -> float:
         runs = self.memory['runs']
         return self.memory['success'] / runs if runs > 0 else 0
 
-    def record_outcome(self, success=True):
+    def record_outcome(self, success: bool = True) -> None:
         self.memory['runs'] += 1
         if success:
             self.memory['success'] += 1
@@ -43,7 +45,7 @@ founder2.register_skill(Skill("patch", dummy_patch))
 all_agents.extend([founder1, founder2])
 
 # --- Message Flow ---
-def on_new_task(msg):
+def on_new_task(msg: Message) -> None:
     task_type = msg.data.get("type")
     for agent in all_agents:
         if task_type in agent.skills:

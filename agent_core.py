@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+"""Core infrastructure for stateful Remix agents.
+
+This module defines :class:`RemixAgent`, a foundational agent that logs
+events, manages storage, and coordinates hooks across the project.  It
+serves as the runtime backbone for higher-level creative agents such as
+``ImmutableTriSpeciesAgent``.
+"""
+
 import os
 import json
 import uuid
@@ -130,7 +138,7 @@ class RemixAgent:
         if not self._use_simple:
             self.load_state()
 
-    def _cleanup_nonces(self):
+    def _cleanup_nonces(self) -> None:
         while True:
             time.sleep(self.config.NONCE_CLEANUP_INTERVAL_SECONDS)
             now = ts()
@@ -151,7 +159,7 @@ class RemixAgent:
                 for n in to_remove:
                     del self.processed_nonces[n]
 
-    def load_state(self):
+    def load_state(self) -> None:
         snapshot_timestamp = None
         if os.path.exists(self.snapshot):
             with open(self.snapshot, "r") as f:
@@ -172,7 +180,7 @@ class RemixAgent:
         if not self.logchain.verify():
             raise ValueError("Logchain verification failed.")
 
-    def save_snapshot(self):
+    def save_snapshot(self) -> None:
         with self.lock:
             data = {
                 "treasury": str(self.treasury),
@@ -194,7 +202,7 @@ class RemixAgent:
             with open(self.snapshot, "w") as f:
                 json.dump(data, f, default=str)
 
-    def on_cross_remix_created(self, event: Dict[str, Any]):
+    def on_cross_remix_created(self, event: Dict[str, Any]) -> None:
         """Hook triggered after a Cross-Remix to simulate a creative breakthrough."""
         if not self.config.QUANTUM_TUNNELING_ENABLED:
             return
@@ -203,7 +211,7 @@ class RemixAgent:
             f"Quantum Tunneling Event: New Cross-Remix {event['coin_id']} by {event['user']}"
         )
 
-    def _update_total_karma(self, delta: Decimal):
+    def _update_total_karma(self, delta: Decimal) -> None:
         with self.lock:
             self.total_system_karma += delta
 
@@ -321,7 +329,7 @@ class RemixAgent:
                 if owner:
                     owner["karma"] = str(float(owner.get("karma", "0")) + 1)
 
-    def process_event(self, event: Dict[str, Any]):
+    def process_event(self, event: Dict[str, Any]) -> None:
         if not self.vaccine.scan(json.dumps(event)):
             raise BlockedContentError("Event content blocked by vaccine.")
         nonce = event.get("nonce")
@@ -342,7 +350,7 @@ class RemixAgent:
         except Exception as e:
             logging.error(f"Event processing failed for {event.get('event')}: {e}")
 
-    def _apply_event(self, event: Dict[str, Any]):
+    def _apply_event(self, event: Dict[str, Any]) -> None:
         event_type = event.get("event")
         handler = getattr(self, f"_apply_{event_type}", None)
         if handler:
@@ -350,7 +358,7 @@ class RemixAgent:
         else:
             logging.warning(f"Unknown event type {event_type}")
 
-    def _apply_ADD_USER(self, event: AddUserPayload):
+    def _apply_ADD_USER(self, event: AddUserPayload) -> None:
         username = event["user"]
         with self.lock:
             if self.storage.get_user(username):
@@ -387,7 +395,7 @@ class RemixAgent:
                     f"Failed to create user {username} atomically"
                 ) from e
 
-    def _apply_MINT(self, event: MintPayload):
+    def _apply_MINT(self, event: MintPayload) -> None:
         user = event["user"]
         user_data = self.storage.get_user(user)
         if not user_data:
@@ -444,7 +452,7 @@ class RemixAgent:
             self.storage.set_coin(root_coin_id, root_coin.to_dict())
             self.storage.set_coin(new_coin_id, new_coin.to_dict())
 
-    def _apply_REACT(self, event: ReactPayload):
+    def _apply_REACT(self, event: ReactPayload) -> None:
         reactor = event["reactor"]
         reactor_data = self.storage.get_user(reactor)
         if not reactor_data:
@@ -495,7 +503,7 @@ class RemixAgent:
             self.storage.set_user(reactor, reactor_obj.to_dict())
             self.storage.set_coin(coin_id, coin.to_dict())
 
-    def _apply_LIST_COIN_FOR_SALE(self, event: MarketplaceListPayload):
+    def _apply_LIST_COIN_FOR_SALE(self, event: MarketplaceListPayload) -> None:
         """List a coin for sale in the in-memory marketplace."""
         listing_id = event["listing_id"]
         if self.storage.get_marketplace_listing(listing_id):
@@ -514,7 +522,7 @@ class RemixAgent:
         }
         self.storage.set_marketplace_listing(listing_id, listing)
 
-    def _apply_BUY_COIN(self, event: MarketplaceBuyPayload):
+    def _apply_BUY_COIN(self, event: MarketplaceBuyPayload) -> None:
         listing_id = event["listing_id"]
         listing_data = self.storage.get_marketplace_listing(listing_id)
         if not listing_data:
@@ -552,7 +560,7 @@ class RemixAgent:
             self.storage.set_coin(seller_obj.root_coin_id, seller_root.to_dict())
             self.storage.delete_marketplace_listing(listing_id)
 
-    def _apply_CREATE_PROPOSAL(self, event: ProposalPayload):
+    def _apply_CREATE_PROPOSAL(self, event: ProposalPayload) -> None:
         proposal_id = event["proposal_id"]
         if self.storage.get_proposal(proposal_id):
             return
@@ -573,7 +581,7 @@ class RemixAgent:
         }
         self.storage.set_proposal(proposal_id, proposal)
 
-    def _apply_VOTE_PROPOSAL(self, event: VoteProposalPayload):
+    def _apply_VOTE_PROPOSAL(self, event: VoteProposalPayload) -> None:
         proposal_data = self.storage.get_proposal(event["proposal_id"])
         if not proposal_data:
             return
@@ -622,7 +630,7 @@ class RemixAgent:
         logger.info(f"Dynamic threshold for {total_voters} voters: {threshold}")
         return threshold
 
-    def _apply_EXECUTE_PROPOSAL(self, event: Dict[str, Any]):
+    def _apply_EXECUTE_PROPOSAL(self, event: Dict[str, Any]) -> None:
         proposal_id = event["proposal_id"]
         proposal_data = self.storage.get_proposal(proposal_id)
         if not proposal_data:
@@ -644,7 +652,7 @@ class RemixAgent:
             proposal["status"] = "executed"
             self.storage.set_proposal(proposal_id, proposal)
 
-    def _apply_STAKE_KARMA(self, event: StakeKarmaPayload):
+    def _apply_STAKE_KARMA(self, event: StakeKarmaPayload) -> None:
         user = event["user"]
         user_data = self.storage.get_user(user)
         if not user_data:
@@ -658,7 +666,7 @@ class RemixAgent:
             user_obj.staked_karma += amount
             self.storage.set_user(user, user_obj.to_dict())
 
-    def _apply_UNSTAKE_KARMA(self, event: UnstakeKarmaPayload):
+    def _apply_UNSTAKE_KARMA(self, event: UnstakeKarmaPayload) -> None:
         user = event["user"]
         user_data = self.storage.get_user(user)
         if not user_data:
@@ -672,7 +680,7 @@ class RemixAgent:
             user_obj.karma += amount
             self.storage.set_user(user, user_obj.to_dict())
 
-    def _apply_REVOKE_CONSENT(self, event: RevokeConsentPayload):
+    def _apply_REVOKE_CONSENT(self, event: RevokeConsentPayload) -> None:
         user = event["user"]
         user_data = self.storage.get_user(user)
         if not user_data:
@@ -682,11 +690,11 @@ class RemixAgent:
             user_obj.revoke_consent()
             self.storage.set_user(user, user_obj.to_dict())
 
-    def _apply_FORK_UNIVERSE(self, event: ForkUniversePayload):
+    def _apply_FORK_UNIVERSE(self, event: ForkUniversePayload) -> None:
         # Forking handled by CosmicNexus for unified governance
         self.cosmic_nexus.apply_fork_universe(event)
 
-    def _apply_CROSS_REMIX(self, event: CrossRemixPayload):
+    def _apply_CROSS_REMIX(self, event: CrossRemixPayload) -> None:
         user = event["user"]
         reference_universe = event["reference_universe"]
         target_agent = self.cosmic_nexus.sub_universes.get(reference_universe)
@@ -730,7 +738,7 @@ class RemixAgent:
             "cross_remix_created", {"coin_id": new_coin_id, "user": user}
         )
 
-    def _apply_DAILY_DECAY(self, event: ApplyDailyDecayPayload):
+    def _apply_DAILY_DECAY(self, event: ApplyDailyDecayPayload) -> None:
         users = self.storage.get_all_users()
         for u in users:
             user_obj = User.from_dict(u, self.config)
@@ -809,7 +817,7 @@ class RemixAgent:
         quorum = voted_harmony / total_harmony if total_harmony > 0 else Decimal("0")
         return {"yes": final_yes, "no": final_no, "quorum": quorum}
 
-    def _process_proposal_lifecycle(self):
+    def _process_proposal_lifecycle(self) -> None:
         """
         Process the lifecycle of all open proposals: tally if deadline passed, update status, execute if ready.
         """
