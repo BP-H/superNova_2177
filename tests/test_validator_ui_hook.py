@@ -2,6 +2,7 @@ import pytest
 
 from frontend_bridge import dispatch_route
 from validators import ui_hook
+from hooks import events
 
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
@@ -45,6 +46,7 @@ async def test_update_reputations_ui_emits_event(monkeypatch):
 
     assert result == {"reputations": {"v1": 0.5}, "diversity": {}}
     assert called["vals"] == payload["validations"]
+    assert dummy.events == [(events.VALIDATOR_REPUTATIONS, (result,), {})]
     assert dummy.events == [("reputations_updated", (result,), {})]
 
 

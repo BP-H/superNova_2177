@@ -1,6 +1,7 @@
 import pytest
 
 from consensus import ui_hook as cons_ui_hook
+from hooks import events
 
 
 class DummyHookManager:
@@ -33,4 +34,4 @@ async def test_forecast_consensus_ui(monkeypatch):
 
     assert result == {"forecast_score": 0.7, "trend": "increasing"}
     assert called["args"] == (payload["validations"], payload["network_analysis"])
-    assert dummy.events == [("consensus_forecast_run", (result,), {})]
+    assert dummy.events == [(events.CONSENSUS_FORECAST_RUN, (result,), {})]

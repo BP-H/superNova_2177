@@ -5,6 +5,7 @@ from typing import Any, Dict
 
 from frontend_bridge import register_route
 from hook_manager import HookManager
+from hooks import events
 from validator_reputation_tracker import update_validator_reputations
 from diversity_analyzer import compute_diversity_score
 
@@ -38,7 +39,7 @@ async def compute_reputation_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
         "stats": result.get("stats", {}),
     }
 
-    await ui_hook_manager.trigger("reputation_analysis_run", minimal)
+    await ui_hook_manager.trigger(events.REPUTATION_ANALYSIS_RUN, minimal)
     return minimal
 
 
@@ -56,6 +57,7 @@ async def update_reputations_ui(
     }
 
     try:
+        hook_manager.fire_hooks(events.VALIDATOR_REPUTATIONS, result)
         hook_manager.fire_hooks("reputations_updated", minimal)
     except Exception:  # pragma: no cover - logging only
         logging.exception("Failed to fire reputations_updated hook")

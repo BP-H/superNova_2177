@@ -2091,8 +2091,9 @@ class CosmicNexus:
             else:
                 logging.warning("Ignoring invalid config key %s", key)
         self.sub_universes[fork_id] = fork_agent
+        from hooks import events
         self.hooks.register_hook(
-            "cross_remix", lambda data: self.handle_cross_remix(data, fork_id)
+            events.CROSS_REMIX, lambda data: self.handle_cross_remix(data, fork_id)
         )
 
         # persist fork info for DAO governance
@@ -2266,8 +2267,9 @@ class EntropyTracker(RemixAgent):
             info = calculate_interaction_entropy(user, db)
             self.current_entropy = float(info.get("value", 0.0))
             if self.current_entropy > self.entropy_threshold:
+                from hooks import events
                 self.cosmic_nexus.hooks.fire_hooks(
-                    "entropy_divergence",
+                    events.ENTROPY_DIVERGENCE,
                     {"universe": id(self), "entropy": self.current_entropy},
                 )
         finally:

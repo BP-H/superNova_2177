@@ -9,6 +9,7 @@ from protocols.core import JobQueueAgent
 from sqlalchemy.orm import Session
 
 from hook_manager import HookManager
+from hooks import events
 
 from .introspection_pipeline import run_full_audit
 
@@ -39,7 +40,7 @@ async def trigger_full_audit_ui(
     audit_bundle = run_full_audit(hypothesis_id, db)
 
     # Allow external listeners to process the audit result asynchronously
-    await ui_hook_manager.trigger("full_audit_completed", audit_bundle)
+    await ui_hook_manager.trigger(events.FULL_AUDIT_COMPLETED, audit_bundle)
 
     return audit_bundle
 

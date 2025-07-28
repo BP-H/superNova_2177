@@ -603,6 +603,9 @@ jupyter notebook docs/Validation_Pipeline.ipynb
 jupyter notebook docs/Network_Graph_Visualization.ipynb
 ```
 
+See `docs/hooks.md` for a catalogue of hook event names used by the
+`HookManager`.
+
 ## 🏗️ Architecture (v4.6)
 
 * `validation_integrity_pipeline.py` — Orchestrator for full validation logic

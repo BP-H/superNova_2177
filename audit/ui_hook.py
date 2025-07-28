@@ -13,6 +13,7 @@ from audit_bridge import (
 # isort: on
 from causal_graph import InfluenceGraph
 from hook_manager import HookManager
+from hooks import events
 from protocols.utils.messaging import MessageHub
 
 logger = logging.getLogger(__name__)
@@ -47,7 +48,7 @@ async def log_hypothesis_ui(payload: Dict[str, Any], db: Session, **_: Any) -> s
         metadata=payload.get("metadata"),
     )
     await hook_manager.trigger(
-        "audit_log",
+        events.AUDIT_LOG,
         {"action": "log_hypothesis", "key": key},
     )
     message_hub.publish("audit_log", {"action": "log_hypothesis", "key": key})
@@ -63,7 +64,7 @@ async def attach_trace_ui(payload: Dict[str, Any], db: Session, **_: Any) -> Non
         summary=payload.get("summary"),
     )
     await hook_manager.trigger(
-        "audit_log",
+        events.AUDIT_LOG,
         {"action": "attach_trace", "log_id": int(payload["log_id"])},
     )
 

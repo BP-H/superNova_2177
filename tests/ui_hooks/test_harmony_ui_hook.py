@@ -4,6 +4,7 @@ import pytest
 
 import protocols.agents.harmony_ui_hook as harmony_hook
 from frontend_bridge import dispatch_route
+from hooks import events
 
 
 class DummyHookManager:
@@ -37,4 +38,4 @@ async def test_generate_midi_route(monkeypatch):
 
     assert result == {"midi_base64": base64.b64encode(midi).decode()}  # nosec B101
     assert agent.calls == [payload]  # nosec B101
-    assert hooks.events == [("midi_generated", (midi,), {})]  # nosec B101
+    assert hooks.events == [(events.MIDI_GENERATED, (midi,), {})]  # nosec B101
