@@ -219,7 +219,10 @@ if "superNova_2177" not in sys.modules:
         import types
 
         fastapi_stub = types.ModuleType("fastapi")
-        fastapi_stub.__spec__ = importlib.machinery.ModuleSpec("fastapi", loader=None)
+        # Avoid providing a ModuleSpec so ``importlib.util.find_spec('fastapi')``
+        # returns ``None`` when FastAPI isn't installed. This ensures the tests
+        # don't try to import the real package in minimal environments.
+        fastapi_stub.__spec__ = None
 
         class FastAPI:
             def __init__(self, *a, **kw):
