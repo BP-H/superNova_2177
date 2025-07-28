@@ -9,7 +9,7 @@ def test_main_git_missing(monkeypatch, capsys):
     monkeypatch.setattr(check_disclaimers, "which", lambda cmd: None)
     assert check_disclaimers.main() == 1
     out = capsys.readouterr().out.strip()
-    assert "git executable not found" in out
+    assert "install git" in out
 
 
 def test_main_git_error(monkeypatch, capsys):
