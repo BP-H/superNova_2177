@@ -675,18 +675,45 @@ except Exception:  # pragma: no cover - lightweight fallback
 import pytest
 
 
-@pytest.fixture
-def test_db(tmp_path):
-    """Provide an in-memory SQLite session for tests."""
-    from db_models import Base, SessionLocal, engine, init_db
+def _setup_sqlite(monkeypatch, db_path):
+    """Return engine and sessionmaker bound to a temporary SQLite file."""
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    import db_models, sys
 
-    init_db()
+    engine = create_engine(
+        f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
+    )
+    Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+    old_engine = getattr(db_models, "engine", None)
+    old_session = getattr(db_models, "SessionLocal", None)
+
+    monkeypatch.setattr(db_models, "engine", engine, raising=False)
+    monkeypatch.setattr(db_models, "SessionLocal", Session, raising=False)
+
+    for mod in list(sys.modules.values()):
+        if getattr(mod, "engine", None) is old_engine:
+            monkeypatch.setattr(mod, "engine", engine, raising=False)
+        if getattr(mod, "SessionLocal", None) is old_session:
+            monkeypatch.setattr(mod, "SessionLocal", Session, raising=False)
+
+    db_models.Base.metadata.create_all(bind=engine)
+    return engine, Session
+
+
+@pytest.fixture
+def test_db(tmp_path, monkeypatch):
+    """Provide an isolated SQLite session for tests."""
+    engine, SessionLocal = _setup_sqlite(monkeypatch, tmp_path / "test.db")
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-        Base.metadata.drop_all(bind=engine)
+        import db_models
+        db_models.Base.metadata.drop_all(bind=engine)
+        engine.dispose()
 
 
 @pytest.fixture
