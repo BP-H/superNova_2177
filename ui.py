@@ -986,15 +986,12 @@ if __name__ == "__main__":
     print("Starting Streamlit UI...", file=sys.stderr)
     try:
         main()
-    except Exception:
+    except Exception as exc:
         logger.exception("UI startup failed")
-        print("Startup failed", file=sys.stderr)
+        print(f"Startup failed: {exc}", file=sys.stderr)
         traceback.print_exc(file=sys.stderr)
         raise
     else:
         st.success("\u2705 UI Booted")
         print("UI Booted", file=sys.stderr)
-    except Exception as exc:
-        logger.exception("Startup failed")
-        print(f"Startup failed: {exc}", file=sys.stderr)
 
