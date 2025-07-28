@@ -103,5 +103,13 @@ async def vibenodes_page():
                         ui.button('Like/Unlike', on_click=like_fn).style(
                             f'background: {THEME["accent"]}; color: {THEME["background"]};'
                         )
+                        async def remix_fn(vn_data=vn):
+                            name.value = vn_data['name']
+                            description.value = vn_data['description']
+                            parent_id.value = str(vn_data['id'])
+                            ui.notify('Loaded remix draft', color='info')
+                        ui.button('Remix', on_click=remix_fn).style(
+                            f'background: {THEME["primary"]}; color: {THEME["text"]};'
+                        )
 
         await refresh_vibenodes()

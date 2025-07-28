@@ -2636,6 +2636,63 @@ def follow_unfollow_user(
     return {"message": message}
 
 
+@app.post(
+    "/vibenodes/{vibenode_id}/remix",
+    response_model=VibeNodeOut,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Content & Engagement"],
+)
+def remix_vibenode(
+    vibenode_id: int,
+    vibenode: Optional[VibeNodeCreate] = None,
+    db: Session = Depends(get_db),
+    current_user: Harmonizer = Depends(get_current_active_user),
+):
+    parent = db.query(VibeNode).filter(VibeNode.id == vibenode_id).first()
+    if not parent:
+        raise HTTPException(status_code=404, detail="VibeNode not found")
+
+    data = vibenode.dict() if vibenode else {}
+    new_data = {
+        "name": data.get("name", parent.name),
+        "description": data.get("description", parent.description),
+        "media_type": data.get("media_type", parent.media_type),
+        "media_url": data.get("media_url", parent.media_url),
+        "tags": data.get("tags", parent.tags),
+        "patron_saint_id": data.get("patron_saint_id", parent.patron_saint_id),
+    }
+
+    clone = VibeNode(
+        **new_data,
+        author_id=current_user.id,
+        parent_vibenode_id=parent.id,
+        fractal_depth=parent.fractal_depth + 1,
+        engagement_catalyst="0.0",
+        negentropy_score="0.0",
+    )
+    db.add(clone)
+    db.commit()
+    db.refresh(clone)
+
+    last_entry = db.query(LogEntry).order_by(LogEntry.id.desc()).first()
+    prev_hash = last_entry.current_hash if last_entry else ""
+    payload = json.dumps({"parent_id": parent.id, "child_id": clone.id})
+    log = LogEntry(
+        timestamp=datetime.datetime.utcnow(),
+        event_type="vibenode_remix",
+        payload=payload,
+        previous_hash=prev_hash,
+        current_hash="",
+    )
+    log.current_hash = log.compute_hash()
+    db.add(log)
+    db.commit()
+    out = VibeNodeOut.model_validate(clone)
+    data = out.model_dump()
+    data.update(likes_count=0, comments_count=0, entangled_count=0)
+    return VibeNodeOut(**data)
+
+
 @app.get("/status", tags=["System"])
 def get_system_status(
     db: Session = Depends(get_db),
@@ -3088,8 +3145,10 @@ def create_vibenode(
                 seen.add(tag.lower())
                 clean.append(tag)
         clean_tags = clean
+    data_dict = vibenode.dict(exclude_none=True)
+    data_dict.pop("tags", None)
     db_vibenode = VibeNode(
-        **vibenode.dict(),
+        **data_dict,
         tags=clean_tags,
         author_id=current_user.id,
         fractal_depth=parent_depth + 1,
@@ -3102,9 +3161,10 @@ def create_vibenode(
     # Reduce system entropy by injecting negentropy
     new_entropy = Decimal(system_entropy) - Decimal(str(Config.ENTROPY_REDUCTION_STEP))
     state_service.set_state("system_entropy", str(new_entropy))
-    return VibeNodeOut(
-        **db_vibenode.__dict__, likes_count=0, comments_count=0, entangled_count=0
-    )
+    out = VibeNodeOut.model_validate(db_vibenode)
+    data = out.model_dump()
+    data.update(likes_count=0, comments_count=0, entangled_count=0)
+    return VibeNodeOut(**data)
 
 
 @app.post(
