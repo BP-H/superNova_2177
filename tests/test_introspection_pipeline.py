@@ -1,4 +1,5 @@
 import datetime
+from datetime import UTC
 import types
 from unittest.mock import MagicMock
 
@@ -31,7 +32,7 @@ def test_run_full_audit_no_valid_logs(monkeypatch):
 
     log = types.SimpleNamespace(
         id=1,
-        timestamp=datetime.datetime.utcnow(),
+        timestamp=datetime.datetime.now(UTC),
         payload="{}",
     )
     mock_query = MagicMock()

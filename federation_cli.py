@@ -5,7 +5,7 @@ import argparse
 import json
 import uuid
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
@@ -45,7 +45,7 @@ def create_fork(args: argparse.Namespace) -> None:
         if (
             user.last_passive_aura_timestamp
             and (
-                datetime.utcnow() - user.last_passive_aura_timestamp
+                datetime.now(UTC) - user.last_passive_aura_timestamp
             ).total_seconds()
             < cooldown
         ):
@@ -57,12 +57,12 @@ def create_fork(args: argparse.Namespace) -> None:
             creator_id=user.id,
             karma_at_fork=user.karma_score,
             config=config,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
             status="active",
             entropy_divergence=divergence,
         )
         db.add(fork)
-        user.last_passive_aura_timestamp = datetime.utcnow()
+        user.last_passive_aura_timestamp = datetime.now(UTC)
         try:
             db.commit()
         except IntegrityError:

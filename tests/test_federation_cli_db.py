@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import datetime
+from datetime import UTC
 from decimal import Decimal
 
 import pytest
@@ -41,7 +42,7 @@ def _make_user(**kw) -> Harmonizer:
         email=f"{username}@example.com",
         hashed_password="x",
         karma_score=10.0,
-        last_passive_aura_timestamp=datetime.datetime.utcnow()
+        last_passive_aura_timestamp=datetime.datetime.now(UTC)
         - datetime.timedelta(hours=2),
     )
     defaults.update(kw)
@@ -54,7 +55,7 @@ def _make_fork(creator: Harmonizer) -> UniverseBranch:
         creator_id=creator.id,
         karma_at_fork=creator.karma_score,
         config={"d": "1.5"},
-        timestamp=datetime.datetime.utcnow(),
+        timestamp=datetime.datetime.now(UTC),
         status="active",
     )
 
@@ -101,7 +102,7 @@ def test_create_fork_invalid_config(cli_db, monkeypatch, capsys):
 
 def test_create_fork_cooldown(cli_db, monkeypatch, capsys):
     monkeypatch.setattr(federation_cli.Config, "FORK_COOLDOWN_SECONDS", 3600, raising=False)
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(UTC)
     db = cli_db()
     user = _make_user(username="carol", last_passive_aura_timestamp=now)
     db.add(user)
@@ -170,4 +171,3 @@ def test_vote_fork_missing_records(cli_db, capsys):
     federation_cli.vote_fork(args)
     out = capsys.readouterr().out.strip()
     assert out == "Fork or voter not found"
-

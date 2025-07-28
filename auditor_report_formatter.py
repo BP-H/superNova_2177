@@ -12,7 +12,7 @@ display, or structured export.
 """
 
 from typing import Dict, List, Optional, Any
-from datetime import datetime # Added datetime import for timestamping
+from datetime import datetime # Added datetime import for timestamping, UTC
 
 
 def render_plain_text_report(explainer_output: Dict[str, Any]) -> str:
@@ -168,5 +168,5 @@ def generate_structured_audit_bundle(
         "risk_flags": explainer_output.get("risk_flags", []),
         "bias_summary": bias_summary_text,
         "causal_trace": causal_chain_data or [],
-        "timestamp": datetime.utcnow().isoformat(), # Add timestamp to bundle
+        "timestamp": datetime.now(UTC).isoformat(), # Add timestamp to bundle
     }

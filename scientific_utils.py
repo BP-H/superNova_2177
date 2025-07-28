@@ -7,6 +7,7 @@ import math
 import inspect
 import logging
 import datetime
+from datetime import UTC
 import asyncio
 import html
 import re
@@ -844,7 +845,7 @@ def refine_hypotheses_from_evidence(
                     "novelty_score": novelty + 0.1,
                     "parent_hypothesis_id": hypothesis_id,
                     "status": "new",
-                    "created_at": datetime.datetime.utcnow().isoformat(),
+                    "created_at": datetime.datetime.now(UTC).isoformat(),
                 }
                 refined.append(h)
                 refined.append(counter)
@@ -853,7 +854,7 @@ def refine_hypotheses_from_evidence(
         h["confidence"] = confidence
         h["novelty_score"] = novelty
         h.setdefault("refinement_history", []).append({
-            "timestamp": datetime.datetime.utcnow().isoformat(),
+            "timestamp": datetime.datetime.now(UTC).isoformat(),
             "evidence_applied": len(new_evidence_log),
             "resulting_confidence": confidence,
         })
@@ -911,7 +912,7 @@ def detect_emergent_patterns(
                 "confidence": 0.5,
                 "novelty_score": 0.8,
                 "status": "new",
-                "created_at": datetime.datetime.utcnow().isoformat(),
+                "created_at": datetime.datetime.now(UTC).isoformat(),
                 "trigger_value": values[i],
                 "delta_observed": delta,
             }
@@ -956,5 +957,5 @@ def autonomous_literature_synthesis(generated_hypothesis: Dict[str, Any]) -> Dic
             "Could this reflect a latent variable not captured in current metrics?"
         ],
         "status": "stub",
-        "timestamp": datetime.datetime.utcnow().isoformat(),
+        "timestamp": datetime.datetime.now(UTC).isoformat(),
     }

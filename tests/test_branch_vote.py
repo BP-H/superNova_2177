@@ -1,4 +1,5 @@
 import datetime
+from datetime import UTC
 import pytest
 from sqlalchemy.exc import IntegrityError
 
@@ -14,7 +15,7 @@ def test_branch_vote_unique_constraint(test_db):
         creator_id=None,
         karma_at_fork=0.0,
         config={},
-        timestamp=datetime.datetime.utcnow(),
+        timestamp=datetime.datetime.now(UTC),
         status="active",
     )
     voter = Harmonizer(username="alice", email="a@example.com", hashed_password="x")
@@ -41,7 +42,7 @@ def test_vote_updates_counts(monkeypatch, test_db):
         creator_id=None,
         karma_at_fork=0.0,
         config={},
-        timestamp=datetime.datetime.utcnow(),
+        timestamp=datetime.datetime.now(UTC),
         status="active",
     )
     voter = Harmonizer(username="bob", email="b@example.com", hashed_password="x")

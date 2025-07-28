@@ -1,4 +1,5 @@
 import datetime
+from datetime import UTC
 import pytest
 import json
 
@@ -15,7 +16,7 @@ def test_discover_causal_mechanisms():
     """
     # 1. Setup
     g = InfluenceGraph()
-    base_time = datetime.datetime.utcnow()
+    base_time = datetime.datetime.now(UTC)
 
     # Log an intervention with a known change in a metric (delta).
     intervention_log = [
@@ -57,7 +58,7 @@ def test_temporal_causality_analysis():
     """
     # 1. Setup
     g = InfluenceGraph()
-    base_time = datetime.datetime.utcnow()
+    base_time = datetime.datetime.now(UTC)
 
     # Create a clear, time-ordered sequence of events: A -> B -> C
     g.add_interaction('A', 'B', timestamp=base_time + datetime.timedelta(seconds=10), weight=0.7)

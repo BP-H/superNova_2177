@@ -3,6 +3,7 @@ import math
 import random
 import statistics
 import datetime
+from datetime import UTC
 import json
 from decimal import Decimal
 from typing import Any, TYPE_CHECKING, Dict, Optional
@@ -192,7 +193,7 @@ def calculate_interaction_entropy(
         def _wcount(items: list[Any]) -> float:
             if not decay_rate:
                 return float(len(items))
-            now = datetime.datetime.utcnow()
+            now = datetime.datetime.now(UTC)
             total_w = 0.0
             for it in items:
                 ts = getattr(it, "created_at", None)
@@ -710,8 +711,8 @@ def predict_user_interactions(
                 "method": "entropy_based",
             },
         },
-        "expires_at": (datetime.datetime.utcnow() + datetime.timedelta(hours=prediction_window_hours)).isoformat(),
-        "created_at": datetime.datetime.utcnow().isoformat(),
+        "expires_at": (datetime.datetime.now(UTC) + datetime.timedelta(hours=prediction_window_hours)).isoformat(),
+        "created_at": datetime.datetime.now(UTC).isoformat(),
     }
 
 
@@ -761,7 +762,7 @@ def validate_user_prediction(
         "prediction_id": prediction.get("user_id"),
         "overall_accuracy": overall_accuracy,
         "detailed_results": results,
-        "validation_timestamp": datetime.datetime.utcnow().isoformat(),
+        "validation_timestamp": datetime.datetime.now(UTC).isoformat(),
     }
 
 
@@ -818,7 +819,7 @@ def generate_system_predictions(db: Session, timeframe_hours: int) -> Dict[str, 
         },
         "top_influencers_next_day": top_influencers,
         "falsifiability_criteria": "compare predicted metrics with observed metrics after timeframe",
-        "generated_at": datetime.datetime.utcnow().isoformat(),
+        "generated_at": datetime.datetime.now(UTC).isoformat(),
     }
 
 
@@ -992,7 +993,7 @@ def log_metric_change(
         "new_value": float(new_value) if isinstance(new_value, Decimal) else new_value,
         "source_module": source_module,
         "note": optional_note,
-        "timestamp": datetime.datetime.utcnow().isoformat(),
+        "timestamp": datetime.datetime.now(UTC).isoformat(),
         "delta": _compute_delta(old_value, new_value),
     }
 
