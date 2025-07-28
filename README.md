@@ -232,14 +232,13 @@ The application will be available at [http://localhost:8000](http://localhost:80
 
 ## 🎛️ Local Streamlit UI
 
-To experiment with the validation analyzer locally, launch the Streamlit frontend:
+To experiment with the validation analyzer locally, launch the Streamlit frontend from this repository root:
 
 ```bash
 streamlit run ui.py
 ```
 Or run `make ui` from the repository root to start the demo.
-Run these commands from the repository root. **Do not** execute `python ui.py`
-directly as that bypasses Streamlit's runtime.
+Run these commands from the repository root. **Do not** execute `python ui.py` directly as that bypasses Streamlit's runtime.
 
 Open [http://localhost:8501](http://localhost:8501) in your browser to interact with the demo.
 

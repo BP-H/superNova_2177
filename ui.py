@@ -1,17 +1,45 @@
 import json
-import streamlit as st
-import networkx as nx
-import matplotlib.pyplot as plt
 
-from validation_integrity_pipeline import analyze_validation_integrity
+import matplotlib.pyplot as plt
+import networkx as nx
+import streamlit as st
+
 from network.network_coordination_detector import build_validation_graph
+from validation_integrity_pipeline import analyze_validation_integrity
+
+try:
+    st_secrets = st.secrets
+except Exception:
+    st_secrets = {
+        "SECRET_KEY": "dev",
+        "DATABASE_URL": "sqlite:///:memory:",
+    }
 
 try:
     from config import Config
+except Exception:  # pragma: no cover - optional debug dependencies
+
+    class Config:  # type: ignore
+        """Minimal stub used when the real Config cannot be imported."""
+
+        METRICS_PORT = 8001
+
+        def __init__(self) -> None:
+            pass
+
+
+try:
     from superNova_2177 import HarmonyScanner
 except Exception:  # pragma: no cover - optional debug dependencies
-    HarmonyScanner = None  # type: ignore
-    Config = None  # type: ignore
+
+    class HarmonyScanner:  # type: ignore
+        """Fallback stub for demo mode."""
+
+        def __init__(self, config: Config) -> None:  # noqa: D401 - simple stub
+            self.config = config
+
+        def scan(self, text: str) -> bool:
+            return True
 
 
 def run_analysis(validations):
@@ -88,13 +116,13 @@ def main() -> None:
         "mode to see the pipeline in action."
     )
 
-    secret_key = st.secrets.get("SECRET_KEY", "not set")
-    database_url = st.secrets.get("DATABASE_URL", "not set")
+    secret_key = st_secrets.get("SECRET_KEY", "not set")
+    database_url = st_secrets.get("DATABASE_URL", "not set")
 
     with st.sidebar:
         st.header("Environment")
         st.write(f"Database URL: {database_url}")
-        if secret_key != "not set":
+        if secret_key != "not set":  # nosec B105 - comparison only
             st.success("Secret key loaded")
         else:
             st.warning("SECRET_KEY missing")
@@ -104,8 +132,20 @@ def main() -> None:
 
     if run_clicked:
         if demo_mode:
-            with open("sample_validations.json") as f:
-                data = json.load(f)
+            try:
+                with open("sample_validations.json") as f:
+                    data = json.load(f)
+            except FileNotFoundError:
+                data = {
+                    "validations": [
+                        {
+                            "id": 1,
+                            "validator": "demo",
+                            "target": "example",
+                            "result": True,
+                        }
+                    ]
+                }
         elif uploaded_file is not None:
             data = json.load(uploaded_file)
         else:
@@ -115,4 +155,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    print("✅ Streamlit UI started. Launching main()...")
     main()
