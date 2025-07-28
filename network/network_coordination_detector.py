@@ -99,9 +99,9 @@ def build_validation_graph(validations: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     return {
         "edges": edges,
-        "nodes": set(validator_data.keys()),
+        "nodes": list(validator_data.keys()),
         "hypothesis_coverage": dict(hypothesis_validators),
-        "communities": communities,
+        "communities": [list(c) for c in communities],
     }
 
 
@@ -503,7 +503,7 @@ def analyze_coordination_patterns(validations: List[Dict[str, Any]]) -> Dict[str
             "overall_risk_score": 0.0,
             "coordination_clusters": [],
             "flags": ["no_validations"],
-            "graph": {"edges": [], "nodes": set(), "communities": []},
+            "graph": {"edges": [], "nodes": [], "communities": []},
             "risk_breakdown": {"temporal": 0, "score": 0, "semantic": 0},
         }
 
@@ -559,7 +559,7 @@ def analyze_coordination_patterns(validations: List[Dict[str, Any]]) -> Dict[str
             "overall_risk_score": 0.0,
             "coordination_clusters": [],
             "flags": ["coordination_analysis_failed"],
-            "graph": {"edges": [], "nodes": set(), "communities": []},
+            "graph": {"edges": [], "nodes": [], "communities": []},
             "risk_breakdown": {"temporal": 0, "score": 0, "semantic": 0},
         }
 
