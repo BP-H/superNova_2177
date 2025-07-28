@@ -349,7 +349,10 @@ except ImportError:  # pragma: no cover - fallback when deps are missing
     )
 from pydantic import BaseModel, Field, EmailStr, ValidationError
 from pydantic_settings import BaseSettings
-import redis
+try:
+    import redis
+except ImportError:  # pragma: no cover - optional dependency
+    redis = None
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 
