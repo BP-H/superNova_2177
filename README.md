@@ -277,7 +277,7 @@ pip install -r requirements.txt
 
 ### Test Requirements
 
-Install the minimal set of packages required for running the tests:
+Before running `pytest`, install the minimal set of packages required for the tests:
 
 ```bash
 pip install -r requirements-minimal.txt
@@ -289,7 +289,9 @@ pip install -r requirements-minimal.txt
 `python-dateutil`, `sqlalchemy`, `networkx`, `pytest-asyncio`, `httpx`,
 `email-validator`). With these installed, running `pytest` should
 succeed (`99 passed`).
-Alternatively, the tests can run without these packages. Stub implementations in `stubs/` activate automatically when optional dependencies are missing, allowing `pytest` to succeed even if `requirements-minimal.txt` is not installed.
+If these packages are missing, stub implementations in `stubs/`
+activate automatically. This allows `pytest` to succeed but may not
+exercise the full functionality of optional modules.
 
 ### Real Module Dependencies
 
