@@ -347,8 +347,14 @@ except ImportError:  # pragma: no cover - fallback when deps are missing
         declarative_base,
         IntegrityError,
     )
-from pydantic import BaseModel, Field, EmailStr, ValidationError
-from pydantic_settings import BaseSettings
+try:
+    from pydantic import BaseModel, Field, EmailStr, ValidationError
+except Exception:  # pragma: no cover - lightweight fallback
+    from stubs.pydantic_stub import BaseModel, Field, EmailStr, ValidationError
+try:
+    from pydantic_settings import BaseSettings
+except Exception:  # pragma: no cover - lightweight fallback
+    from stubs.pydantic_settings_stub import BaseSettings
 try:
     import redis
 except ImportError:  # pragma: no cover - optional dependency
@@ -497,7 +503,11 @@ getcontext().prec = 50
 
 # FUSED: Additional imports from v01_grok15.py
 import secrets
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv  # type: ignore
+except Exception:  # pragma: no cover - optional dependency
+    def load_dotenv(*_a, **_k):
+        return False
 import structlog
 import prometheus_client as prom
 from prometheus_client import REGISTRY
