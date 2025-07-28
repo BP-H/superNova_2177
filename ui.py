@@ -1007,4 +1007,8 @@ def main() -> None:
         render_agent_insights_tab()
 if __name__ == "__main__":
     logger.info("\u2705 Streamlit UI started. Launching main()...")
-    main()
+    try:
+        main()
+        st.success("\u2705 UI Booted")
+    except Exception as e:
+        st.error(f"Startup failed: {e}")

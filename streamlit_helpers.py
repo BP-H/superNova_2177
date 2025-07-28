@@ -34,11 +34,6 @@ def alert(message: str, level: Literal["warning", "error", "info"] = "info") -> 
 
 def header(title: str, *, layout: str = "centered") -> None:
     """Render a standard page header and apply base styling."""
-    try:
-        st.set_page_config(page_title=title, layout=layout)
-    except Exception:
-        # set_page_config may have been called already in this session
-        pass
     st.markdown(
         "<style>.app-container{padding:1rem 2rem;}" "</style>",
         unsafe_allow_html=True,

@@ -3991,7 +3991,6 @@ def _run_boot_debug() -> None:
     try:
         import streamlit as st  # type: ignore
 
-        st.set_page_config(page_title="Boot Diagnostic", layout="centered")
         st.header("Boot Diagnostic")
 
         st.subheader("Config Test")
