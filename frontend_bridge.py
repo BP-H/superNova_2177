@@ -66,12 +66,18 @@ from predictions.ui_hook import (
     get_prediction_ui,
     update_prediction_status_ui,
 )
+from prediction_manager.ui_hook import (
+    save_prediction_ui,
+    get_prediction_ui as manager_get_prediction_ui,
+)
 
 from optimization.ui_hook import tune_parameters_ui
 
 register_route("store_prediction", store_prediction_ui)
 register_route("get_prediction", get_prediction_ui)
 register_route("update_prediction_status", update_prediction_status_ui)
+register_route("save_prediction", save_prediction_ui)
+register_route("get_saved_prediction", manager_get_prediction_ui)
 
 # Protocol agent management routes
 from protocols.api_bridge import (
