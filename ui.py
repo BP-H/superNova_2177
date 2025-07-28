@@ -359,8 +359,12 @@ def main() -> None:
                     "note": diary_note,
                 }
             )
-        for entry in st.session_state["diary"]:
-            st.write(f"{entry['timestamp']}: {entry['note']}")
+        for i, entry in enumerate(st.session_state["diary"]):
+            anchor = f"diary-{i}"
+            st.markdown(
+                f"<p id='{anchor}'><strong>{entry['timestamp']}</strong>: {entry['note']}</p>",
+                unsafe_allow_html=True,
+            )
         if st.download_button(
             "Export Diary as Markdown",
             "\n".join(
@@ -378,21 +382,49 @@ def main() -> None:
     st.subheader("RFCs and Agent Insights")
     with st.expander("Proposed RFCs", expanded=False):
         rfc_dir = Path("rfcs")
-        for path in sorted(rfc_dir.glob("rfc-*.md")):
+        filter_text = st.text_input("Filter RFCs")
+        preview_all = st.checkbox("Preview full text")
+
+        def parse_summary(text: str) -> str:
+            if "## Summary" not in text:
+                return ""
+            part = text.split("## Summary", 1)[1]
+            lines = []
+            for line in part.splitlines()[1:]:
+                if line.startswith("##"):
+                    break
+                if line.strip():
+                    lines.append(line.strip())
+            return " ".join(lines)
+
+        rfc_paths = sorted(rfc_dir.rglob("rfc-*.md"))
+        rfc_entries = []
+        for path in rfc_paths:
             text = path.read_text()
-            summary = ""
-            if "## Summary" in text:
-                part = text.split("## Summary", 1)[1]
-                summary_lines = []
-                for line in part.splitlines()[1:]:
-                    if line.startswith("##"):
-                        break
-                    if line.strip():
-                        summary_lines.append(line.strip())
-                summary = " ".join(summary_lines)
-            st.markdown(f"### {path.stem}")
-            st.write(summarize_text(summary))
-            st.markdown(f"[Read RFC]({path.as_posix()})")
+            summary = parse_summary(text)
+            rfc_entries.append({"id": path.stem, "summary": summary, "text": text, "path": path})
+
+        diary_mentions: dict[str, list[int]] = {e["id"]: [] for e in rfc_entries}
+        for i, entry in enumerate(st.session_state.get("diary", [])):
+            note_lower = entry.get("note", "").lower()
+            for rfc in rfc_entries:
+                if rfc["id"].lower() in note_lower or rfc["id"].replace("-", " ") in note_lower:
+                    diary_mentions.setdefault(rfc["id"], []).append(i)
+
+        for rfc in rfc_entries:
+            if filter_text and filter_text.lower() not in rfc["summary"].lower() and filter_text.lower() not in rfc["id"].lower():
+                continue
+            st.markdown(f"### {rfc['id']}")
+            st.write(summarize_text(rfc["summary"]))
+            mentions = diary_mentions.get(rfc["id"], [])
+            if mentions:
+                links = ", ".join([
+                    f"[entry {idx + 1}](#diary-{idx})" for idx in mentions
+                ])
+                st.markdown(f"Referenced in: {links}", unsafe_allow_html=True)
+            st.markdown(f"[Read RFC]({rfc['path'].as_posix()})")
+            if preview_all or st.checkbox("Show details", key=f"show_{rfc['id']}"):
+                st.markdown(rfc["text"], unsafe_allow_html=True)
 
     notes_path = Path("AgentNotes.md")
     if notes_path.exists():
