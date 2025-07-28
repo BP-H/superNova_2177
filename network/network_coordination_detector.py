@@ -11,6 +11,11 @@ This module can be profiled with ``cProfile`` to identify heavy NumPy or
 NetworkX sections when analyzing large validation graphs::
 
     python -m cProfile -s time network/network_coordination_detector.py
+
+``ProcessPoolExecutor`` is used by default for CPU-bound tasks, but environments
+like Streamlit can have trouble spawning processes. Set the environment variable
+``SUPERNOVA_FORCE_THREADPOOL=1`` (or run within Streamlit) to fall back to
+``ThreadPoolExecutor``.
 """
 
 import itertools
@@ -18,7 +23,7 @@ import logging
 import math
 import os
 from collections import defaultdict
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from datetime import datetime, timedelta
 from functools import lru_cache
 from multiprocessing import get_context
@@ -27,6 +32,23 @@ from typing import Any, Dict, List, Set, Tuple
 
 logger = logging.getLogger("superNova_2177.coordination")
 logger.propagate = False
+
+
+def _use_process_pool() -> bool:
+    """Return True if process-based executors should be used."""
+    if os.environ.get("SUPERNOVA_FORCE_THREADPOOL") == "1":
+        return False
+    try:  # detect Streamlit environment which doesn't allow forking easily
+        import streamlit.runtime.scriptrunner as stc  # type: ignore
+
+        if stc.get_script_run_ctx() is not None:
+            return False
+    except Exception:
+        pass
+    return True
+
+
+ExecutorClass = ProcessPoolExecutor if _use_process_pool() else ThreadPoolExecutor
 
 
 class Config:
@@ -241,7 +263,14 @@ def detect_temporal_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
         for i in range(0, len(pairs), chunk_size)
     ]
 
-    with ProcessPoolExecutor(mp_context=get_context("spawn")) as executor:
+    # ``ExecutorClass`` switches between ``ProcessPoolExecutor`` and
+    # ``ThreadPoolExecutor`` depending on environment restrictions. Using
+    # threads avoids process spawning issues in Streamlit.
+    if ExecutorClass is ProcessPoolExecutor:
+        context = get_context("spawn")
+    else:
+        context = None
+    with ExecutorClass(mp_context=context) if context else ExecutorClass() as executor:
         results = executor.map(_temporal_worker, chunks, itertools.repeat(window))
         for clusters, chunk_flags in results:
             temporal_clusters.extend(clusters)
@@ -297,7 +326,11 @@ def detect_score_coordination(validations: List[Dict[str, Any]]) -> Dict[str, An
         for i in range(0, len(items), chunk_size)
     ]
 
-    with ProcessPoolExecutor(mp_context=get_context("spawn")) as executor:
+    if ExecutorClass is ProcessPoolExecutor:
+        context = get_context("spawn")
+    else:
+        context = None
+    with ExecutorClass(mp_context=context) if context else ExecutorClass() as executor:
         results = executor.map(_score_worker, chunks)
         for clusters, chunk_flags in results:
             score_clusters.extend(clusters)

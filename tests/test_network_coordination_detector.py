@@ -165,3 +165,13 @@ def test_detect_semantic_coordination_sentence_transformer_failure(monkeypatch):
     assert result["semantic_clusters"]
     assert result["semantic_clusters"][0]["similarity_score"] >= 0.8
 
+
+def test_force_threadpool(monkeypatch):
+    """Setting SUPERNOVA_FORCE_THREADPOOL uses threads instead of processes."""
+    monkeypatch.setenv("SUPERNOVA_FORCE_THREADPOOL", "1")
+    import importlib
+    import network.network_coordination_detector as mod
+
+    mod = importlib.reload(mod)
+    assert mod.ExecutorClass is mod.ThreadPoolExecutor
+
