@@ -24,6 +24,14 @@ async def dispatch_route(name: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         result = await result
     return result
 
+
+def _list_routes(_: Dict[str, Any]) -> Dict[str, Any]:
+    """Return the names of all registered routes."""
+    return {"routes": sorted(ROUTES.keys())}
+
+
+register_route("list_routes", _list_routes)
+
 # Built-in hypothesis-related routes
 from hypothesis.ui_hook import (
     rank_hypotheses_by_confidence_ui,
