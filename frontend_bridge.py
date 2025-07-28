@@ -31,7 +31,6 @@ async def dispatch_route(
     return result
 
 
-
 def _list_routes(_: Dict[str, Any]) -> Dict[str, Any]:
     """Return the names of all registered routes."""
     return {"routes": sorted(ROUTES.keys())}
@@ -90,3 +89,13 @@ register_route("temporal_consistency", analyze_temporal_ui)
 
 # Optimization-related route
 register_route("tune_parameters", tune_parameters_ui)
+
+# Import additional UI hooks for side effects (route registration)
+import network.ui_hook  # noqa: F401,E402 - registers network analysis routes
+import consensus.ui_hook  # noqa: F401,E402 - registers consensus forecast routes
+import validators.ui_hook  # noqa: F401,E402 - registers validator reputation routes
+import audit.ui_hook  # noqa: F401,E402 - exposes audit utilities
+import introspection.ui_hook  # noqa: F401,E402 - registers introspection routes
+import protocols.ui_hook  # noqa: F401,E402 - registers cross-universe bridge routes
+import protocols.agents.guardian_ui_hook  # noqa: F401,E402 - guardian agent routes
+import protocols.agents.harmony_ui_hook  # noqa: F401,E402 - harmony synth route
