@@ -26,23 +26,42 @@ try:
         declarative_base,
     )
 except Exception:  # pragma: no cover - optional dependency
-    from stubs.sqlalchemy_stub import (
-        create_engine,
-        Column,
-        Integer,
-        String,
-        Text,
-        Boolean,
-        DateTime,
-        ForeignKey,
-        Table,
-        Float,
-        JSON,
-        sessionmaker,
-        relationship,
-        Session,
-        declarative_base,
-    )
+    try:
+        from stubs.sqlalchemy_stub import (
+            create_engine,
+            Column,
+            Integer,
+            String,
+            Text,
+            Boolean,
+            DateTime,
+            ForeignKey,
+            Table,
+            Float,
+            JSON,
+            sessionmaker,
+            relationship,
+            Session,
+            declarative_base,
+        )
+    except Exception:  # pragma: no cover - package may be relative
+        from .stubs.sqlalchemy_stub import (
+            create_engine,
+            Column,
+            Integer,
+            String,
+            Text,
+            Boolean,
+            DateTime,
+            ForeignKey,
+            Table,
+            Float,
+            JSON,
+            sessionmaker,
+            relationship,
+            Session,
+            declarative_base,
+        )
 
     def UniqueConstraint(*_a, **_kw):
         return None

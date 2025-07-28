@@ -35,6 +35,7 @@ except Exception:  # pragma: no cover - handle optional dependency
 
 # Provide a lightweight stub for the heavy ``superNova_2177`` module so tests do
 # not require optional scientific dependencies.
+sys.modules.pop("superNova_2177", None)
 if "superNova_2177" not in sys.modules:
     import types
     import importlib
@@ -589,6 +590,19 @@ for mod_name in [
 
             redis_stub.from_url = from_url
             stub = redis_stub
+        if mod_name == "requests":
+            class Response:
+                def __init__(self, status_code=200, json_data=None):
+                    self.status_code = status_code
+                    self._json = json_data or {}
+
+                def json(self):
+                    return self._json
+
+            stub.Response = Response
+            stub.get = lambda *a, **kw: Response()
+            stub.post = lambda *a, **kw: Response()
+            stub.Timeout = type("Timeout", (Exception,), {})
         if mod_name == "passlib":
             class CryptContext:
                 def __init__(self, *a, **kw):
@@ -910,7 +924,9 @@ def _setup_sqlite(monkeypatch, db_path):
     """Create an isolated engine and session factory bound to ``db_path``."""
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
-    import db_models, sys, pytest
+    import db_models
+    import sys
+    import pytest
 
     mod = getattr(create_engine, "__module__", "")
     name = getattr(create_engine, "__name__", "")

@@ -7,6 +7,10 @@ class Column:
 
     def __set_name__(self, owner, name):  # pragma: no cover - simplified
         self.name = name
+        self.model = owner
+
+    def __hash__(self):  # pragma: no cover - simplified
+        return hash((self.model, self.name))
 
     def __get__(self, instance, owner):  # pragma: no cover - simplified
         if instance is None:
@@ -128,8 +132,9 @@ class Session:
             return len(self._data)
 
     def query(self, model):  # pragma: no cover - simplified
-        data = self.engine.storage.get(model, [])
-        data += [o for o in self._pending if isinstance(o, model)]
+        real_model = getattr(model, "model", model)
+        data = self.engine.storage.get(real_model, [])
+        data += [o for o in self._pending if isinstance(o, real_model)]
         return Session._Query(data)
 
     # Simple execute/select emulation ----------------------------------------
