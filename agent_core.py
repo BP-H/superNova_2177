@@ -667,19 +667,58 @@ class RemixAgent:
         proposal_id = event["proposal_id"]
         if self.storage.get_proposal(proposal_id):
             return
+        creator_data = self.storage.get_user(event["creator"])
+        if not creator_data:
+            return
+        creator = User.from_dict(creator_data, self.config)
+        min_karma = Decimal(str(event.get("min_karma", "0")))
+        if creator.karma < min_karma:
+            logging.info(
+                "proposal rejected: insufficient karma",
+                proposal_id=proposal_id,
+                karma=str(creator.karma),
+            )
+            return
+
+        system_entropy = Decimal(
+            self.cosmic_nexus.state_service.get_state(
+                "system_entropy", str(self.config.SYSTEM_ENTROPY_BASE)
+            )
+        )
+        if event.get("requires_certification") and system_entropy > Decimal(
+            str(self.config.ENTROPY_CHAOS_THRESHOLD)
+        ):
+            logging.info(
+                "proposal rejected: certification required in chaotic state",
+                proposal_id=proposal_id,
+            )
+            return
+
+        tags = {
+            "urgency": "high"
+            if system_entropy > Decimal(str(self.config.ENTROPY_INTERVENTION_THRESHOLD))
+            else "normal",
+            "popularity": "high"
+            if creator.karma >= self.config.KARMA_MINT_THRESHOLD
+            else "low",
+            "entropy": float(system_entropy),
+        }
+        payload = event.get("payload", {}) or {}
+        payload["tags"] = tags
+
         proposal = {
             "proposal_id": proposal_id,
             "creator": event["creator"],
             "description": event["description"],
             "target": event["target"],
-            "payload": event["payload"],
+            "payload": payload,
             "status": "open",
             "votes": {},
             "created_at": datetime.datetime.utcnow().isoformat(),
             "voting_deadline": (
                 datetime.datetime.utcnow()
                 + datetime.timedelta(hours=Config.VOTING_DEADLINE_HOURS)
-            ).isoformat(),  # Example duration
+            ).isoformat(),
             "execution_time": None,
         }
         self.storage.set_proposal(proposal_id, proposal)
