@@ -211,7 +211,8 @@ def run_analysis(validations, *, layout: str = "force"):
         if update_validator_reputations:
             try:
                 rep_result = update_validator_reputations(validations)
-                reputations = rep_result.get("reputations", {})
+                if isinstance(rep_result, dict):
+                    reputations = rep_result.get("reputations", {})
             except Exception as exc:  # pragma: no cover - optional
                 logger.warning(f"Reputation calc failed: {exc}")
 
