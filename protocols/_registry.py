@@ -72,7 +72,7 @@ AGENT_REGISTRY = {
     },
     "CodexAgent": {
         "cls": CodexAgent,
-        "description": "Base agent class for Codex experiments.",
+        "description": "Base agent with in-memory utilities.",
         "llm_capable": False,
     },
 }
