@@ -124,6 +124,9 @@ build the project using Docker, these packages are installed automatically:
 sudo apt-get install build-essential libsnappy-dev libsdl2-dev …
 ```
 
+The Docker image installs these dependencies automatically, so you only
+need them locally when running without Docker.
+
 **macOS**
 
 ```bash
@@ -252,6 +255,9 @@ Build the image:
 ```bash
 docker build -t supernova-2177 .
 ```
+
+The build process installs required system libraries such as `libsnappy-dev`
+and SDL dependencies, so no manual setup is needed when using Docker.
 
 Or bring up the full stack:
 ```bash
