@@ -2,6 +2,7 @@ import json
 import logging
 import difflib
 from pathlib import Path
+import inspect
 
 import os
 import io
@@ -34,6 +35,8 @@ except Exception:  # pragma: no cover - optional in dev/CI
 
 from network.network_coordination_detector import build_validation_graph
 from validation_integrity_pipeline import analyze_validation_integrity
+from protocols import AGENT_REGISTRY
+import llm_backends
 try:
     from validator_reputation_tracker import update_validator_reputations
 except Exception:  # pragma: no cover - optional dependency
@@ -418,6 +421,42 @@ def main() -> None:
             "High Risk Threshold", 0.1, 1.0, float(VCConfig.HIGH_RISK_THRESHOLD), 0.05
         )
 
+        st.divider()
+        st.subheader("LLM Backend")
+        backend_choice = st.selectbox(
+            "Model", ["GPT-4o", "Claude-3", "Gemini"], index=0
+        )
+        openai_key = st.text_input(
+            "OpenAI API Key", value=st_secrets.get("OPENAI_API_KEY", ""), type="password"
+        )
+        anthropic_key = st.text_input(
+            "Anthropic API Key", value=st_secrets.get("ANTHROPIC_API_KEY", ""), type="password"
+        )
+        google_key = st.text_input(
+            "Google API Key", value=st_secrets.get("GOOGLE_API_KEY", ""), type="password"
+        )
+
+        llm_backend_map = {
+            "GPT-4o": llm_backends.GPT4oBackend(openai_key),
+            "Claude-3": llm_backends.Claude3Backend(anthropic_key),
+            "Gemini": llm_backends.GeminiBackend(google_key),
+        }
+        llm_backend = llm_backend_map[backend_choice]
+
+        st.subheader("Agents")
+        agent_names = list(AGENT_REGISTRY.keys())
+        selected_agent = st.selectbox("Select Agent", agent_names, index=0)
+        launch_clicked = st.button("Launch Agent")
+
+        llm_prompt = st.text_area("Test Prompt", key="llm_prompt")
+        if st.button("Send to LLM"):
+            try:
+                st.session_state["llm_response"] = llm_backend.chat(llm_prompt)
+            except Exception as exc:
+                st.session_state["llm_response"] = f"ERROR: {exc}"
+        if "llm_response" in st.session_state:
+            st.write(st.session_state["llm_response"])
+
         uploaded_file = st.file_uploader(
             "Upload validations JSON (drag/drop)", type="json"
         )
@@ -441,6 +480,23 @@ def main() -> None:
             file_name="latest_result.json",
         )
         st.divider()
+
+    if launch_clicked:
+        try:
+            cls, _ = AGENT_REGISTRY[selected_agent]
+            sig = inspect.signature(cls.__init__)
+            kwargs = {}
+            if "talk_to_llm_fn" in sig.parameters:
+                kwargs["talk_to_llm_fn"] = llm_backend.chat
+            if "trust_registry" in sig.parameters:
+                kwargs["trust_registry"] = {}
+            extra = set(sig.parameters) - {"self", *kwargs.keys()}
+            if extra:
+                raise TypeError(f"Unhandled args: {', '.join(extra)}")
+            st.session_state["agent"] = cls(**kwargs)
+            st.success(f"Launched {selected_agent}")
+        except Exception as exc:
+            st.error(f"Launch failed: {exc}")
 
     if run_clicked or rerun_clicked:
         if run_clicked:
