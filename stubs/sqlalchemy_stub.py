@@ -162,6 +162,10 @@ class Result:
     def first(self):  # pragma: no cover - trivial
         return self._data[0] if self._data else None
 
+    def scalar_one_or_none(self):
+        """Return the single element or ``None`` if the result set is empty."""
+        return self._data[0] if len(self._data) == 1 else None
+
     def all(self):  # pragma: no cover - trivial
         return list(self._data)
 
