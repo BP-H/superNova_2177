@@ -318,6 +318,24 @@ Missing packages such as `tqdm` are installed automatically when you run `one_cl
 - **Browser does not open**: Navigate manually to
   [http://localhost:8888](http://localhost:8888) or the port you selected.
 
+### Job Queue & Polling
+
+Long-running tasks started via the UI now run asynchronously. Use the
+`queue_*` routes to start a job and `poll_*` to check its status. Example:
+
+```python
+from frontend_bridge import dispatch_route
+
+# queue an introspection audit
+job = await dispatch_route("queue_full_audit", {"hypothesis_id": "H1"})
+
+# later poll for the result
+status = await dispatch_route("poll_full_audit", {"job_id": job["job_id"]})
+```
+
+The returned status dictionary includes ``status`` and ``result`` keys. Events
+are still emitted via the hook managers when a job completes.
+
 ## 🌩️ Streamlit Cloud
 
 Deploy the demo UI online with Streamlit Cloud:
@@ -331,6 +349,22 @@ Deploy the demo UI online with Streamlit Cloud:
 `kaleido` is bundled in `requirements.txt` so image export features work on Streamlit Cloud.
 
 After the build completes, you'll get a shareable URL to interact with the validation demo in your browser.
+
+## 🤝 UI Integration
+
+The `frontend_bridge` module exposes a lightweight router for the UI. Handlers
+register themselves with `register_route(name, func)` and are invoked through
+`dispatch_route`.
+
+A convenient read-only route `"list_routes"` returns the currently available
+route names. This can help debug which backend callbacks are present:
+
+```python
+from frontend_bridge import dispatch_route
+
+routes = await dispatch_route("list_routes", {})
+print(routes["routes"])
+```
 
 ## 🧪 Running Tests
 
@@ -568,6 +602,9 @@ Launch them from the repository root:
 jupyter notebook docs/Validation_Pipeline.ipynb
 jupyter notebook docs/Network_Graph_Visualization.ipynb
 ```
+
+See `docs/hooks.md` for a catalogue of hook event names used by the
+`HookManager`.
 
 ## 🏗️ Architecture (v4.6)
 

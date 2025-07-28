@@ -2,16 +2,17 @@ import pytest
 
 from frontend_bridge import dispatch_route
 from consensus.ui_hook import ui_hook_manager
+from hooks import events
 
 
 @pytest.mark.asyncio
 async def test_forecast_consensus_via_router():
-    events = []
+    received = []
 
     async def listener(data):
-        events.append(data)
+        received.append(data)
 
-    ui_hook_manager.register_hook("consensus_forecast_run", listener)
+    ui_hook_manager.register_hook(events.CONSENSUS_FORECAST_RUN, listener)
 
     payload = {
         "validations": [
@@ -24,4 +25,4 @@ async def test_forecast_consensus_via_router():
     result = await dispatch_route("forecast_consensus", payload)
 
     assert result["trend"] == "increasing"
-    assert events == [result]
+    assert received == [result]

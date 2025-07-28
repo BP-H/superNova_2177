@@ -2,6 +2,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from introspection.ui_hook import trigger_full_audit_ui
+from hooks import events
 
 
 class DummyHookManager:
@@ -31,7 +32,7 @@ async def test_full_audit_ui_runs_pipeline_and_emits_event(monkeypatch):
 
     assert result == {"bundle": True}
     assert calls["run"] == ("H1", db)
-    assert dummy.events == [("full_audit_completed", ({"bundle": True},), {})]
+    assert dummy.events == [(events.FULL_AUDIT_COMPLETED, ({"bundle": True},), {})]
 
 
 @pytest.mark.asyncio
