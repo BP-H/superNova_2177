@@ -2,6 +2,7 @@
 import time
 from collections import defaultdict
 
+
 class FatigueMemoryMixin:
     def __init__(self):
         self.task_count = defaultdict(int)
@@ -15,6 +16,7 @@ class FatigueMemoryMixin:
 
     def register_task(self, task: str):
         self.task_count[task] += 1
+
 
 class ProbabilisticBeliefSystem:
     def __init__(self):

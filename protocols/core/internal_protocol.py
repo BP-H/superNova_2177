@@ -6,6 +6,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+
 class InternalAgentProtocol:
     """Standard interface for agent communication and state."""
     def __init__(self) -> None:

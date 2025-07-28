@@ -1,4 +1,6 @@
 """Mixins for exporting agent reasoning context."""
+
+
 class IntrospectiveMixin:
     def export_reasoning(self) -> dict:
         return {

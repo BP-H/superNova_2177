@@ -4,6 +4,7 @@ import time
 import json
 from .profiles import AgentProfile
 
+
 class AgentCoreRuntime:
     """Launch and coordinate agents against input tasks."""
     def __init__(self, registry: Dict[str, AgentProfile]):
@@ -32,6 +33,7 @@ class AgentCoreRuntime:
     def export_log(self, path: str = "agent_log.json") -> None:
         with open(path, "w") as f:
             json.dump(self.history, f, indent=2)
+
 
 # Provider API key storage
 _provider_keys: Dict[str, str] = {}

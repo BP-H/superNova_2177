@@ -31,4 +31,3 @@ class CollaborativePlannerAgent(InternalAgentProtocol):
                 }
 
         return {"error": f"No agent available for task '{task}'"}
-

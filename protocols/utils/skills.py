@@ -8,6 +8,7 @@ __all__ = ["Skill", "EmbodiedAgent"]
 from typing import Callable, Dict
 from protocols.core.internal_protocol import InternalAgentProtocol
 
+
 class Skill:
     def __init__(self, name: str, action: Callable[[dict], dict], description: str = ""):
         self.name = name
@@ -16,6 +17,7 @@ class Skill:
 
     def run(self, input_data: dict) -> dict:
         return self.action(input_data)
+
 
 class EmbodiedAgent(InternalAgentProtocol):
     def __init__(self, name: str):
