@@ -593,7 +593,7 @@ structlog.configure(
         structlog.processors.JSONRenderer(),
     ],
     logger_factory=structlog.stdlib.LoggerFactory(),
-    wrapper_class=structlog.stdlib.BoundLogger,
+    wrapper_class=getattr(structlog.stdlib, "BoundLogger", object),
     cache_logger_on_first_use=True,
 )
 
@@ -2301,6 +2301,15 @@ app = FastAPI(
     description="A voter-owned social metaverse reversing entropy through collaborative creativity.",
     version="1.0",
 )
+if not hasattr(app, "post"):
+    def _stub(*_a, **_kw):
+        return lambda f: f
+
+    app.post = _stub  # type: ignore[attr-defined]
+    app.get = _stub  # type: ignore[attr-defined]
+    app.put = _stub  # type: ignore[attr-defined]
+    app.delete = _stub  # type: ignore[attr-defined]
+    app.add_middleware = lambda *a, **kw: None  # type: ignore[attr-defined]
 
 cosmic_nexus = None
 agent = None
@@ -2341,7 +2350,8 @@ def create_app() -> FastAPI:
     engine = db_models.engine
     SessionLocal = db_models.SessionLocal
     os.makedirs(s.UPLOAD_FOLDER, exist_ok=True)
-    Base.metadata.create_all(bind=engine)
+    if engine is not None:
+        Base.metadata.create_all(bind=engine)
 
     cosmic_nexus = CosmicNexus(SessionLocal, SystemStateService(SessionLocal()))
     agent = RemixAgent(
