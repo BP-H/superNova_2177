@@ -31,8 +31,7 @@ python setup_env.py
 # optional: build the Transcendental Resonance frontend
 # python setup_env.py --build-ui
 # The NiceGUI web interface now lives in `transcendental_resonance_frontend/`.
-# References to the old `web_ui` directory continue to work but will emit a
-# warning.
+# This folder was historically called `web_ui`.
 # Launch the frontend directly with
 # ```bash
 # python -m transcendental_resonance_frontend
