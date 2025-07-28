@@ -3499,6 +3499,10 @@ class TranscendentalCLI(cmd.Cmd):
 # your production infrastructure.
 
 if __name__ == "__main__":
+    if '_is_streamlit_context' in globals() and _is_streamlit_context():
+        _run_boot_debug()
+        sys.exit(0)
+
     import uvicorn
 
     create_app()
@@ -3828,6 +3832,49 @@ if "pytest" in sys.modules and agent is None:
 
 # --- MODULE: hook_manager.py ---
 
+def _is_streamlit_context() -> bool:
+    """Return True when executed via ``streamlit run``."""
+    try:
+        import streamlit.runtime.scriptrunner as stc  # type: ignore
+        return stc.get_script_run_ctx() is not None
+    except Exception:
+        return False
+
+
+def _run_boot_debug() -> None:
+    """Render a simple Streamlit diagnostics UI."""
+    try:
+        import streamlit as st  # type: ignore
+
+        st.set_page_config(page_title="Boot Diagnostic", layout="centered")
+        st.header("Boot Diagnostic")
+
+        st.subheader("Config Test")
+        try:
+            from config import Config
+            st.success("Config import succeeded")
+            st.write({"METRICS_PORT": Config.METRICS_PORT})
+        except Exception as exc:  # pragma: no cover - debug only
+            st.error(f"Config import failed: {exc}")
+            Config = None  # type: ignore
+
+        st.subheader("Harmony Scanner Check")
+        scanner = None
+        try:
+            scanner = HarmonyScanner(Config()) if Config else None
+            st.success("HarmonyScanner instantiated")
+        except Exception as exc:  # pragma: no cover - debug only
+            st.error(f"HarmonyScanner init failed: {exc}")
+
+        if st.button("Run Dummy Scan") and scanner:
+            try:
+                scanner.scan("hello world")
+                st.success("Dummy scan completed")
+            except Exception as exc:  # pragma: no cover - debug only
+                st.error(f"Dummy scan error: {exc}")
+    except Exception as exc:  # pragma: no cover - debug only
+        print(f"Streamlit debug view failed: {exc}")
+
 
 if __name__ == "__main__":
     import sys
@@ -3835,40 +3882,8 @@ if __name__ == "__main__":
     import os
 
     debug_boot = os.getenv("DEBUG_BOOT_UI")
-    if debug_boot:
-        def _run_boot_debug():
-            try:
-                import streamlit as st  # type: ignore
-
-                st.set_page_config(page_title="Boot Diagnostic", layout="centered")
-                st.header("Boot Diagnostic")
-
-                st.subheader("Config Test")
-                try:
-                    from config import Config
-                    st.success("Config import succeeded")
-                    st.write({"METRICS_PORT": Config.METRICS_PORT})
-                except Exception as exc:  # pragma: no cover - debug only
-                    st.error(f"Config import failed: {exc}")
-                    Config = None  # type: ignore
-
-                st.subheader("Harmony Scanner Check")
-                scanner = None
-                try:
-                    scanner = HarmonyScanner(Config()) if Config else None
-                    st.success("HarmonyScanner instantiated")
-                except Exception as exc:  # pragma: no cover - debug only
-                    st.error(f"HarmonyScanner init failed: {exc}")
-
-                if st.button("Run Dummy Scan") and scanner:
-                    try:
-                        scanner.scan("hello world")
-                        st.success("Dummy scan completed")
-                    except Exception as exc:  # pragma: no cover - debug only
-                        st.error(f"Dummy scan error: {exc}")
-            except Exception as exc:  # pragma: no cover - debug only
-                print(f"Streamlit debug view failed: {exc}")
-
+    running_with_streamlit = _is_streamlit_context()
+    if debug_boot or running_with_streamlit:
         _run_boot_debug()
         sys.exit(0)
 
