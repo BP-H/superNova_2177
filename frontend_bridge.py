@@ -29,6 +29,8 @@ from hypothesis.ui_hook import (
     rank_hypotheses_by_confidence_ui,
     detect_conflicting_hypotheses_ui,
 )
+from optimization.ui_hook import tune_parameters_ui
 
 register_route("rank_hypotheses_by_confidence", rank_hypotheses_by_confidence_ui)
 register_route("detect_conflicting_hypotheses", detect_conflicting_hypotheses_ui)
+register_route("tune_parameters", tune_parameters_ui)
