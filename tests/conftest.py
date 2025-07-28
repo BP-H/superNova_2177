@@ -771,6 +771,9 @@ def _setup_sqlite(monkeypatch, db_path):
 
     monkeypatch.setattr(db_models, "engine", engine, raising=False)
     monkeypatch.setattr(db_models, "SessionLocal", Session, raising=False)
+    # ``Base.metadata.bind`` may be ``None`` when the models are first imported.
+    # Always ensure it points at our temporary engine so any new sessions or
+    # tables created via the metadata use the correct database.
     if getattr(db_models.Base.metadata, "bind", None) is not engine:
         monkeypatch.setattr(db_models.Base.metadata, "bind", engine, raising=False)
 
@@ -783,7 +786,7 @@ def _setup_sqlite(monkeypatch, db_path):
             base = getattr(mod, "Base", None)
             if base is not None:
                 metadata = getattr(base, "metadata", None)
-                if metadata and getattr(metadata, "bind", None) is old_engine:
+                if metadata and getattr(metadata, "bind", None) is not engine:
                     monkeypatch.setattr(metadata, "bind", engine, raising=False)
         except AttributeError:
             continue
