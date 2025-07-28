@@ -7,23 +7,8 @@ applications to keep the UI code concise and consistent.
 from __future__ import annotations
 
 from typing import Literal
-from contextlib import contextmanager
-
+import html
 import streamlit as st
-
-
-try:  # pragma: no cover - depends on Streamlit version
-    _escape_md = st.escape_markdown
-except AttributeError:  # pragma: no cover - fallback for older versions
-    try:  # pragma: no cover - optional text_util path
-        from streamlit.text_util import escape_markdown as _escape_md  # type: ignore
-    except Exception:  # pragma: no cover - final fallback
-        def _escape_md(text: str) -> str:
-            return (
-                text.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-            )
 
 
 def alert(message: str, level: Literal["warning", "error", "info"] = "info") -> None:
@@ -38,7 +23,7 @@ def alert(message: str, level: Literal["warning", "error", "info"] = "info") -> 
         f"<div style='border-left: 4px solid {border_color}; "
         f"background-color: {bg_color}; padding: 0.5em; "
         f"border-radius: 0 4px 4px 0; margin-bottom: 1em;'>"
-        f"{_escape_md(message)}</div>",
+        f"{html.escape(message)}</div>",
         unsafe_allow_html=True,
     )
 
