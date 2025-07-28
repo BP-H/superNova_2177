@@ -69,6 +69,21 @@ async def poll_full_audit_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return queue_agent.get_status(job_id)
 
 
-register_route("queue_full_audit", queue_full_audit_ui)
-register_route("poll_full_audit", poll_full_audit_ui)
-register_route("trigger_full_audit", trigger_full_audit_ui)
+register_route(
+    "queue_full_audit",
+    queue_full_audit_ui,
+    "Queue a full introspection audit",
+    "audit",
+)
+register_route(
+    "poll_full_audit",
+    poll_full_audit_ui,
+    "Poll introspection audit status",
+    "audit",
+)
+register_route(
+    "trigger_full_audit",
+    trigger_full_audit_ui,
+    "Run a full introspection audit",
+    "audit",
+)

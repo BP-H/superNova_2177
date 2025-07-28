@@ -11,6 +11,15 @@ async def test_list_routes_returns_registered_names():
     assert set(result["routes"]) == set(ROUTES.keys())
 
 
+@pytest.mark.asyncio
+async def test_help_returns_grouped_info():
+    result = await dispatch_route("help", {})
+    assert "hypothesis" in result["routes"]
+    assert any(
+        r["name"] == "register_hypothesis" for r in result["routes"]["hypothesis"]
+    )
+
+
 class DummyAgent:
     def __init__(self):
         self.jobs = {}
@@ -43,7 +52,7 @@ async def test_long_running_job_enqueued(monkeypatch):
     def handler(payload):
         return long_running(slow(payload))
 
-    register_route("slow_test", handler)
+    register_route("slow_test", handler, "slow test", "meta")
     try:
         job = await dispatch_route("slow_test", {"x": 5})
         assert job == {"job_id": "job1"}

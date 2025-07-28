@@ -7,6 +7,7 @@ backend handler.
 | Route | Description |
 |-------|-------------|
 |`list_routes`|Return the names of all registered routes.|
+|`help`|Return routes grouped by category with descriptions.|
 |`describe_routes`|Return each route name with its handler docstring.|
 |`rank_hypotheses_by_confidence`|Rank hypotheses using the reasoning layer.|
 |`detect_conflicting_hypotheses`|Detect contradictions between hypotheses.|

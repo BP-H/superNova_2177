@@ -358,17 +358,22 @@ After the build completes, you'll get a shareable URL to interact with the valid
 ## 🤝 UI Integration
 
 The `frontend_bridge` module exposes a lightweight router for the UI. Handlers
-register themselves with `register_route(name, func)` and are invoked through
-`dispatch_route`.
+register themselves with `register_route(name, func, description, category)` and
+are invoked through `dispatch_route`.
 
 A convenient read-only route `"list_routes"` returns the currently available
-route names. This can help debug which backend callbacks are present:
+route names. For more detail, the `"help"` route provides descriptions grouped
+by category. This can help debug which backend callbacks are present:
 
 ```python
 from frontend_bridge import dispatch_route
 
 routes = await dispatch_route("list_routes", {})
 print(routes["routes"])
+
+# Detailed route information
+help_data = await dispatch_route("help", {})
+print(help_data["routes"].keys())
 ```
 
 ### Frontend Bridge & Social Hooks

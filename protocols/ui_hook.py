@@ -28,5 +28,15 @@ async def get_provenance_ui(payload: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 # Register with the central frontend router
-register_route("cross_universe_register_bridge", register_bridge_ui)
-register_route("cross_universe_get_provenance", get_provenance_ui)
+register_route(
+    "cross_universe_register_bridge",
+    register_bridge_ui,
+    "Register cross-universe provenance data",
+    "protocol",
+)
+register_route(
+    "cross_universe_get_provenance",
+    get_provenance_ui,
+    "Retrieve provenance information for a coin",
+    "protocol",
+)

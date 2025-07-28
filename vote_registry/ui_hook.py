@@ -26,5 +26,15 @@ async def load_votes_ui(_: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # Register with the frontend bridge
-register_route("record_vote", record_vote_ui)
-register_route("load_votes", load_votes_ui)
+register_route(
+    "record_vote",
+    record_vote_ui,
+    "Record a validator vote",
+    "prediction",
+)
+register_route(
+    "load_votes",
+    load_votes_ui,
+    "Load recorded votes",
+    "prediction",
+)

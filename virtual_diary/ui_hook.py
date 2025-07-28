@@ -29,5 +29,15 @@ async def add_entry_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # Register routes
-register_route("fetch_diary_entries", fetch_entries_ui)
-register_route("add_diary_entry", add_entry_ui)
+register_route(
+    "fetch_diary_entries",
+    fetch_entries_ui,
+    "Fetch diary entries",
+    "diary",
+)
+register_route(
+    "add_diary_entry",
+    add_entry_ui,
+    "Add a diary entry",
+    "diary",
+)

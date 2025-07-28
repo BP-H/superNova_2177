@@ -42,4 +42,9 @@ async def simulate_entanglement_ui(
 
 
 # Register the route with the central router so UIs can invoke it
-register_route("simulate_entanglement", simulate_entanglement_ui)
+register_route(
+    "simulate_entanglement",
+    simulate_entanglement_ui,
+    "Simulate quantum entanglement",
+    "quantum",
+)
