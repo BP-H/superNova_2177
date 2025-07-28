@@ -548,6 +548,7 @@ jupyter notebook docs/Network_Graph_Visualization.ipynb
 * `temporal_consistency_checker.py` — Tracks time-based volatility
 * `network_coordination_detector.py` — Spots suspicious group behavior using
   sentence‑embedding similarity
+* Planned: `vote_registry.py` with identity linking, public timelines per species, and real-time consensus graphs
 
 ## 🧪 Status
 

@@ -89,3 +89,7 @@ def load_votes() -> Dict[str, Any]:
 # ``company``—so that cross-species participation and thresholds can be
 # analyzed programmatically.
 
+# TODO: Implement OAuth or wallet-based identity linking for validators.
+# TODO: Build public frontend pages to display vote timelines per species.
+# TODO: Generate real-time consensus graphs across divergent forks.
+
