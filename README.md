@@ -230,6 +230,16 @@ docker-compose up
 
 The application will be available at [http://localhost:8000](http://localhost:8000).
 
+## 🎛️ Local Streamlit UI
+
+To experiment with the validation analyzer locally, launch the Streamlit frontend:
+
+```bash
+streamlit run ui.py
+```
+
+Open [http://localhost:8501](http://localhost:8501) in your browser to interact with the demo.
+
 ## 🌩️ Streamlit Cloud
 
 Deploy the demo UI online with Streamlit Cloud:
