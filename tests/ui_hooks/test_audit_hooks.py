@@ -3,6 +3,7 @@ import pytest
 
 from audit.ui_hook import log_hypothesis_ui, attach_trace_ui
 from db_models import LogEntry, SystemState
+from hooks import events
 
 
 class DummyHookManager:
@@ -24,7 +25,7 @@ async def test_log_hypothesis_ui(test_db, monkeypatch):
     state = test_db.query(SystemState).filter(SystemState.key == key).first()
     assert state is not None
     assert dummy.events == [
-        ("audit_log", ({"action": "log_hypothesis", "key": key},), {})
+        (events.AUDIT_LOG, ({"action": "log_hypothesis", "key": key},), {})
     ]
 
 
@@ -51,5 +52,5 @@ async def test_attach_trace_ui(test_db, monkeypatch):
     assert data["causal_node_ids"] == ["x"]
     assert data["causal_commentary"] == "trace"
     assert dummy.events == [
-        ("audit_log", ({"action": "attach_trace", "log_id": log.id},), {})
+        (events.AUDIT_LOG, ({"action": "attach_trace", "log_id": log.id},), {})
     ]

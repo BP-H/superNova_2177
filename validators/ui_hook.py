@@ -5,6 +5,7 @@ from typing import Any, Dict
 
 from frontend_bridge import register_route
 from hook_manager import HookManager
+from hooks import events
 from validator_reputation_tracker import update_validator_reputations
 
 from .reputation_influence_tracker import compute_validator_reputations
@@ -37,7 +38,7 @@ async def compute_reputation_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
         "stats": result.get("stats", {}),
     }
 
-    await ui_hook_manager.trigger("reputation_analysis_run", minimal)
+    await ui_hook_manager.trigger(events.REPUTATION_ANALYSIS_RUN, minimal)
     return minimal
 
 async def update_reputations_ui(payload: Dict[str, Any], db) -> Dict[str, Any]:
@@ -47,7 +48,7 @@ async def update_reputations_ui(payload: Dict[str, Any], db) -> Dict[str, Any]:
     result = update_validator_reputations(validations, db=db)
 
     try:
-        hook_manager.fire_hooks("validator_reputations", result)
+        hook_manager.fire_hooks(events.VALIDATOR_REPUTATIONS, result)
     except Exception:  # pragma: no cover - logging only
         logging.exception("Failed to fire validator_reputations hook")
 

@@ -1,6 +1,7 @@
 import pytest
 
 from validators import ui_hook
+from hooks import events
 
 
 class DummyHookManager:
@@ -30,4 +31,4 @@ async def test_update_reputations_ui_emits_event(monkeypatch):
 
     assert result == {"reputations": {"v1": 0.5}, "diversity": {}}
     assert called["vals"] == payload["validations"]
-    assert dummy.events == [("validator_reputations", (result,), {})]
+    assert dummy.events == [(events.VALIDATOR_REPUTATIONS, (result,), {})]

@@ -1,6 +1,7 @@
 import pytest
 
 from network.ui_hook import run_coordination_analysis
+from hooks import events
 
 
 class DummyHookManager:
@@ -33,7 +34,7 @@ async def test_run_coordination_analysis(monkeypatch):
     assert "overall_risk_score" in result  # nosec B101
     assert "flags" in result  # nosec B101
     assert "clusters" in result  # nosec B101
-    assert dummy.events == [("network_analysis", (result,), {})]  # nosec B101
+    assert dummy.events == [(events.NETWORK_ANALYSIS, (result,), {})]  # nosec B101
 
 
 @pytest.mark.asyncio
