@@ -1,6 +1,6 @@
 # run_agents_demo.py
 
-from protocols.agent_protocols_suite import EmbodiedAgent, Skill, MessageHub
+from protocols.utils import EmbodiedAgent, Skill, MessageHub
 
 # --- Setup Message Bus ---
 bus = MessageHub()

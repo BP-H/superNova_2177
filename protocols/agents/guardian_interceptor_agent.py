@@ -13,7 +13,7 @@ from typing import Dict, List
 import uuid
 import time  # retained for potential future hooks
 
-from protocols.agent_protocols_suite import InternalAgentProtocol
+from protocols.core import InternalAgentProtocol
 
 
 # ---------------------------------------------------------------------------

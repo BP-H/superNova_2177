@@ -2,7 +2,13 @@
 
 import random
 import time
-from protocols.agent_protocols_suite import EmbodiedAgent, Skill, fork_agent, FatigueMemoryMixin, MessageHub
+from protocols.utils import (
+    EmbodiedAgent,
+    Skill,
+    fork_agent,
+    FatigueMemoryMixin,
+    MessageHub,
+)
 
 # --- Setup ---
 bus = MessageHub()

@@ -1,12 +1,51 @@
-# protocols/__init__.py
+"""Convenience re-exports for the protocols package."""
 
-from .agent_protocols_suite import (
+from .core import (
+    InternalAgentProtocol,
     AgentProfile,
     AgentTaskContract,
     self_reflect,
     ping_agent,
     handshake,
     fork_agent,
-    ValidatorElf,
-    DreamWeaver,
+    AgentCoreRuntime,
+    Message,
+    MessageHub,
 )
+from .agents import (
+    CI_PRProtectorAgent,
+    GuardianInterceptorAgent,
+    MetaValidatorAgent,
+    ObserverAgent,
+)
+from .utils import (
+    Skill,
+    EmbodiedAgent,
+    AgentNegotiation,
+    FatigueMemoryMixin,
+    ProbabilisticBeliefSystem,
+    IntrospectiveMixin,
+)
+
+__all__ = [
+    "InternalAgentProtocol",
+    "AgentProfile",
+    "AgentTaskContract",
+    "self_reflect",
+    "ping_agent",
+    "handshake",
+    "fork_agent",
+    "AgentCoreRuntime",
+    "Message",
+    "MessageHub",
+    "CI_PRProtectorAgent",
+    "GuardianInterceptorAgent",
+    "MetaValidatorAgent",
+    "ObserverAgent",
+    "Skill",
+    "EmbodiedAgent",
+    "AgentNegotiation",
+    "FatigueMemoryMixin",
+    "ProbabilisticBeliefSystem",
+    "IntrospectiveMixin",
+]
