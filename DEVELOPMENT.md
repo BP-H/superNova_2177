@@ -62,3 +62,11 @@ pre-commit run --all-files
 ## Optional Frontend
 
 The `transcendental_resonance_frontend/` directory contains a NiceGUI-based UI. Follow its README to install `pip install -r transcendental_resonance_frontend/requirements.txt` and run the frontend if desired.
+
+## Vote Registry Roadmap
+
+The `vote_registry.py` module is under active development. Planned tasks include:
+
+- OAuth or wallet-based identity linking for validators.
+- Public frontend pages showing vote timelines per species.
+- Real-time consensus graphs across divergent forks.

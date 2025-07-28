@@ -55,3 +55,7 @@ def load_votes() -> Dict[str, Any]:
 #   including voter type (``human``, ``ai``, ``company``) and context so that
 #   threshold calculations can reference species distributions.
 
+# TODO: Implement OAuth or wallet-based identity linking for validators.
+# TODO: Build public frontend pages to display vote timelines per species.
+# TODO: Generate real-time consensus graphs across divergent forks.
+
