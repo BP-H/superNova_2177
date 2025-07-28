@@ -1,15 +1,15 @@
+import difflib
+import io
 import json
 import logging
-import difflib
+import math
+import os
+from datetime import datetime
 from pathlib import Path
 
-import os
-import io
-import math
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
-from datetime import datetime
 
 try:
     import plotly.graph_objects as go
@@ -20,6 +20,12 @@ try:
     from pyvis.network import Network
 except Exception:  # pragma: no cover - optional dependency
     Network = None
+
+from network.network_coordination_detector import build_validation_graph
+from protocols import AGENT_REGISTRY
+from protocols.utils.fatigue import FatigueMemoryMixin
+from protocols.utils.messaging import MessageHub
+from validation_integrity_pipeline import analyze_validation_integrity
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -32,8 +38,6 @@ except Exception:  # pragma: no cover - optional in dev/CI
         "DATABASE_URL": "sqlite:///:memory:",
     }
 
-from network.network_coordination_detector import build_validation_graph
-from validation_integrity_pipeline import analyze_validation_integrity
 try:
     from validator_reputation_tracker import update_validator_reputations
 except Exception:  # pragma: no cover - optional dependency
@@ -91,6 +95,89 @@ def generate_explanation(result: dict) -> str:
             lines.append(f"- {r}")
     return "\n".join(lines)
 
+
+def call_llm(backend: str, api_key: str, prompt: str) -> str:
+    """Attempt to call the selected LLM backend."""
+    try:
+        if backend == "GPT-4o":
+            import openai  # type: ignore
+
+            openai.api_key = api_key
+            res = openai.ChatCompletion.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return res.choices[0].message["content"]
+        if backend == "Claude-3":
+            import anthropic  # type: ignore
+
+            client = anthropic.Anthropic(api_key=api_key)
+            resp = client.messages.create(
+                model="claude-3",
+                messages=[{"role": "user", "content": prompt}],
+            )
+            return resp.content[0].text
+        if backend == "Gemini":
+            import google.generativeai as genai  # type: ignore
+
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel("gemini-pro")
+            resp = model.generate_content(prompt)
+            return resp.candidates[0].content.parts[0].text
+    except Exception as exc:  # pragma: no cover - optional external call
+        return f"Error: {exc}"
+    return ""
+
+
+def instantiate_agent(agent_name: str, backend: str, api_key: str):
+    """Create an agent instance for the demo sidebar."""
+    cls, _desc = AGENT_REGISTRY[agent_name]
+    if agent_name == "CI_PRProtectorAgent":
+
+        def talk(prompt: str) -> str:
+            return call_llm(backend, api_key, prompt)
+
+        return cls(talk)
+    if agent_name == "MetaValidatorAgent":
+        return cls({})
+    if agent_name == "GuardianInterceptorAgent":
+        return cls()
+    if agent_name == "ObserverAgent":
+        hub = MessageHub()
+        tracker = FatigueMemoryMixin()
+        agent = cls(hub, AGENT_REGISTRY, tracker)
+        agent.start()
+        return agent
+    return cls()
+
+
+def default_event(agent_name: str) -> dict:
+    """Return a demo event for the given agent."""
+    if agent_name == "CI_PRProtectorAgent":
+        return {
+            "event": "CI_FAILURE",
+            "payload": {"repo": "demo", "branch": "main", "logs": "build fail"},
+        }
+    if agent_name == "GuardianInterceptorAgent":
+        return {
+            "event": "REQUEST_PATCH_PROPOSAL",
+            "payload": {"issue": "demo", "context": "test"},
+        }
+    if agent_name == "MetaValidatorAgent":
+        return {
+            "event": "EVALUATE_PATCH",
+            "payload": {
+                "agent": "Demo",
+                "patch": "print('fix')",
+                "explanation": "demo",
+            },
+        }
+    return {
+        "event": "AGENT_TASK_RESULT",
+        "payload": {"agent": "Demo", "task": "demo", "result": {}},
+    }
+
+
 try:
     from validation_certifier import Config as VCConfig
 except Exception:  # pragma: no cover - optional debug dependencies
@@ -104,15 +191,20 @@ except Exception:  # pragma: no cover - optional debug dependencies
     Config = None  # type: ignore
 
 if Config is None:
+
     class Config:
         METRICS_PORT = 1234
 
+
 if VCConfig is None:
+
     class VCConfig:
         HIGH_RISK_THRESHOLD = 0.7
         MEDIUM_RISK_THRESHOLD = 0.4
 
+
 if HarmonyScanner is None:
+
     class HarmonyScanner:
         def __init__(self, *_a, **_k):
             pass
@@ -403,7 +495,9 @@ def main() -> None:
         st.header("Environment")
         st.write(f"Database URL: {database_url or 'not set'}")
         st.write(f"ENV: {os.getenv('ENV', 'dev')}")
-        st.write(f"Session start: {datetime.utcnow().isoformat(timespec='seconds')} UTC")
+        st.write(
+            f"Session start: {datetime.utcnow().isoformat(timespec='seconds')} UTC"
+        )
 
         if secret_key:
             st.success("Secret key loaded")
@@ -426,9 +520,7 @@ def main() -> None:
         if st.session_state.get("last_result") is not None:
             rerun_clicked = st.button("Re-run This Dataset with New Thresholds")
 
-        st.markdown(
-            f"**Runs this session:** {st.session_state['run_count']}"
-        )
+        st.markdown(f"**Runs this session:** {st.session_state['run_count']}")
         if st.session_state.get("last_run"):
             st.write(f"Last run: {st.session_state['last_run']}")
         if st.button("Clear Memory"):
@@ -440,6 +532,26 @@ def main() -> None:
             export_blob,
             file_name="latest_result.json",
         )
+        st.divider()
+
+        st.subheader("Agent Runner")
+        agent_choice = st.selectbox("Agent", list(AGENT_REGISTRY.keys()))
+        backend_choice = st.selectbox("LLM Backend", ["GPT-4o", "Claude-3", "Gemini"])
+        key_label = f"{backend_choice.replace('-', '_').upper()}_KEY"
+        key_default = st_secrets.get(key_label, "")
+        api_key = st.text_input(
+            f"{backend_choice} API Key", value=key_default, type="password"
+        )
+        if st.button("Run Agent Demo"):
+            try:
+                agent = instantiate_agent(agent_choice, backend_choice, api_key)
+                event = default_event(agent_choice)
+                st.session_state["agent_demo"] = agent.process_event(event)
+            except Exception as exc:
+                st.session_state["agent_demo"] = {"error": str(exc)}
+        demo_res = st.session_state.get("agent_demo")
+        if demo_res is not None:
+            st.write(demo_res)
         st.divider()
 
     if run_clicked or rerun_clicked:
@@ -458,9 +570,7 @@ def main() -> None:
                 except FileNotFoundError:
                     st.warning("Demo file not found, using default dataset.")
                     data = {
-                        "validations": [
-                            {"validator": "A", "target": "B", "score": 0.9}
-                        ]
+                        "validations": [{"validator": "A", "target": "B", "score": 0.9}]
                     }
                 st.session_state["validations_json"] = json.dumps(data, indent=2)
             elif uploaded_file is not None:
@@ -484,7 +594,9 @@ def main() -> None:
         st.session_state["analysis_diary"].append(
             {
                 "timestamp": st.session_state["last_run"],
-                "score": result.get("integrity_analysis", {}).get("overall_integrity_score"),
+                "score": result.get("integrity_analysis", {}).get(
+                    "overall_integrity_score"
+                ),
                 "risk": result.get("integrity_analysis", {}).get("risk_level"),
             }
         )
@@ -524,8 +636,12 @@ def main() -> None:
             "Export Diary as Markdown",
             "\n".join(
                 [
-                    f"* {e['timestamp']}: {e.get('note','')}"
-                    + (f" (RFCs: {', '.join(e['rfc_ids'])})" if e.get("rfc_ids") else "")
+                    f"* {e['timestamp']}: {e.get('note', '')}"
+                    + (
+                        f" (RFCs: {', '.join(e['rfc_ids'])})"
+                        if e.get("rfc_ids")
+                        else ""
+                    )
                     for e in st.session_state["diary"]
                 ]
             ),
@@ -561,7 +677,9 @@ def main() -> None:
         for path in rfc_paths:
             text = path.read_text()
             summary = parse_summary(text)
-            rfc_entries.append({"id": path.stem, "summary": summary, "text": text, "path": path})
+            rfc_entries.append(
+                {"id": path.stem, "summary": summary, "text": text, "path": path}
+            )
 
         diary_mentions: dict[str, list[int]] = {e["id"]: [] for e in rfc_entries}
         for i, entry in enumerate(st.session_state.get("diary", [])):
@@ -569,19 +687,27 @@ def main() -> None:
             ids = set(e.strip().lower() for e in entry.get("rfc_ids", []) if e)
             for rfc in rfc_entries:
                 rid = rfc["id"].lower()
-                if rid in note_lower or rid.replace("-", " ") in note_lower or rid in ids:
+                if (
+                    rid in note_lower
+                    or rid.replace("-", " ") in note_lower
+                    or rid in ids
+                ):
                     diary_mentions.setdefault(rfc["id"], []).append(i)
 
         for rfc in rfc_entries:
-            if filter_text and filter_text.lower() not in rfc["summary"].lower() and filter_text.lower() not in rfc["id"].lower():
+            if (
+                filter_text
+                and filter_text.lower() not in rfc["summary"].lower()
+                and filter_text.lower() not in rfc["id"].lower()
+            ):
                 continue
             st.markdown(f"### {rfc['id']}")
             st.write(summarize_text(rfc["summary"]))
             mentions = diary_mentions.get(rfc["id"], [])
             if mentions:
-                links = ", ".join([
-                    f"[entry {idx + 1}](#diary-{idx})" for idx in mentions
-                ])
+                links = ", ".join(
+                    [f"[entry {idx + 1}](#diary-{idx})" for idx in mentions]
+                )
                 st.markdown(f"Referenced in: {links}", unsafe_allow_html=True)
             st.markdown(f"[Read RFC]({rfc['path'].as_posix()})")
             if preview_all or st.checkbox("Show details", key=f"show_{rfc['id']}"):
