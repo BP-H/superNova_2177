@@ -35,6 +35,6 @@ jobs:
       - name: Streamlit smoke test
         run: |
           streamlit run ui.py --server.headless true &
-          sleep 10
-          curl -f http://localhost:8501
+          sleep 15
+          curl -f http://localhost:8501 || (echo "Streamlit UI not ready" && exit 1)
           pkill streamlit
