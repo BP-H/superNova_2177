@@ -245,6 +245,14 @@ directly as that bypasses Streamlit's runtime.
 
 Open [http://localhost:8501](http://localhost:8501) in your browser to interact with the demo.
 
+`ui.py` reads configuration from `st.secrets` when running under Streamlit. If
+the secrets dictionary is unavailable (such as during local development), the
+module falls back to a development setup equivalent to:
+
+```python
+{"SECRET_KEY": "dev", "DATABASE_URL": "sqlite:///:memory:"}
+```
+
 ## 🌩️ Streamlit Cloud
 
 Deploy the demo UI online with Streamlit Cloud:
