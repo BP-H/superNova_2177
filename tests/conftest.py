@@ -175,7 +175,12 @@ if "superNova_2177" not in sys.modules:
                 user = self.storage.get_user(event["user"])
                 if user:
                     karma = Decimal(user.get("karma", "0"))
-                    if not user.get("is_genesis") and karma < self.config.KARMA_MINT_THRESHOLD:
+                    bypass = event.get("genesis_creator") or event.get("genesis_bonus_applied")
+                    if (
+                        not user.get("is_genesis")
+                        and not bypass
+                        and karma < self.config.KARMA_MINT_THRESHOLD
+                    ):
                         return
                     root_coin = self.storage.get_coin(event.get("root_coin_id"))
                     if root_coin and root_coin.get("owner") == event["user"]:
