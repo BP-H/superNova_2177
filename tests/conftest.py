@@ -599,8 +599,12 @@ for mod_name in [
             # bool_ is used as an alias for Python's ``bool`` within the test
             # suite.  Define it here so that the NumPy stub mirrors the real
             # module interface and avoid ``AttributeError`` when ``numpy.bool_``
-            # is accessed.
+            # is accessed.  Provide float_ and int_ aliases as well so code that
+            # expects these numpy scalar types continues to operate when running
+            # against the lightweight stub.
             stub.bool_ = bool
+            stub.float_ = float
+            stub.int_ = int
         if mod_name == "dateutil":
             parser_mod = types.ModuleType("dateutil.parser")
             def _parse(val):
