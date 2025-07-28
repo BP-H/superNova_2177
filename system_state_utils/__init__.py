@@ -9,6 +9,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from db_models import SystemState
 
+__all__ = ["log_event"]
+
 
 def log_event(db: Session, category: str, payload: Dict[str, Any]) -> None:
     """Append an event record to SystemState under ``log:<category>``."""

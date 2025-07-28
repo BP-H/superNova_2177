@@ -53,6 +53,7 @@ from hypothesis_reasoner_ui_hook import auto_flag_stale_ui
 from validation_certifier_ui_hook import run_integrity_analysis_ui
 from validator_reputation_tracker_ui_hook import update_reputations_ui
 from consensus_forecaster_agent_ui_hook import forecast_consensus_ui
+from system_state_utils.ui_hook import log_event_ui  # noqa: F401 - route registration
 
 
 register_route("rank_hypotheses_by_confidence", rank_hypotheses_by_confidence_ui)
