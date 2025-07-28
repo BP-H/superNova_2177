@@ -2,14 +2,22 @@ import asyncio
 import sys
 import importlib
 
+# Simulate ``pytest_asyncio`` being unavailable before the test runs so the
+# fallback plugin activates during collection.  This must happen at module load
+# time to ensure the plugin's hook is registered prior to executing any async
+# tests.
+sys.modules.pop("pytest_asyncio", None)
+
+# Import and reload the fallback plugin after removing ``pytest_asyncio`` so the
+# plugin sees it is missing and registers the appropriate hooks.
+import tests.async_fallback as fallback
+importlib.reload(fallback)
+
 async def test_async_fallback_plugin(tmp_path, monkeypatch):
     """Async test should run even when pytest_asyncio is absent."""
-    # Simulate missing pytest_asyncio
-    monkeypatch.delitem(sys.modules, "pytest_asyncio", raising=False)
-
-    # Ensure fallback plugin is reloaded in case it relied on the module
-    import tests.async_fallback as fallback
-    importlib.reload(fallback)
+    # The fallback plugin has already been loaded at module import time with
+    # ``pytest_asyncio`` removed.  The test simply exercises async behavior to
+    # confirm the plugin runs the coroutine under ``asyncio``.
 
     file = tmp_path / "example.txt"
     file.write_text("hello")
