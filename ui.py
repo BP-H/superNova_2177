@@ -193,6 +193,7 @@ def run_analysis(validations, *, layout: str = "force"):
             G.add_edge(v1, v2, weight=w)
 
         # Offer GraphML download of the constructed graph
+        # TODO: log voter class/species as metadata when exporting GraphML
         gm_buf = io.BytesIO()
         try:
             nx.write_graphml(G, gm_buf)
