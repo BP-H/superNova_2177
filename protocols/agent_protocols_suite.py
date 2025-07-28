@@ -9,15 +9,51 @@ This module defines core agent infrastructure:
 - DNAFork: agent evolution and cloning
 - AgentCoreRuntime: launch, trigger, and score agents
 - MessageHub: lightweight pub/sub for multi-agent broadcasts
+- InternalAgentProtocol: base class for memory-bound, message-driven agents
 """
 
-from typing import Callable, List, Dict, Any
+from typing import Callable, List, Dict, Any, Optional
 import requests
 import copy
 import json
 import time
 import uuid
 from collections import defaultdict
+import logging
+
+logger = logging.getLogger(__name__)
+
+# ----------------------
+# 0. Internal Agent Protocol Base Class
+# ----------------------
+
+class InternalAgentProtocol:
+    """
+    Internal protocol to standardize how agent modules communicate
+    with the UI and each other. Can store local state and send messages.
+    """
+    def __init__(self):
+        self.memory: Dict[str, Any] = {}
+        self.inbox: List[dict] = []
+        self.name: str = self.__class__.__name__
+        self.hooks: Dict[str, Callable[[dict], Any]] = {}
+
+    def send(self, topic: str, payload: dict):
+        logger.info(f"[{self.name}] SEND {topic}: {payload}")
+        self.inbox.append({"topic": topic, "payload": payload})
+
+    def receive(self, topic: str, handler: Callable[[dict], Any]):
+        self.hooks[topic] = handler
+
+    def process_event(self, event: dict):
+        topic = event.get("event")
+        payload = event.get("payload", {})
+        if topic in self.hooks:
+            return self.hooks[topic](payload)
+        else:
+            logger.warning(f"[{self.name}] Unknown event: {topic}")
+            return {"error": f"Unhandled event {topic}"}
+
 
 # ----------------------
 # 1. Agent Personality Profiles
