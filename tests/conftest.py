@@ -526,6 +526,17 @@ for mod_name in [
             exc_mod = types.ModuleType("sqlalchemy.exc")
             exc_mod.IntegrityError = sa_stub.IntegrityError
             sys.modules["sqlalchemy.exc"] = exc_mod
+        if mod_name == "requests":
+            class Response:
+                def __init__(self, status_code=200):
+                    self.status_code = status_code
+
+            def get(*_a, **_kw):
+                return Response()
+
+            stub.get = get
+            stub.Response = Response
+            stub.__all__ = ["get"]
         if mod_name == "pydantic":
             class BaseModel:
                 pass
