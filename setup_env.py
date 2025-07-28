@@ -51,8 +51,8 @@ def run_app() -> None:
         raise
 
 
-def build_web_ui(pip: list) -> None:
-    """Install UI deps and build the NiceGUI frontend."""
+def build_frontend(pip: list) -> None:
+    """Install UI deps and build the Transcendental Resonance frontend."""
     ui_reqs = Path('transcendental_resonance_frontend') / 'requirements.txt'
     if ui_reqs.is_file():
         try:
@@ -66,7 +66,7 @@ def build_web_ui(pip: list) -> None:
     try:
         subprocess.check_call(nicegui + ['build', str(ui_script)])
     except subprocess.CalledProcessError as exc:
-        logging.error('Failed to build the web UI: %s', exc)
+        logging.error('Failed to build the frontend: %s', exc)
         logging.error('Ensure Node.js and NiceGUI are properly installed.')
         raise
 
@@ -77,7 +77,7 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     parser = argparse.ArgumentParser(description='Set up the environment')
     parser.add_argument('--run-app', action='store_true', help='start the API after installation')
-    parser.add_argument('--build-ui', action='store_true', help='build the web UI after installation')
+    parser.add_argument('--build-ui', action='store_true', help='build the Transcendental Resonance frontend after installation')
     parser.add_argument('--locked', action='store_true',
                         help='install dependencies from requirements.lock')
     args = parser.parse_args()
@@ -100,7 +100,7 @@ def main() -> None:
         print('Copied .env.example to .env')
 
     if args.build_ui:
-        build_web_ui(pip)
+        build_frontend(pip)
 
     print('Installation complete.')
     if env_created:
