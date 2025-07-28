@@ -10,6 +10,7 @@ import logging
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import Any, Dict, TYPE_CHECKING
+from virtual_diary import load_entries
 from config import get_emoji_weights
 
 if TYPE_CHECKING:
@@ -870,5 +871,35 @@ class RemixAgent:
                     f"Processed proposal {proposal['proposal_id']} "
                     f"to status {proposal['status']} with threshold {dynamic_threshold}"
                 )
+
+    def self_improve(self) -> list[str]:
+        """Analyze recent diary entries and suggest improvements."""
+        try:
+            entries = load_entries(limit=20)
+        except Exception:  # pragma: no cover - external deps
+            logging.exception("Failed to load diary entries")
+            return []
+
+        fail_count = 0
+        contradictions = 0
+        action_results: Dict[str, Any] = {}
+        for entry in entries:
+            text = json.dumps(entry)
+            if "fail" in text.lower():
+                fail_count += 1
+            action = entry.get("action")
+            result = entry.get("result")
+            if action and result is not None:
+                prev = action_results.get(action)
+                if prev is not None and prev != result:
+                    contradictions += 1
+                action_results[action] = result
+
+        suggestions: list[str] = []
+        if fail_count >= 3:
+            suggestions.append("multiple failures detected: revision recommended")
+        if contradictions:
+            suggestions.append("contradictory actions detected: review logic")
+        return suggestions
 
 

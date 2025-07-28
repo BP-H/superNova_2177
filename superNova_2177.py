@@ -253,6 +253,7 @@ import random
 import optimization_engine
 from agent_core import RemixAgent
 from annual_audit import annual_audit_task
+from self_improvement import self_improvement_task
 from collections import defaultdict, deque, Counter
 from decimal import (
     Decimal,
@@ -3525,6 +3526,7 @@ async def startup_event():
     loop.create_task(system_prediction_task(SessionLocal))
     loop.create_task(scientific_reasoning_cycle_task(SessionLocal))
     loop.create_task(adaptive_optimization_task(SessionLocal))
+    loop.create_task(self_improvement_task(agent))
 
 
 # --- MODULE: cli.py ---
@@ -3561,6 +3563,14 @@ class TranscendentalCLI(cmd.Cmd):
         )
         self.agent.process_event(event)
         logger.info("User %s added.", name)
+
+    def do_self_improve(self, _arg):
+        """Trigger self improvement analysis."""
+        suggestions = self.agent.self_improve()
+        if suggestions:
+            logger.info("Self improvement suggestions: %s", "; ".join(suggestions))
+        else:
+            logger.info("No self improvement suggestions")
 
     # Add all other do_ methods, making it comprehensive with 50+ commands.
 
