@@ -19,7 +19,12 @@ try:
         Float,
         JSON,
     )
-    from sqlalchemy.orm import sessionmaker, relationship, Session, DeclarativeBase
+    from sqlalchemy.orm import (
+        sessionmaker,
+        relationship,
+        Session,
+        declarative_base,
+    )
 except Exception:  # pragma: no cover - optional dependency
     from stubs.sqlalchemy_stub import (
         create_engine,
@@ -73,10 +78,8 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-class Base(DeclarativeBase):
-    """Base class for all ORM models."""
-
-    pass
+# Base class for all ORM models
+Base = declarative_base()
 
 # Association Tables from FastAPI files
 harmonizer_follows = Table(
