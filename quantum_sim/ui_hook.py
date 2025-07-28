@@ -44,5 +44,15 @@ async def simulate_entanglement_ui(
 
 
 # Register routes with frontend
-register_route_once("quantum_prediction", quantum_prediction_ui)
-register_route_once("simulate_entanglement", simulate_entanglement_ui)
+register_route_once(
+    "quantum_prediction",
+    quantum_prediction_ui,
+    "Run a quantum prediction",
+    "quantum",
+)
+register_route_once(
+    "simulate_entanglement",
+    simulate_entanglement_ui,
+    "Simulate quantum entanglement",
+    "quantum",
+)

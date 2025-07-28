@@ -32,4 +32,9 @@ async def simulate_entanglement_ui(
 
 
 # Register route with the frontend router
-register_route_once("simulate_entanglement", simulate_entanglement_ui)
+register_route_once(
+    "simulate_entanglement",
+    simulate_entanglement_ui,
+    "Simulate social entanglement",
+    "social",
+)

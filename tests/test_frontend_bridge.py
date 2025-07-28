@@ -29,6 +29,14 @@ async def test_new_routes_exposed():
         assert name in result["routes"]
 
 
+@pytest.mark.asyncio
+async def test_help_lists_routes_by_category():
+    result = await dispatch_route("help", {})
+    categories = result["categories"]
+    names = {entry["name"] for routes in categories.values() for entry in routes}
+    assert names == set(ROUTES.keys())
+
+
 class DummyAgent:
     def __init__(self):
         self.jobs = {}
@@ -71,4 +79,3 @@ async def test_long_running_job_enqueued(monkeypatch):
         assert status == {"status": "done", "result": {"value": 5}}
     finally:
         ROUTES.pop("slow_test", None)
-

@@ -18,6 +18,9 @@ async def update_reputations_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return minimal
 
 
-register_route_once("update_reputations", update_reputations_ui)
-
-
+register_route_once(
+    "update_reputations",
+    update_reputations_ui,
+    "Update validator reputations",
+    "validators",
+)
