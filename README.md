@@ -278,7 +278,7 @@ pip install -r requirements.txt
 
 ### Test Requirements
 
-Before running `pytest`, install the minimal set of packages required for the tests:
+Before running `pre-commit` or `pytest`, install the minimal set of packages required for the tests:
 
 ```bash
 pip install -r requirements-minimal.txt
@@ -290,7 +290,14 @@ pip install -r requirements-minimal.txt
 `python-dateutil`, `sqlalchemy`, `networkx`, `pytest-asyncio`, `httpx`,
 `email-validator`). With these installed, running `pytest` should
 succeed (`99 passed`).
-If these packages are missing, stub implementations in `stubs/`
+
+> **Important**
+> CI and local testing rely on these packages. Always run
+> `pip install -r requirements-minimal.txt` **before** invoking
+> `pre-commit` or `pytest`. Skipping this step triggers the simplified
+> stubs in `stubs/` and can cause numerous test failures.
+
+If the packages are missing, stub implementations in `stubs/`
 activate automatically. This allows `pytest` to succeed but may not
 exercise the full functionality of optional modules.
 
