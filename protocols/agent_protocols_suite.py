@@ -75,6 +75,48 @@ ConsciousSentinel = AgentProfile(
     powers=["detect_value_conflict", "log_self_reasoning", "assess_agent_alignment"]
 )
 
+ReflexAgent = AgentProfile(
+    "Reflex Agent",
+    traits=["judgmental", "self-correcting"],
+    powers=["run_post_audit_check", "score_regret_trace"]
+)
+
+DreamWeaverAgent = AgentProfile(
+    "DreamWeaver Agent",
+    traits=["imaginative", "recursive"],
+    powers=["simulate_past_future", "generate_forked_timelines"]
+)
+
+CivicGuardianAgent = AgentProfile(
+    "Civic Guardian",
+    traits=["fair", "balanced", "ethical"],
+    powers=["monitor_vote_equity", "adjust_governance_thresholds"]
+)
+
+VoiceOfNodeAgent = AgentProfile(
+    "Voice of Node",
+    traits=["representative", "adaptive"],
+    powers=["narrate_validator", "flag_invisible_majority"]
+)
+
+MetaProtocolAgent = AgentProfile(
+    "Meta Protocol Agent",
+    traits=["schema-aware", "protocol-evolving"],
+    powers=["propose_protocol_extension", "flag_agent_conflict"]
+)
+
+IntuitionSeekerAgent = AgentProfile(
+    "Intuition Seeker",
+    traits=["suspicious", "gut-driven"],
+    powers=["flag_uneasy_case", "trigger_deeper_review"]
+)
+
+ConsciousnessSeederAgent = AgentProfile(
+    "Consciousness Seeder",
+    traits=["observer", "synthesizer"],
+    powers=["detect_emergent_coherence", "log_awareness_moment"]
+)
+
 # ----------------------
 # 2. Agent Task Contracts
 # ----------------------
