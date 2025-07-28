@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import argparse
 import logging
+import importlib.util
 from pathlib import Path
 
 ENV_DIR = 'venv'
@@ -51,9 +52,32 @@ def run_app() -> None:
         raise
 
 
-def build_web_ui(pip: list) -> None:
-    """Install UI deps and build the NiceGUI frontend."""
-    ui_reqs = Path('transcendental-resonance-frontend') / 'requirements.txt'
+def run_ui() -> None:
+    """Launch the Streamlit UI using the environment's Python."""
+    python_exe = sys.executable if in_virtualenv() else venv_bin('python')
+    if importlib.util.find_spec('streamlit') is None:
+        logging.error('Streamlit is not installed. Install it with "pip install streamlit" and try again.')
+        return
+    try:
+        subprocess.check_call([
+            python_exe,
+            '-m',
+            'streamlit',
+            'run',
+            'ui.py',
+            '--server.port',
+            '8501',
+        ])
+    except subprocess.CalledProcessError as exc:
+        logging.error('Failed to launch the Streamlit UI: %s', exc)
+        logging.error('Ensure Streamlit is installed and functioning correctly.')
+        raise
+
+
+def build_frontend(pip: list) -> None:
+    """Install UI deps and build the Transcendental Resonance frontend."""
+    frontend_dir = Path('transcendental_resonance_frontend')
+    ui_reqs = frontend_dir / 'requirements.txt'
     if ui_reqs.is_file():
         try:
             subprocess.check_call(pip + ['install', '-r', str(ui_reqs)])
@@ -61,12 +85,12 @@ def build_web_ui(pip: list) -> None:
             logging.error('Failed to install UI dependencies: %s', exc)
             logging.error('Check your internet connection and try again.')
             raise
-    ui_script = Path('transcendental-resonance-frontend') / 'src' / 'main.py'
+    ui_script = frontend_dir / 'src' / 'main.py'
     nicegui = [venv_bin('nicegui')] if not in_virtualenv() else ['nicegui']
     try:
         subprocess.check_call(nicegui + ['build', str(ui_script)])
     except subprocess.CalledProcessError as exc:
-        logging.error('Failed to build the web UI: %s', exc)
+        logging.error('Failed to build the frontend: %s', exc)
         logging.error('Ensure Node.js and NiceGUI are properly installed.')
         raise
 
@@ -77,7 +101,8 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     parser = argparse.ArgumentParser(description='Set up the environment')
     parser.add_argument('--run-app', action='store_true', help='start the API after installation')
-    parser.add_argument('--build-ui', action='store_true', help='build the web UI after installation')
+    parser.add_argument('--build-ui', action='store_true', help='build the Transcendental Resonance frontend after installation')
+    parser.add_argument('--launch-ui', action='store_true', help='start the Streamlit UI after installation')
     parser.add_argument('--locked', action='store_true',
                         help='install dependencies from requirements.lock')
     args = parser.parse_args()
@@ -100,7 +125,7 @@ def main() -> None:
         print('Copied .env.example to .env')
 
     if args.build_ui:
-        build_web_ui(pip)
+        build_frontend(pip)
 
     print('Installation complete.')
     if env_created:
@@ -121,6 +146,13 @@ def main() -> None:
         except subprocess.CalledProcessError:
             logging.error('Failed to run the application.')
             logging.error('Resolve the errors above and re-run with --run-app.')
+
+    if args.launch_ui:
+        try:
+            run_ui()
+        except subprocess.CalledProcessError:
+            logging.error('Failed to launch the UI.')
+            logging.error('Resolve the errors above and re-run with --launch-ui.')
 
 
 if __name__ == '__main__':

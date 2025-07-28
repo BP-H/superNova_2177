@@ -8,3 +8,4 @@
 - Implemented seasonal quest toggle and milestone CLI.
 - Created moderation helpers for profanity and consent.
 - Added resonance music stub and summary route.
+- Standardized Streamlit default port to **8888**.

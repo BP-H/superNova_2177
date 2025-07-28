@@ -1,15 +1,14 @@
-import uuid
-from decimal import Decimal
-
-import pytest
-import pytest_asyncio
-import httpx
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
 import importlib
 import importlib.util
 import sys
+import uuid
+from decimal import Decimal
+
+import httpx
+import pytest
+import pytest_asyncio
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 import superNova_2177 as sn
 
@@ -19,7 +18,11 @@ if (
     or str(getattr(sn, "__file__", "")).endswith("_stub")
 ) and importlib.util.find_spec("fastapi") is not None:
     for mod in list(sys.modules):
-        if mod.startswith("fastapi") or mod.startswith("pydantic") or mod.startswith("sqlalchemy"):
+        if (
+            mod.startswith("fastapi")
+            or mod.startswith("pydantic")
+            or mod.startswith("sqlalchemy")
+        ):
             sys.modules.pop(mod, None)
     sys.modules.pop("superNova_2177", None)
     sn = importlib.import_module("superNova_2177")
@@ -53,7 +56,9 @@ async def client(test_db):
 def memory_agent(monkeypatch):
     monkeypatch.setattr(sn, "USE_IN_MEMORY_STORAGE", True)
     agent = sn.RemixAgent(
-        cosmic_nexus=sn.CosmicNexus(sn.SessionLocal, sn.SystemStateService(sn.SessionLocal()))
+        cosmic_nexus=sn.CosmicNexus(
+            sn.SessionLocal, sn.SystemStateService(sn.SessionLocal())
+        )
     )
     return agent
 
@@ -105,7 +110,9 @@ async def test_login_success(client):
     await register(client, "loginuser", "l@example.com")
     r = await login(client, "loginuser")
     assert r.status_code == 200
-    assert "access_token" in r.json()
+    data = r.json()
+    assert "access_token" in data
+    assert "universe_id" in data
 
 
 @pytest.mark.asyncio
@@ -164,6 +171,33 @@ async def test_follow_unfollow(client):
         "/users/target/follow", headers={"Authorization": f"Bearer {token}"}
     )
     assert r.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_follow_lists(client):
+    token_a = await register_and_get_token(client, "alice", "a@example.com")
+    await register(client, "bob", "b@example.com")
+    await client.post(
+        "/users/bob/follow", headers={"Authorization": f"Bearer {token_a}"}
+    )
+    r = await client.get("/users/bob/followers")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["count"] == 1
+    assert "alice" in data["followers"]
+    r = await client.get("/users/alice/following")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["count"] == 1
+    assert "bob" in data["following"]
+
+
+@pytest.mark.asyncio
+async def test_get_user_by_username(client):
+    await register(client, "charlie", "c@example.com")
+    r = await client.get("/users/charlie")
+    assert r.status_code == 200
+    assert r.json()["username"] == "charlie"
 
 
 @pytest.mark.asyncio
@@ -439,9 +473,37 @@ async def test_add_user_atomicity_and_rollback(test_db, monkeypatch):
     event = sn.AddUserPayload(user="rollback_user", is_genesis=False, species="human")
     with pytest.raises(sn.UserCreationError):
         sn.agent._apply_ADD_USER(event)
-    assert test_db.query(sn.Harmonizer).filter_by(username="rollback_user").first() is None
+    assert (
+        test_db.query(sn.Harmonizer).filter_by(username="rollback_user").first() is None
+    )
 
 
 def test_entropy_calc(test_db):
     entropy = sn.calculate_content_entropy(test_db)
     assert entropy >= 0.0
+
+
+@pytest.mark.asyncio
+async def test_vibenode_remix(client):
+    token = await register_and_get_token(client, "remixer", "remix@example.com")
+    create = await client.post(
+        "/vibenodes/",
+        json={
+            "name": "orig",
+            "description": "desc",
+            "media_type": "text",
+            "tags": None,
+        },
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert create.status_code == 201
+    orig = create.json()
+
+    remix_resp = await client.post(
+        f"/vibenodes/{orig['id']}/remix",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert remix_resp.status_code == 201
+    remix = remix_resp.json()
+    assert remix["parent_vibenode_id"] == orig["id"]
+    assert remix["id"] != orig["id"]

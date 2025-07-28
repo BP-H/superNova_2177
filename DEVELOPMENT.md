@@ -38,14 +38,22 @@ You can also install both requirement files to match the CI environment:
 pip install -r requirements-minimal.txt -r requirements-dev.txt
 ```
 
+If the packages are missing, stub implementations found under `stubs/`
+will activate automatically and may cause confusing test failures.
+
+Installing every dependency from `requirements-minimal.txt` and
+`requirements-dev.txt` prevents these stubs from loading and keeps the tests
+reliable.
+
 The GitHub Actions workflows (`.github/workflows/ci.yml` and `pr-tests.yml`) run these commands automatically whenever you push or open a pull request.
 
 ## Pre-commit Hooks
 
-Install the development tools and enable the git hooks so code is automatically formatted and linted:
+Install the development tools and enable the git hooks so code is automatically
+formatted and linted. The hooks rely on packages from both requirement files:
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -r requirements-minimal.txt -r requirements-dev.txt
 pre-commit install
 ```
 
@@ -57,4 +65,24 @@ pre-commit run --all-files
 
 ## Optional Frontend
 
-The `transcendental-resonance-frontend/` directory contains a NiceGUI-based UI. Follow its README to install `pip install -r transcendental-resonance-frontend/requirements.txt` and run the frontend if desired.
+The `transcendental_resonance_frontend/` directory contains a NiceGUI-based UI. Follow its README to install `pip install -r transcendental_resonance_frontend/requirements.txt` and run the frontend if desired.
+
+## Vote Registry Roadmap
+
+The `vote_registry.py` module is under active development. Planned tasks include:
+
+- OAuth or wallet-based identity linking for validators.
+- Public frontend pages showing vote timelines per species.
+- Real-time consensus graphs across divergent forks.
+
+## Troubleshooting
+
+If the Streamlit UI fails to start when running tests or the smoke test in the
+CI pipeline, inspect `streamlit.log` for errors and confirm that port `8501` is
+free. You can terminate any leftover processes with:
+
+```bash
+pkill streamlit || true
+```
+
+Rerun the tests after addressing the issue.

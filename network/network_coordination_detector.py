@@ -11,21 +11,32 @@ This module can be profiled with ``cProfile`` to identify heavy NumPy or
 NetworkX sections when analyzing large validation graphs::
 
     python -m cProfile -s time network/network_coordination_detector.py
+
+To avoid issues when running under Streamlit, the detection functions use
+``ThreadPoolExecutor`` by default instead of spawning new processes. Set the
+``COORDINATION_USE_PROCESS_POOL`` environment variable to ``1`` to force the
+use of ``ProcessPoolExecutor`` when true concurrency is desirable.
 """
 
-import logging
-from typing import List, Dict, Any, Set, Tuple
-from collections import defaultdict
-from datetime import datetime, timedelta
-from statistics import mean
 import itertools
-from functools import lru_cache
-from concurrent.futures import ProcessPoolExecutor
-import os
+import logging
 import math
+import os
+from collections import defaultdict
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from datetime import datetime, timedelta
+from functools import lru_cache
+from multiprocessing import get_context
+from statistics import mean
+from typing import Any, Dict, List, Set, Tuple
 
 logger = logging.getLogger("superNova_2177.coordination")
 logger.propagate = False
+
+# Use threads by default because spawning new processes can fail in
+# restricted environments like Streamlit. Set the environment variable
+# ``COORDINATION_USE_PROCESS_POOL=1`` to force ``ProcessPoolExecutor``.
+USE_PROCESS_POOL = os.environ.get("COORDINATION_USE_PROCESS_POOL") == "1"
 
 
 class Config:
@@ -94,14 +105,18 @@ def build_validation_graph(validations: List[Dict[str, Any]]) -> Dict[str, Any]:
         if normalized_weight >= 0.1:
             edges.append((v1, v2, normalized_weight))
 
+    # Collect node list explicitly for use by callers expecting an ordered
+    # sequence rather than a set.
+    nodes = list(validator_data.keys())
+
     # Detect communities using simple clustering
-    communities = detect_graph_communities(edges, set(validator_data.keys()))
+    communities = detect_graph_communities(edges, set(nodes))
 
     return {
         "edges": edges,
-        "nodes": set(validator_data.keys()),
+        "nodes": nodes,
         "hypothesis_coverage": dict(hypothesis_validators),
-        "communities": communities,
+        "communities": [list(c) for c in communities],
     }
 
 
@@ -231,9 +246,14 @@ def detect_temporal_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
 
     cpu_count = os.cpu_count() or 1
     chunk_size = max(1, (len(pairs) + cpu_count - 1) // cpu_count)
-    chunks = [pairs[i : i + chunk_size] for i in range(0, len(pairs), chunk_size)]
+    chunks = [
+        pairs[i : i + chunk_size]  # noqa: E203
+        for i in range(0, len(pairs), chunk_size)
+    ]
 
-    with ProcessPoolExecutor() as executor:
+    executor_cls = ProcessPoolExecutor if USE_PROCESS_POOL else ThreadPoolExecutor
+    ctx = {"mp_context": get_context("spawn")} if USE_PROCESS_POOL else {}
+    with executor_cls(**ctx) as executor:
         results = executor.map(_temporal_worker, chunks, itertools.repeat(window))
         for clusters, chunk_flags in results:
             temporal_clusters.extend(clusters)
@@ -284,9 +304,14 @@ def detect_score_coordination(validations: List[Dict[str, Any]]) -> Dict[str, An
 
     cpu_count = os.cpu_count() or 1
     chunk_size = max(1, (len(items) + cpu_count - 1) // cpu_count)
-    chunks = [items[i : i + chunk_size] for i in range(0, len(items), chunk_size)]
+    chunks = [
+        items[i : i + chunk_size]  # noqa: E203
+        for i in range(0, len(items), chunk_size)
+    ]
 
-    with ProcessPoolExecutor() as executor:
+    executor_cls = ProcessPoolExecutor if USE_PROCESS_POOL else ThreadPoolExecutor
+    ctx = {"mp_context": get_context("spawn")} if USE_PROCESS_POOL else {}
+    with executor_cls(**ctx) as executor:
         results = executor.map(_score_worker, chunks)
         for clusters, chunk_flags in results:
             score_clusters.extend(clusters)
@@ -330,6 +355,7 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
         """Heavy embedding computation cached for reuse."""
         try:
             from sentence_transformers import SentenceTransformer
+
             # Avoid accidental network downloads by forcing offline mode if unset
             os.environ.setdefault("HF_HUB_OFFLINE", "1")
             os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
@@ -364,9 +390,7 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
 
                 return np.stack([to_counts(t) for t in texts])
             except Exception as np_exc:  # pragma: no cover - extremely rare
-                logger.error(
-                    f"NumPy unavailable: {np_exc}; using pure Python counts"
-                )
+                logger.error(f"NumPy unavailable: {np_exc}; using pure Python counts")
 
                 vocab = sorted({w for t in texts for w in t.split()})
 
@@ -402,7 +426,7 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
     idx = 0
     validator_embeddings = {}
     for vid, notes in validator_texts.items():
-        note_embeds = embeddings[idx : idx + len(notes)]
+        note_embeds = embeddings[idx : idx + len(notes)]  # noqa: E203
         idx += len(notes)
         validator_embeddings[vid] = _average_vectors(note_embeds)
 
@@ -469,7 +493,9 @@ def calculate_sophisticated_risk_score(
         return 0.0
 
     # Normalize by validator count (more validators should reduce individual flag impact)
-    validator_factor = math.log(max(2, total_validators)) / math.log(10)  # Log scale normalization
+    validator_factor = math.log(max(2, total_validators)) / math.log(
+        10
+    )  # Log scale normalization
 
     # Weight different types of coordination
     weighted_score = (
@@ -479,7 +505,9 @@ def calculate_sophisticated_risk_score(
     )
 
     # Normalize by validator factor and max expected flags
-    normalized_score = weighted_score / (validator_factor * Config.MAX_FLAGS_FOR_NORMALIZATION)
+    normalized_score = weighted_score / (
+        validator_factor * Config.MAX_FLAGS_FOR_NORMALIZATION
+    )
 
     # Apply sigmoid function for smooth scaling
     risk_score = 2 / (1 + math.exp(-4 * normalized_score)) - 1
@@ -503,7 +531,7 @@ def analyze_coordination_patterns(validations: List[Dict[str, Any]]) -> Dict[str
             "overall_risk_score": 0.0,
             "coordination_clusters": [],
             "flags": ["no_validations"],
-            "graph": {"edges": [], "nodes": set(), "communities": []},
+            "graph": {"edges": [], "nodes": [], "communities": []},
             "risk_breakdown": {"temporal": 0, "score": 0, "semantic": 0},
         }
 
@@ -559,7 +587,7 @@ def analyze_coordination_patterns(validations: List[Dict[str, Any]]) -> Dict[str
             "overall_risk_score": 0.0,
             "coordination_clusters": [],
             "flags": ["coordination_analysis_failed"],
-            "graph": {"edges": [], "nodes": set(), "communities": []},
+            "graph": {"edges": [], "nodes": [], "communities": []},
             "risk_breakdown": {"temporal": 0, "score": 0, "semantic": 0},
         }
 

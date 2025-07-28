@@ -1,5 +1,4 @@
-.PHONY: install test lint
-.PHONY: ui
+.PHONY: install test lint ui
 
 install:
 	python setup_env.py
@@ -8,7 +7,7 @@ test:
 	pytest -q
 
 lint:
-        mypy
+	mypy
 
 ui:
-        streamlit run ui.py
+	streamlit run ui.py

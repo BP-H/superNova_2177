@@ -13,6 +13,15 @@ def _safe_find_spec(name, package=None):
 
 importlib.util.find_spec = _safe_find_spec
 
+# Ensure ``sqlalchemy.orm.select`` is available when SQLAlchemy is installed.
+try:  # pragma: no cover - optional dependency
+    import sqlalchemy
+    import sqlalchemy.orm
+    if not hasattr(sqlalchemy.orm, "select"):
+        sqlalchemy.orm.select = sqlalchemy.select
+except Exception:
+    pass
+
 ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
@@ -29,7 +38,9 @@ if "superNova_2177" not in sys.modules:
     import types
     import importlib
     import importlib.machinery
+    import uuid
     from decimal import Decimal
+    from functools import lru_cache
 
     stub_sn = types.ModuleType("superNova_2177")
     # Mark as a stub so modules can detect and optionally reload the real one if
@@ -106,6 +117,11 @@ if "superNova_2177" not in sys.modules:
         ALLOWED_POLICY_KEYS = ["DAILY_DECAY", "KARMA_MINT_THRESHOLD"]
         SPECIES = ["human", "ai", "company"]
 
+        @staticmethod
+        @lru_cache(maxsize=1)
+        def get_emoji_weights() -> dict:
+            return Config.EMOJI_WEIGHTS
+
     stub_sn.Config = Config
     stub_sn.Harmonizer = type("Harmonizer", (), {})
     stub_sn.VibeNode = type("VibeNode", (), {})
@@ -138,6 +154,9 @@ if "superNova_2177" not in sys.modules:
         def set_marketplace_listing(self, lid, data):
             self.listings[lid] = data
 
+        def delete_marketplace_listing(self, lid):
+            self.listings.pop(lid, None)
+
     class SystemStateService:
         def __init__(self, db):
             pass
@@ -156,19 +175,40 @@ if "superNova_2177" not in sys.modules:
         def process_event(self, event):
             ev = event.get("event")
             if ev == "ADD_USER":
+                root_id = event.get("root_coin_id") or f"root_{uuid.uuid4().hex}"
                 self.storage.set_user(
                     event["user"],
                     {
-                        "root_coin_id": event.get("root_coin_id") or "root",
+                        "root_coin_id": root_id,
                         "karma": event.get("karma", "0"),
                         "consent_given": event.get("consent", True),
+                        "is_genesis": event.get("is_genesis", False),
+                        "coins_owned": [root_id],
+                    },
+                )
+                self.storage.set_coin(
+                    root_id,
+                    {
+                        "owner": event["user"],
+                        "value": event.get(
+                            "root_coin_value", str(self.config.ROOT_INITIAL_VALUE)
+                        ),
+                        "is_root": True,
                     },
                 )
             elif ev == "MINT":
                 user = self.storage.get_user(event["user"])
                 if user:
                     karma = Decimal(user.get("karma", "0"))
-                    if karma >= self.config.KARMA_MINT_THRESHOLD:
+                    bypass = event.get("genesis_creator") or event.get("genesis_bonus_applied")
+                    if (
+                        not user.get("is_genesis")
+                        and not bypass
+                        and karma < self.config.KARMA_MINT_THRESHOLD
+                    ):
+                        return
+                    root_coin = self.storage.get_coin(event.get("root_coin_id"))
+                    if root_coin and root_coin.get("owner") == event["user"]:
                         self.storage.set_coin(
                             event["coin_id"],
                             {"owner": event["user"], "value": event.get("value", "0")},
@@ -190,8 +230,35 @@ if "superNova_2177" not in sys.modules:
                 listing = self.storage.get_marketplace_listing(event["listing_id"])
                 if listing:
                     coin = self.storage.get_coin(listing["coin_id"])
-                    if coin:
-                        coin["owner"] = event["buyer"]
+                    buyer = self.storage.get_user(event["buyer"])
+                    seller = self.storage.get_user(listing.get("seller"))
+                    if (
+                        coin
+                        and buyer
+                        and seller
+                        and (buyer_root := self.storage.get_coin(buyer.get("root_coin_id")))
+                        and (seller_root := self.storage.get_coin(seller.get("root_coin_id")))
+                    ):
+                        price = Decimal(str(listing.get("price", "0")))
+                        total = Decimal(str(event.get("total_cost", price)))
+                        buyer_val = Decimal(str(buyer_root.get("value", "0")))
+                        if buyer_val >= total:
+                            buyer_root["value"] = str(buyer_val - total)
+                            seller_root["value"] = str(
+                                Decimal(str(seller_root.get("value", "0"))) + price
+                            )
+                            coin_id = listing["coin_id"]
+                            coin["owner"] = event["buyer"]
+                            buyer.setdefault("coins_owned", []).append(coin_id)
+                            seller_coins = seller.setdefault("coins_owned", [])
+                            if coin_id in seller_coins:
+                                seller_coins.remove(coin_id)
+                            self.storage.set_coin(buyer["root_coin_id"], buyer_root)
+                            self.storage.set_coin(seller["root_coin_id"], seller_root)
+                            self.storage.set_coin(coin_id, coin)
+                            self.storage.set_user(event["buyer"], buyer)
+                            self.storage.set_user(listing.get("seller"), seller)
+                            self.storage.delete_marketplace_listing(event["listing_id"])
             elif ev == "REACT":
                 coin = self.storage.get_coin(event["coin_id"])
                 if coin:
@@ -199,18 +266,63 @@ if "superNova_2177" not in sys.modules:
                     if owner:
                         owner["karma"] = str(float(owner.get("karma", "0")) + 1)
 
+        def self_improve(self):
+            """Analyze recent diary entries and suggest improvements."""
+            import json
+            try:
+                from virtual_diary import load_entries
+            except Exception:
+                return []
+
+            try:
+                entries = load_entries(limit=20)
+            except Exception:
+                entries = []
+
+            fail_count = 0
+            contradictions = 0
+            action_results = {}
+            for entry in entries:
+                text = json.dumps(entry)
+                if "fail" in text.lower():
+                    fail_count += 1
+                action = entry.get("action")
+                result = entry.get("result")
+                if action and result is not None:
+                    prev = action_results.get(action)
+                    if prev is not None and prev != result:
+                        contradictions += 1
+                    action_results[action] = result
+
+            suggestions = []
+            if fail_count >= 3:
+                suggestions.append(
+                    "multiple failures detected: revision recommended"
+                )
+            if contradictions:
+                suggestions.append("contradictory actions detected: review logic")
+
+            if not suggestions and not entries:
+                suggestions.append("no diary entries found")
+
+            if suggestions:
+                try:
+                    Config.ENTROPY_MULTIPLIER += 0.01
+                except Exception:
+                    pass
+
+            return suggestions
+
     stub_sn.InMemoryStorage = InMemoryStorage
     stub_sn.SystemStateService = SystemStateService
     stub_sn.CosmicNexus = CosmicNexus
     stub_sn.RemixAgent = RemixAgent
     stub_sn.LogChain = type("LogChain", (), {"__init__": lambda self, f: None, "add": lambda self, e: None})
-    stub_sn.SessionLocal = lambda *a, **k: None
-    stub_sn.Base = type("Base", (), {
-        "metadata": types.SimpleNamespace(
-            create_all=lambda *a, **k: None,
-            drop_all=lambda *a, **k: None,
-        )
-    })
+    import stubs.sqlalchemy_stub as sa_stub
+    stub_engine = sa_stub.create_engine("sqlite:///:memory:")
+    stub_sn.engine = stub_engine
+    stub_sn.SessionLocal = sa_stub.sessionmaker(bind=stub_engine)
+    stub_sn.Base = sa_stub.declarative_base()
     stub_sn.USE_IN_MEMORY_STORAGE = True
 
     # Import FastAPI components with a lightweight fallback when the real
@@ -383,53 +495,36 @@ for mod_name in [
             middleware.CORSMiddleware = object
             sys.modules["fastapi.middleware.cors"] = middleware
         if mod_name == "sqlalchemy.orm":
-            class Session:
-                pass
+            import stubs.sqlalchemy_stub as sa_stub
 
-            stub.Session = Session
-            stub.sessionmaker = lambda *a, **kw: None
-            stub.relationship = lambda *a, **kw: None
-            class DeclarativeBase:
-                metadata = types.SimpleNamespace(
-                    create_all=lambda *a, **kw: None,
-                    drop_all=lambda *a, **kw: None,
-                )
-            stub.DeclarativeBase = DeclarativeBase
-            def _base():
-                class B:
-                    metadata = types.SimpleNamespace()
-                    metadata.create_all = lambda *a, **kw: None
-                    metadata.drop_all = lambda *a, **kw: None
-
-                return B
-
-            stub.declarative_base = lambda *a, **kw: _base()
+            stub.Session = sa_stub.Session
+            stub.sessionmaker = sa_stub.sessionmaker
+            stub.relationship = sa_stub.relationship
+            stub.declarative_base = sa_stub.declarative_base
+            stub.DeclarativeBase = sa_stub.declarative_base().__class__
+            stub.select = sa_stub.select
         if mod_name == "sqlalchemy":
-            class SQLA(types.ModuleType):
-                def __init__(self):
-                    super().__init__("sqlalchemy")
-                    self.__path__ = []
+            import stubs.sqlalchemy_stub as sa_stub
 
-                    class Column:
-                        def __init__(self, name, *a, **kw):
-                            self.name = name
-
-                    def Table(_name, _metadata, *cols, **_kw):
-                        c = types.SimpleNamespace()
-                        for col in cols:
-                            if hasattr(col, "name"):
-                                setattr(c, col.name, object())
-                        return types.SimpleNamespace(c=c)
-
-                    self.Column = Column
-                    self.Table = Table
-
-                def __getattr__(self, name):
-                    return lambda *a, **kw: None
-
-            stub = SQLA()
+            stub.__path__ = []
+            for attr in [
+                "Column",
+                "Integer",
+                "String",
+                "Text",
+                "Boolean",
+                "DateTime",
+                "ForeignKey",
+                "Table",
+                "Float",
+                "JSON",
+                "create_engine",
+                "select",
+                "func",
+            ]:
+                setattr(stub, attr, getattr(sa_stub, attr))
             exc_mod = types.ModuleType("sqlalchemy.exc")
-            exc_mod.IntegrityError = type("IntegrityError", (), {})
+            exc_mod.IntegrityError = sa_stub.IntegrityError
             sys.modules["sqlalchemy.exc"] = exc_mod
         if mod_name == "pydantic":
             class BaseModel:
@@ -596,11 +691,38 @@ for mod_name in [
             stub.log = lambda v: math.log(v)
             stub.exp = lambda v: math.exp(v)
 
+            def _clip(a, a_min, a_max):
+                try:
+                    return [
+                        _clip(x, a_min, a_max) for x in a
+                    ]  # type: ignore[arg-type]
+                except TypeError:
+                    return max(a_min, min(a_max, float(a)))
+
+            def _polyfit(x, y, deg):
+                n = len(x)
+                if n == 0:
+                    return 0.0, 0.0
+                mean_x = sum(x) / n
+                mean_y = sum(y) / n
+                num = sum((xi - mean_x) * (yi - mean_y) for xi, yi in zip(x, y))
+                den = sum((xi - mean_x) ** 2 for xi in x) or 1.0
+                slope = num / den
+                intercept = mean_y - slope * mean_x
+                return slope, intercept
+
+            stub.clip = _clip
+            stub.polyfit = _polyfit
+
             # bool_ is used as an alias for Python's ``bool`` within the test
             # suite.  Define it here so that the NumPy stub mirrors the real
             # module interface and avoid ``AttributeError`` when ``numpy.bool_``
-            # is accessed.
+            # is accessed.  Provide float_ and int_ aliases as well so code that
+            # expects these numpy scalar types continues to operate when running
+            # against the lightweight stub.
             stub.bool_ = bool
+            stub.float_ = float
+            stub.int_ = int
         if mod_name == "dateutil":
             parser_mod = types.ModuleType("dateutil.parser")
             def _parse(val):
@@ -744,12 +866,18 @@ import pytest
 
 
 def _setup_sqlite(monkeypatch, db_path):
-    """Return engine, sessionmaker and db_models bound to a temporary SQLite file."""
+    """Create an isolated engine and session factory bound to ``db_path``."""
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
     import db_models, sys, pytest
 
-    if "stubs" in getattr(create_engine, "__module__", ""):
+    mod = getattr(create_engine, "__module__", "")
+    name = getattr(create_engine, "__name__", "")
+    if (
+        "stubs" in mod
+        or mod != "sqlalchemy.engine"
+        or name == "<lambda>"
+    ):
         pytest.skip("SQLAlchemy not available")
 
     try:
@@ -771,8 +899,7 @@ def _setup_sqlite(monkeypatch, db_path):
 
     monkeypatch.setattr(db_models, "engine", engine, raising=False)
     monkeypatch.setattr(db_models, "SessionLocal", Session, raising=False)
-    if getattr(db_models.Base.metadata, "bind", None) is not engine:
-        monkeypatch.setattr(db_models.Base.metadata, "bind", engine, raising=False)
+    monkeypatch.setattr(db_models.Base.metadata, "bind", engine, raising=False)
 
     for mod in list(sys.modules.values()):
         try:
@@ -787,25 +914,30 @@ def _setup_sqlite(monkeypatch, db_path):
                 except Exception:
                     continue
                 if metadata and getattr(metadata, "bind", None) is old_engine:
+
                     monkeypatch.setattr(metadata, "bind", engine, raising=False)
         except AttributeError:
             continue
 
     db_models.Base.metadata.create_all(bind=engine)
-    return engine, Session, db_models
+
+    def teardown():
+        db_models.Base.metadata.drop_all(bind=engine)
+        engine.dispose()
+
+    return engine, Session, teardown
 
 
 @pytest.fixture
 def test_db(tmp_path, monkeypatch):
     """Provide an isolated SQLite session for tests."""
-    engine, SessionLocal, models = _setup_sqlite(monkeypatch, tmp_path / "test.db")
+    engine, SessionLocal, teardown = _setup_sqlite(monkeypatch, tmp_path / "test.db")
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-        models.Base.metadata.drop_all(bind=engine)
-        engine.dispose()
+        teardown()
 
 
 @pytest.fixture

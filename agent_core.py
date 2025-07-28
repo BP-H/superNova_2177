@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+"""Core infrastructure for stateful Remix agents.
+
+This module defines :class:`RemixAgent`, a foundational agent that logs
+events, manages storage, and coordinates hooks across the project.  It
+serves as the runtime backbone for higher-level creative agents such as
+``ImmutableTriSpeciesAgent``.
+"""
+
 import os
 import json
 import uuid
@@ -10,6 +18,8 @@ import logging
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import Any, Dict, TYPE_CHECKING
+from virtual_diary import load_entries
+from config import Config, get_emoji_weights
 
 if TYPE_CHECKING:
     from superNova_2177 import (
@@ -46,6 +56,7 @@ from moderation_utils import Vaccine
 try:  # pragma: no cover - prefer real implementation when present
     LogChain  # type: ignore[name-defined]
 except Exception:  # pragma: no cover - lightweight stub for tests
+
     class LogChain:
         """Simplified event log used during tests."""
 
@@ -99,7 +110,9 @@ class RemixAgent:
         self.config = Config()
         self.quantum_ctx = QuantumContext(self.config.FUZZY_ANALOG_COMPUTATION_ENABLED)
         self.vaccine = Vaccine(self.config)
-        self._use_simple = USE_IN_MEMORY_STORAGE or "User" not in globals() or "Coin" not in globals()
+        self._use_simple = (
+            USE_IN_MEMORY_STORAGE or "User" not in globals() or "Coin" not in globals()
+        )
         if filename is None:
             filename = os.environ.get("LOGCHAIN_FILE", "remix_logchain.log")
         if snapshot is None:
@@ -118,7 +131,8 @@ class RemixAgent:
         # Track awarded fork badges for users
         self.fork_badges: Dict[str, list[str]] = {}
         # Register hook for cross remix creation events
-        self.hooks.register_hook("cross_remix_created", self.on_cross_remix_created)
+        from hooks import events
+        self.hooks.register_hook(events.CROSS_REMIX_CREATED, self.on_cross_remix_created)
         self.event_count = 0
         self.processed_nonces = {}
         self._cleanup_thread = threading.Thread(
@@ -128,7 +142,7 @@ class RemixAgent:
         if not self._use_simple:
             self.load_state()
 
-    def _cleanup_nonces(self):
+    def _cleanup_nonces(self) -> None:
         while True:
             time.sleep(self.config.NONCE_CLEANUP_INTERVAL_SECONDS)
             now = ts()
@@ -137,19 +151,15 @@ class RemixAgent:
                     n
                     for n, t in self.processed_nonces.items()
                     if (
-                        datetime.datetime.fromisoformat(
-                            now.replace("Z", "+00:00")
-                        )
-                        - datetime.datetime.fromisoformat(
-                            t.replace("Z", "+00:00")
-                        )
+                        datetime.datetime.fromisoformat(now.replace("Z", "+00:00"))
+                        - datetime.datetime.fromisoformat(t.replace("Z", "+00:00"))
                     ).total_seconds()
                     > self.config.NONCE_EXPIRATION_SECONDS
                 ]
                 for n in to_remove:
                     del self.processed_nonces[n]
 
-    def load_state(self):
+    def load_state(self) -> None:
         snapshot_timestamp = None
         if os.path.exists(self.snapshot):
             with open(self.snapshot, "r") as f:
@@ -170,7 +180,7 @@ class RemixAgent:
         if not self.logchain.verify():
             raise ValueError("Logchain verification failed.")
 
-    def save_snapshot(self):
+    def save_snapshot(self) -> None:
         with self.lock:
             data = {
                 "treasury": str(self.treasury),
@@ -192,7 +202,7 @@ class RemixAgent:
             with open(self.snapshot, "w") as f:
                 json.dump(data, f, default=str)
 
-    def on_cross_remix_created(self, event: Dict[str, Any]):
+    def on_cross_remix_created(self, event: Dict[str, Any]) -> None:
         """Hook triggered after a Cross-Remix to simulate a creative breakthrough."""
         if not self.config.QUANTUM_TUNNELING_ENABLED:
             return
@@ -201,7 +211,7 @@ class RemixAgent:
             f"Quantum Tunneling Event: New Cross-Remix {event['coin_id']} by {event['user']}"
         )
 
-    def _update_total_karma(self, delta: Decimal):
+    def _update_total_karma(self, delta: Decimal) -> None:
         with self.lock:
             self.total_system_karma += delta
 
@@ -258,13 +268,37 @@ class RemixAgent:
     def _simple_process_event(self, event: Dict[str, Any]) -> None:
         ev = event.get("event")
         if ev == "ADD_USER":
+            root_id = event.get("root_coin_id") or f"root_{uuid.uuid4().hex}"
             self.storage.set_user(
                 event["user"],
                 {
-                    "root_coin_id": event.get("root_coin_id") or "root",
+                    "root_coin_id": root_id,
                     "karma": event.get("karma", "0"),
                     "consent_given": event.get("consent", True),
                     "is_genesis": event.get("is_genesis", False),
+                    "coins_owned": [root_id],
+                },
+            )
+            self.storage.set_coin(
+                root_id,
+                {
+                    "owner": event["user"],
+                    "value": event.get(
+                        "root_coin_value", str(self.config.ROOT_INITIAL_VALUE)
+                    ),
+                    "is_root": True,
+                },
+            )
+            self.storage.set_coin(
+                root_id,
+                {
+                    "owner": event["user"],
+                    "creator": event["user"],
+                    "value": event.get(
+                        "root_coin_value", str(self.config.ROOT_INITIAL_VALUE)
+                    ),
+                    "reactor_escrow": "0",
+                    "reactions": [],
                 },
             )
         elif ev == "MINT":
@@ -288,10 +322,20 @@ class RemixAgent:
                 return
 
             root_coin["value"] = str(root_value - mint_value)
+            treasury = mint_value * self.config.TREASURY_SHARE
+            reactor = mint_value * self.config.REACTOR_SHARE
+            creator_val = mint_value * self.config.CREATOR_SHARE
+            self.treasury += treasury
             self.storage.set_coin(root_coin_id, root_coin)
             self.storage.set_coin(
                 event["coin_id"],
-                {"owner": user, "value": event.get("value", "0")},
+                {
+                    "owner": user,
+                    "creator": user,
+                    "value": str(creator_val),
+                    "reactor_escrow": str(reactor),
+                    "reactions": [],
+                },
             )
         elif ev == "REVOKE_CONSENT":
             u = self.storage.get_user(event["user"])
@@ -310,16 +354,80 @@ class RemixAgent:
             listing = self.storage.get_marketplace_listing(event["listing_id"])
             if listing:
                 coin = self.storage.get_coin(listing["coin_id"])
-                if coin:
-                    coin["owner"] = event["buyer"]
+                buyer = self.storage.get_user(event["buyer"])
+                seller = self.storage.get_user(listing.get("seller"))
+                if (
+                    coin
+                    and buyer
+                    and seller
+                    and (buyer_root := self.storage.get_coin(buyer.get("root_coin_id")))
+                    and (seller_root := self.storage.get_coin(seller.get("root_coin_id")))
+                ):
+                    price = Decimal(str(listing.get("price", "0")))
+                    total = Decimal(str(event.get("total_cost", price)))
+                    buyer_root_value = Decimal(str(buyer_root.get("value", "0")))
+                    if buyer_root_value >= total:
+                        buyer_root["value"] = str(buyer_root_value - total)
+                        seller_root["value"] = str(
+                            Decimal(str(seller_root.get("value", "0"))) + price
+                        )
+                        coin["owner"] = event["buyer"]
+                        buyer.setdefault("coins_owned", []).append(coin["coin_id"])
+                        seller_coins = seller.setdefault("coins_owned", [])
+                        if coin["coin_id"] in seller_coins:
+                            seller_coins.remove(coin["coin_id"])
+                        self.storage.set_coin(buyer["root_coin_id"], buyer_root)
+                        self.storage.set_coin(seller["root_coin_id"], seller_root)
+                        self.storage.set_coin(coin["coin_id"], coin)
+                        self.storage.set_user(event["buyer"], buyer)
+                        self.storage.set_user(listing.get("seller"), seller)
+                        self.storage.delete_marketplace_listing(event["listing_id"])
         elif ev == "REACT":
             coin = self.storage.get_coin(event["coin_id"])
-            if coin:
-                owner = self.storage.get_user(coin["owner"])
-                if owner:
-                    owner["karma"] = str(float(owner.get("karma", "0")) + 1)
+            if not coin:
+                return
+            reactor = self.storage.get_user(event["reactor"])
+            if not reactor:
+                return
+            creator_name = coin.get("creator", coin.get("owner"))
+            creator = self.storage.get_user(creator_name)
+            weight = get_emoji_weights().get(event.get("emoji"))
+            if weight is None:
+                return
+            if creator:
+                creator_karma = Decimal(str(creator.get("karma", "0")))
+                creator["karma"] = str(
+                    creator_karma + self.config.CREATOR_KARMA_PER_REACT * weight
+                )
+                self.storage.set_user(creator_name, creator)
+            reactor_karma = Decimal(str(reactor.get("karma", "0")))
+            reactor["karma"] = str(
+                reactor_karma + self.config.REACTOR_KARMA_PER_REACT * weight
+            )
+            self.storage.set_user(event["reactor"], reactor)
+            escrow = Decimal(str(coin.get("reactor_escrow", "0")))
+            release = min(
+                escrow,
+                escrow * (weight / self.config.REACTION_ESCROW_RELEASE_FACTOR),
+            )
+            coin["reactor_escrow"] = str(escrow - release)
+            coin.setdefault("reactions", []).append(
+                {
+                    "reactor": event["reactor"],
+                    "emoji": event["emoji"],
+                    "message": event.get("message", ""),
+                    "timestamp": event["timestamp"],
+                }
+            )
+            self.storage.set_coin(event["coin_id"], coin)
+            if release > 0:
+                root = self.storage.get_coin(reactor.get("root_coin_id"))
+                if root:
+                    root_val = Decimal(str(root.get("value", "0")))
+                    root["value"] = str(root_val + release)
+                    self.storage.set_coin(reactor["root_coin_id"], root)
 
-    def process_event(self, event: Dict[str, Any]):
+    def process_event(self, event: Dict[str, Any]) -> None:
         if not self.vaccine.scan(json.dumps(event)):
             raise BlockedContentError("Event content blocked by vaccine.")
         nonce = event.get("nonce")
@@ -335,12 +443,15 @@ class RemixAgent:
                 self._apply_event(event)
             self.event_count += 1
             self.hooks.fire_hooks(event["event"], event)
-            if not self._use_simple and self.event_count % self.config.SNAPSHOT_INTERVAL == 0:
+            if (
+                not self._use_simple
+                and self.event_count % self.config.SNAPSHOT_INTERVAL == 0
+            ):
                 self.save_snapshot()
         except Exception as e:
             logging.error(f"Event processing failed for {event.get('event')}: {e}")
 
-    def _apply_event(self, event: Dict[str, Any]):
+    def _apply_event(self, event: Dict[str, Any]) -> None:
         event_type = event.get("event")
         handler = getattr(self, f"_apply_{event_type}", None)
         if handler:
@@ -348,7 +459,7 @@ class RemixAgent:
         else:
             logging.warning(f"Unknown event type {event_type}")
 
-    def _apply_ADD_USER(self, event: AddUserPayload):
+    def _apply_ADD_USER(self, event: AddUserPayload) -> None:
         username = event["user"]
         with self.lock:
             if self.storage.get_user(username):
@@ -385,7 +496,7 @@ class RemixAgent:
                     f"Failed to create user {username} atomically"
                 ) from e
 
-    def _apply_MINT(self, event: MintPayload):
+    def _apply_MINT(self, event: MintPayload) -> None:
         user = event["user"]
         user_data = self.storage.get_user(user)
         if not user_data:
@@ -442,7 +553,7 @@ class RemixAgent:
             self.storage.set_coin(root_coin_id, root_coin.to_dict())
             self.storage.set_coin(new_coin_id, new_coin.to_dict())
 
-    def _apply_REACT(self, event: ReactPayload):
+    def _apply_REACT(self, event: ReactPayload) -> None:
         reactor = event["reactor"]
         reactor_data = self.storage.get_user(reactor)
         if not reactor_data:
@@ -459,9 +570,9 @@ class RemixAgent:
         if not coin_data:
             return
         coin = Coin.from_dict(coin_data, self.config)
-        if event["emoji"] not in self.config.EMOJI_WEIGHTS:
+        if event["emoji"] not in get_emoji_weights():
             return
-        weight = self.config.EMOJI_WEIGHTS[event["emoji"]]
+        weight = get_emoji_weights()[event["emoji"]]
         locks = [reactor_obj.lock, coin.lock]
         with acquire_multiple_locks(locks):
             coin.add_reaction(
@@ -478,9 +589,11 @@ class RemixAgent:
                 creator_obj = User.from_dict(creator_data, self.config)
                 with creator_obj.lock:
                     creator_obj.karma += self.config.CREATOR_KARMA_PER_REACT * weight
-                    self.storage.set_user(coin.creator, creator_obj.to_dict())
+                self.storage.set_user(coin.creator, creator_obj.to_dict())
             release = coin.release_escrow(
-                weight / Config.REACTION_ESCROW_RELEASE_FACTOR * coin.reactor_escrow
+                weight
+                / self.config.REACTION_ESCROW_RELEASE_FACTOR
+                * coin.reactor_escrow
             )
             if release > 0:
                 reactor_root_data = self.storage.get_coin(reactor_obj.root_coin_id)
@@ -493,7 +606,7 @@ class RemixAgent:
             self.storage.set_user(reactor, reactor_obj.to_dict())
             self.storage.set_coin(coin_id, coin.to_dict())
 
-    def _apply_LIST_COIN_FOR_SALE(self, event: MarketplaceListPayload):
+    def _apply_LIST_COIN_FOR_SALE(self, event: MarketplaceListPayload) -> None:
         """List a coin for sale in the in-memory marketplace."""
         listing_id = event["listing_id"]
         if self.storage.get_marketplace_listing(listing_id):
@@ -512,7 +625,7 @@ class RemixAgent:
         }
         self.storage.set_marketplace_listing(listing_id, listing)
 
-    def _apply_BUY_COIN(self, event: MarketplaceBuyPayload):
+    def _apply_BUY_COIN(self, event: MarketplaceBuyPayload) -> None:
         listing_id = event["listing_id"]
         listing_data = self.storage.get_marketplace_listing(listing_id)
         if not listing_data:
@@ -550,28 +663,67 @@ class RemixAgent:
             self.storage.set_coin(seller_obj.root_coin_id, seller_root.to_dict())
             self.storage.delete_marketplace_listing(listing_id)
 
-    def _apply_CREATE_PROPOSAL(self, event: ProposalPayload):
+    def _apply_CREATE_PROPOSAL(self, event: ProposalPayload) -> None:
         proposal_id = event["proposal_id"]
         if self.storage.get_proposal(proposal_id):
             return
+        creator_data = self.storage.get_user(event["creator"])
+        if not creator_data:
+            return
+        creator = User.from_dict(creator_data, self.config)
+        min_karma = Decimal(str(event.get("min_karma", "0")))
+        if creator.karma < min_karma:
+            logging.info(
+                "proposal rejected: insufficient karma",
+                proposal_id=proposal_id,
+                karma=str(creator.karma),
+            )
+            return
+
+        system_entropy = Decimal(
+            self.cosmic_nexus.state_service.get_state(
+                "system_entropy", str(self.config.SYSTEM_ENTROPY_BASE)
+            )
+        )
+        if event.get("requires_certification") and system_entropy > Decimal(
+            str(self.config.ENTROPY_CHAOS_THRESHOLD)
+        ):
+            logging.info(
+                "proposal rejected: certification required in chaotic state",
+                proposal_id=proposal_id,
+            )
+            return
+
+        tags = {
+            "urgency": "high"
+            if system_entropy > Decimal(str(self.config.ENTROPY_INTERVENTION_THRESHOLD))
+            else "normal",
+            "popularity": "high"
+            if creator.karma >= self.config.KARMA_MINT_THRESHOLD
+            else "low",
+            "entropy": float(system_entropy),
+        }
+        payload = event.get("payload", {}) or {}
+        payload["tags"] = tags
+
         proposal = {
             "proposal_id": proposal_id,
             "creator": event["creator"],
             "description": event["description"],
             "target": event["target"],
-            "payload": event["payload"],
+            "payload": payload,
             "status": "open",
             "votes": {},
             "created_at": datetime.datetime.utcnow().isoformat(),
             "voting_deadline": (
                 datetime.datetime.utcnow()
                 + datetime.timedelta(hours=Config.VOTING_DEADLINE_HOURS)
-            ).isoformat(),  # Example duration
+            ).isoformat(),
             "execution_time": None,
         }
         self.storage.set_proposal(proposal_id, proposal)
 
-    def _apply_VOTE_PROPOSAL(self, event: VoteProposalPayload):
+    def _apply_VOTE_PROPOSAL(self, event: VoteProposalPayload) -> None:
         proposal_data = self.storage.get_proposal(event["proposal_id"])
         if not proposal_data:
             return
@@ -620,7 +772,7 @@ class RemixAgent:
         logger.info(f"Dynamic threshold for {total_voters} voters: {threshold}")
         return threshold
 
-    def _apply_EXECUTE_PROPOSAL(self, event: Dict[str, Any]):
+    def _apply_EXECUTE_PROPOSAL(self, event: Dict[str, Any]) -> None:
         proposal_id = event["proposal_id"]
         proposal_data = self.storage.get_proposal(proposal_id)
         if not proposal_data:
@@ -642,7 +794,7 @@ class RemixAgent:
             proposal["status"] = "executed"
             self.storage.set_proposal(proposal_id, proposal)
 
-    def _apply_STAKE_KARMA(self, event: StakeKarmaPayload):
+    def _apply_STAKE_KARMA(self, event: StakeKarmaPayload) -> None:
         user = event["user"]
         user_data = self.storage.get_user(user)
         if not user_data:
@@ -656,7 +808,7 @@ class RemixAgent:
             user_obj.staked_karma += amount
             self.storage.set_user(user, user_obj.to_dict())
 
-    def _apply_UNSTAKE_KARMA(self, event: UnstakeKarmaPayload):
+    def _apply_UNSTAKE_KARMA(self, event: UnstakeKarmaPayload) -> None:
         user = event["user"]
         user_data = self.storage.get_user(user)
         if not user_data:
@@ -670,7 +822,7 @@ class RemixAgent:
             user_obj.karma += amount
             self.storage.set_user(user, user_obj.to_dict())
 
-    def _apply_REVOKE_CONSENT(self, event: RevokeConsentPayload):
+    def _apply_REVOKE_CONSENT(self, event: RevokeConsentPayload) -> None:
         user = event["user"]
         user_data = self.storage.get_user(user)
         if not user_data:
@@ -680,11 +832,11 @@ class RemixAgent:
             user_obj.revoke_consent()
             self.storage.set_user(user, user_obj.to_dict())
 
-    def _apply_FORK_UNIVERSE(self, event: ForkUniversePayload):
+    def _apply_FORK_UNIVERSE(self, event: ForkUniversePayload) -> None:
         # Forking handled by CosmicNexus for unified governance
         self.cosmic_nexus.apply_fork_universe(event)
 
-    def _apply_CROSS_REMIX(self, event: CrossRemixPayload):
+    def _apply_CROSS_REMIX(self, event: CrossRemixPayload) -> None:
         user = event["user"]
         reference_universe = event["reference_universe"]
         target_agent = self.cosmic_nexus.sub_universes.get(reference_universe)
@@ -724,11 +876,12 @@ class RemixAgent:
         )
         self.storage.set_coin(new_coin_id, new_coin.to_dict())
         # Trigger hooks after a successful cross remix
+        from hooks import events
         self.hooks.fire_hooks(
-            "cross_remix_created", {"coin_id": new_coin_id, "user": user}
+            events.CROSS_REMIX_CREATED, {"coin_id": new_coin_id, "user": user}
         )
 
-    def _apply_DAILY_DECAY(self, event: ApplyDailyDecayPayload):
+    def _apply_DAILY_DECAY(self, event: ApplyDailyDecayPayload) -> None:
         users = self.storage.get_all_users()
         for u in users:
             user_obj = User.from_dict(u, self.config)
@@ -807,7 +960,7 @@ class RemixAgent:
         quorum = voted_harmony / total_harmony if total_harmony > 0 else Decimal("0")
         return {"yes": final_yes, "no": final_no, "quorum": quorum}
 
-    def _process_proposal_lifecycle(self):
+    def _process_proposal_lifecycle(self) -> None:
         """
         Process the lifecycle of all open proposals: tally if deadline passed, update status, execute if ready.
         """
@@ -870,4 +1023,41 @@ class RemixAgent:
                     f"to status {proposal['status']} with threshold {dynamic_threshold}"
                 )
 
+    def self_improve(self) -> list[str]:
+        """Analyze recent diary entries and suggest improvements."""
+        try:
+            entries = load_entries(limit=20)
+        except Exception:  # pragma: no cover - external deps
+            logging.exception("Failed to load diary entries")
+            entries = []
 
+        fail_count = 0
+        contradictions = 0
+        action_results: Dict[str, Any] = {}
+        for entry in entries:
+            text = json.dumps(entry)
+            if "fail" in text.lower():
+                fail_count += 1
+            action = entry.get("action")
+            result = entry.get("result")
+            if action and result is not None:
+                prev = action_results.get(action)
+                if prev is not None and prev != result:
+                    contradictions += 1
+                action_results[action] = result
+
+        suggestions: list[str] = []
+        if fail_count >= 3:
+            suggestions.append("multiple failures detected: revision recommended")
+        if contradictions:
+            suggestions.append("contradictory actions detected: review logic")
+        if not suggestions and not entries:
+            suggestions.append("no diary entries found")
+
+        if suggestions:
+            try:
+                Config.ENTROPY_MULTIPLIER += 0.01
+            except Exception:  # pragma: no cover - defensive
+                logging.exception("Failed to update ENTROPY_MULTIPLIER")
+
+        return suggestions

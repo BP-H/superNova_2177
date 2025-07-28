@@ -12,6 +12,12 @@ This repository hosts `superNova_2177.py` — an experimental protocol merging c
 ⚠️ This is *not* a financial product, cryptocurrency, or tradable asset. All metrics (e.g., Harmony Score, Resonance, Entropy) are symbolic — for modeling, visualization, and creative gameplay only. See legal/disclaimer sections in `superNova_2177.py`, lines 60–88.
 Symbolic tokens and listings introduced in the gameplay modules have **no real-world monetary value**. They exist purely as resonance artifacts used for cooperative storytelling.
 
+The repository includes a *patch monitor* that scans new contributions for these
+required disclaimers. If added files or lines don't contain the phrases
+`STRICTLY A SOCIAL MEDIA PLATFORM`, `Intellectual Property & Artistic
+Inspiration`, and `Legal & Ethical Safeguards`, the commit will fail in CI and
+locally if pre-commit hooks are installed.
+
 ````markdown
 # superNova_2177 🧠
 
@@ -24,12 +30,27 @@ A modular intelligence pipeline that evaluates hypotheses through evidence-based
 ```bash
 # create the virtual environment and install dependencies
 python setup_env.py
+# or install dependencies manually
+pip install -r requirements.txt
 
 # optional: launch the API immediately
 # python setup_env.py --run-app
 
-# optional: build the NiceGUI frontend
+# optional: build the Transcendental Resonance frontend
 # python setup_env.py --build-ui
+# The NiceGUI web interface now lives in `transcendental_resonance_frontend/`.
+# This folder was historically called `web_ui`.
+# Launch the frontend directly with
+# ```bash
+# python -m transcendental_resonance_frontend
+# ```
+# Or explore the demo data using
+# ```bash
+# python -m transcendental_resonance_frontend.demo
+# ```
+
+# optional: launch the Streamlit UI
+# python setup_env.py --launch-ui
 
 # Try demo mode
 supernova-validate --demo
@@ -56,23 +77,25 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
    dependencies locally. Install any missing system libraries first (see
    [System Packages](#system-packages)). You can also pass `--locked` to install packages from
    `requirements.lock` for deterministic builds. Additional flags `--run-app`
-   and `--build-ui` can automatically start the API or compile the frontend:
+   and `--build-ui` can automatically start the API or compile the frontend. Use
+   `--launch-ui` to open the Streamlit dashboard after install:
    ```bash
    python setup_env.py
    # python setup_env.py --run-app    # launch API after install
    # python setup_env.py --locked     # install from requirements.lock
-   # python setup_env.py --build-ui   # build NiceGUI frontend assets
+    # python setup_env.py --build-ui   # build Transcendental Resonance frontend assets
+    # python setup_env.py --launch-ui  # run the Streamlit UI on port 8501
    ```
   You can also let `install.py` choose the appropriate installer for your
   platform:
   ```bash
   python install.py
   ```
- This project depends on libraries such as `fastapi`, `pydantic-settings`, `structlog`, `prometheus-client`, and core packages like `numpy`, `python-dateutil`, `sqlalchemy>=2.0`, and `email-validator`. The full list lives in `requirements.txt`. A pared-down `requirements-minimal.txt` installs only what is necessary to run the unit tests.
+This project depends on libraries such as `fastapi`, `pydantic-settings`, `structlog`, `prometheus-client`, and core packages like `numpy`, `python-dateutil`, `sqlalchemy>=2.0`, and `email-validator`. The full list lives in `requirements.txt`. A pared-down `requirements-minimal.txt` installs only what is necessary to run the unit tests and now includes `requests`.
   If you prefer to manage the environment manually, install the required
   packages yourself using `requirements.txt`:
   ```bash
-  pip install -r requirements.txt  # installs numpy, python-dateutil, email-validator, etc.
+  pip install -r requirements.txt  # installs numpy, python-dateutil, email-validator, streamlit-ace, etc.
   ```
    A PyPI wheel is currently unavailable. Run `python setup_env.py` or use the online installer scripts:
    ```bash
@@ -118,12 +141,18 @@ make lint     # run mypy type checks
 
 ### Pre-commit Hooks
 
-Set up pre-commit to automatically format and lint the code:
+Set up pre-commit to automatically format and lint the code. The hooks depend on
+packages from **both** `requirements-minimal.txt` and
+`requirements-dev.txt`, and also run the `patch-monitor` hook to enforce the
+disclaimer policy:
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -r requirements-minimal.txt -r requirements-dev.txt
 pre-commit install
 ```
+
+Running `pre-commit install` ensures the patch monitor executes before each
+commit so that missing disclaimer text is caught locally.
 
 You can run all checks manually with:
 
@@ -161,6 +190,7 @@ docker-compose up --build
 
 ```bash
 python one_click_install.py
+# python one_click_install.py --launch-ui  # open the Streamlit UI on port 8888
 ```
 
 This script automatically installs the `tqdm` package if it isn't available so
@@ -177,7 +207,7 @@ Set up a Python environment and install the package and its dependencies:
 ```bash
 pip install .
 # install optional libraries used by the tests
-pip install -r requirements.txt
+pip install -r requirements.txt  # includes streamlit-ace
 # To install the exact versions used during development,
 # use the generated `requirements.lock` file instead:
 # pip install -r requirements.lock
@@ -232,18 +262,79 @@ The application will be available at [http://localhost:8000](http://localhost:80
 
 ## 🎛️ Local Streamlit UI
 
-To experiment with the validation analyzer locally, launch the Streamlit frontend:
+To experiment with the validation analyzer locally, first build the NiceGUI
+frontend found in `transcendental_resonance_frontend/` and launch the Streamlit
+dashboard:
+
+```bash
+python setup_env.py --build-ui --launch-ui
+```
+This command compiles the UI assets and starts the app on
+[http://localhost:8888](http://localhost:8888).
+You can still run `make ui` from the repository root to launch the demo only.
+`ui.py` replaces the previous `app.py` script and is now the canonical entry
+point for the Streamlit interface.  Common UI patterns like alerts, theme
+switching and layout containers live in `streamlit_helpers.py`:
+
+```python
+from streamlit_helpers import header, alert, theme_selector, centered_container
+```
+
+Import these helpers at the top of your Streamlit files to keep the UI code
+clean and consistent.
+Run these commands from the repository root. **Do not** execute `python ui.py`
+directly as that bypasses Streamlit's runtime.
+
+Exporting plots as static images requires the `kaleido` package. Install it
+using `pip install -r requirements.txt` if it isn't already available.
+
+Open [http://localhost:8888](http://localhost:8888) in your browser to interact with the demo. Use the **Reset to Demo** button below the editor to reload `sample_validations.json` at any time.
+
+`ui.py` reads configuration from `st.secrets` when running under Streamlit. If
+the secrets dictionary is unavailable (such as during local development), the
+module falls back to a development setup equivalent to:
+
+```python
+{"SECRET_KEY": "dev", "DATABASE_URL": "sqlite:///:memory:"}
+```
+
+## 📊 Dashboard
+
+The dashboard provides real-time integrity metrics and network graphs built with `streamlit`, `networkx`, and `matplotlib`. Upload your validations JSON or enable demo mode to populate the table. You can edit rows inline before re-running the analysis to see how scores change.
 
 ```bash
 streamlit run ui.py
 ```
-Or run `make ui` from the repository root to start the demo.
-`ui.py` replaces the previous `app.py` script and is now the canonical entry
-point for the Streamlit interface.
-Run these commands from the repository root. **Do not** execute `python ui.py`
-directly as that bypasses Streamlit's runtime.
 
-Open [http://localhost:8501](http://localhost:8501) in your browser to interact with the demo.
+Use the sidebar file uploader to select or update your dataset, then click **Run Analysis** to refresh the report.
+Missing packages such as `tqdm` are installed automatically when you run `one_click_install.py` so progress bars work without extra setup.
+
+### Troubleshooting the UI
+
+- **Missing dependencies**: If the interface fails with `ModuleNotFoundError`, run
+  `pip install -r requirements.txt` to ensure all packages are available.
+- **Port already in use**: Pass `--server.port` to Streamlit or set the
+  `STREAMLIT_SERVER_PORT` environment variable to use a different port.
+- **Browser does not open**: Navigate manually to
+  [http://localhost:8888](http://localhost:8888) or the port you selected.
+
+### Job Queue & Polling
+
+Long-running tasks started via the UI now run asynchronously. Use the
+`queue_*` routes to start a job and `poll_*` to check its status. Example:
+
+```python
+from frontend_bridge import dispatch_route
+
+# queue an introspection audit
+job = await dispatch_route("queue_full_audit", {"hypothesis_id": "H1"})
+
+# later poll for the result
+status = await dispatch_route("poll_full_audit", {"job_id": job["job_id"]})
+```
+
+The returned status dictionary includes ``status`` and ``result`` keys. Events
+are still emitted via the hook managers when a job completes.
 
 ## 🌩️ Streamlit Cloud
 
@@ -255,53 +346,77 @@ Deploy the demo UI online with Streamlit Cloud:
 4. Add your `SECRET_KEY` and set a `DATABASE_URL` secret with your connection string under **Secrets** in the app settings.
 5. Streamlit will install dependencies from `requirements.txt` and launch the app.
 
+`kaleido` is bundled in `requirements.txt` so image export features work on Streamlit Cloud.
+
 After the build completes, you'll get a shareable URL to interact with the validation demo in your browser.
+
+## 🤝 UI Integration
+
+The `frontend_bridge` module exposes a lightweight router for the UI. Handlers
+register themselves with `register_route(name, func)` and are invoked through
+`dispatch_route`.
+
+A convenient read-only route `"list_routes"` returns the currently available
+route names. This can help debug which backend callbacks are present:
+
+```python
+from frontend_bridge import dispatch_route
+
+routes = await dispatch_route("list_routes", {})
+print(routes["routes"])
+```
 
 ## 🧪 Running Tests
 
-Install the testing requirements first using `requirements-dev.txt`:
+Before invoking `pre-commit` or `pytest`, install the minimal testing
+dependencies:
+
+```bash
+pip install -r requirements-minimal.txt
+```
+
+This ensures `pytest-asyncio` is available so that asynchronous test
+fixtures work correctly.
+
+You can then add the full development tools by installing
+`requirements-dev.txt`:
 
 ```bash
 pip install -r requirements-dev.txt
 pytest
 ```
 
-This file includes `pytest` and all libraries required for development.
-For a lightweight setup you can instead install the reduced set from
-`requirements-minimal.txt` or use `requirements.txt`/`requirements.lock`
-for the full environment.
+`requirements-dev.txt` includes `pytest` and all libraries required for
+development. For a lightweight setup you can instead install only the
+packages from `requirements-minimal.txt` or use
+`requirements.txt`/`requirements.lock` for the complete environment.
 
 Before running the tests, install the packages from `requirements.txt` (or the expanded minimal file) if you want the real dependencies. Otherwise, the built-in stubs will activate automatically. Use the setup script with locked versions or `pip` directly:
 
 ```bash
 python setup_env.py --locked  # install from requirements.lock
-pip install -r requirements.txt
+pip install -r requirements.txt  # installs streamlit-ace
 ```
 
 ### Test Requirements
 
-Before running `pre-commit` or `pytest`, install the minimal set of packages required for the tests:
+Before running `pre-commit` or `pytest`, install **both** requirement
+files so that all dependencies are available:
 
 ```bash
-pip install -r requirements-minimal.txt
+pip install -r requirements-minimal.txt -r requirements-dev.txt
 ```
 
 `requirements-minimal.txt` installs `fastapi`, `pydantic`,
 `pydantic-settings`, `python-multipart`, `structlog`,
-`prometheus-client` and the core scientific packages (`numpy`,
+`prometheus-client`, `requests` and the core scientific packages (`numpy`,
 `python-dateutil`, `sqlalchemy`, `networkx`, `pytest-asyncio`, `httpx`,
-`email-validator`). With these installed, running `pytest` should
+`email-validator`). `pytest-asyncio` enables the async fixtures used
+throughout the test suite. With these installed, running `pytest` should
 succeed (`99 passed`).
 
-> **Important**
-> CI and local testing rely on these packages. Always run
-> `pip install -r requirements-minimal.txt` **before** invoking
-> `pre-commit` or `pytest`. Skipping this step triggers the simplified
-> stubs in `stubs/` and can cause numerous test failures.
-
-If the packages are missing, stub implementations in `stubs/`
-activate automatically. This allows `pytest` to succeed but may not
-exercise the full functionality of optional modules.
+Missing packages trigger the simplified stubs in `stubs/`, which can
+lead to confusing test failures.
 
 ### Real Module Dependencies
 
@@ -321,6 +436,15 @@ pip install -r requirements-minimal.txt -r requirements-dev.txt
 ```
 
 Run `pytest` after installing the packages to validate your setup.
+
+You can also run static type checks with `mypy`:
+
+```bash
+pytest
+mypy .
+```
+
+The provided `Makefile` exposes `make test` and `make lint` wrappers for these commands.
 
 ### Makefile Commands
 
@@ -420,6 +544,7 @@ If you prefer to build everything locally, run:
 
 ```bash
 python one_click_install.py
+# python one_click_install.py --launch-ui  # open the Streamlit UI on port 8888
 ```
 
 The script detects your OS, downloads Python 3.11 if necessary, bundles the
@@ -478,6 +603,9 @@ jupyter notebook docs/Validation_Pipeline.ipynb
 jupyter notebook docs/Network_Graph_Visualization.ipynb
 ```
 
+See `docs/hooks.md` for a catalogue of hook event names used by the
+`HookManager`.
+
 ## 🏗️ Architecture (v4.6)
 
 * `validation_integrity_pipeline.py` — Orchestrator for full validation logic
@@ -486,6 +614,7 @@ jupyter notebook docs/Network_Graph_Visualization.ipynb
 * `temporal_consistency_checker.py` — Tracks time-based volatility
 * `network_coordination_detector.py` — Spots suspicious group behavior using
   sentence‑embedding similarity
+* Planned: `vote_registry.py` with identity linking, public timelines per species, and real-time consensus graphs
 
 ## 🧪 Status
 

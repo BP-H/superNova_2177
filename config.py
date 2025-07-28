@@ -1,6 +1,7 @@
 # --- MODULE: config.py ---
 from decimal import Decimal
 from typing import Dict, List
+from functools import lru_cache
 import os
 
 class Config:
@@ -69,6 +70,7 @@ class Config:
     GUINNESS_PURSUIT_INTERVAL_SECONDS: int = 86400 * 3
     SCIENTIFIC_REASONING_CYCLE_INTERVAL_SECONDS: int = 3600
     ADAPTIVE_OPTIMIZATION_INTERVAL_SECONDS: int = 3600
+    SELF_IMPROVE_INTERVAL_SECONDS: int = 3600
     ANNUAL_AUDIT_INTERVAL_SECONDS: int = 86400 * 365
     METRICS_PORT: int = int(os.environ.get("METRICS_PORT", "8001"))
 
@@ -103,3 +105,9 @@ class Config:
     LOW_ENTROPY_DELTA_THRESHOLD: float = 0.1
     # Days before unresolved hypotheses are considered stale in meta analyses
     UNRESOLVED_HYPOTHESIS_THRESHOLD_DAYS: int = 60
+
+
+@lru_cache(maxsize=1)
+def get_emoji_weights() -> Dict[str, Decimal]:
+    """Return configured emoji reaction weights."""
+    return Config.EMOJI_WEIGHTS

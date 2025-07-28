@@ -43,7 +43,11 @@ dependencies = [
     "scikit-learn",
     "streamlit",
     "asyncpg",
-    "email-validator"
+    "email-validator",
+    "streamlit-ace",
+    "openai",
+    "anthropic",
+    "google-generativeai"
 ]
 
 [project.scripts]
