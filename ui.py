@@ -4,7 +4,6 @@ import json
 import logging
 import math
 import os
-import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -124,6 +123,14 @@ def diff_results(old: dict | None, new: dict) -> str:
         lineterm="",
     )
     return "\n".join(diff)
+
+
+def render_pyvis_to_html(net: Any) -> str:
+    """Return the interactive HTML for a PyVis network."""
+    try:
+        return net.generate_html(notebook=False)
+    except AttributeError:  # pragma: no cover - fallback for old pyvis
+        return net.generate_html()
 
 
 def generate_explanation(result: dict) -> str:
@@ -299,11 +306,13 @@ def run_analysis(validations, *, layout: str = "force"):
                         net.add_node(node, label=node, size=size, color=color)
                 net.add_edge(u, v, value=w)
             st.subheader("Validator Coordination Graph")
-            with tempfile.NamedTemporaryFile("w+", suffix=".html") as tmp_file:
-                net.show(tmp_file.name)
-                tmp_file.seek(0)
-                html_data = tmp_file.read()
-                st.components.v1.html(html_data, height=500)
+            html_data = render_pyvis_to_html(net)
+            st.components.v1.html(html_data, height=500)
+            st.download_button(
+                "Download Interactive HTML",
+                html_data,
+                file_name="graph.html",
+            )
         else:
             weights = [G[u][v]["weight"] * 3 for u, v in G.edges()]
             node_sizes = [300 + (reputations.get(n, 0) * 600) for n in G.nodes()]
