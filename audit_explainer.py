@@ -147,13 +147,18 @@ def explain_validation_reasoning(
                     relevant_history_entries.append(entry)
                     break # Found the specific validation event
         if not relevant_history_entries:
-            reasoning_fragments.append(f"No specific validation event found for log_id {validation_id} in hypothesis history.")
+            reasoning_fragments.append(
+                f"No specific validation event found for log_id {validation_id} in hypothesis history."
+            )
             # Set suggested_review based on explicit check at the end
 
     else:
         # If no specific validation_id, consider the latest resolution (most recent history entry)
         if hyp_history:
-            relevant_history_entries = sorted(hyp_history, key=lambda x: _parse_datetime_safely(x.get("t", "")) or datetime.min)
+            relevant_history_entries = sorted(
+                hyp_history,
+                key=lambda x: _parse_datetime_safely(x.get("t", "")) or datetime.min,
+            )
             if relevant_history_entries:
                 relevant_history_entries = [relevant_history_entries[-1]] # Take the latest resolution
 
@@ -177,7 +182,11 @@ def explain_validation_reasoning(
     # Gather supporting evidence
     supporting_nodes_list.extend(hypothesis.get("supporting_nodes", []))
     if supporting_nodes_list:
-        reasoning_fragments.append(f"Supported by evidence from key causal nodes: {', '.join(supporting_nodes_list[:5])}{'...' if len(supporting_nodes_list) > 5 else ''}.")
+        reasoning_fragments.append(
+            "Supported by evidence from key causal nodes: "
+            f"{', '.join(supporting_nodes_list[:5])}"
+            f"{'...' if len(supporting_nodes_list) > 5 else ''}."
+        )
 
     # Process relevant audit sources
     audit_sources_processed = set()
@@ -190,7 +199,9 @@ def explain_validation_reasoning(
                 audit_commentary = audit_snapshot.get("commentary", "No specific commentary.")
                 validation_res = audit_snapshot.get("validation_outcome")
                 
-                reasoning_fragments.append(f"Audit log #{audit_log_id} ({audit_source_key}): {audit_commentary}")
+                reasoning_fragments.append(
+                    f"Audit log #{audit_log_id} ({audit_source_key}): {audit_commentary}"
+                )
 
                 if validation_res:
                     deviation = validation_res.get("deviation")
@@ -199,11 +210,15 @@ def explain_validation_reasoning(
 
                 # Check for low entropy delta from audit's metadata (if passed and stored)
                 audit_summary_payload = audit_snapshot.get("triggered_by_payload", {})
-                audit_result_metadata = audit_summary_payload.get("metadata", {}) # Metadata might be here if trigger_causal_audit adds it
+                audit_result_metadata = audit_summary_payload.get(
+                    "metadata", {}
+                )  # Metadata might be here if trigger_causal_audit adds it
                 entropy_delta = audit_result_metadata.get("entropy_delta")
                 if entropy_delta is not None and abs(entropy_delta) < CONFIG.LOW_ENTROPY_DELTA_THRESHOLD:
                     risk_flags_list.append(f"low_entropy_delta (delta={entropy_delta:.2f})")
-                    reasoning_fragments.append(f"Note: This audit involved a low entropy change, which may warrant closer review.")
+                    reasoning_fragments.append(
+                        "Note: This audit involved a low entropy change, which may warrant closer review."
+                    )
 
             audit_sources_processed.add(audit_source_key)
 
@@ -223,7 +238,8 @@ def explain_validation_reasoning(
         suggested_review = True
     if risk_flags_list: # Any risk flag implies suggested review
         suggested_review = True
-    if not relevant_history_entries and validation_id is not None: # If a specific validation_id was requested but not found
+    # If a specific validation_id was requested but not found
+    if not relevant_history_entries and validation_id is not None:
         suggested_review = True
 
 
@@ -277,7 +293,11 @@ def trace_causal_chain(audit_ref_key: str, db: Session) -> List[Dict[str, Any]]:
         target = edge_data_raw.get("target")
         if source is not None and target is not None:
             # Assuming add_edge can take full data dict or individual params
-            temp_graph.add_edge(source, target, **{k:v for k,v in edge_data_raw.items() if k not in ['source', 'target']})
+            temp_graph.add_edge(
+                source,
+                target,
+                **{k: v for k, v in edge_data_raw.items() if k not in ['source', 'target']},
+            )
 
 
     events_in_chain = []

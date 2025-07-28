@@ -157,7 +157,13 @@ def generate_structured_audit_bundle(
         "hypothesis_id": hypothesis_id,
         "validation_id": validation_id,
         "summary": explainer_output.get("summary", "N/A"), # Added default value
-        "markdown_report": render_markdown_report(explainer_output, hypothesis_id, hypothesis_text_preview, validation_id, bias_summary_text),
+        "markdown_report": render_markdown_report(
+            explainer_output,
+            hypothesis_id,
+            hypothesis_text_preview,
+            validation_id,
+            bias_summary_text,
+        ),
         "plain_text_report": render_plain_text_report(explainer_output),
         "risk_flags": explainer_output.get("risk_flags", []),
         "bias_summary": bias_summary_text,

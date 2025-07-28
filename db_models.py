@@ -430,7 +430,8 @@ class HypothesisRecord(Base):
     metadata_json = Column(JSON, default=lambda: {})
 
     validation_log_ids = Column(JSON, default=lambda: [])  # LogEntry.id references
-    audit_sources = Column(JSON, default=lambda: [])       # causal_trigger.py, audit_bridge.py etc. refs (SystemState keys)
+    audit_sources = Column(JSON, default=lambda: [])
+    # causal_trigger.py, audit_bridge.py etc. refs (SystemState keys)
 
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
