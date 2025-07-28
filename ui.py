@@ -20,6 +20,11 @@ from network.network_coordination_detector import build_validation_graph
 from validation_integrity_pipeline import analyze_validation_integrity
 
 try:
+    from validation_certifier import Config as VCConfig
+except Exception:  # pragma: no cover - optional debug dependencies
+    VCConfig = None  # type: ignore
+
+try:
     from config import Config
     from superNova_2177 import HarmonyScanner
 except Exception:  # pragma: no cover - optional debug dependencies
@@ -29,6 +34,11 @@ except Exception:  # pragma: no cover - optional debug dependencies
 if Config is None:
     class Config:
         METRICS_PORT = 1234
+
+if VCConfig is None:
+    class VCConfig:
+        HIGH_RISK_THRESHOLD = 0.7
+        MEDIUM_RISK_THRESHOLD = 0.4
 
 if HarmonyScanner is None:
     class HarmonyScanner:
@@ -54,10 +64,30 @@ def run_analysis(validations):
     with st.spinner("Running analysis..."):
         result = analyze_validation_integrity(validations)
 
+    consensus = result.get("consensus_score")
+    if consensus is not None:
+        st.metric("Consensus Score", round(consensus, 3))
+
     integrity = result.get("integrity_analysis", {})
     score = integrity.get("overall_integrity_score")
     if score is not None:
-        st.metric("Integrity Score", score)
+        color = "green"
+        if score < VCConfig.MEDIUM_RISK_THRESHOLD:
+            color = "red"
+        elif score < VCConfig.HIGH_RISK_THRESHOLD:
+            color = "yellow"
+        tooltip = (
+            f"Green \u2265 {VCConfig.HIGH_RISK_THRESHOLD}, "
+            f"Yellow \u2265 {VCConfig.MEDIUM_RISK_THRESHOLD}, "
+            f"Red < {VCConfig.MEDIUM_RISK_THRESHOLD}"
+        )
+        st.markdown(
+            f"<span title='{tooltip}' "
+            f"style='background-color:{color};color:white;"
+            f"padding:0.25em 0.5em;border-radius:0.25em;'>"
+            f"Integrity Score: {score:.2f}</span>",
+            unsafe_allow_html=True,
+        )
 
     st.subheader("Analysis Result")
     st.json(result)
