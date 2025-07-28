@@ -4,13 +4,11 @@ from nicegui import ui
 
 from utils.api import api_call, set_token
 from utils.styles import get_theme
-from utils.api import clear_token  # imported for completeness
 
 
 @ui.page('/')
 async def login_page():
     """Render the login form and handle authentication."""
-    ui.context.client.request.headers['user-agent']
     THEME = get_theme()
     with ui.column().classes('w-full max-w-md mx-auto p-4').style(
         f'background: {THEME["gradient"]}; color: {THEME["text"]};'
