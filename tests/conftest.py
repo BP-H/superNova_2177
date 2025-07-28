@@ -556,6 +556,7 @@ for mod_name in [
 
             stub.fixture = fixture
         if mod_name == "numpy":
+            import math
             class _Array(list):
                 def mean(self):
                     return sum(float(x) for x in self) / len(self) if self else 0.0
@@ -564,6 +565,32 @@ for mod_name in [
             stub.ndarray = list
             stub.stack = lambda arrays: arrays
             stub.zeros = lambda shape, dtype=float: [0.0] * shape if isinstance(shape, int) else [[0.0] * shape[1] for _ in range(shape[0])]
+            stub.isscalar = lambda obj: not hasattr(obj, "__iter__")
+
+            def _trapz(y, x):
+                area = 0.0
+                for i in range(1, len(x)):
+                    area += (x[i] - x[i - 1]) * (y[i] + y[i - 1]) / 2.0
+                return area
+
+            stub.trapz = _trapz
+            stub.trapezoid = _trapz
+
+            def _linspace(start, stop, num, endpoint=True):
+                if num <= 0:
+                    return []
+                if num == 1:
+                    return [float(stop if endpoint else start)]
+                if endpoint:
+                    step = (stop - start) / (num - 1)
+                    return [start + i * step for i in range(num)]
+                else:
+                    step = (stop - start) / num
+                    return [start + i * step for i in range(num)]
+
+            stub.linspace = _linspace
+            stub.log = lambda v: math.log(v)
+            stub.exp = lambda v: math.exp(v)
         if mod_name == "dateutil":
             parser_mod = types.ModuleType("dateutil.parser")
             def _parse(val):
