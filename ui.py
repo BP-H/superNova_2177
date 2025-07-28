@@ -11,6 +11,11 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
+
+# Basic page setup so Streamlit responds immediately on load
+st.set_page_config(page_title="superNova_2177", layout="wide")
+st.title("superNova_2177")
+st.success("\u2705 Streamlit loaded!")
 from streamlit_helpers import (
     alert,
     header,
@@ -443,6 +448,10 @@ def boot_diagnostic_ui():
 
 def render_validation_ui() -> None:
     """Main entry point for the validation analysis UI."""
+    header("superNova_2177 Validation Analyzer", layout="wide")
+    st.title("Welcome to superNova_2177")
+    st.success("✅ Streamlit loaded!")
+
 
     ts_placeholder = st.empty()
     if "session_start_ts" not in st.session_state:
