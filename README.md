@@ -255,13 +255,13 @@ module falls back to a development setup equivalent to:
 
 ## 📊 Dashboard
 
-The dashboard provides real-time integrity metrics and network graphs built with `streamlit`, `networkx`, and `matplotlib`. Upload your validations JSON or enable demo mode to populate the table. You can edit rows inline before re-running the analysis to see how scores change.
+The dashboard provides real-time integrity metrics and network graphs built with `streamlit`, `networkx`, and `matplotlib`. Upload your validations JSON or enable demo mode to populate the table. You can edit rows inline before re-running the analysis to see how scores change. The sidebar also lets you tune the high and medium risk thresholds used by the validator certifier.
 
 ```bash
 streamlit run ui.py
 ```
 
-Use the sidebar file uploader to select or update your dataset, then click **Run Analysis** to refresh the report.
+Use the sidebar file uploader to select or update your dataset (drag and drop is supported), then click **Run Analysis** to refresh the report. You can also adjust the high and medium risk thresholds from the sidebar to immediately see how different settings impact the integrity score.
 Missing packages such as `tqdm` are installed automatically when you run `one_click_install.py` so progress bars work without extra setup.
 
 ## 🌩️ Streamlit Cloud

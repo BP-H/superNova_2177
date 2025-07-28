@@ -1,9 +1,14 @@
 import json
 import logging
+import os
+from datetime import datetime
 
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
+
+from network.network_coordination_detector import build_validation_graph
+from validation_integrity_pipeline import analyze_validation_integrity
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -15,9 +20,6 @@ except Exception:  # pragma: no cover - optional in dev/CI
         "SECRET_KEY": "dev",
         "DATABASE_URL": "sqlite:///:memory:",
     }
-
-from network.network_coordination_detector import build_validation_graph
-from validation_integrity_pipeline import analyze_validation_integrity
 
 try:
     from validation_certifier import Config as VCConfig
@@ -32,16 +34,21 @@ except Exception:  # pragma: no cover - optional debug dependencies
     Config = None  # type: ignore
 
 if Config is None:
-    class Config:
+
+    class Config:  # type: ignore[no-redef]
         METRICS_PORT = 1234
 
+
 if VCConfig is None:
-    class VCConfig:
+
+    class VCConfig:  # type: ignore[no-redef]
         HIGH_RISK_THRESHOLD = 0.7
         MEDIUM_RISK_THRESHOLD = 0.4
 
+
 if HarmonyScanner is None:
-    class HarmonyScanner:
+
+    class HarmonyScanner:  # type: ignore[no-redef]
         def __init__(self, *_a, **_k):
             pass
 
@@ -180,8 +187,42 @@ def main() -> None:
             st.success("Secret key loaded")
         else:
             st.warning("SECRET_KEY missing")
+        # Runtime info
+        st.write(
+            {
+                "user": os.getenv("USER", "n/a"),
+                "utc": datetime.utcnow().isoformat(timespec="seconds"),
+            }
+        )
+
+        st.subheader("Run Options")
         demo_mode = st.checkbox("Demo mode")
-        uploaded_file = st.file_uploader("Upload validations JSON", type="json")
+        uploaded_file = st.file_uploader(
+            "Upload validations JSON",
+            type="json",
+            accept_multiple_files=False,
+            help="Drag & drop or click to select a JSON file.",
+        )
+
+        st.subheader("Risk Thresholds")
+        high = st.slider(
+            "High Risk Threshold",
+            min_value=0.0,
+            max_value=1.0,
+            step=0.05,
+            value=float(VCConfig.HIGH_RISK_THRESHOLD),
+        )
+        medium = st.slider(
+            "Medium Risk Threshold",
+            min_value=0.0,
+            max_value=1.0,
+            step=0.05,
+            value=float(VCConfig.MEDIUM_RISK_THRESHOLD),
+        )
+        # Update global config when sliders change
+        VCConfig.HIGH_RISK_THRESHOLD = high
+        VCConfig.MEDIUM_RISK_THRESHOLD = medium
+
         run_clicked = st.button("Run Analysis")
 
     if run_clicked:
@@ -199,9 +240,7 @@ def main() -> None:
             except FileNotFoundError:
                 st.warning("Demo file not found, using default dataset.")
                 data = {
-                    "validations": [
-                        {"validator": "A", "target": "B", "score": 0.9}
-                    ]
+                    "validations": [{"validator": "A", "target": "B", "score": 0.9}]
                 }
             st.session_state["validations_json"] = json.dumps(data, indent=2)
         elif uploaded_file is not None:
