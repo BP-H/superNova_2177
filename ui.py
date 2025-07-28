@@ -1,9 +1,22 @@
 import json
 import logging
 
+import os
+from pathlib import Path
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
+from datetime import datetime
+
+try:
+    import plotly.graph_objects as go
+except Exception:  # pragma: no cover - optional dependency
+    go = None
+
+try:
+    from pyvis.network import Network
+except Exception:  # pragma: no cover - optional dependency
+    Network = None
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -18,6 +31,13 @@ except Exception:  # pragma: no cover - optional in dev/CI
 
 from network.network_coordination_detector import build_validation_graph
 from validation_integrity_pipeline import analyze_validation_integrity
+
+
+def summarize_text(text: str, max_len: int = 150) -> str:
+    """Basic text summarizer placeholder."""
+    if len(text) <= max_len:
+        return text
+    return text[: max_len - 3] + "..."
 
 try:
     from validation_certifier import Config as VCConfig
@@ -99,18 +119,72 @@ def run_analysis(validations):
         for v1, v2, w in edges:
             G.add_edge(v1, v2, weight=w)
         pos = nx.spring_layout(G, seed=42)
-        weights = [G[u][v]["weight"] * 3 for u, v in G.edges()]
-        fig, ax = plt.subplots()
-        nx.draw(
-            G,
-            pos,
-            with_labels=True,
-            width=weights,
-            node_color="#4da6ff",
-            ax=ax,
-        )
-        st.subheader("Validator Coordination Graph")
-        st.pyplot(fig)
+
+        if go is not None:
+            edge_x = []
+            edge_y = []
+            for u, v in G.edges():
+                x0, y0 = pos[u]
+                x1, y1 = pos[v]
+                edge_x += [x0, x1, None]
+                edge_y += [y0, y1, None]
+            edge_trace = go.Scatter(
+                x=edge_x,
+                y=edge_y,
+                line=dict(width=0.5, color="#888"),
+                hoverinfo="none",
+                mode="lines",
+            )
+
+            node_x = []
+            node_y = []
+            texts = []
+            for node in G.nodes():
+                x, y = pos[node]
+                node_x.append(x)
+                node_y.append(y)
+                texts.append(str(node))
+
+            node_trace = go.Scatter(
+                x=node_x,
+                y=node_y,
+                mode="markers+text",
+                text=texts,
+                hoverinfo="text",
+                marker=dict(size=10, color="#4da6ff"),
+            )
+
+            fig = go.Figure(data=[edge_trace, node_trace])
+            st.subheader("Validator Coordination Graph")
+            st.plotly_chart(fig, use_container_width=True)
+        elif Network is not None:
+            net = Network(height="450px", width="100%")
+            for u, v, w in edges:
+                net.add_node(u, label=u)
+                net.add_node(v, label=v)
+                net.add_edge(u, v, value=w)
+            st.subheader("Validator Coordination Graph")
+            net.show("graph.html")
+            with open("graph.html") as f:
+                st.components.v1.html(f.read(), height=500)
+        else:
+            weights = [G[u][v]["weight"] * 3 for u, v in G.edges()]
+            fig, ax = plt.subplots()
+            nx.draw(
+                G,
+                pos,
+                with_labels=True,
+                width=weights,
+                node_color="#4da6ff",
+                ax=ax,
+            )
+            st.subheader("Validator Coordination Graph")
+            st.pyplot(fig)
+
+    if st.button("Explain This Score"):
+        st.json(result.get("integrity_analysis", {}))
+
+    return result
 
 
 def boot_diagnostic_ui():
@@ -146,6 +220,24 @@ def boot_diagnostic_ui():
 def main() -> None:
     """Main entry point for the validation analysis UI."""
     st.set_page_config(page_title="superNova_2177 Demo")
+
+    if "diary" not in st.session_state:
+        st.session_state["diary"] = []
+    if "run_count" not in st.session_state:
+        st.session_state["run_count"] = 0
+    if "theme" not in st.session_state:
+        st.session_state["theme"] = "light"
+
+    if st.session_state["theme"] == "dark":
+        st.markdown(
+            """
+            <style>
+            body, .stApp { background-color: #1e1e1e; color: #f0f0f0; }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+
     st.title("superNova_2177 Validation Analyzer")
     st.markdown(
         "Upload a JSON file with a `validations` array, paste JSON below, "
@@ -176,13 +268,40 @@ def main() -> None:
     with st.sidebar:
         st.header("Environment")
         st.write(f"Database URL: {database_url or 'not set'}")
+        st.write(f"ENV: {os.getenv('ENV', 'dev')}")
+        st.write(f"Session start: {datetime.utcnow().isoformat(timespec='seconds')} UTC")
+
         if secret_key:
             st.success("Secret key loaded")
         else:
             st.warning("SECRET_KEY missing")
+
+        st.divider()
+        st.subheader("Settings")
         demo_mode = st.checkbox("Demo mode")
-        uploaded_file = st.file_uploader("Upload validations JSON", type="json")
+        st.session_state["theme"] = "dark" if st.checkbox("Dark theme") else "light"
+        VCConfig.HIGH_RISK_THRESHOLD = st.slider(
+            "High Risk Threshold", 0.1, 1.0, float(VCConfig.HIGH_RISK_THRESHOLD), 0.05
+        )
+
+        uploaded_file = st.file_uploader(
+            "Upload validations JSON (drag/drop)", type="json"
+        )
         run_clicked = st.button("Run Analysis")
+
+        st.markdown(
+            f"**Runs this session:** {st.session_state['run_count']}"
+        )
+        if st.button("Clear Memory"):
+            st.session_state["diary"] = []
+        if st.button("Export Report"):
+            if "last_result" in st.session_state:
+                st.download_button(
+                    "Download JSON",
+                    json.dumps(st.session_state["last_result"], indent=2),
+                    file_name="report.json",
+                )
+        st.divider()
 
     if run_clicked:
         if validations_input.strip():
@@ -210,7 +329,60 @@ def main() -> None:
         else:
             st.error("Please upload a file, paste JSON, or enable demo mode.")
             st.stop()
-        run_analysis(data.get("validations", []))
+        result = run_analysis(data.get("validations", []))
+        st.session_state["run_count"] += 1
+        st.session_state["last_result"] = result
+        st.session_state["diary"].append(
+            {
+                "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+                "note": f"Run {st.session_state['run_count']} completed",
+            }
+        )
+
+    st.subheader("Virtual Diary")
+    with st.expander("📘 Notes", expanded=False):
+        diary_note = st.text_input("Add note")
+        if st.button("Append Note"):
+            st.session_state["diary"].append(
+                {
+                    "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+                    "note": diary_note,
+                }
+            )
+        for entry in st.session_state["diary"]:
+            st.write(f"{entry['timestamp']}: {entry['note']}")
+        if st.download_button(
+            "Export Diary as Markdown",
+            "\n".join(
+                [f"* {e['timestamp']}: {e['note']}" for e in st.session_state["diary"]]
+            ),
+            file_name="diary.md",
+        ):
+            pass
+        st.download_button(
+            "Export Diary as JSON",
+            json.dumps(st.session_state["diary"], indent=2),
+            file_name="diary.json",
+        )
+
+    st.subheader("RFCs and Agent Insights")
+    with st.expander("Proposed RFCs", expanded=False):
+        rfc_dir = Path("rfcs")
+        for path in sorted(rfc_dir.glob("rfc-*.md")):
+            text = path.read_text()
+            summary = ""
+            if "## Summary" in text:
+                part = text.split("## Summary", 1)[1]
+                summary_lines = []
+                for line in part.splitlines()[1:]:
+                    if line.startswith("##"):
+                        break
+                    if line.strip():
+                        summary_lines.append(line.strip())
+                summary = " ".join(summary_lines)
+            st.markdown(f"### {path.stem}")
+            st.write(summarize_text(summary))
+            st.markdown(f"[Read RFC]({path.as_posix()})")
 
 
 if __name__ == "__main__":
