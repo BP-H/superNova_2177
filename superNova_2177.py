@@ -247,6 +247,7 @@ import copy
 import asyncio
 import traceback
 import signal
+import socket
 import immutable_tri_species_adjust
 import random
 import optimization_engine
@@ -631,6 +632,20 @@ file_handler.setFormatter(
 )
 logging.getLogger().addHandler(console_handler)
 
+try:  # pragma: no cover - optional in some environments
+    import streamlit as st  # type: ignore
+except Exception:  # pragma: no cover - optional dependency
+    st = None  # type: ignore
+
+metrics_started = False
+
+
+def find_free_port() -> int:
+    """Return an available port."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("", 0))
+        return sock.getsockname()[1]
+
 # Prometheus metrics
 if "system_entropy" in REGISTRY._names_to_collectors:
     entropy_gauge = REGISTRY._names_to_collectors["system_entropy"]
@@ -647,14 +662,22 @@ if "total_vibenodes" in REGISTRY._names_to_collectors:
 else:
     vibenodes_gauge = prom.Gauge("total_vibenodes", "Total number of vibenodes")
 
-try:
-    prom.start_http_server(Config.METRICS_PORT)  # Metrics endpoint
-except OSError as exc:  # pragma: no cover - system specific
-    logger.warning(
-        "Prometheus metrics server could not start on port %s: %s",
-        Config.METRICS_PORT,
-        exc,
-    )
+_session_started = bool(st and st.session_state.get("metrics_started"))
+if not _session_started and not metrics_started:
+    port = Config.METRICS_PORT
+    try:
+        prom.start_http_server(port)
+    except OSError:
+        logger.warning(
+            "Prometheus metrics server could not start on port %s, selecting free port",
+            port,
+        )
+        port = find_free_port()
+        prom.start_http_server(port)
+    logger.info("Prometheus metrics server listening on port %s", port)
+    if st:
+        st.session_state["metrics_started"] = True
+    metrics_started = True
 
 
 
