@@ -356,14 +356,16 @@ The `frontend_bridge` module exposes a lightweight router for the UI. Handlers
 register themselves with `register_route(name, func)` and are invoked through
 `dispatch_route`.
 
-A convenient read-only route `"list_routes"` returns the currently available
-route names. This can help debug which backend callbacks are present:
+A convenient read-only route `"list_routes"` now returns structured details
+about each registered route. This helps debug which backend callbacks are
+present and what they do:
 
 ```python
 from frontend_bridge import dispatch_route
 
 routes = await dispatch_route("list_routes", {})
-print(routes["routes"])
+for route in routes["routes"]:
+    print(route["category"], route["name"], "-", route["doc"])
 ```
 
 ## 🧪 Running Tests

@@ -7,6 +7,21 @@ from typing import Any, Awaitable, Callable, Dict, Union
 Handler = Callable[..., Union[Dict[str, Any], Awaitable[Dict[str, Any]]]]
 
 ROUTES: Dict[str, Handler] = {}
+# Optional metadata mapping route name to a high level category
+_ROUTE_CATEGORY_HINTS: Dict[str, str] = {
+    "rank_hypotheses_by_confidence": "Hypothesis",
+    "detect_conflicting_hypotheses": "Hypothesis",
+    "register_hypothesis": "Hypothesis",
+    "update_hypothesis_score": "Hypothesis",
+    "store_prediction": "Prediction",
+    "get_prediction": "Prediction",
+    "update_prediction_status": "Prediction",
+    "list_agents": "Protocol",
+    "launch_agents": "Protocol",
+    "step_agents": "Protocol",
+    "temporal_consistency": "Temporal",
+    "tune_parameters": "Optimization",
+}
 
 
 def register_route(name: str, func: Handler) -> None:
@@ -31,54 +46,54 @@ async def dispatch_route(
     return result
 
 
-
 def _list_routes(_: Dict[str, Any]) -> Dict[str, Any]:
-    """Return the names of all registered routes."""
-    return {"routes": sorted(ROUTES.keys())}
+    """Return structured metadata about all registered routes."""
+    info = []
+    for name, handler in ROUTES.items():
+        doc = (handler.__doc__ or "").strip()
+        info.append(
+            {
+                "category": _ROUTE_CATEGORY_HINTS.get(name, "General"),
+                "name": name,
+                "doc": doc,
+            }
+        )
+    info.sort(key=lambda r: r["name"])
+    return {"routes": info}
 
 
 register_route("list_routes", _list_routes)
 
 # Built-in hypothesis-related routes
 from hypothesis.ui_hook import (
-    rank_hypotheses_by_confidence_ui,
     detect_conflicting_hypotheses_ui,
-    register_hypothesis_ui,
-    update_hypothesis_score_ui,
+    rank_hypotheses_by_confidence_ui,
     rank_hypotheses_ui,
+    register_hypothesis_ui,
     synthesize_consensus_ui,
+    update_hypothesis_score_ui,
 )
-from hypothesis_meta_evaluator_ui_hook import trigger_meta_evaluation_ui
-from hypothesis_reasoner_ui_hook import auto_flag_stale_ui
-from validation_certifier_ui_hook import run_integrity_analysis_ui
-from validator_reputation_tracker_ui_hook import update_reputations_ui
-from consensus_forecaster_agent_ui_hook import forecast_consensus_ui
-
 
 register_route("rank_hypotheses_by_confidence", rank_hypotheses_by_confidence_ui)
 register_route("detect_conflicting_hypotheses", detect_conflicting_hypotheses_ui)
 register_route("register_hypothesis", register_hypothesis_ui)
 register_route("update_hypothesis_score", update_hypothesis_score_ui)
 
+from optimization.ui_hook import tune_parameters_ui
+
 # Prediction-related routes
 from predictions.ui_hook import (
-    store_prediction_ui,
     get_prediction_ui,
+    store_prediction_ui,
     update_prediction_status_ui,
 )
-
-from optimization.ui_hook import tune_parameters_ui
 
 register_route("store_prediction", store_prediction_ui)
 register_route("get_prediction", get_prediction_ui)
 register_route("update_prediction_status", update_prediction_status_ui)
 
 # Protocol agent management routes
-from protocols.api_bridge import (
-    list_agents_api,
-    launch_agents_api,
-    step_agents_api,
-)
+from protocols.api_bridge import launch_agents_api, list_agents_api, step_agents_api
 
 register_route("list_agents", list_agents_api)
 register_route("launch_agents", launch_agents_api)
