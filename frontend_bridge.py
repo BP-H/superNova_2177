@@ -66,12 +66,15 @@ from predictions.ui_hook import (
     get_prediction_ui,
     update_prediction_status_ui,
 )
+from vote_registry.ui_hook import record_vote_ui, load_votes_ui
 
 from optimization.ui_hook import tune_parameters_ui
 
 register_route("store_prediction", store_prediction_ui)
 register_route("get_prediction", get_prediction_ui)
 register_route("update_prediction_status", update_prediction_status_ui)
+register_route("record_vote", record_vote_ui)
+register_route("load_votes", load_votes_ui)
 
 # Protocol agent management routes
 from protocols.api_bridge import (
