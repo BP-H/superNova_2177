@@ -13,7 +13,10 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except Exception:  # pragma: no cover - optional dependency
+    plt = None
 import networkx as nx
 import streamlit as st
 
@@ -392,7 +395,7 @@ def run_analysis(validations, *, layout: str = "force"):
                 html_data,
                 file_name="graph.html",
             )
-        else:
+        elif plt is not None:
             weights = [G[u][v]["weight"] * 3 for u, v in G.edges()]
             node_sizes = [300 + (reputations.get(n, 0) * 600) for n in G.nodes()]
             node_colors = [reputations.get(n, 0.5) for n in G.nodes()]
@@ -409,6 +412,8 @@ def run_analysis(validations, *, layout: str = "force"):
             )
             st.subheader("Validator Coordination Graph")
             st.pyplot(fig)
+        else:
+            st.info("Install matplotlib or pyvis for graph visualization")
 
     if st.button("Explain This Score"):
         explanation = generate_explanation(result)
