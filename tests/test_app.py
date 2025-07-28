@@ -190,6 +190,10 @@ def test_mint_success(memory_agent):
     memory_agent.process_event(add)
     user = memory_agent.storage.get_user("gen")
     root_coin_id = user["root_coin_id"]
+    memory_agent.storage.set_coin(
+        root_coin_id,
+        {"owner": "gen", "value": str(memory_agent.config.ROOT_INITIAL_VALUE)},
+    )
     mint = sn.MintPayload(
         event="MINT",
         user="gen",

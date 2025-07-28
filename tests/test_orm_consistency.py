@@ -3,7 +3,8 @@ import importlib.util
 import sys
 
 import superNova_2177 as sn
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 # Reload the real module if a lightweight stub is installed
 if (
@@ -22,8 +23,9 @@ def test_orm_consistency():
         "sqlite:///:memory:", connect_args={"check_same_thread": False}
     )
     sn.Base.metadata.create_all(engine)
-    session = sn.SessionLocal(bind=engine)
+    Session = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+    session = Session()
     try:
-        session.execute(select(sn.Harmonizer)).scalars().all()
+        session.query(sn.Harmonizer).all()
     finally:
         session.close()
