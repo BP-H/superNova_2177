@@ -31,7 +31,6 @@ async def dispatch_route(
     return result
 
 
-
 def _list_routes(_: Dict[str, Any]) -> Dict[str, Any]:
     """Return the names of all registered routes."""
     return {"routes": sorted(ROUTES.keys())}
@@ -39,46 +38,44 @@ def _list_routes(_: Dict[str, Any]) -> Dict[str, Any]:
 
 register_route("list_routes", _list_routes)
 
+from consensus_forecaster_agent_ui_hook import forecast_consensus_ui
+
 # Built-in hypothesis-related routes
 from hypothesis.ui_hook import (
-    rank_hypotheses_by_confidence_ui,
     detect_conflicting_hypotheses_ui,
-    register_hypothesis_ui,
-    update_hypothesis_score_ui,
+    rank_hypotheses_by_confidence_ui,
     rank_hypotheses_ui,
+    register_hypothesis_ui,
     synthesize_consensus_ui,
+    update_hypothesis_score_ui,
 )
 from hypothesis_meta_evaluator_ui_hook import trigger_meta_evaluation_ui
 from hypothesis_reasoner_ui_hook import auto_flag_stale_ui
 from validation_certifier_ui_hook import run_integrity_analysis_ui
 from validator_reputation_tracker_ui_hook import update_reputations_ui
-from consensus_forecaster_agent_ui_hook import forecast_consensus_ui
-
 
 register_route("rank_hypotheses_by_confidence", rank_hypotheses_by_confidence_ui)
 register_route("detect_conflicting_hypotheses", detect_conflicting_hypotheses_ui)
 register_route("register_hypothesis", register_hypothesis_ui)
 register_route("update_hypothesis_score", update_hypothesis_score_ui)
 
-# Prediction-related routes
-from predictions.ui_hook import (
-    store_prediction_ui,
-    get_prediction_ui,
-    update_prediction_status_ui,
-)
-
 from optimization.ui_hook import tune_parameters_ui
+
+# Prediction-related routes
+from prediction.ui_hook import (
+    get_prediction_ui,
+    schedule_audit_proposal_ui,
+    store_prediction_ui,
+)
+from predictions.ui_hook import update_prediction_status_ui
 
 register_route("store_prediction", store_prediction_ui)
 register_route("get_prediction", get_prediction_ui)
+register_route("schedule_audit_proposal", schedule_audit_proposal_ui)
 register_route("update_prediction_status", update_prediction_status_ui)
 
 # Protocol agent management routes
-from protocols.api_bridge import (
-    list_agents_api,
-    launch_agents_api,
-    step_agents_api,
-)
+from protocols.api_bridge import launch_agents_api, list_agents_api, step_agents_api
 
 register_route("list_agents", list_agents_api)
 register_route("launch_agents", launch_agents_api)
