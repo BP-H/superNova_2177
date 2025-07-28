@@ -1,8 +1,30 @@
-"""Lightweight router for UI callbacks."""
+"""Lightweight router for UI callbacks.
+
+This module exposes a simple registry mapping route names to callables.
+Handlers register themselves with :func:`register_route` and can be
+executed using :func:`dispatch_route`. The built-in handlers cover
+hypothesis management, prediction storage and protocol operations.
+
+The :data:`ROUTES` dictionary holds the active mapping. Debug helpers
+``list_routes`` and ``describe_routes`` reveal the currently registered
+names and their docstrings. See ``docs/routes.md`` for a reference table
+of default routes.
+"""
 
 from __future__ import annotations
 
 from typing import Any, Awaitable, Callable, Dict, Union
+
+from hypothesis.ui_hook import (detect_conflicting_hypotheses_ui,
+                                rank_hypotheses_by_confidence_ui,
+                                register_hypothesis_ui,
+                                update_hypothesis_score_ui)
+from optimization.ui_hook import tune_parameters_ui
+from predictions.ui_hook import (get_prediction_ui, store_prediction_ui,
+                                 update_prediction_status_ui)
+from protocols.api_bridge import (launch_agents_api, list_agents_api,
+                                  step_agents_api)
+from temporal.ui_hook import analyze_temporal_ui
 
 Handler = Callable[..., Union[Dict[str, Any], Awaitable[Dict[str, Any]]]]
 
@@ -14,14 +36,16 @@ def register_route(name: str, func: Handler) -> None:
     ROUTES[name] = func
 
 
+def register_route_once(name: str, func: Handler) -> None:
+    """Register ``func`` under ``name`` only if it isn't already set."""
+    if name not in ROUTES:
+        register_route(name, func)
+
+
 async def dispatch_route(
     name: str, payload: Dict[str, Any], **kwargs: Any
 ) -> Dict[str, Any]:
-    """Dispatch ``payload`` to the registered handler.
-
-    Additional keyword arguments are forwarded to the handler. This allows
-    callers to provide context objects like database sessions.
-    """
+    """Dispatch ``payload`` to the registered handler."""
     if name not in ROUTES:
         raise KeyError(name)
     handler = ROUTES[name]
@@ -36,28 +60,21 @@ def _list_routes(_: Dict[str, Any]) -> Dict[str, Any]:
     return {"routes": sorted(ROUTES.keys())}
 
 
-register_route("list_routes", _list_routes)
-
-# Built-in hypothesis-related routes
-from hypothesis.ui_hook import (
-    rank_hypotheses_by_confidence_ui,
-    detect_conflicting_hypotheses_ui,
-    register_hypothesis_ui,
-    update_hypothesis_score_ui,
-    rank_hypotheses_ui,
-    synthesize_consensus_ui,
-)
-from hypothesis_meta_evaluator_ui_hook import trigger_meta_evaluation_ui
-from hypothesis_reasoner_ui_hook import auto_flag_stale_ui
-from validation_certifier_ui_hook import run_integrity_analysis_ui
-from validator_reputation_tracker_ui_hook import update_reputations_ui
-from consensus_forecaster_agent_ui_hook import forecast_consensus_ui
+def describe_routes(_: Dict[str, Any]) -> Dict[str, Any]:
+    """Return each route name mapped to the handler's docstring."""
+    descriptions = {
+        name: (getattr(func, "__doc__", "") or "").strip()
+        for name, func in ROUTES.items()
+    }
+    return {"routes": descriptions}
 
 
+# Hypothesis related routes
 register_route("rank_hypotheses_by_confidence", rank_hypotheses_by_confidence_ui)
 register_route("detect_conflicting_hypotheses", detect_conflicting_hypotheses_ui)
 register_route("register_hypothesis", register_hypothesis_ui)
 register_route("update_hypothesis_score", update_hypothesis_score_ui)
+
 
 # Prediction-related routes
 from predictions.ui_hook import (
@@ -67,27 +84,22 @@ from predictions.ui_hook import (
 )
 
 from optimization.ui_hook import tune_parameters_ui
+from virtual_diary.ui_hook import fetch_entries_ui, add_entry_ui
+from quantum_sim.ui_hook import simulate_entanglement_ui
 
-register_route("store_prediction", store_prediction_ui)
-register_route("get_prediction", get_prediction_ui)
-register_route("update_prediction_status", update_prediction_status_ui)
+register_route_once("store_prediction", store_prediction_ui)
+register_route_once("get_prediction", get_prediction_ui)
+register_route_once("update_prediction_status", update_prediction_status_ui)
 
 # Protocol agent management routes
-from protocols.api_bridge import (
-    list_agents_api,
-    launch_agents_api,
-    step_agents_api,
-)
-
 register_route("list_agents", list_agents_api)
 register_route("launch_agents", launch_agents_api)
 register_route("step_agents", step_agents_api)
-# Temporal analysis route
-from temporal.ui_hook import analyze_temporal_ui
 
-register_route("temporal_consistency", analyze_temporal_ui)
 
-# Optimization-related route
+register_route_once("temporal_consistency", analyze_temporal_ui)
+
+# Optimization route
 register_route("tune_parameters", tune_parameters_ui)
 
 # Import additional UI hooks for side effects (route registration)
