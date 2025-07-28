@@ -10,6 +10,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
+
 from streamlit_helpers import alert, header
 
 try:
@@ -44,6 +45,9 @@ except Exception:  # pragma: no cover - optional in dev/CI
     }
 
 sample_path = Path(__file__).resolve().parent / "sample_validations.json"
+
+# limit length of diary history displayed in the UI
+MAX_DIARY_ENTRIES = 100
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -370,11 +374,15 @@ def main() -> None:
 
     ts_placeholder = st.empty()
     if "session_start_ts" not in st.session_state:
-        st.session_state["session_start_ts"] = datetime.utcnow().isoformat(timespec="seconds")
-    ts_placeholder.markdown(
-        f"<div style='position:fixed;top:0;right:0;background:rgba(0,0,0,0.6);color:white;padding:0.25em 0.5em;border-radius:0 0 0 4px;'>Session start: {st.session_state['session_start_ts']} UTC</div>",
-        unsafe_allow_html=True,
+        st.session_state["session_start_ts"] = datetime.utcnow().isoformat(
+            timespec="seconds"
+        )
+    ts_html = (
+        "<div style='position:fixed;top:0;right:0;background:rgba(0,0,0,0.6);"
+        "color:white;padding:0.25em 0.5em;border-radius:0 0 0 4px;'>"
+        f"Session start: {st.session_state['session_start_ts']} UTC</div>"
     )
+    ts_placeholder.markdown(ts_html, unsafe_allow_html=True)
     if "diary" not in st.session_state:
         st.session_state["diary"] = []
     if "analysis_diary" not in st.session_state:
@@ -452,7 +460,12 @@ def main() -> None:
         st.subheader("Settings")
         demo_mode_choice = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
         demo_mode = demo_mode_choice == "Demo"
-        theme_choice = st.radio("Theme", ["Light", "Dark"], index=(1 if st.session_state["theme"]=="dark" else 0), horizontal=True)
+        theme_choice = st.radio(
+            "Theme",
+            ["Light", "Dark"],
+            index=(1 if st.session_state["theme"] == "dark" else 0),
+            horizontal=True,
+        )
         st.session_state["theme"] = theme_choice.lower()
 
         VCConfig.HIGH_RISK_THRESHOLD = st.slider(
@@ -551,12 +564,16 @@ def main() -> None:
                 "risk": result.get("integrity_analysis", {}).get("risk_level"),
             }
         )
+        st.session_state["analysis_diary"] = st.session_state["analysis_diary"][
+            -MAX_DIARY_ENTRIES:
+        ]
         st.session_state["diary"].append(
             {
                 "timestamp": st.session_state["last_run"],
                 "note": f"Run {st.session_state['run_count']} completed",
             }
         )
+        st.session_state["diary"] = st.session_state["diary"][-MAX_DIARY_ENTRIES:]
         if diff:
             st.subheader("Result Diff vs Previous Run")
             st.code(diff)
@@ -608,6 +625,7 @@ def main() -> None:
             if rfc_ids:
                 entry["rfc_ids"] = rfc_ids
             st.session_state["diary"].append(entry)
+            st.session_state["diary"] = st.session_state["diary"][-MAX_DIARY_ENTRIES:]
         for i, entry in enumerate(st.session_state["diary"]):
             anchor = f"diary-{i}"
             note = entry.get("note", "")
