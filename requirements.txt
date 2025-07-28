@@ -1,5 +1,5 @@
 pytest
-pytest-asyncio>=0.23
+pytest-asyncio==0.23.6
 sqlalchemy>=2.0
 networkx
 python-dateutil
@@ -18,7 +18,7 @@ python-dotenv
 types-python-dateutil
 types-requests
 types-networkx
-numpy
+numpy==1.26.4
 sympy
 sentence-transformers
 scipy

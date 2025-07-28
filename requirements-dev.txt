@@ -1,8 +1,8 @@
 pytest
-pytest-asyncio>=0.23
+pytest-asyncio==0.23.6
 sqlalchemy>=2.0
 networkx
-numpy
+numpy==1.26.4
 python-dateutil
 pre-commit
 black
