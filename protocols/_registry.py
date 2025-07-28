@@ -4,6 +4,7 @@ from .agents.ci_pr_protector_agent import CI_PRProtectorAgent
 from .agents.guardian_interceptor_agent import GuardianInterceptorAgent
 from .agents.meta_validator_agent import MetaValidatorAgent
 from .agents.observer_agent import ObserverAgent
+from .agents.coordination_sentinel_agent import CoordinationSentinelAgent
 
 # Mapping of agent names to metadata dictionaries
 AGENT_REGISTRY = {
@@ -25,6 +26,11 @@ AGENT_REGISTRY = {
     "ObserverAgent": {
         "cls": ObserverAgent,
         "description": "Monitors agent outputs and suggests forks when needed.",
+        "llm_capable": False,
+    },
+    "CoordinationSentinelAgent": {
+        "cls": CoordinationSentinelAgent,
+        "description": "Runs network coordination analysis and flags collusion.",
         "llm_capable": False,
     },
 }
