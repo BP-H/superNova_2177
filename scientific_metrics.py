@@ -982,6 +982,9 @@ def log_metric_change(
 ) -> None:
     """Persist a single metric change event to ``SystemState`` audit log."""
 
+    # Import inside the function to ensure the freshest model definition is used.
+    from db_models import SystemState
+
     entry = {
         "metric_name": metric_name,
         "old_value": float(old_value) if isinstance(old_value, Decimal) else old_value,
@@ -1018,6 +1021,9 @@ def log_metric_change(
 
 def get_metric_history(db: Session, metric_name: str) -> list[Dict[str, Any]]:
     """Return all audit log entries for ``metric_name``."""
+
+    # Import inside the function to avoid stale references during migrations.
+    from db_models import SystemState
 
     state = (
         db.query(SystemState).filter(SystemState.key == "metric_audit_log").first()
