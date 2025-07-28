@@ -33,6 +33,14 @@ python setup_env.py
 # The NiceGUI web interface now lives in `transcendental_resonance_frontend/`.
 # References to the old `web_ui` directory continue to work but will emit a
 # warning.
+# Launch the frontend directly with
+# ```bash
+# python -m transcendental_resonance_frontend
+# ```
+# Or explore the demo data using
+# ```bash
+# python -m transcendental_resonance_frontend.demo
+# ```
 
 # optional: launch the Streamlit UI
 # python setup_env.py --launch-ui
