@@ -12,6 +12,12 @@ This repository hosts `superNova_2177.py` — an experimental protocol merging c
 ⚠️ This is *not* a financial product, cryptocurrency, or tradable asset. All metrics (e.g., Harmony Score, Resonance, Entropy) are symbolic — for modeling, visualization, and creative gameplay only. See legal/disclaimer sections in `superNova_2177.py`, lines 60–88.
 Symbolic tokens and listings introduced in the gameplay modules have **no real-world monetary value**. They exist purely as resonance artifacts used for cooperative storytelling.
 
+The repository includes a *patch monitor* that scans new contributions for these
+required disclaimers. If added files or lines don't contain the phrases
+`STRICTLY A SOCIAL MEDIA PLATFORM`, `Intellectual Property & Artistic
+Inspiration`, and `Legal & Ethical Safeguards`, the commit will fail in CI and
+locally if pre-commit hooks are installed.
+
 ````markdown
 # superNova_2177 🧠
 
@@ -137,12 +143,16 @@ make lint     # run mypy type checks
 
 Set up pre-commit to automatically format and lint the code. The hooks depend on
 packages from **both** `requirements-minimal.txt` and
-`requirements-dev.txt`:
+`requirements-dev.txt`, and also run the `patch-monitor` hook to enforce the
+disclaimer policy:
 
 ```bash
 pip install -r requirements-minimal.txt -r requirements-dev.txt
 pre-commit install
 ```
+
+Running `pre-commit install` ensures the patch monitor executes before each
+commit so that missing disclaimer text is caught locally.
 
 You can run all checks manually with:
 
