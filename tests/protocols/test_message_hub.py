@@ -46,6 +46,26 @@ def test_unsubscribe_stops_callbacks():
     assert received[0].data == {"n": 1}  # nosec B101
 
 
+def test_unsubscribe_missing_handler_is_noop():
+    """Unsubscribing a non-existent handler should not raise or alter state."""
+    hub = MessageHub()
+    received = []
+
+    def handler(msg: Message) -> None:
+        received.append(msg)
+
+    # Unsubscribe before subscribing
+    hub.unsubscribe("task", handler)
+    hub.subscribe("task", handler)
+    hub.unsubscribe("task", handler)
+
+    # Second unsubscribe should be a no-op
+    hub.unsubscribe("task", handler)
+    hub.publish("task", {"n": 1})
+
+    assert len(received) == 0  # nosec B101
+
+
 def test_get_messages_history_and_filtering():
     hub = MessageHub()
     hub.publish("a", {"n": 1})

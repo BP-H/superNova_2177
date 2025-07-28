@@ -33,8 +33,15 @@ class MessageHub:
         self.subscribers[topic].append(handler)
 
     def unsubscribe(self, topic: str, handler: Callable[[Message], None]) -> None:
-        if handler in self.subscribers.get(topic, []):
-            self.subscribers[topic].remove(handler)
+        """Remove ``handler`` for ``topic`` if present."""
+        handlers = self.subscribers.get(topic)
+        if not handlers:
+            return
+        try:
+            handlers.remove(handler)
+        except ValueError:
+            # handler wasn't subscribed
+            pass
 
     def get_messages(self, topic: str | None = None) -> List[Message]:
         if topic:
