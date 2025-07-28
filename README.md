@@ -357,13 +357,15 @@ register themselves with `register_route(name, func)` and are invoked through
 `dispatch_route`.
 
 A convenient read-only route `"list_routes"` returns the currently available
-route names. This can help debug which backend callbacks are present:
+routes grouped by category along with each handler's description. This can help
+debug which backend callbacks are present:
 
 ```python
 from frontend_bridge import dispatch_route
 
 routes = await dispatch_route("list_routes", {})
-print(routes["routes"])
+for category, items in routes["routes"].items():
+    print(category, [r["name"] for r in items])
 ```
 
 ## 🧪 Running Tests
