@@ -1,6 +1,7 @@
 import pytest
 
 from frontend_bridge import dispatch_route
+from proposals.engine import DEFAULT_PROPOSALS, ProposalEngine
 from ui_hooks import universe_ui
 
 
@@ -75,3 +76,19 @@ async def test_universe_ui_routes(monkeypatch):
         ("proposal_list_returned", ([{"pid": "p1"}],), {}),
         ("proposal_submitted", ({"proposal_id": "p1"},), {}),
     ]
+
+
+@pytest.mark.asyncio
+async def test_universe_ui_with_real_engine(monkeypatch):
+    hook_mgr = DummyHookManager()
+    um = DummyUniverseManager()
+    engine = ProposalEngine(min_karma=10)
+    monkeypatch.setattr(universe_ui, "ui_hook_manager", hook_mgr, raising=False)
+    monkeypatch.setattr(universe_ui, "universe_manager", um, raising=False)
+    monkeypatch.setattr(universe_ui, "proposal_engine", engine, raising=False)
+
+    payload = {"user_id": "u", "universe_id": "U1"}
+    result = await dispatch_route("list_available_proposals", payload)
+
+    assert len(result["proposals"]) == len(DEFAULT_PROPOSALS)
+    assert hook_mgr.events == [("proposal_list_returned", (result["proposals"],), {})]

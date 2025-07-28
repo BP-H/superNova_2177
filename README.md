@@ -115,7 +115,8 @@ This project depends on libraries such as `fastapi`, `pydantic-settings`, `struc
 
 ### System Packages
 
-Install these system dependencies if they're missing on your platform:
+Install these system dependencies if they're missing on your platform. If you
+build the project using Docker, these packages are installed automatically:
 
 **Ubuntu**
 

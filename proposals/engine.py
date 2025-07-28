@@ -34,7 +34,9 @@ class ProposalEngine:
         self.universe_metadata = universe_metadata or {}
 
     # ------------------------------------------------------------------
-    def generate(self, user: Dict[str, Any], universe_state: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def generate(
+        self, user: Dict[str, Any], universe_state: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Return proposal suggestions for ``user`` given ``universe_state``."""
 
         if user.get("karma", 0) < self.min_karma:
@@ -59,8 +61,23 @@ class ProposalEngine:
             proposals.append(p)
         return proposals
 
+    # ------------------------------------------------------------------
+    def list_proposals(
+        self, karma: int, universe_state: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """Return proposals for a user ``karma`` in the given ``universe_state``.
+
+        This is a convenience wrapper around :meth:`generate` that constructs
+        a minimal user dictionary based on the provided karma value and passes
+        it through to ``generate``.
+        """
+
+        user = {"karma": karma}
+        return self.generate(user, universe_state)
+
 
 # Convenience function -------------------------------------------------
+
 
 def generate_proposals(
     user: Dict[str, Any],

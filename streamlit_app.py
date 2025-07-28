@@ -7,10 +7,10 @@ from streamlit_helpers import apply_theme, header
 
 
 def _run_async(coro):
-    """Execute ``coro`` in the current or new event loop."""
+    """Execute ``coro`` or schedule it if a loop is already running."""
     try:
         loop = asyncio.get_running_loop()
-    except RuntimeError:  # no running loop
+    except RuntimeError:
         return asyncio.run(coro)
     else:
         if loop.is_running():
@@ -43,7 +43,10 @@ def main() -> None:
             except Exception as exc:
                 st.error(f"Route failed: {exc}")
             else:
-                st.json(result)
+                if isinstance(result, asyncio.Task):
+                    st.info("Background task started")
+                else:
+                    st.json(result)
 
 
 if __name__ == "__main__":
