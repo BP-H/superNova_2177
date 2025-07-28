@@ -64,7 +64,7 @@ def _parse_datetime_safely(dt_str: str) -> Optional[datetime]:
     """Safely parse datetime string, returning None on error."""
     try:
         return dateutil.parser.parse(dt_str)
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, AttributeError):
         return None
 
 
