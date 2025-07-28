@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict
 
 from frontend_bridge import register_route
 from hook_manager import HookManager
+from validator_reputation_tracker import update_validator_reputations
 
 from .reputation_influence_tracker import compute_validator_reputations
 
 # Exposed hook manager for observers
 ui_hook_manager = HookManager()
+# Internal hook manager for update_reputations_ui events
+hook_manager = HookManager()
 
 
 async def compute_reputation_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -36,6 +40,20 @@ async def compute_reputation_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     await ui_hook_manager.trigger("reputation_analysis_run", minimal)
     return minimal
 
+async def update_reputations_ui(payload: Dict[str, Any], db) -> Dict[str, Any]:
+    """Update validator reputations and emit an internal event."""
+
+    validations = payload.get("validations", [])
+    result = update_validator_reputations(validations, db=db)
+
+    try:
+        hook_manager.fire_hooks("validator_reputations", result)
+    except Exception:  # pragma: no cover - logging only
+        logging.exception("Failed to fire validator_reputations hook")
+
+    return result
+
 
 # Register with the central frontend router
 register_route("reputation_analysis", compute_reputation_ui)
+register_route("update_validator_reputations", update_reputations_ui)
