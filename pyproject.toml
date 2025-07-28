@@ -44,7 +44,10 @@ dependencies = [
     "streamlit",
     "asyncpg",
     "email-validator",
-    "streamlit-ace"
+    "streamlit-ace",
+    "openai",
+    "anthropic",
+    "google-generativeai"
 ]
 
 [project.scripts]
