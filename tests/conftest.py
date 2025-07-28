@@ -909,8 +909,12 @@ def _setup_sqlite(monkeypatch, db_path):
                 monkeypatch.setattr(mod, "SessionLocal", Session, raising=False)
             base = getattr(mod, "Base", None)
             if base is not None:
-                metadata = getattr(base, "metadata", None)
-                if metadata and getattr(metadata, "bind", None) is not engine:
+                try:
+                    metadata = getattr(base, "metadata", None)
+                except Exception:
+                    continue
+                if metadata and getattr(metadata, "bind", None) is old_engine:
+
                     monkeypatch.setattr(metadata, "bind", engine, raising=False)
         except AttributeError:
             continue

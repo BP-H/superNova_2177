@@ -71,3 +71,4 @@ async def poll_full_audit_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 register_route("queue_full_audit", queue_full_audit_ui)
 register_route("poll_full_audit", poll_full_audit_ui)
+register_route("trigger_full_audit", trigger_full_audit_ui)
