@@ -17,7 +17,17 @@ Planned features
   entries for ``human``, ``ai`` and ``company`` types.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, List, Set
+
+# ---------------------------------------------------------------------------
+# Data structures
+# ---------------------------------------------------------------------------
+
+# Valid species classifications for voters
+SPECIES: Set[str] = {"human", "ai", "company"}
+
+# In-memory vote storage (placeholder until real DB integration)
+_VOTES: List[Dict[str, Any]] = []
 
 # ---------------------------------------------------------------------------
 # Placeholder functions
@@ -32,12 +42,21 @@ def record_vote(vote: Dict[str, Any]) -> None:
         Information about the vote cast. The exact schema is still under
         design and will eventually align with ``tri_species_vote_registry.json``.
     """
-    pass  # Implementation pending
+    species = vote.get("species")
+    if species not in SPECIES:
+        # Placeholder validation until full schema enforcement
+        raise ValueError(
+            f"Invalid species '{species}'. Must be one of {sorted(SPECIES)}"
+        )
+
+    # TODO: persist vote data including species to tri_species_vote_registry.json
+    _VOTES.append(vote)
 
 
 def load_votes() -> Dict[str, Any]:
     """Return all recorded votes (stub)."""
-    return {}
+    # TODO: load species field from tri_species_vote_registry.json
+    return {"votes": list(_VOTES)}
 
 # Future considerations ------------------------------------------------------
 #
@@ -54,4 +73,7 @@ def load_votes() -> Dict[str, Any]:
 # - ``tri_species_vote_registry.json`` should store metadata about each vote
 #   including voter type (``human``, ``ai``, ``company``) and context so that
 #   threshold calculations can reference species distributions.
+# - TODO: log voter class to GraphML metadata for analysis tools
+# - TODO: finalize ``tri_species_vote_registry.json`` format for persistent
+#   storage of species-aware vote records
 
