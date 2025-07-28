@@ -688,7 +688,7 @@ import pytest
 
 
 def _setup_sqlite(monkeypatch, db_path):
-    """Return engine and sessionmaker bound to a temporary SQLite file."""
+    """Return engine, sessionmaker and db_models bound to a temporary SQLite file."""
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
     import db_models, sys
@@ -711,20 +711,19 @@ def _setup_sqlite(monkeypatch, db_path):
             monkeypatch.setattr(mod, "SessionLocal", Session, raising=False)
 
     db_models.Base.metadata.create_all(bind=engine)
-    return engine, Session
+    return engine, Session, db_models
 
 
 @pytest.fixture
 def test_db(tmp_path, monkeypatch):
     """Provide an isolated SQLite session for tests."""
-    engine, SessionLocal = _setup_sqlite(monkeypatch, tmp_path / "test.db")
+    engine, SessionLocal, models = _setup_sqlite(monkeypatch, tmp_path / "test.db")
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-        import db_models
-        db_models.Base.metadata.drop_all(bind=engine)
+        models.Base.metadata.drop_all(bind=engine)
         engine.dispose()
 
 
