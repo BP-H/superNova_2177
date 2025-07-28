@@ -591,6 +591,7 @@ for mod_name in [
             stub.linspace = _linspace
             stub.log = lambda v: math.log(v)
             stub.exp = lambda v: math.exp(v)
+            stub.bool_ = bool
         if mod_name == "dateutil":
             parser_mod = types.ModuleType("dateutil.parser")
             def _parse(val):
