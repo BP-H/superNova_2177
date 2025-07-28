@@ -37,6 +37,9 @@ python setup_env.py
 # optional: launch the Streamlit UI
 # python setup_env.py --launch-ui
 
+# optional: launch the Streamlit UI
+# python setup_env.py --launch-ui
+
 # Try demo mode
 supernova-validate --demo
 
