@@ -8,6 +8,7 @@ import threading
 import time
 import logging
 from decimal import Decimal
+from types import SimpleNamespace
 from typing import Any, Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -98,7 +99,7 @@ class RemixAgent:
         self.config = Config()
         self.quantum_ctx = QuantumContext(self.config.FUZZY_ANALOG_COMPUTATION_ENABLED)
         self.vaccine = Vaccine(self.config)
-        self._use_simple = "User" not in globals() or "Coin" not in globals()
+        self._use_simple = USE_IN_MEMORY_STORAGE or "User" not in globals() or "Coin" not in globals()
         if filename is None:
             filename = os.environ.get("LOGCHAIN_FILE", "remix_logchain.log")
         if snapshot is None:
@@ -471,6 +472,7 @@ class RemixAgent:
             self.storage.set_coin(coin_id, coin.to_dict())
 
     def _apply_LIST_COIN_FOR_SALE(self, event: MarketplaceListPayload):
+        """List a coin for sale in the in-memory marketplace."""
         listing_id = event["listing_id"]
         if self.storage.get_marketplace_listing(listing_id):
             return
@@ -479,17 +481,21 @@ class RemixAgent:
         coin_data = self.storage.get_coin(coin_id)
         if not coin_data or coin_data["owner"] != seller:
             return
-        listing = MarketplaceListing(
-            listing_id, coin_id, seller, Decimal(event["price"]), event["timestamp"]
-        )
-        self.storage.set_marketplace_listing(listing_id, listing.to_dict())
+        listing = {
+            "listing_id": listing_id,
+            "coin_id": coin_id,
+            "seller": seller,
+            "price": Decimal(event["price"]),
+            "timestamp": event["timestamp"],
+        }
+        self.storage.set_marketplace_listing(listing_id, listing)
 
     def _apply_BUY_COIN(self, event: MarketplaceBuyPayload):
         listing_id = event["listing_id"]
         listing_data = self.storage.get_marketplace_listing(listing_id)
         if not listing_data:
             return
-        listing = MarketplaceListing.from_dict(listing_data)
+        listing = SimpleNamespace(**listing_data)
         buyer = event["buyer"]
         buyer_data = self.storage.get_user(buyer)
         if not buyer_data:
