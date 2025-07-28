@@ -16,6 +16,7 @@ jobs:
         python-version: ['3.11', '3.12']
     env:
       PYTHONPATH: ${{ github.workspace }}/transcendental_resonance_frontend/src
+      STREAMLIT_PORT: ${{ env.STREAMLIT_PORT || '8501' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -47,18 +48,19 @@ jobs:
       - run: pytest
       - name: Streamlit smoke test
         run: |
-          streamlit run ui.py --server.headless true --server.port 8501 &
+          PORT=${STREAMLIT_PORT:-8501}
+          streamlit run ui.py --server.headless true --server.port "$PORT" &
           for i in {1..30}; do
-            if curl -f http://localhost:8501 >/dev/null 2>&1; then
+            if curl -f http://localhost:"$PORT" >/dev/null 2>&1; then
               echo "Streamlit started after $i seconds"
               break
             fi
             sleep 1
           done
-          if ! curl -f http://localhost:8501 >/dev/null 2>&1; then
+          if ! curl -f http://localhost:"$PORT" >/dev/null 2>&1; then
             echo "Streamlit failed to start within timeout"
             pkill streamlit
             exit 1
           fi
-          curl -f http://localhost:8501
+          curl -f http://localhost:"$PORT"
           pkill streamlit
