@@ -10,6 +10,7 @@ import logging
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import Any, Dict, TYPE_CHECKING
+from config import get_emoji_weights
 
 if TYPE_CHECKING:
     from superNova_2177 import (
@@ -459,9 +460,9 @@ class RemixAgent:
         if not coin_data:
             return
         coin = Coin.from_dict(coin_data, self.config)
-        if event["emoji"] not in self.config.EMOJI_WEIGHTS:
+        if event["emoji"] not in get_emoji_weights():
             return
-        weight = self.config.EMOJI_WEIGHTS[event["emoji"]]
+        weight = get_emoji_weights()[event["emoji"]]
         locks = [reactor_obj.lock, coin.lock]
         with acquire_multiple_locks(locks):
             coin.add_reaction(
