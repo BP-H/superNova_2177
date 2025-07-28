@@ -40,6 +40,35 @@ def summarize_text(text: str, max_len: int = 150) -> str:
         return text
     return text[: max_len - 3] + "..."
 
+
+def clear_memory(state: dict) -> None:
+    """Reset analysis tracking state."""
+    state["analysis_diary"] = []
+    state["run_count"] = 0
+    state["last_result"] = None
+    state["last_run"] = None
+
+
+def export_latest_result(state: dict) -> str:
+    """Return the latest result as a JSON blob."""
+    return json.dumps(state.get("last_result", {}), indent=2)
+
+
+def generate_explanation(result: dict) -> str:
+    """Generate a human readable integrity summary."""
+    integrity = result.get("integrity_analysis", {})
+    if not integrity:
+        return "No integrity analysis available."
+    risk = integrity.get("risk_level", "unknown")
+    score = integrity.get("overall_integrity_score", "N/A")
+    lines = [f"Risk level: {risk}", f"Integrity score: {score}"]
+    recs = result.get("recommendations") or []
+    if recs:
+        lines.append("Recommendations:")
+        for r in recs:
+            lines.append(f"- {r}")
+    return "\n".join(lines)
+
 try:
     from validation_certifier import Config as VCConfig
 except Exception:  # pragma: no cover - optional debug dependencies
@@ -183,7 +212,9 @@ def run_analysis(validations):
             st.pyplot(fig)
 
     if st.button("Explain This Score"):
-        st.json(result.get("integrity_analysis", {}))
+        explanation = generate_explanation(result)
+        with st.expander("Score Explanation"):
+            st.markdown(explanation)
 
     return result
 
@@ -224,8 +255,14 @@ def main() -> None:
 
     if "diary" not in st.session_state:
         st.session_state["diary"] = []
+    if "analysis_diary" not in st.session_state:
+        st.session_state["analysis_diary"] = []
     if "run_count" not in st.session_state:
         st.session_state["run_count"] = 0
+    if "last_result" not in st.session_state:
+        st.session_state["last_result"] = None
+    if "last_run" not in st.session_state:
+        st.session_state["last_run"] = None
     if "theme" not in st.session_state:
         st.session_state["theme"] = "light"
 
@@ -302,15 +339,17 @@ def main() -> None:
         st.markdown(
             f"**Runs this session:** {st.session_state['run_count']}"
         )
+        if st.session_state.get("last_run"):
+            st.write(f"Last run: {st.session_state['last_run']}")
         if st.button("Clear Memory"):
+            clear_memory(st.session_state)
             st.session_state["diary"] = []
-        if st.button("Export Report"):
-            if "last_result" in st.session_state:
-                st.download_button(
-                    "Download JSON",
-                    json.dumps(st.session_state["last_result"], indent=2),
-                    file_name="report.json",
-                )
+        export_blob = export_latest_result(st.session_state)
+        st.download_button(
+            "Export Latest Result",
+            export_blob,
+            file_name="latest_result.json",
+        )
         st.divider()
 
     if run_clicked:
@@ -342,9 +381,17 @@ def main() -> None:
         result = run_analysis(data.get("validations", []))
         st.session_state["run_count"] += 1
         st.session_state["last_result"] = result
+        st.session_state["last_run"] = datetime.utcnow().isoformat(timespec="seconds")
+        st.session_state["analysis_diary"].append(
+            {
+                "timestamp": st.session_state["last_run"],
+                "score": result.get("integrity_analysis", {}).get("overall_integrity_score"),
+                "risk": result.get("integrity_analysis", {}).get("risk_level"),
+            }
+        )
         st.session_state["diary"].append(
             {
-                "timestamp": datetime.utcnow().isoformat(timespec="seconds"),
+                "timestamp": st.session_state["last_run"],
                 "note": f"Run {st.session_state['run_count']} completed",
             }
         )
