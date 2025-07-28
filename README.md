@@ -238,6 +238,8 @@ To experiment with the validation analyzer locally, launch the Streamlit fronten
 streamlit run ui.py
 ```
 Or run `make ui` from the repository root to start the demo.
+`ui.py` replaces the previous `app.py` script and is now the canonical entry
+point for the Streamlit interface.
 Run these commands from the repository root. **Do not** execute `python ui.py`
 directly as that bypasses Streamlit's runtime.
 
@@ -249,7 +251,7 @@ Deploy the demo UI online with Streamlit Cloud:
 
 1. Fork this repository on GitHub.
 2. Sign in to [Streamlit Cloud](https://streamlit.io/cloud) and select **New app**.
-3. Choose the repo and set `app.py` as the entry point.
+3. Choose the repo and set `ui.py` as the entry point.
 4. Add your `SECRET_KEY` and set a `DATABASE_URL` secret with your connection string under **Secrets** in the app settings.
 5. Streamlit will install dependencies from `requirements.txt` and launch the app.
 
