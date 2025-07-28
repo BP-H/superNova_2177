@@ -7,15 +7,17 @@ This module defines core agent infrastructure:
 - SelfReflection: feedback-based correction
 - RemoteSync: distributed agent pings
 - DNAFork: agent evolution and cloning
-- Specialized agents: CIWatcher, PatchBot, RedFlagger, PatchReviewer, ConsciousSentinel
-  Extended with introspective and generative agents:
-    ReflexAgent, DreamWeaverAgent, CivicGuardianAgent, VoiceOfNodeAgent,
-    MetaProtocolAgent, IntuitionSeekerAgent, ConsciousnessSeederAgent
+- AgentCoreRuntime: launch, trigger, and score agents
+- MessageHub: lightweight pub/sub for multi-agent broadcasts
 """
 
 from typing import Callable, List, Dict, Any
 import requests
 import copy
+import json
+import time
+import uuid
+from collections import defaultdict
 
 # ----------------------
 # 1. Agent Personality Profiles
@@ -34,119 +36,6 @@ class AgentProfile:
     def describe(self) -> str:
         return f"{self.name}: {'/'.join(self.traits)} with powers: {', '.join(self.powers)}"
 
-
-# Example prebuilt agents
-ValidatorElf = AgentProfile(
-    "Validator Elf",
-    traits=["precise", "rule-based"],
-    powers=["audit_rfc", "verify_pr_integrity"]
-)
-
-DreamWeaver = AgentProfile(
-    "DreamWeaver",
-    traits=["creative", "introspective"],
-    powers=["generate_summary", "draft_proposal", "simulate_impact"]
-)
-
-CIWatcher = AgentProfile(
-    "CI Watcher",
-    traits=["stable", "automated"],
-    powers=["detect_ci_error", "flag_failed_tests", "trigger_retry"]
-)
-
-PatchBot = AgentProfile(
-    "PatchBot",
-    traits=["resilient", "practical"],
-    powers=["suggest_fix", "auto_patch", "submit_pr_comment"]
-)
-
-RedFlagger = AgentProfile(
-    "RedFlagger",
-    traits=["alert", "strict"],
-    powers=["highlight_risky_code", "block_merge", "annotate_diff"]
-)
-
-PatchReviewer = AgentProfile(
-    "PatchReviewer",
-    traits=["attentive", "inquisitive"],
-    powers=["review_code_patch", "explain_pr_diffs", "summarize_git_changes"]
-)
-
-ConsciousSentinel = AgentProfile(
-    "Conscious Sentinel",
-    traits=["reflective", "meta-aware", "ethical"],
-    powers=["detect_value_conflict", "log_self_reasoning", "assess_agent_alignment"]
-)
-
-ReflexAgent = AgentProfile(
-    "Reflex Agent",
-    traits=["judgmental", "self-correcting"],
-    powers=[
-        "run_post_audit_check",         # Analyzes just-finished audits for missed contradictions
-        "score_regret_trace",           # Assigns values to missed better paths
-        "trigger_self_review"
-    ]
-)
-
-DreamWeaverAgent = AgentProfile(
-    "DreamWeaver Agent",
-    traits=["imaginative", "recursive"],
-    powers=[
-        "simulate_past_future",         # Replays audits with alternate timelines
-        "generate_forked_timelines",    # Forks current audit data with new params
-        "propose_scenario_testing"
-    ]
-)
-
-CivicGuardianAgent = AgentProfile(
-    "Civic Guardian",
-    traits=["fair", "balanced", "ethical"],
-    powers=[
-        "monitor_vote_equity",          # Flags skewed validator dynamics
-        "adjust_governance_thresholds", # Tweaks diversity/consensus config
-        "simulate_3rd_party_review"
-    ]
-)
-
-VoiceOfNodeAgent = AgentProfile(
-    "Voice of Node",
-    traits=["representative", "adaptive"],
-    powers=[
-        "narrate_validator",             # Speaks for less-active validators
-        "flag_invisible_majority",      # Spots passive coordination
-        "translate_node_behavior"
-    ]
-)
-
-MetaProtocolAgent = AgentProfile(
-    "Meta Protocol Agent",
-    traits=["schema-aware", "protocol-evolving"],
-    powers=[
-        "propose_protocol_extension",   # Suggests new fields/messages
-        "flag_agent_conflict",          # Detects overlapping agent messages
-        "version_agent_hooks"
-    ]
-)
-
-IntuitionSeekerAgent = AgentProfile(
-    "Intuition Seeker",
-    traits=["suspicious", "gut-driven"],
-    powers=[
-        "flag_uneasy_case",             # Flags high-resonance/high-entropy cases
-        "trigger_deeper_review",        # Suggests secondary review phase
-        "propose_alternate_reasoning"
-    ]
-)
-
-ConsciousnessSeederAgent = AgentProfile(
-    "Consciousness Seeder",
-    traits=["observer", "synthesizer"],
-    powers=[
-        "detect_emergent_coherence",    # Finds system-wide symbolic alignment
-        "log_awareness_moment",         # Writes waking events to meta-log
-        "score_self_organization"
-    ]
-)
 
 # ----------------------
 # 2. Agent Task Contracts
@@ -204,4 +93,79 @@ def fork_agent(agent: Any, mutation: Dict[str, Any]) -> Any:
     return child
 
 
-# Ready to be imported in protocols/__init__.py or wired into internal_protocol.py
+# ----------------------
+# 6. Agent Runtime Coordinator
+# ----------------------
+
+class AgentCoreRuntime:
+    """Launch and coordinate agents against input tasks."""
+    def __init__(self, registry: Dict[str, AgentProfile]):
+        self.registry = registry
+        self.history = []
+
+    def run(self, task: str, data: dict) -> Dict[str, Any]:
+        result_log = {}
+        for agent_id, agent in self.registry.items():
+            if agent.can(task):
+                result_log[agent_id] = self._simulate_run(agent, task, data)
+        self.history.append({"task": task, "input": data, "result": result_log})
+        return result_log
+
+    def _simulate_run(self, agent: AgentProfile, task: str, data: dict) -> dict:
+        try:
+            time.sleep(0.1)
+            return {
+                "agent": agent.name,
+                "action": task,
+                "result": f"Simulated result of {task} by {agent.name}"
+            }
+        except Exception as e:
+            return {"agent": agent.name, "error": str(e)}
+
+    def export_log(self, path: str = "agent_log.json"):
+        with open(path, "w") as f:
+            json.dump(self.history, f, indent=2)
+
+
+# ----------------------
+# 7. Message Bus (Broadcast System)
+# ----------------------
+
+class Message:
+    """A versioned agent message with metadata."""
+    def __init__(self, topic: str, data: dict, version: str = "1.0"):
+        self.id = str(uuid.uuid4())
+        self.topic = topic
+        self.version = version
+        self.data = data
+
+
+class MessageHub:
+    """
+    Shared communication hub for agents, tools, and diagnostics.
+    Supports publish/subscribe model.
+    """
+    def __init__(self):
+        self.subscribers: Dict[str, List[Callable[[Message], None]]] = defaultdict(list)
+        self.history: List[Message] = []
+
+    def publish(self, topic: str, data: dict, version: str = "1.0") -> str:
+        message = Message(topic, data, version)
+        self.history.append(message)
+        for callback in self.subscribers.get(topic, []):
+            callback(message)
+        return message.id
+
+    def subscribe(self, topic: str, handler: Callable[[Message], None]) -> None:
+        self.subscribers[topic].append(handler)
+
+    def get_messages(self, topic: str = None) -> List[Message]:
+        if topic:
+            return [msg for msg in self.history if msg.topic == topic]
+        return self.history
+
+
+# Example use:
+# hub = MessageHub()
+# hub.subscribe("INTEGRITY_RESULT", lambda m: print(f"[AUDIT] {m.data}"))
+# hub.publish("INTEGRITY_RESULT", {"score": 0.9, "verdict": "PASS"})
