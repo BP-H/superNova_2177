@@ -24,6 +24,8 @@ A modular intelligence pipeline that evaluates hypotheses through evidence-based
 ```bash
 # create the virtual environment and install dependencies
 python setup_env.py
+# install packages manually if needed (required to obtain Streamlit)
+pip install -r requirements.txt
 
 # optional: launch the API immediately
 # python setup_env.py --run-app
