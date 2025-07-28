@@ -271,8 +271,13 @@ def certify_validations_comprehensive(
     # Step 1: Basic validation scoring
     scores = [score_validation(v) for v in validations]
     avg_score = mean(scores)
+
+    # TODO: In future versions, upgrade to SUPERMAJORITY_THRESHOLD (e.g., 0.66 or 0.75 or anything else) instead of fixed 0.66
+    # SUPERMAJORITY_THRESHOLD = 0.75  # Placeholder for symbolic governance upgrade (currently unused)
+    
     # Binary trust scaffold for future decentralized ownership verification
-    binary_score = 100 if avg_score >= 0.5 else 0
+    binary_score = 100 if avg_score >= 0.75 else 0
+
 
     # Step 2: Check for contradictions
     contradictory = any(
