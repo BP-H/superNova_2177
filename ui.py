@@ -7,15 +7,24 @@ import os
 import asyncio
 from datetime import datetime
 from pathlib import Path
+import sys
+
+logger = logging.getLogger(__name__)
+logger.propagate = False
 
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
 
 # Basic page setup so Streamlit responds immediately on load
-st.set_page_config(page_title="superNova_2177", layout="wide")
-st.title("superNova_2177")
-st.success("\u2705 Streamlit loaded!")
+try:
+    st.set_page_config(page_title="superNova_2177", layout="wide")
+except Exception:
+    logger.exception("Failed to configure Streamlit page")
+    print("Failed to configure Streamlit page", file=sys.stderr)
+else:
+    st.title("superNova_2177")
+    st.success("\u2705 Streamlit loaded!")
 from streamlit_helpers import (
     alert,
     header,
@@ -99,9 +108,6 @@ except Exception:  # pragma: no cover - optional in dev/CI
     }
 
 sample_path = Path(__file__).resolve().parent / "sample_validations.json"
-
-logger = logging.getLogger(__name__)
-logger.propagate = False
 
 try:
     from validation_certifier import Config as VCConfig
@@ -1010,5 +1016,7 @@ if __name__ == "__main__":
     try:
         main()
         st.success("\u2705 UI Booted")
-    except Exception as e:
-        st.error(f"Startup failed: {e}")
+        print("UI Booted", file=sys.stderr)
+    except Exception as exc:
+        logger.exception("Startup failed")
+        print(f"Startup failed: {exc}", file=sys.stderr)
