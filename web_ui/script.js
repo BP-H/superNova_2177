@@ -14,6 +14,7 @@ async function loadData() {
     list.innerHTML = '';
     proposals.forEach(p => {
       const li = document.createElement('li');
+      li.className = 'list-group-item';
       li.textContent = `${p.id}: ${p.description} [${p.status}]`;
       list.appendChild(li);
     });
