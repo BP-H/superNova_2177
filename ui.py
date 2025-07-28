@@ -3,6 +3,11 @@ import streamlit as st
 import networkx as nx
 import matplotlib.pyplot as plt
 
+try:
+    SECRETS = st.secrets
+except Exception:  # pragma: no cover - environment may lack st.secrets
+    SECRETS = {"SECRET_KEY": "dev", "DATABASE_URL": "sqlite:///:memory:"}
+
 from validation_integrity_pipeline import analyze_validation_integrity
 from network.network_coordination_detector import build_validation_graph
 
@@ -88,8 +93,8 @@ def main() -> None:
         "mode to see the pipeline in action."
     )
 
-    secret_key = st.secrets.get("SECRET_KEY", "not set")
-    database_url = st.secrets.get("DATABASE_URL", "not set")
+    secret_key = SECRETS.get("SECRET_KEY", "not set")
+    database_url = SECRETS.get("DATABASE_URL", "not set")
 
     with st.sidebar:
         st.header("Environment")
