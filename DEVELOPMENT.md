@@ -41,6 +41,10 @@ pip install -r requirements-minimal.txt -r requirements-dev.txt
 If the packages are missing, stub implementations found under `stubs/`
 will activate automatically and may cause confusing test failures.
 
+Installing every dependency from `requirements-minimal.txt` and
+`requirements-dev.txt` prevents these stubs from loading and keeps the tests
+reliable.
+
 The GitHub Actions workflows (`.github/workflows/ci.yml` and `pr-tests.yml`) run these commands automatically whenever you push or open a pull request.
 
 ## Pre-commit Hooks
