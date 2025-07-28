@@ -68,6 +68,7 @@ from predictions.ui_hook import (
 )
 
 from optimization.ui_hook import tune_parameters_ui
+from causal_graph.ui_hook import build_graph_ui, simulate_entanglement_ui
 
 register_route("store_prediction", store_prediction_ui)
 register_route("get_prediction", get_prediction_ui)
@@ -90,3 +91,5 @@ register_route("temporal_consistency", analyze_temporal_ui)
 
 # Optimization-related route
 register_route("tune_parameters", tune_parameters_ui)
+register_route("build_causal_graph", build_graph_ui)
+register_route("simulate_entanglement", simulate_entanglement_ui)
