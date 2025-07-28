@@ -1,9 +1,12 @@
 version: "3.9"
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 services:
   app:
     build: .
     ports:
-      - "8000:8000"
+      - "8501:8501"
     depends_on:
       - db
       - redis

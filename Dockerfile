@@ -1,3 +1,7 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 # Builder stage
 # Use slim Python image for smaller footprint
 FROM python:3.12-slim AS builder
