@@ -3832,6 +3832,45 @@ if "pytest" in sys.modules and agent is None:
 if __name__ == "__main__":
     import sys
     import argparse
+    import os
+
+    debug_boot = os.getenv("DEBUG_BOOT_UI")
+    if debug_boot:
+        def _run_boot_debug():
+            try:
+                import streamlit as st  # type: ignore
+
+                st.set_page_config(page_title="Boot Diagnostic", layout="centered")
+                st.header("Boot Diagnostic")
+
+                st.subheader("Config Test")
+                try:
+                    from config import Config
+                    st.success("Config import succeeded")
+                    st.write({"METRICS_PORT": Config.METRICS_PORT})
+                except Exception as exc:  # pragma: no cover - debug only
+                    st.error(f"Config import failed: {exc}")
+                    Config = None  # type: ignore
+
+                st.subheader("Harmony Scanner Check")
+                scanner = None
+                try:
+                    scanner = HarmonyScanner(Config()) if Config else None
+                    st.success("HarmonyScanner instantiated")
+                except Exception as exc:  # pragma: no cover - debug only
+                    st.error(f"HarmonyScanner init failed: {exc}")
+
+                if st.button("Run Dummy Scan") and scanner:
+                    try:
+                        scanner.scan("hello world")
+                        st.success("Dummy scan completed")
+                    except Exception as exc:  # pragma: no cover - debug only
+                        st.error(f"Dummy scan error: {exc}")
+            except Exception as exc:  # pragma: no cover - debug only
+                print(f"Streamlit debug view failed: {exc}")
+
+        _run_boot_debug()
+        sys.exit(0)
 
     parser = argparse.ArgumentParser(description="Launch superNova_2177")
     parser.add_argument("command", nargs="?", default="run", choices=["run", "test", "cli"], help="Execution mode")
