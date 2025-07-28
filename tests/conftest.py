@@ -187,10 +187,53 @@ if "superNova_2177" not in sys.modules:
     stub_sn.RemixAgent = RemixAgent
     stub_sn.LogChain = type("LogChain", (), {"__init__": lambda self, f: None, "add": lambda self, e: None})
     stub_sn.SessionLocal = lambda *a, **k: None
-    stub_sn.Base = type("Base", (), {"metadata": types.SimpleNamespace(create_all=lambda *a, **k: None, drop_all=lambda *a, **k: None)})
+    stub_sn.Base = type("Base", (), {
+        "metadata": types.SimpleNamespace(
+            create_all=lambda *a, **k: None,
+            drop_all=lambda *a, **k: None,
+        )
+    })
     stub_sn.USE_IN_MEMORY_STORAGE = True
-    from fastapi import FastAPI, HTTPException, Depends
-    from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
+    # Import FastAPI components with a lightweight fallback when the real
+    # package isn't installed.  This avoids ``ModuleNotFoundError`` during test
+    # collection in minimal environments.
+    try:
+        from fastapi import FastAPI, HTTPException, Depends
+        from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+    except Exception:  # pragma: no cover - optional dependency
+        import types
+
+        fastapi_stub = types.ModuleType("fastapi")
+
+        class FastAPI:
+            def __init__(self, *a, **kw):
+                pass
+
+            def _decorator(self, *a, **kw):
+                def wrapper(func):
+                    return func
+                return wrapper
+
+            post = _decorator
+            get = _decorator
+
+        fastapi_stub.FastAPI = FastAPI
+        fastapi_stub.Depends = lambda x=None: None
+        fastapi_stub.HTTPException = type("HTTPException", (), {})
+        security = types.ModuleType("fastapi.security")
+
+        class OAuth2PasswordBearer:
+            def __init__(self, tokenUrl: str, **_kw):
+                self.tokenUrl = tokenUrl
+
+        security.OAuth2PasswordBearer = OAuth2PasswordBearer
+        security.OAuth2PasswordRequestForm = object
+
+        sys.modules.setdefault("fastapi", fastapi_stub)
+        sys.modules.setdefault("fastapi.security", security)
+        from fastapi import FastAPI, HTTPException, Depends
+        from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
     app = FastAPI()
     oauth = OAuth2PasswordBearer(tokenUrl="/token")
