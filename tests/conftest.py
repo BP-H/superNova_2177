@@ -638,6 +638,12 @@ except Exception:  # pragma: no cover - lightweight fallback
             data.update(attrs)
             self._adj[u][v] = data
 
+        def successors(self, node: Any):
+            return self._adj.get(node, {}).keys()
+
+        def predecessors(self, node: Any):
+            return [n for n, nbrs in self._adj.items() if node in nbrs]
+
         def edges(self, data: bool = False):
             for u, nbrs in self._adj.items():
                 for v, attr in nbrs.items():
@@ -699,7 +705,7 @@ except Exception:  # pragma: no cover - lightweight fallback
             if node in visited:
                 continue
             visited.add(node)
-            stack.extend(graph._adj.get(node, {}))
+            stack.extend(graph.successors(node))
         return False
 
     def all_simple_paths(graph: DiGraph, source: Any, target: Any) -> Iterable[List[Any]]:
@@ -710,7 +716,7 @@ except Exception:  # pragma: no cover - lightweight fallback
             if current == target:
                 yield list(path)
                 return
-            for nbr in graph._adj.get(current, {}):
+            for nbr in graph.successors(current):
                 if nbr not in visited:
                     visited.add(nbr)
                     path.append(nbr)
