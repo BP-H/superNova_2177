@@ -47,3 +47,11 @@ backend handler.
 These routes are provided for research purposes only. STRICTLY A SOCIAL MEDIA PLATFORM.
 They incorporate Intellectual Property & Artistic Inspiration protections
 and follow Legal & Ethical Safeguards for community use.
+
+## proposals
+
+| Route | Description |
+|-------|-------------|
+|`create_proposal`|Create a new proposal.|
+|`list_proposals`|List existing proposals.|
+|`vote_proposal`|Vote on a proposal.|
