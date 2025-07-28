@@ -214,6 +214,53 @@ if "superNova_2177" not in sys.modules:
                     if owner:
                         owner["karma"] = str(float(owner.get("karma", "0")) + 1)
 
+        def self_improve(self):
+            """Analyze recent diary entries and suggest improvements."""
+            import json
+            try:
+                from virtual_diary import load_entries
+            except Exception:
+                return []
+
+            try:
+                entries = load_entries(limit=20)
+            except Exception:
+                entries = []
+
+            fail_count = 0
+            contradictions = 0
+            action_results = {}
+            for entry in entries:
+                text = json.dumps(entry)
+                if "fail" in text.lower():
+                    fail_count += 1
+                action = entry.get("action")
+                result = entry.get("result")
+                if action and result is not None:
+                    prev = action_results.get(action)
+                    if prev is not None and prev != result:
+                        contradictions += 1
+                    action_results[action] = result
+
+            suggestions = []
+            if fail_count >= 3:
+                suggestions.append(
+                    "multiple failures detected: revision recommended"
+                )
+            if contradictions:
+                suggestions.append("contradictory actions detected: review logic")
+
+            if not suggestions and not entries:
+                suggestions.append("no diary entries found")
+
+            if suggestions:
+                try:
+                    Config.ENTROPY_MULTIPLIER += 0.01
+                except Exception:
+                    pass
+
+            return suggestions
+
     stub_sn.InMemoryStorage = InMemoryStorage
     stub_sn.SystemStateService = SystemStateService
     stub_sn.CosmicNexus = CosmicNexus
