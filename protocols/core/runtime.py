@@ -32,3 +32,16 @@ class AgentCoreRuntime:
     def export_log(self, path: str = "agent_log.json") -> None:
         with open(path, "w") as f:
             json.dump(self.history, f, indent=2)
+
+# Provider API key storage
+_provider_keys: Dict[str, str] = {}
+
+
+def set_provider_key(provider: str, key: str) -> None:
+    """Store an API key for the given provider."""
+    _provider_keys[provider] = key
+
+
+def get_key(provider: str) -> str:
+    """Retrieve the stored API key for ``provider``."""
+    return _provider_keys.get(provider, "")
