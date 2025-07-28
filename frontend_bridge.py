@@ -90,3 +90,10 @@ register_route("temporal_consistency", analyze_temporal_ui)
 
 # Optimization-related route
 register_route("tune_parameters", tune_parameters_ui)
+
+# Newly added advanced operations
+register_route("trigger_meta_evaluation", trigger_meta_evaluation_ui)
+register_route("auto_flag_stale", auto_flag_stale_ui)
+register_route("run_integrity_analysis", run_integrity_analysis_ui)
+register_route("update_reputations", update_reputations_ui)
+register_route("forecast_consensus_agent", forecast_consensus_ui)
