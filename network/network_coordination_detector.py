@@ -329,43 +329,50 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
         """Heavy embedding computation cached for reuse."""
         try:
             from sentence_transformers import SentenceTransformer
-
-            model = SentenceTransformer("paraphrase-MiniLM-L6-v2")
-            return model.encode(list(texts))
-        except Exception as e:  # pragma: no cover - fallback rarely triggered
+            # Avoid accidental network downloads by forcing offline mode if unset
+            os.environ.setdefault("HF_HUB_OFFLINE", "1")
+            os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+            try:
+                model = SentenceTransformer("paraphrase-MiniLM-L6-v2")
+                return model.encode(list(texts))
+            except Exception as st_exc:
+                logger.warning(
+                    f"SentenceTransformer failed: {st_exc}; using TF-IDF fallback"
+                )
+        except Exception as import_exc:  # pragma: no cover - fallback rarely triggered
             logger.warning(
-                f"SentenceTransformer unavailable: {e}; using TF-IDF fallback"
+                f"SentenceTransformer unavailable: {import_exc}; using TF-IDF fallback"
+            )
+        try:
+            from sklearn.feature_extraction.text import TfidfVectorizer
+
+            vec = TfidfVectorizer().fit(list(texts))
+            return vec.transform(list(texts)).toarray()
+        except Exception as tfidf_exc:  # pragma: no cover - minimal fallback
+            logger.error(
+                f"TF-IDF fallback unavailable: {tfidf_exc}; using simple counts"
             )
             try:
-                from sklearn.feature_extraction.text import TfidfVectorizer
+                import numpy as np
 
-                vec = TfidfVectorizer().fit(list(texts))
-                return vec.transform(list(texts)).toarray()
-            except Exception as tfidf_exc:  # pragma: no cover - minimal fallback
+                vocab = sorted({w for t in texts for w in t.split()})
+
+                def to_counts(text: str) -> np.ndarray:
+                    counts = [text.split().count(tok) for tok in vocab]
+                    return np.array(counts, dtype=float)
+
+                return np.stack([to_counts(t) for t in texts])
+            except Exception as np_exc:  # pragma: no cover - extremely rare
                 logger.error(
-                    f"TF-IDF fallback unavailable: {tfidf_exc}; using simple counts"
+                    f"NumPy unavailable: {np_exc}; using pure Python counts"
                 )
-                try:
-                    import numpy as np
 
-                    vocab = sorted({w for t in texts for w in t.split()})
+                vocab = sorted({w for t in texts for w in t.split()})
 
-                    def to_counts(text: str) -> np.ndarray:
-                        counts = [text.split().count(tok) for tok in vocab]
-                        return np.array(counts, dtype=float)
+                def to_counts_list(text: str) -> List[float]:
+                    return [float(text.split().count(tok)) for tok in vocab]
 
-                    return np.stack([to_counts(t) for t in texts])
-                except Exception as np_exc:  # pragma: no cover - extremely rare
-                    logger.error(
-                        f"NumPy unavailable: {np_exc}; using pure Python counts"
-                    )
-
-                    vocab = sorted({w for t in texts for w in t.split()})
-
-                    def to_counts_list(text: str) -> List[float]:
-                        return [float(text.split().count(tok)) for tok in vocab]
-
-                    return [to_counts_list(t) for t in texts]
+                return [to_counts_list(t) for t in texts]
 
     # Heavy embedding generation can dominate runtime on large datasets.
     # Profile with ``cProfile`` to verify and consider batching strategies.
