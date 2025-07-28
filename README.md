@@ -260,6 +260,11 @@ docker-compose up
 
 The application will be available at [http://localhost:8000](http://localhost:8000).
 
+## Authentication
+
+Register first using `POST /users/register` then obtain a token with `POST /login`.
+The login route returns a JWT and a freshly initialized `universe_id` for your account.
+
 ## 🎛️ Local Streamlit UI
 
 To experiment with the validation analyzer locally, first build the NiceGUI
@@ -365,6 +370,41 @@ from frontend_bridge import dispatch_route
 routes = await dispatch_route("list_routes", {})
 print(routes["routes"])
 ```
+
+During development, you can also open `/ui/debug_panel` in the NiceGUI
+frontend to interactively invoke these routes. The panel lists every
+registered name with a JSON payload editor and uses `dispatch_route` under
+the hood.
+ 
+### Frontend Bridge & Social Hooks
+
+`frontend_bridge` now includes routes for cross-universe provenance and other
+social network operations. Events emitted by these routes trigger hooks defined
+in `hooks/events.py`.
+
+Example dispatch using the router:
+
+```python
+from frontend_bridge import dispatch_route
+from protocols.utils.messaging import MessageHub
+from hooks import events
+
+bus = MessageHub()
+bus.subscribe(events.CROSS_REMIX_CREATED, lambda m: print(m.data))
+
+await dispatch_route(
+    "cross_universe_register_bridge",
+    {
+        "coin_id": "abc123",
+        "source_universe": "testnet",
+        "source_coin": "xyz789",
+        "proof": "http://example.com/proof",
+    },
+)
+```
+
+The `MessageHub` message bus lets observers react to hook events in real time.
+See `docs/hooks.md` for the full list of event names.
 
 ## 🧪 Running Tests
 
