@@ -1,16 +1,30 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 # Builder stage
 # Use slim Python image for smaller footprint
-FROM python:3.12-slim AS builder
+FROM python:3.11-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 WORKDIR /install
 COPY requirements.txt ./
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        libsnappy-dev \
+        libsdl2-dev \
+        libgl1-mesa-glx \
+        libglib2.0-0 \
+        libxext6 \
+        libsm6 \
+        libxrender1 \
+    && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # Final stage
-FROM python:3.12-slim
+FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
