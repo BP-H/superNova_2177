@@ -813,7 +813,7 @@ import pytest
 
 
 def _setup_sqlite(monkeypatch, db_path):
-    """Return engine, sessionmaker and db_models bound to a temporary SQLite file."""
+    """Create an isolated engine and session factory bound to ``db_path``."""
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
     import db_models, sys, pytest
@@ -834,8 +834,6 @@ def _setup_sqlite(monkeypatch, db_path):
     except Exception:
         pytest.skip("SQLAlchemy not available")
 
-    # When using the SQLAlchemy stub ``create_engine`` may return ``None`` which
-    # would break subsequent calls. Skip tests in that scenario.
     if engine is None:
         pytest.skip("SQLAlchemy not available")
 
@@ -848,11 +846,7 @@ def _setup_sqlite(monkeypatch, db_path):
 
     monkeypatch.setattr(db_models, "engine", engine, raising=False)
     monkeypatch.setattr(db_models, "SessionLocal", Session, raising=False)
-    # ``Base.metadata.bind`` may be ``None`` when the models are first imported.
-    # Always ensure it points at our temporary engine so any new sessions or
-    # tables created via the metadata use the correct database.
-    if getattr(db_models.Base.metadata, "bind", None) is not engine:
-        monkeypatch.setattr(db_models.Base.metadata, "bind", engine, raising=False)
+    monkeypatch.setattr(db_models.Base.metadata, "bind", engine, raising=False)
 
     for mod in list(sys.modules.values()):
         try:
@@ -869,20 +863,24 @@ def _setup_sqlite(monkeypatch, db_path):
             continue
 
     db_models.Base.metadata.create_all(bind=engine)
-    return engine, Session, db_models
+
+    def teardown():
+        db_models.Base.metadata.drop_all(bind=engine)
+        engine.dispose()
+
+    return engine, Session, teardown
 
 
 @pytest.fixture
 def test_db(tmp_path, monkeypatch):
     """Provide an isolated SQLite session for tests."""
-    engine, SessionLocal, models = _setup_sqlite(monkeypatch, tmp_path / "test.db")
+    engine, SessionLocal, teardown = _setup_sqlite(monkeypatch, tmp_path / "test.db")
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-        models.Base.metadata.drop_all(bind=engine)
-        engine.dispose()
+        teardown()
 
 
 @pytest.fixture
