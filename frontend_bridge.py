@@ -29,6 +29,10 @@ from hypothesis.ui_hook import (
     rank_hypotheses_by_confidence_ui,
     detect_conflicting_hypotheses_ui,
 )
+from protocols.api_bridge import list_agents, launch_agents, step_agents
 
 register_route("rank_hypotheses_by_confidence", rank_hypotheses_by_confidence_ui)
 register_route("detect_conflicting_hypotheses", detect_conflicting_hypotheses_ui)
+register_route("list_agents", list_agents)
+register_route("launch_agents", launch_agents)
+register_route("step_agents", step_agents)
