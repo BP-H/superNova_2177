@@ -268,11 +268,27 @@ class RemixAgent:
                 },
             )
         elif ev == "MINT":
-            if self.storage.get_user(event["user"]):
-                self.storage.set_coin(
-                    event["coin_id"],
-                    {"owner": event["user"], "value": event.get("value", "0")},
-                )
+            user_data = self.storage.get_user(event["user"])
+            if not user_data:
+                return
+            effective_karma = (
+                Decimal(user_data.get("karma", "0"))
+                - Decimal(user_data.get("staked_karma", "0"))
+            )
+            if (
+                not user_data.get("is_genesis")
+                and effective_karma < self.config.KARMA_MINT_THRESHOLD
+            ):
+                return
+            if (
+                event.get("is_remix")
+                and len(event.get("improvement", "")) < self.config.MIN_IMPROVEMENT_LEN
+            ):
+                return
+            self.storage.set_coin(
+                event["coin_id"],
+                {"owner": event["user"], "value": event.get("value", "0")},
+            )
         elif ev == "REVOKE_CONSENT":
             u = self.storage.get_user(event["user"])
             if u:
