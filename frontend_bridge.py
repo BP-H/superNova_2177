@@ -43,3 +43,14 @@ from predictions.ui_hook import (
 register_route("store_prediction", store_prediction_ui)
 register_route("get_prediction", get_prediction_ui)
 register_route("update_prediction_status", update_prediction_status_ui)
+
+# Protocol agent management routes
+from protocols.api_bridge import (
+    list_agents_api,
+    launch_agents_api,
+    step_agents_api,
+)
+
+register_route("list_agents", list_agents_api)
+register_route("launch_agents", launch_agents_api)
+register_route("step_agents", step_agents_api)
