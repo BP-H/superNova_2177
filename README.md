@@ -256,6 +256,12 @@ Build the image:
 docker build -t supernova-2177 .
 ```
 
+To build and run the Streamlit UI inside Docker:
+```bash
+docker build -t supernova-ui .
+docker run -p 8501:8501 supernova-ui
+```
+
 The build process installs required system libraries such as `libsnappy-dev`
 and SDL dependencies, so no manual setup is needed when using Docker.
 
@@ -265,7 +271,9 @@ cp .env.example .env  # set your own secrets
 docker-compose up
 ```
 
-The application will be available at [http://localhost:8501](http://localhost:8501).
+
+The application will be available at [http://localhost:8000](http://localhost:8000),
+and the Streamlit UI at [http://localhost:8501](http://localhost:8501).
 
 
 ## Authentication
