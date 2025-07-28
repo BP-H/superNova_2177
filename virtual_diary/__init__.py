@@ -32,3 +32,23 @@ def load_entries(limit: int = 20) -> List[Dict[str, Any]]:
     except Exception:
         logger.exception("Failed to load virtual diary")
     return []
+
+__all__ = ["load_entries"]
+
+def add_entry(entry: Dict[str, Any]) -> None:
+    """Append ``entry`` to the virtual diary file."""
+    path = os.environ.get("VIRTUAL_DIARY_FILE", "virtual_diary.json")
+    try:
+        data: List[Dict[str, Any]] = []
+        if os.path.exists(path):
+            with open(path, "r") as f:
+                loaded = json.load(f)
+                if isinstance(loaded, list):
+                    data = loaded
+        data.append(entry)
+        with open(path, "w") as f:
+            json.dump(data, f, default=str)
+    except Exception:
+        logger.exception("Failed to update virtual diary")
+
+

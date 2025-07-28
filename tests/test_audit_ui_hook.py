@@ -1,7 +1,9 @@
 import json
 import pytest
 
-from audit.ui_hook import log_hypothesis_ui, attach_trace_ui
+from audit.ui_hook import log_hypothesis_ui, attach_trace_ui, causal_audit_ui
+from frontend_bridge import dispatch_route
+from causal_graph import InfluenceGraph
 from db_models import LogEntry, SystemState
 from hooks import events
 
@@ -60,3 +62,64 @@ async def test_attach_trace_ui_updates_log_and_emits_event(test_db, monkeypatch)
     assert dummy.events == [
         (events.AUDIT_LOG, ({"action": "attach_trace", "log_id": log.id},), {})
     ]
+
+
+@pytest.mark.asyncio
+async def test_causal_audit_ui_runs_trigger_and_emits_event(test_db, monkeypatch):
+    dummy = DummyHookManager()
+    monkeypatch.setattr("audit.ui_hook.hook_manager", dummy, raising=False)
+
+    captured = {}
+
+    def fake_trigger(db, log_id, graph, hypothesis_id=None, skip_commentary=False, skip_validation=False):
+        captured["args"] = (db, log_id, graph, hypothesis_id, skip_commentary, skip_validation)
+        return {
+            "causal_chain": ["n1"],
+            "governance_review": {"score": 0.1},
+            "commentary": "ok",
+            "extra": True,
+        }
+
+    monkeypatch.setattr("audit.ui_hook.trigger_causal_audit", fake_trigger)
+
+    graph = InfluenceGraph()
+    payload = {"log_id": 1, "graph": graph, "hypothesis_id": "H"}
+    result = await causal_audit_ui(payload, test_db)
+
+    assert result == {
+        "causal_chain": ["n1"],
+        "governance_review": {"score": 0.1},
+        "commentary": "ok",
+    }
+    assert captured["args"] == (test_db, 1, graph, "H", False, False)
+    assert dummy.events == [
+        (events.AUDIT_LOG, ({"action": "causal_audit", "log_id": 1},), {})
+    ]
+
+
+@pytest.mark.asyncio
+async def test_causal_audit_ui_requires_keys(test_db):
+    graph = InfluenceGraph()
+    with pytest.raises(KeyError):
+        await causal_audit_ui({"graph": graph}, test_db)
+    with pytest.raises(KeyError):
+        await causal_audit_ui({"log_id": 1}, test_db)
+
+
+@pytest.mark.asyncio
+async def test_causal_audit_route_dispatch(monkeypatch):
+    called = {}
+
+    async def fake_ui(payload, db=None):
+        called["args"] = (payload, db)
+        return {"done": True}
+
+    monkeypatch.setattr("audit.ui_hook.causal_audit_ui", fake_ui)
+    from frontend_bridge import ROUTES
+    ROUTES["causal_audit"] = fake_ui
+
+    payload = {"log_id": 2, "graph": InfluenceGraph()}
+    result = await dispatch_route("causal_audit", payload, db="db")
+
+    assert result == {"done": True}
+    assert called["args"] == (payload, "db")
