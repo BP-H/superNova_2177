@@ -1158,6 +1158,8 @@ def is_valid_username(name: str) -> bool:
 
 
 def is_valid_emoji(emoji: str, config: "Config") -> bool:
+    if emoji is None or config is None:
+        return False
     return emoji in config.EMOJI_WEIGHTS
 
 
@@ -1374,12 +1376,20 @@ def calculate_content_entropy(db: Session) -> float:
     assumptions: tags independent
     validation_notes: counts within Config.CONTENT_ENTROPY_WINDOW_HOURS-hour window
     """
+    if db is None:
+        return 0.0
+
     time_threshold = datetime.datetime.utcnow() - datetime.timedelta(
         hours=Config.CONTENT_ENTROPY_WINDOW_HOURS
     )
-    nodes = db.query(VibeNode).filter(VibeNode.created_at >= time_threshold).all()
+    results = db.query(VibeNode).filter(
+        VibeNode.created_at >= time_threshold
+    ).all()
+    if results is None:
+        return 0.0
+
     tag_counter: Counter[str] = Counter()
-    for node in nodes:
+    for node in results:
         if node.tags:
             tag_counter.update(node.tags)
 

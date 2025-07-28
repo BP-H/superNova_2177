@@ -285,6 +285,8 @@ def is_valid_emoji(emoji: str, config: "Config") -> bool:
     validation_notes: unit tests ensure only configured emoji allowed
     approximation: exact
     """
+    if emoji is None or config is None:
+        return False
     return emoji in config.EMOJI_WEIGHTS
 
 
@@ -411,6 +413,9 @@ def calculate_genesis_bonus_decay(
     approximation: exact
     value_bounds: (0.0, 1.0)
     """
+    if join_time is None:
+        return Decimal("1")
+
     years_passed = (now_utc() - join_time).total_seconds() / (365.25 * 24 * 3600)
     if years_passed >= decay_years:
         return Decimal("0")
