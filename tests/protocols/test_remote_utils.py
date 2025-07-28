@@ -41,3 +41,12 @@ def test_handshake_passes_timeout(monkeypatch):
     result = remote.handshake("agent42", "http://example.com", timeout=3)
     assert result == {"agent_id": "agent42", "remote_status": True}
     assert fake_ping.called_timeout == 3
+
+
+def test_ping_agent_handles_timeout(monkeypatch):
+    def fake_get(url, timeout=None):
+        raise requests.exceptions.Timeout
+
+    monkeypatch.setattr(requests, "get", fake_get)
+    assert remote.ping_agent("http://example.com") is False
+
