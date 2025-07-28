@@ -60,6 +60,24 @@ def _list_routes(_: Dict[str, Any]) -> Dict[str, Any]:
     return {"routes": sorted(ROUTES.keys())}
 
 
+register_route("list_routes", _list_routes)
+
+from consensus_forecaster_agent_ui_hook import forecast_consensus_ui
+
+# Built-in hypothesis-related routes
+from hypothesis.ui_hook import (
+    detect_conflicting_hypotheses_ui,
+    rank_hypotheses_by_confidence_ui,
+    rank_hypotheses_ui,
+    register_hypothesis_ui,
+    synthesize_consensus_ui,
+    update_hypothesis_score_ui,
+)
+from hypothesis_meta_evaluator_ui_hook import trigger_meta_evaluation_ui
+from hypothesis_reasoner_ui_hook import auto_flag_stale_ui
+from validation_certifier_ui_hook import run_integrity_analysis_ui
+from validator_reputation_tracker_ui_hook import update_reputations_ui
+
 def describe_routes(_: Dict[str, Any]) -> Dict[str, Any]:
     """Return each route name mapped to the handler's docstring."""
     descriptions = {
@@ -68,30 +86,34 @@ def describe_routes(_: Dict[str, Any]) -> Dict[str, Any]:
     }
     return {"routes": descriptions}
 
-
 # Hypothesis related routes
 register_route("rank_hypotheses_by_confidence", rank_hypotheses_by_confidence_ui)
 register_route("detect_conflicting_hypotheses", detect_conflicting_hypotheses_ui)
 register_route("register_hypothesis", register_hypothesis_ui)
 register_route("update_hypothesis_score", update_hypothesis_score_ui)
 
+from optimization.ui_hook import tune_parameters_ui
 
 # Prediction-related routes
-from predictions.ui_hook import (
-    store_prediction_ui,
+from prediction.ui_hook import (
     get_prediction_ui,
-    update_prediction_status_ui,
+    schedule_audit_proposal_ui,
+    store_prediction_ui,
 )
+from predictions.ui_hook import update_prediction_status_ui
 
-from optimization.ui_hook import tune_parameters_ui
+register_route("store_prediction", store_prediction_ui)
+register_route("get_prediction", get_prediction_ui)
+register_route("schedule_audit_proposal", schedule_audit_proposal_ui)
+register_route("update_prediction_status", update_prediction_status_ui)
+
+# Additional routes
 from virtual_diary.ui_hook import fetch_entries_ui, add_entry_ui
 from quantum_sim.ui_hook import simulate_entanglement_ui
 
-register_route_once("store_prediction", store_prediction_ui)
-register_route_once("get_prediction", get_prediction_ui)
-register_route_once("update_prediction_status", update_prediction_status_ui)
-
 # Protocol agent management routes
+from protocols.api_bridge import launch_agents_api, list_agents_api, step_agents_api
+
 register_route("list_agents", list_agents_api)
 register_route("launch_agents", launch_agents_api)
 register_route("step_agents", step_agents_api)

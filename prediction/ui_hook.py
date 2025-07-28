@@ -2,18 +2,20 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
+from frontend_bridge import register_route
 from hook_manager import HookManager
 from prediction_manager import PredictionManager
 
-# Exposed hook manager so external modules can listen for prediction events
+# Hook manager to allow external listeners
 ui_hook_manager = HookManager()
 
-# Global manager instance. Real application should configure this on startup.
+# Global PredictionManager instance injected at runtime
 prediction_manager: Optional[PredictionManager] = None
 
 
-async def store_prediction_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
+async def store_prediction_ui(payload: Dict[str, Any], db: Any) -> Dict[str, Any]:
     """Persist prediction data coming from the UI."""
+    _ = db  # unused placeholder for symmetry
     if prediction_manager is None:
         raise RuntimeError("prediction_manager not configured")
 
@@ -23,8 +25,9 @@ async def store_prediction_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return {"prediction_id": prediction_id}
 
 
-async def get_prediction_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
+async def get_prediction_ui(payload: Dict[str, Any], db: Any) -> Dict[str, Any]:
     """Return prediction record identified by ``prediction_id``."""
+    _ = db
     if prediction_manager is None:
         raise RuntimeError("prediction_manager not configured")
 
@@ -34,19 +37,22 @@ async def get_prediction_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return record or {}
 
 
-async def update_prediction_status_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Update prediction status based on UI request."""
+async def schedule_audit_proposal_ui(
+    payload: Dict[str, Any], db: Any
+) -> Dict[str, Any]:
+    """Schedule an annual audit proposal via the PredictionManager."""
+    _ = db
     if prediction_manager is None:
         raise RuntimeError("prediction_manager not configured")
 
-    prediction_id = payload["prediction_id"]
-    new_status = payload.get("status", "pending")
-    outcome = payload.get("actual_outcome")
-    prediction_manager.update_prediction_status(
-        prediction_id, new_status, actual_outcome=outcome
-    )
+    proposal_id = prediction_manager.schedule_annual_audit_proposal()
     await ui_hook_manager.trigger(
-        "prediction_status_updated",
-        {"prediction_id": prediction_id, "status": new_status},
+        "audit_proposal_scheduled", {"proposal_id": proposal_id}
     )
-    return {"prediction_id": prediction_id, "status": new_status}
+    return {"proposal_id": proposal_id}
+
+
+# Register handlers with the frontend bridge
+register_route("store_prediction", store_prediction_ui)
+register_route("get_prediction", get_prediction_ui)
+register_route("schedule_audit_proposal", schedule_audit_proposal_ui)
