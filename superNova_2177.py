@@ -1891,9 +1891,11 @@ class HarmonyScanner:
         )
         self._block_writer_thread.start()
         # ML model for enhanced fuzzy detection
-        if nn is not None and torch is not None:
-            self.embedding_model = nn.Sequential(
-                nn.Linear(128, 64), nn.ReLU(), nn.Linear(64, 32)
+        torch_mod = globals().get("torch")
+        nn_mod = globals().get("nn")
+        if nn_mod is not None and torch_mod is not None:
+            self.embedding_model = nn_mod.Sequential(
+                nn_mod.Linear(128, 64), nn_mod.ReLU(), nn_mod.Linear(64, 32)
             )
         else:
             self.embedding_model = None
@@ -1928,12 +1930,14 @@ class HarmonyScanner:
 
     def _ml_detect_dissonance(self, text: str) -> bool:
         """Use torch for embedding-based detection."""
-        if self.embedding_model is None or torch is None:
+        torch_mod = globals().get("torch")
+        nn_mod = globals().get("nn")
+        if self.embedding_model is None or torch_mod is None or nn_mod is None:
             return False
         # Stub: convert text to vector, compare to bad embeddings
-        vector = torch.tensor([hash(c) for c in text[:10]])  # Simple hash vector
+        vector = torch_mod.tensor([hash(c) for c in text[:10]])  # Simple hash vector
         embedded = self.embedding_model(vector.float())
-        bad_embed = torch.tensor([0.0] * 32)  # Placeholder for trained bad embed
+        bad_embed = torch_mod.tensor([0.0] * 32)  # Placeholder for trained bad embed
         similarity = nn.functional.cosine_similarity(embedded, bad_embed, dim=0)
         return similarity > self.config.DISSONANCE_SIMILARITY_THRESHOLD  # Threshold
 
