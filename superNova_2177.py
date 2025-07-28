@@ -724,6 +724,7 @@ class VibeNodeOut(VibeNodeBase):
     engagement_catalyst: str
     negentropy_score: str
     patron_saint_id: Optional[int]
+    media_url: Optional[str] = None
     likes_count: int = 0
     comments_count: int = 0
     fractal_depth: int = 0
