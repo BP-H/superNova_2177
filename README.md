@@ -318,6 +318,24 @@ Missing packages such as `tqdm` are installed automatically when you run `one_cl
 - **Browser does not open**: Navigate manually to
   [http://localhost:8888](http://localhost:8888) or the port you selected.
 
+### Job Queue & Polling
+
+Long-running tasks started via the UI now run asynchronously. Use the
+`queue_*` routes to start a job and `poll_*` to check its status. Example:
+
+```python
+from frontend_bridge import dispatch_route
+
+# queue an introspection audit
+job = await dispatch_route("queue_full_audit", {"hypothesis_id": "H1"})
+
+# later poll for the result
+status = await dispatch_route("poll_full_audit", {"job_id": job["job_id"]})
+```
+
+The returned status dictionary includes ``status`` and ``result`` keys. Events
+are still emitted via the hook managers when a job completes.
+
 ## 🌩️ Streamlit Cloud
 
 Deploy the demo UI online with Streamlit Cloud:
