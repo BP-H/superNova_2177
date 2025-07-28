@@ -76,7 +76,7 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
   ```bash
   python install.py
   ```
- This project depends on libraries such as `fastapi`, `pydantic-settings`, `structlog`, `prometheus-client`, and core packages like `numpy`, `python-dateutil`, `sqlalchemy>=2.0`, and `email-validator`. The full list lives in `requirements.txt`. A pared-down `requirements-minimal.txt` installs only what is necessary to run the unit tests.
+This project depends on libraries such as `fastapi`, `pydantic-settings`, `structlog`, `prometheus-client`, and core packages like `numpy`, `python-dateutil`, `sqlalchemy>=2.0`, and `email-validator`. The full list lives in `requirements.txt`. A pared-down `requirements-minimal.txt` installs only what is necessary to run the unit tests and now includes `requests`.
   If you prefer to manage the environment manually, install the required
   packages yourself using `requirements.txt`:
   ```bash
@@ -328,7 +328,7 @@ pip install -r requirements-minimal.txt
 
 `requirements-minimal.txt` installs `fastapi`, `pydantic`,
 `pydantic-settings`, `python-multipart`, `structlog`,
-`prometheus-client` and the core scientific packages (`numpy`,
+`prometheus-client`, `requests` and the core scientific packages (`numpy`,
 `python-dateutil`, `sqlalchemy`, `networkx`, `pytest-asyncio`, `httpx`,
 `email-validator`). With these installed, running `pytest` should
 succeed (`99 passed`).
