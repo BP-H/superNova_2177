@@ -30,7 +30,12 @@ class DummySession:
         self.fork = fork
 
     def execute(self, stmt):
-        params = stmt.compile().params
+        if not hasattr(stmt, "compile"):
+            return DummyResult(None)
+        try:
+            params = stmt.compile().params
+        except Exception:
+            return DummyResult(None)
         if params:
             val = next(iter(params.values()))
             value = self.fork if val == self.fork.id or val == self.fork.creator_id else None
