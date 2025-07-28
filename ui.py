@@ -48,6 +48,40 @@ sample_path = Path(__file__).resolve().parent / "sample_validations.json"
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
+try:
+    from validation_certifier import Config as VCConfig
+except Exception:  # pragma: no cover - optional debug dependencies
+    VCConfig = None  # type: ignore
+
+try:
+    from config import Config
+    from superNova_2177 import HarmonyScanner
+except Exception:  # pragma: no cover - optional debug dependencies
+    HarmonyScanner = None  # type: ignore
+    Config = None  # type: ignore
+
+if Config is None:
+
+    class Config:  # type: ignore[no-redef]
+        METRICS_PORT = 1234
+
+
+if VCConfig is None:
+
+    class VCConfig:  # type: ignore[no-redef]
+        HIGH_RISK_THRESHOLD = 0.7
+        MEDIUM_RISK_THRESHOLD = 0.4
+
+
+if HarmonyScanner is None:
+
+    class HarmonyScanner:  # type: ignore[no-redef]
+        def __init__(self, *_a, **_k):
+            pass
+
+        def scan(self, _data):
+            return {"dummy": True}
+
 
 def summarize_text(text: str, max_len: int = 150) -> str:
     """Basic text summarizer placeholder."""
@@ -99,41 +133,6 @@ def generate_explanation(result: dict) -> str:
         for r in recs:
             lines.append(f"- {r}")
     return "\n".join(lines)
-
-
-try:
-    from validation_certifier import Config as VCConfig
-except Exception:  # pragma: no cover - optional debug dependencies
-    VCConfig = None  # type: ignore
-
-try:
-    from config import Config
-    from superNova_2177 import HarmonyScanner
-except Exception:  # pragma: no cover - optional debug dependencies
-    HarmonyScanner = None  # type: ignore
-    Config = None  # type: ignore
-
-if Config is None:
-
-    class Config:  # type: ignore[no-redef]
-        METRICS_PORT = 1234
-
-
-if VCConfig is None:
-
-    class VCConfig:  # type: ignore[no-redef]
-        HIGH_RISK_THRESHOLD = 0.7
-        MEDIUM_RISK_THRESHOLD = 0.4
-
-
-if HarmonyScanner is None:
-
-    class HarmonyScanner:  # type: ignore[no-redef]
-        def __init__(self, *_a, **_k):
-            pass
-
-        def scan(self, _data):
-            return {"dummy": True}
 
 
 def run_analysis(validations, *, layout: str = "force"):
@@ -663,7 +662,7 @@ def main() -> None:
             rfc_entries.append(entry)
             rfc_index[path.stem.lower()] = entry
 
-        diary_mentions: dict[str, list[int]] = {e["id"]: [] for e in rfc_entries}  # type: ignore[misc]
+        diary_mentions: dict[str, list[int]] = {str(e["id"]): [] for e in rfc_entries}
         for i, entry in enumerate(st.session_state.get("diary", [])):
             note_lower = entry.get("note", "").lower()
             ids = set(e.strip().lower() for e in entry.get("rfc_ids", []) if e)
@@ -674,7 +673,7 @@ def main() -> None:
                     or rid.replace("-", " ") in note_lower
                     or rid in ids
                 ):
-                    diary_mentions.setdefault(rfc["id"], []).append(i)
+                    diary_mentions.setdefault(str(rfc["id"]), []).append(i)
                     continue
                 keywords = {
                     w.strip(".,()[]{}:").lower()
@@ -682,7 +681,7 @@ def main() -> None:
                     if len(w) > 4
                 }
                 if any(k in note_lower for k in keywords):
-                    diary_mentions.setdefault(rfc["id"], []).append(i)
+                    diary_mentions.setdefault(str(rfc["id"]), []).append(i)
 
         for rfc in rfc_entries:
             if (
@@ -691,10 +690,8 @@ def main() -> None:
                 and filter_text.lower() not in rfc["id"].lower()
             ):
                 continue
-            mentions = diary_mentions.get(rfc["id"], [])
-            heading = (
-                f"<mark>{rfc['id']}</mark>" if mentions else rfc["id"]
-            )
+            mentions = diary_mentions.get(str(rfc["id"]), [])
+            heading = f"<mark>{rfc['id']}</mark>" if mentions else rfc["id"]
             st.markdown(f"### {heading}", unsafe_allow_html=True)
             st.write(summarize_text(str(rfc["summary"])))
             if mentions:
