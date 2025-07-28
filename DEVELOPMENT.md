@@ -70,3 +70,15 @@ The `vote_registry.py` module is under active development. Planned tasks include
 - OAuth or wallet-based identity linking for validators.
 - Public frontend pages showing vote timelines per species.
 - Real-time consensus graphs across divergent forks.
+
+## Troubleshooting
+
+If the Streamlit UI fails to start when running tests or the smoke test in the
+CI pipeline, inspect `streamlit.log` for errors and confirm that port `8501` is
+free. You can terminate any leftover processes with:
+
+```bash
+pkill streamlit || true
+```
+
+Rerun the tests after addressing the issue.
