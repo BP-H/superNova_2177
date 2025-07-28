@@ -7,7 +7,6 @@ import os
 import asyncio
 from datetime import datetime
 from pathlib import Path
-import asyncio
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -34,10 +33,6 @@ except Exception:
                 return asyncio.run_coroutine_threadsafe(coro, loop).result()
             return loop.run_until_complete(coro)
 
-try:
-    from frontend_bridge import dispatch_route
-except Exception:  # pragma: no cover - optional dependency
-    dispatch_route = None
 
 try:
     from db_models import SessionLocal, Harmonizer, UniverseBranch
@@ -77,7 +72,11 @@ except Exception:  # pragma: no cover - optional dependency
     update_validator_reputations = None
 
 from typing import Any, cast
-from frontend_bridge import dispatch_route, ROUTE_INFO
+try:
+    from frontend_bridge import dispatch_route, ROUTE_INFO
+except Exception:  # pragma: no cover - optional dependency
+    dispatch_route = None  # type: ignore
+    ROUTE_INFO = None  # type: ignore
 
 from llm_backends import get_backend
 from protocols import AGENT_REGISTRY
