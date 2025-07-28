@@ -110,7 +110,9 @@ async def test_login_success(client):
     await register(client, "loginuser", "l@example.com")
     r = await login(client, "loginuser")
     assert r.status_code == 200
-    assert "access_token" in r.json()
+    data = r.json()
+    assert "access_token" in data
+    assert "universe_id" in data
 
 
 @pytest.mark.asyncio

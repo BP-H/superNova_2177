@@ -2,18 +2,17 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
+from frontend_bridge import register_route
 from hook_manager import HookManager
-from prediction_manager import PredictionManager
+from . import PredictionManager
 
-# Exposed hook manager so external modules can listen for prediction events
 ui_hook_manager = HookManager()
 
-# Global manager instance. Real application should configure this on startup.
 prediction_manager: Optional[PredictionManager] = None
 
 
 async def store_prediction_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Persist prediction data coming from the UI."""
+    """Persist prediction data from the UI and return its identifier."""
     if prediction_manager is None:
         raise RuntimeError("prediction_manager not configured")
 
@@ -24,18 +23,21 @@ async def store_prediction_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 async def get_prediction_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Return prediction record identified by ``prediction_id``."""
+    """Return minimal prediction info identified by ``prediction_id``."""
     if prediction_manager is None:
         raise RuntimeError("prediction_manager not configured")
 
     prediction_id = payload["prediction_id"]
     record = prediction_manager.get_prediction(prediction_id)
-    await ui_hook_manager.trigger("prediction_returned", record)
-    return record or {}
+    status = record.get("status") if record else None
+    await ui_hook_manager.trigger(
+        "prediction_returned", {"prediction_id": prediction_id, "status": status}
+    )
+    return {"prediction_id": prediction_id, "status": status}
 
 
 async def update_prediction_status_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Update prediction status based on UI request."""
+    """Update prediction status and emit minimal result."""
     if prediction_manager is None:
         raise RuntimeError("prediction_manager not configured")
 
@@ -46,7 +48,11 @@ async def update_prediction_status_ui(payload: Dict[str, Any]) -> Dict[str, Any]
         prediction_id, new_status, actual_outcome=outcome
     )
     await ui_hook_manager.trigger(
-        "prediction_status_updated",
-        {"prediction_id": prediction_id, "status": new_status},
+        "prediction_status_updated", {"prediction_id": prediction_id, "status": new_status}
     )
     return {"prediction_id": prediction_id, "status": new_status}
+
+
+register_route("store_prediction", store_prediction_ui)
+register_route("get_prediction", get_prediction_ui)
+register_route("update_prediction_status", update_prediction_status_ui)
