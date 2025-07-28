@@ -28,7 +28,7 @@ python setup_env.py
 # optional: launch the API immediately
 # python setup_env.py --run-app
 
-# optional: build the NiceGUI frontend
+# optional: build the Transcendental Resonance frontend
 # python setup_env.py --build-ui
 
 # Try demo mode
@@ -61,7 +61,7 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
    python setup_env.py
    # python setup_env.py --run-app    # launch API after install
    # python setup_env.py --locked     # install from requirements.lock
-   # python setup_env.py --build-ui   # build NiceGUI frontend assets
+    # python setup_env.py --build-ui   # build Transcendental Resonance frontend assets
    ```
   You can also let `install.py` choose the appropriate installer for your
   platform:

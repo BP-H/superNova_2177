@@ -12,4 +12,4 @@ pip install --upgrade pip
 pip install -r requirements.txt
 uvicorn superNova_2177:app --reload &
 sleep 2
-xdg-open http://localhost:8000/web_ui/index.html || open http://localhost:8000/web_ui/index.html
+xdg-open http://localhost:8080 || open http://localhost:8080
