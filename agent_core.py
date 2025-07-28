@@ -268,12 +268,7 @@ class RemixAgent:
                 },
             )
         elif ev == "MINT":
-            user = self.storage.get_user(event["user"])
-            karma = float(user.get("karma", "0")) if user else 0.0
-            if user and (
-                user.get("is_genesis")
-                or karma >= float(self.config.KARMA_MINT_THRESHOLD)
-            ):
+            if self.storage.get_user(event["user"]):
                 self.storage.set_coin(
                     event["coin_id"],
                     {"owner": event["user"], "value": event.get("value", "0")},
