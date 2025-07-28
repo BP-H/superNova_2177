@@ -7,7 +7,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /install
 COPY requirements.txt ./
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        libsnappy-dev \
+        libsdl2-dev \
+        libsdl2-image-dev \
+        libsdl2-mixer-dev \
+        libsdl2-ttf-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # Final stage
 FROM python:3.12-slim
