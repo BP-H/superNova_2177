@@ -253,6 +253,17 @@ module falls back to a development setup equivalent to:
 {"SECRET_KEY": "dev", "DATABASE_URL": "sqlite:///:memory:"}
 ```
 
+## 📊 Dashboard
+
+The dashboard provides real-time integrity metrics and network graphs built with `streamlit`, `networkx`, and `matplotlib`. Upload your validations JSON or enable demo mode to populate the table. You can edit rows inline before re-running the analysis to see how scores change.
+
+```bash
+streamlit run ui.py
+```
+
+Use the sidebar file uploader to select or update your dataset, then click **Run Analysis** to refresh the report.
+Missing packages such as `tqdm` are installed automatically when you run `one_click_install.py` so progress bars work without extra setup.
+
 ## 🌩️ Streamlit Cloud
 
 Deploy the demo UI online with Streamlit Cloud:
