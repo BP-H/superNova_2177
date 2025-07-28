@@ -5,6 +5,12 @@ from .agents.guardian_interceptor_agent import GuardianInterceptorAgent
 from .agents.meta_validator_agent import MetaValidatorAgent
 from .agents.observer_agent import ObserverAgent
 from .agents.collaborative_planner_agent import CollaborativePlannerAgent
+from .agents.CoordinationSentinelAgent import CoordinationSentinelAgent
+from .agents.HarmonySynthesizerAgent import HarmonySynthesizerAgent
+from .agents.TemporalAuditAgent import TemporalAuditAgent
+from .agents.cross_universe_bridge_agent import CrossUniverseBridgeAgent
+from .agents.anomaly_spotter_agent import AnomalySpotterAgent
+from .agents.quantum_resonance_agent import QuantumResonanceAgent
 
 # Mapping of agent names to metadata dictionaries
 AGENT_REGISTRY = {
@@ -32,5 +38,35 @@ AGENT_REGISTRY = {
         "cls": CollaborativePlannerAgent,
         "description": "Coordinates tasks and delegates to the best agent.",
         "llm_capable": False,
+    },
+    "CoordinationSentinelAgent": {
+        "cls": CoordinationSentinelAgent,
+        "description": "Detects suspicious validator coordination patterns.",
+        "llm_capable": False,
+    },
+    "HarmonySynthesizerAgent": {
+        "cls": HarmonySynthesizerAgent,
+        "description": "Transforms metrics into short MIDI snippets.",
+        "llm_capable": False,
+    },
+    "TemporalAuditAgent": {
+        "cls": TemporalAuditAgent,
+        "description": "Audits timestamps for suspicious gaps or disorder.",
+        "llm_capable": False,
+    },
+    "CrossUniverseBridgeAgent": {
+        "cls": CrossUniverseBridgeAgent,
+        "description": "Validates cross-universe remix provenance.",
+        "llm_capable": True,
+    },
+    "AnomalySpotterAgent": {
+        "cls": AnomalySpotterAgent,
+        "description": "Flags anomalies in metrics streams.",
+        "llm_capable": True,
+    },
+    "QuantumResonanceAgent": {
+        "cls": QuantumResonanceAgent,
+        "description": "Tracks resonance via quantum simulation.",
+        "llm_capable": True,
     },
 }
