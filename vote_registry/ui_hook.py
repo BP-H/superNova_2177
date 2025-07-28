@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from frontend_bridge import register_route
+from frontend_bridge import register_route_once
 from hook_manager import HookManager
 
 from . import record_vote as _record_vote, load_votes as _load_votes
@@ -26,5 +26,5 @@ async def load_votes_ui(_: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # Register with the frontend bridge
-register_route("record_vote", record_vote_ui)
-register_route("load_votes", load_votes_ui)
+register_route_once("record_vote", record_vote_ui)
+register_route_once("load_votes", load_votes_ui)

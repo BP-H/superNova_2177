@@ -358,7 +358,7 @@ After the build completes, you'll get a shareable URL to interact with the valid
 ## 🤝 UI Integration
 
 The `frontend_bridge` module exposes a lightweight router for the UI. Handlers
-register themselves with `register_route(name, func)` and are invoked through
+register themselves with `register_route_once(name, func)` and are invoked through
 `dispatch_route`.
 
 A convenient read-only route `"list_routes"` returns the currently available

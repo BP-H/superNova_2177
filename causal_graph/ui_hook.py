@@ -5,6 +5,7 @@ from typing import Any, Dict
 from sqlalchemy.orm import Session
 
 from hook_manager import HookManager
+from frontend_bridge import register_route_once
 from . import build_causal_graph
 try:  # pragma: no cover - optional dependency during tests
     from superNova_2177 import simulate_social_entanglement
@@ -38,3 +39,6 @@ async def simulate_entanglement_ui(payload: Dict[str, Any], db: Session, **__: A
     result = simulate_social_entanglement(db, user1, user2)
     await ui_hook_manager.trigger("entanglement_simulated", result)
     return result
+
+register_route_once("build_causal_graph", build_graph_ui)
+register_route_once("simulate_entanglement_causal", simulate_entanglement_ui)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from frontend_bridge import register_route
+from frontend_bridge import register_route_once
 from hook_manager import HookManager
 from validator_reputation_tracker import update_validator_reputations
 
@@ -18,6 +18,6 @@ async def update_reputations_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return minimal
 
 
-register_route("update_reputations", update_reputations_ui)
+register_route_once("update_reputations", update_reputations_ui)
 
 

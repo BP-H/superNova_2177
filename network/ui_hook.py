@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict
 
-from frontend_bridge import register_route
+from frontend_bridge import register_route_once
 from hook_manager import HookManager
 from hooks import events
 from protocols.core import JobQueueAgent
@@ -69,9 +69,9 @@ async def poll_coordination_analysis_ui(payload: Dict[str, Any]) -> Dict[str, An
 
 
 # Register with the central frontend router
-register_route("coordination_analysis", trigger_coordination_analysis_ui)
-register_route("queue_coordination_analysis", queue_coordination_analysis_ui)
-register_route("poll_coordination_analysis", poll_coordination_analysis_ui)
+register_route_once("coordination_analysis", trigger_coordination_analysis_ui)
+register_route_once("queue_coordination_analysis", queue_coordination_analysis_ui)
+register_route_once("poll_coordination_analysis", poll_coordination_analysis_ui)
 
 
 async def run_coordination_analysis(payload: Dict[str, Any]) -> Dict[str, Any]:

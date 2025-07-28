@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from frontend_bridge import register_route
+from frontend_bridge import register_route_once
 from hook_manager import HookManager
 from . import compute_diversity_score, certify_validations
 
@@ -34,5 +34,5 @@ async def certify_validations_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return minimal
 
 
-register_route("diversity_score", compute_diversity_ui)
-register_route("certify_validations", certify_validations_ui)
+register_route_once("diversity_score", compute_diversity_ui)
+register_route_once("certify_validations", certify_validations_ui)

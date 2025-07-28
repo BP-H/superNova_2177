@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from frontend_bridge import register_route
+from frontend_bridge import register_route_once
 from hook_manager import HookManager
 
 from . import load_entries, add_entry
@@ -32,6 +32,6 @@ async def add_entry_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # Register routes
-register_route("load_diary_entries", load_entries_ui)
-register_route("add_diary_entry", add_entry_ui)
+register_route_once("load_diary_entries", load_entries_ui)
+register_route_once("add_diary_entry", add_entry_ui)
 
