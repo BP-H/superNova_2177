@@ -18,7 +18,9 @@ queue_agent = JobQueueAgent()
 hook_manager = HookManager()
 
 
-async def trigger_coordination_analysis_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
+async def trigger_coordination_analysis_ui(
+    payload: Dict[str, Any], **_: Any
+) -> Dict[str, Any]:
     """Run coordination analysis from UI payload.
 
     Parameters

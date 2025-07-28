@@ -41,7 +41,10 @@ async def compute_reputation_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     await ui_hook_manager.trigger("reputation_analysis_run", minimal)
     return minimal
 
-async def update_reputations_ui(payload: Dict[str, Any], db) -> Dict[str, Any]:
+
+async def update_reputations_ui(
+    payload: Dict[str, Any], db, **_: Any
+) -> Dict[str, Any]:
     """Update validator reputations and emit an internal event."""
 
     validations = payload.get("validations", [])
