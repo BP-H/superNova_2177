@@ -1,9 +1,9 @@
 """Utility functions for communicating with the Transcendental Resonance backend."""
 
-from typing import Optional, Dict, Any
-
-import os
 import logging
+import os
+from typing import Any, Dict, Optional
+
 import httpx
 from nicegui import ui
 
@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 logger.propagate = False
 
 TOKEN: Optional[str] = None
+
 
 async def api_call(
     method: str,
@@ -36,38 +37,44 @@ async def api_call(
             ``None`` when a request fails.
     """
     url = f"{BACKEND_URL}{endpoint}"
-    default_headers = {'Content-Type': 'application/json'} if method != 'multipart' else {}
+    default_headers = (
+        {"Content-Type": "application/json"} if method != "multipart" else {}
+    )
     if headers:
         default_headers.update(headers)
     if TOKEN:
-        default_headers['Authorization'] = f'Bearer {TOKEN}'
+        default_headers["Authorization"] = f"Bearer {TOKEN}"
 
     try:
         async with httpx.AsyncClient() as client:
-            if method == 'GET':
+            if method == "GET":
                 response = await client.get(url, headers=default_headers, params=data)
-            elif method == 'POST':
+            elif method == "POST":
                 if files:
-                    response = await client.post(url, headers=default_headers, data=data, files=files)
+                    response = await client.post(
+                        url, headers=default_headers, data=data, files=files
+                    )
                 else:
-                    response = await client.post(url, headers=default_headers, json=data)
-            elif method == 'PUT':
+                    response = await client.post(
+                        url, headers=default_headers, json=data
+                    )
+            elif method == "PUT":
                 response = await client.put(url, headers=default_headers, json=data)
-            elif method == 'DELETE':
+            elif method == "DELETE":
                 response = await client.delete(url, headers=default_headers, json=data)
             else:
                 raise ValueError(f"Unsupported method: {method}")
             response.raise_for_status()
             return response.json() if response.text else None
     except httpx.RequestError as exc:
-        logger.error(
-            "API request failed: %s %s - %s", method, url, exc, exc_info=True
-        )
+        logger.error("API request failed: %s %s - %s", method, url, exc, exc_info=True)
         ui.notify("API request failed", color="negative")
         if return_error:
             return {
                 "error": str(exc),
-                "status_code": getattr(getattr(exc, "response", None), "status_code", None),
+                "status_code": getattr(
+                    getattr(exc, "response", None), "status_code", None
+                ),
             }
         return None
 
@@ -82,3 +89,25 @@ def clear_token() -> None:
     """Clear the stored access token."""
     global TOKEN
     TOKEN = None
+
+
+async def get_user(username: str) -> Optional[Dict[str, Any]]:
+    return await api_call("GET", f"/users/{username}")
+
+
+async def get_followers(username: str) -> Dict[str, Any]:
+    return await api_call("GET", f"/users/{username}/followers") or {
+        "count": 0,
+        "followers": [],
+    }
+
+
+async def get_following(username: str) -> Dict[str, Any]:
+    return await api_call("GET", f"/users/{username}/following") or {
+        "count": 0,
+        "following": [],
+    }
+
+
+async def toggle_follow(username: str) -> Optional[Dict[str, Any]]:
+    return await api_call("POST", f"/users/{username}/follow")

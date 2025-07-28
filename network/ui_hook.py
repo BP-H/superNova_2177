@@ -5,6 +5,7 @@ from typing import Any, Dict
 
 from frontend_bridge import register_route
 from hook_manager import HookManager
+from hooks import events
 from protocols.core import JobQueueAgent
 
 from .network_coordination_detector import analyze_coordination_patterns
@@ -18,7 +19,9 @@ queue_agent = JobQueueAgent()
 hook_manager = HookManager()
 
 
-async def trigger_coordination_analysis_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
+async def trigger_coordination_analysis_ui(
+    payload: Dict[str, Any], **_: Any
+) -> Dict[str, Any]:
     """Run coordination analysis from UI payload.
 
     Parameters
@@ -38,7 +41,7 @@ async def trigger_coordination_analysis_ui(payload: Dict[str, Any]) -> Dict[str,
         "graph": result.get("graph", {}),
     }
     # Emit event for observers
-    await ui_hook_manager.trigger("coordination_analysis_run", minimal)
+    await ui_hook_manager.trigger(events.COORDINATION_ANALYSIS_RUN, minimal)
     return minimal
 
 
@@ -89,7 +92,7 @@ async def run_coordination_analysis(payload: Dict[str, Any]) -> Dict[str, Any]:
     }
 
     try:
-        hook_manager.fire_hooks("network_analysis", minimal)
+        hook_manager.fire_hooks(events.NETWORK_ANALYSIS, minimal)
     except Exception:  # pragma: no cover - logging only
         logging.exception("Failed to fire network_analysis hook")
 

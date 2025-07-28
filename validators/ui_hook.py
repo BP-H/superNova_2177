@@ -5,6 +5,7 @@ from typing import Any, Dict
 
 from frontend_bridge import register_route
 from hook_manager import HookManager
+from hooks import events
 from validator_reputation_tracker import update_validator_reputations
 from diversity_analyzer import compute_diversity_score
 
@@ -38,10 +39,13 @@ async def compute_reputation_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
         "stats": result.get("stats", {}),
     }
 
-    await ui_hook_manager.trigger("reputation_analysis_run", minimal)
+    await ui_hook_manager.trigger(events.REPUTATION_ANALYSIS_RUN, minimal)
     return minimal
 
-async def update_reputations_ui(payload: Dict[str, Any], db) -> Dict[str, Any]:
+
+async def update_reputations_ui(
+    payload: Dict[str, Any], db, **_: Any
+) -> Dict[str, Any]:
     """Update validator reputations and emit an internal event."""
 
     validations = payload.get("validations", [])
@@ -53,6 +57,7 @@ async def update_reputations_ui(payload: Dict[str, Any], db) -> Dict[str, Any]:
     }
 
     try:
+        hook_manager.fire_hooks(events.VALIDATOR_REPUTATIONS, result)
         hook_manager.fire_hooks("reputations_updated", minimal)
     except Exception:  # pragma: no cover - logging only
         logging.exception("Failed to fire reputations_updated hook")
@@ -75,7 +80,32 @@ async def compute_diversity_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return minimal
 
 
+async def trigger_reputation_update_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Update reputations from UI payload and notify listeners.
+
+    Parameters
+    ----------
+    payload : dict
+        Dictionary containing ``"validations"`` list.
+
+    Returns
+    -------
+    dict
+        Summary with ``reputations`` and ``diversity``.
+    """
+    validations = payload.get("validations", [])
+    result = update_validator_reputations(validations)
+    summary = {
+        "reputations": result.get("reputations", {}),
+        "diversity": result.get("diversity", {}),
+    }
+
+    await ui_hook_manager.trigger("reputation_update_run", summary)
+    return summary
+
+
 # Register with the central frontend router
 register_route("reputation_analysis", compute_reputation_ui)
 register_route("update_validator_reputations", update_reputations_ui)
+register_route("reputation_update", trigger_reputation_update_ui)
 register_route("compute_diversity", compute_diversity_ui)

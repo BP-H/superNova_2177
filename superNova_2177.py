@@ -218,141 +218,88 @@ CosmicNexus orchestrates the multiverse, coordinating forks, entropy reduction, 
 """
 # Core Imports from all files
 try:
-    from config import Config as SystemConfig, get_emoji_weights
+    from config import Config as SystemConfig
+    from config import get_emoji_weights
+
     CONFIG = SystemConfig
 except ImportError:
+
     class TempConfig:
         METRICS_PORT = 8001
+
     CONFIG = TempConfig
-import sys
-import json
-import uuid
-import datetime
-import hashlib
-import threading
+import argparse
+import asyncio
 import base64
-import re
-import logging
-import time
+import cmd
+import copy
+import datetime
+import functools
+import hashlib
 import html
+import inspect
+import json
+import logging
+import math
 import os
 import queue
-import math
-import unittest
-import cmd
-import argparse
-import functools
-import inspect
-import copy
-import asyncio
-import traceback
+import random
+import re
 import signal
 import socket
+import sys
+import threading
+import time
+import traceback
+import unittest
+import uuid
+import weakref
+from collections import Counter, defaultdict, deque
+from contextlib import contextmanager
+from dataclasses import dataclass, field
+from datetime import timedelta
+from decimal import (ROUND_FLOOR, ROUND_HALF_UP, Decimal, InvalidOperation,
+                     getcontext, localcontext)
+from typing import (Any, Awaitable, Callable, Dict, List, Literal, Optional,
+                    TypedDict, Union)
+
 import immutable_tri_species_adjust
-import random
 import optimization_engine
 from agent_core import RemixAgent
 from annual_audit import annual_audit_task
 from self_improvement import self_improvement_task
-from collections import defaultdict, deque, Counter
-from decimal import (
-    Decimal,
-    getcontext,
-    InvalidOperation,
-    ROUND_HALF_UP,
-    ROUND_FLOOR,
-    localcontext,
-)
-from typing import (
-    Optional,
-    Dict,
-    List,
-    Any,
-    Callable,
-    Union,
-    TypedDict,
-    Literal,
-    Awaitable,
-)
-from contextlib import contextmanager
-from dataclasses import dataclass, field
-import weakref
-from datetime import timedelta
 
 # Web and DB Imports from FastAPI files
 USING_STUBS = False
 try:
-    from fastapi import (
-        FastAPI,
-        Depends,
-        HTTPException,
-        status,
-        Query,
-        Body,
-        UploadFile,
-        File,
-        BackgroundTasks,
-    )
-    from fastapi.responses import HTMLResponse, JSONResponse
-    from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+    from fastapi import (BackgroundTasks, Body, Depends, FastAPI, File,
+                         HTTPException, Query, UploadFile, status)
     from fastapi.middleware.cors import CORSMiddleware
-    from sqlalchemy import (
-        create_engine,
-        Column,
-        Integer,
-        String,
-        Text,
-        Boolean,
-        DateTime,
-        ForeignKey,
-        Table,
-        Float,
-        JSON,
-        func,
-    )
-    from sqlalchemy.orm import sessionmaker, relationship, Session, declarative_base
+    from fastapi.responses import HTMLResponse, JSONResponse
+    from fastapi.security import (OAuth2PasswordBearer,
+                                  OAuth2PasswordRequestForm)
+    from sqlalchemy import (JSON, Boolean, Column, DateTime, Float, ForeignKey,
+                            Integer, String, Table, Text, create_engine, func)
     from sqlalchemy.exc import IntegrityError
+    from sqlalchemy.orm import (Session, declarative_base, relationship,
+                                sessionmaker)
 except ImportError:  # pragma: no cover - fallback when deps are missing
     USING_STUBS = True
-    from stubs.fastapi_stub import (
-        FastAPI,
-        Depends,
-        HTTPException,
-        status,
-        Query,
-        Body,
-        UploadFile,
-        File,
-        BackgroundTasks,
-        HTMLResponse,
-        JSONResponse,
-        OAuth2PasswordBearer,
-        OAuth2PasswordRequestForm,
-        CORSMiddleware,
-    )
-    from stubs.sqlalchemy_stub import (
-        create_engine,
-        Column,
-        Integer,
-        String,
-        Text,
-        Boolean,
-        DateTime,
-        ForeignKey,
-        Table,
-        Float,
-        JSON,
-        func,
-        sessionmaker,
-        relationship,
-        Session,
-        declarative_base,
-        IntegrityError,
-    )
+    from stubs.fastapi_stub import (BackgroundTasks, Body, CORSMiddleware,
+                                    Depends, FastAPI, File, HTMLResponse,
+                                    HTTPException, JSONResponse,
+                                    OAuth2PasswordBearer,
+                                    OAuth2PasswordRequestForm, Query,
+                                    UploadFile, status)
+    from stubs.sqlalchemy_stub import (JSON, Boolean, Column, DateTime, Float,
+                                       ForeignKey, Integer, IntegrityError,
+                                       Session, String, Table, Text,
+                                       create_engine, declarative_base, func,
+                                       relationship, sessionmaker)
 try:
-    from pydantic import BaseModel, Field, EmailStr, ValidationError
+    from pydantic import BaseModel, EmailStr, Field, ValidationError
 except Exception:  # pragma: no cover - lightweight fallback
-    from stubs.pydantic_stub import BaseModel, Field, EmailStr, ValidationError
+    from stubs.pydantic_stub import BaseModel, EmailStr, Field, ValidationError
 try:
     from pydantic_settings import BaseSettings
 except Exception:  # pragma: no cover - lightweight fallback
@@ -361,8 +308,8 @@ try:
     import redis
 except ImportError:  # pragma: no cover - optional dependency
     redis = None
-from passlib.context import CryptContext
 from jose import JWTError, jwt
+from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -394,7 +341,9 @@ class Settings(BaseSettings):
     UPLOAD_FOLDER: str = "./uploads"
     REDIS_URL: str = "redis://localhost"
     DB_MODE: str = Field("local", env="DB_MODE")
-    UNIVERSE_ID: str = Field(default_factory=lambda: str(uuid.uuid4()), env="UNIVERSE_ID")
+    UNIVERSE_ID: str = Field(
+        default_factory=lambda: str(uuid.uuid4()), env="UNIVERSE_ID"
+    )
 
     @property
     def engine_url(self) -> str:
@@ -412,6 +361,7 @@ def get_settings() -> Settings:
     """Return cached application settings, generating defaults when needed."""
     return Settings()
 
+
 redis_client = None
 
 # Model for creative leap scoring is loaded lazily to conserve resources
@@ -422,6 +372,7 @@ def get_password_hash(password: str) -> str:
     if hasattr(pwd_context, "hash"):
         return pwd_context.hash(password)
     import hashlib
+
     return hashlib.sha256(password.encode()).hexdigest()
 
 
@@ -429,6 +380,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     if hasattr(pwd_context, "verify"):
         return pwd_context.verify(plain_password, hashed_password)
     import hashlib
+
     return hashlib.sha256(plain_password.encode()).hexdigest() == hashed_password
 
 
@@ -440,18 +392,17 @@ def create_access_token(data: Dict, expires_delta: Optional[timedelta] = None) -
         expire = datetime.datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     s = get_settings()
-    encoded_jwt = jwt.encode(
-        to_encode, s.SECRET_KEY, algorithm=s.ALGORITHM
-    )
+    encoded_jwt = jwt.encode(to_encode, s.SECRET_KEY, algorithm=s.ALGORITHM)
     return encoded_jwt
-
 
 
 # Scientific and Artistic Libraries from all files
 import importlib
 
 
-def _safe_import(module_name: str, alias: Optional[str] = None, attrs: Optional[list] = None) -> None:
+def _safe_import(
+    module_name: str, alias: Optional[str] = None, attrs: Optional[list] = None
+) -> None:
     """Import a module and expose it in globals, logging a warning on failure."""
     try:
         module = importlib.import_module(module_name)
@@ -501,7 +452,7 @@ _safe_import("snappy")  # For compression
 
 # Optional quantum toolkit for entanglement simulations
 try:
-    from qutip import basis, tensor, entropy_vn  # For qubit entanglement sims
+    from qutip import basis, entropy_vn, tensor  # For qubit entanglement sims
 except ImportError:
     logging.warning("qutip not installed; advanced quantum simulations are disabled.")
 
@@ -510,78 +461,51 @@ getcontext().prec = 50
 
 # FUSED: Additional imports from v01_grok15.py
 import secrets
+
 try:
     from dotenv import load_dotenv  # type: ignore
 except Exception:  # pragma: no cover - optional dependency
+
     def load_dotenv(*_a, **_k):
         return False
-import structlog
-import prometheus_client as prom
-from prometheus_client import REGISTRY
-from config import Config
-from scientific_metrics import (
-    calculate_influence_score,
-    calculate_interaction_entropy,
-    build_causal_graph,
-    query_influence,
-    predict_user_interactions,
-    generate_system_predictions,
-    design_validation_experiments,
-    analyze_prediction_accuracy,
-)
-from quantum_sim import QuantumContext
-from causal_graph import InfluenceGraph
+
+
 import types
-from scientific_utils import (
-    SCIENTIFIC_REGISTRY,
-    ScientificModel,
-    VerifiedScientificModel,
-    estimate_uncertainty,
-    safe_decimal,
-    calculate_genesis_bonus_decay,
-    generate_hypotheses,
-    refine_hypotheses_from_evidence,
-)
+
+import prometheus_client as prom
+import structlog
+from prometheus_client import REGISTRY
+
 import db_models
-from db_models import (
-    Base,
-    SessionLocal,
-    engine,
-    UniverseBranch,
-    BranchVote,
-    harmonizer_follows,
-    vibenode_likes,
-    group_members,
-    event_attendees,
-    vibenode_entanglements,
-    proposal_votes,
-    Harmonizer,
-    VibeNode,
-    CreativeGuild,
-    GuinnessClaim,
-    AIPersona,
-    Group,
-    Comment,
-    Event,
-    Proposal,
-    ProposalVote,
-    Notification,
-    Message,
-    SimulationLog,
-    LogEntry,
-    SystemState,
-    SymbolicToken,
-    TokenListing,
-    Coin,
-    MarketplaceListing,
-)
+from causal_graph import InfluenceGraph
+from config import Config
+from db_models import (AIPersona, Base, BranchVote, Coin, Comment,
+                       CreativeGuild, Event, Group, GuinnessClaim, Harmonizer,
+                       LogEntry, MarketplaceListing, Message, Notification,
+                       Proposal, ProposalVote, SessionLocal, SimulationLog,
+                       SymbolicToken, SystemState, TokenListing,
+                       UniverseBranch, VibeNode, engine, event_attendees,
+                       group_members, harmonizer_follows, proposal_votes,
+                       vibenode_entanglements, vibenode_likes)
 from governance_config import calculate_entropy_divergence, quantum_consensus
+from quantum_sim import QuantumContext
+from scientific_metrics import (analyze_prediction_accuracy,
+                                build_causal_graph, calculate_influence_score,
+                                calculate_interaction_entropy,
+                                design_validation_experiments,
+                                generate_system_predictions,
+                                predict_user_interactions, query_influence)
+from scientific_utils import (SCIENTIFIC_REGISTRY, ScientificModel,
+                              VerifiedScientificModel,
+                              calculate_genesis_bonus_decay,
+                              estimate_uncertainty, generate_hypotheses,
+                              refine_hypotheses_from_evidence, safe_decimal)
 
 # Database engine URL resolved at runtime
 DB_ENGINE_URL = None
+from hook_manager import HookManager
 from prediction_manager import PredictionManager
 from resonance_music import generate_midi_from_metrics
-from hook_manager import HookManager
 
 # Import system configuration early so metrics can be started with the proper
 # port value. Other modules follow the same pattern by exposing a ``CONFIG``
@@ -589,7 +513,9 @@ from hook_manager import HookManager
 # when Prometheus metrics are initialised below, leading to a ``NameError`` at
 # runtime on Streamlit Cloud.
 try:  # pragma: no cover - fallback only used if optional import fails
-    from config import Config as SystemConfig, get_emoji_weights
+    from config import Config as SystemConfig
+    from config import get_emoji_weights
+
     CONFIG = SystemConfig
 except Exception:  # pragma: no cover - extremely defensive
     CONFIG = types.SimpleNamespace(METRICS_PORT=8001)
@@ -647,6 +573,7 @@ def find_free_port() -> int:
         sock.bind(("", 0))
         return sock.getsockname()[1]
 
+
 # Prometheus metrics
 if "system_entropy" in REGISTRY._names_to_collectors:
     entropy_gauge = REGISTRY._names_to_collectors["system_entropy"]
@@ -679,7 +606,6 @@ if not _session_started and not metrics_started:
     if st:
         st.session_state["metrics_started"] = True
     metrics_started = True
-
 
 
 # Pydantic Schemas from FastAPI files
@@ -1005,8 +931,6 @@ class TokenData(BaseModel):
     username: Optional[str] = None
 
 
-
-
 # --- MODULE: services.py ---
 class SystemStateService:
     def __init__(self, db: Session):
@@ -1151,7 +1075,12 @@ def now_utc() -> datetime.datetime:
 
 def ts() -> str:
     """Return an ISO-8601 UTC timestamp."""
-    return now_utc().replace(tzinfo=datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+    return (
+        now_utc()
+        .replace(tzinfo=datetime.timezone.utc)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
 
 
 def sha(data: str) -> str:
@@ -1213,7 +1142,9 @@ class LogChain:
     def add(self, event: Dict[str, Any]) -> None:
         self.entries.append(event)
 
-    def replay_events(self, apply: Callable[[Dict[str, Any]], None], since: Any | None = None) -> None:
+    def replay_events(
+        self, apply: Callable[[Dict[str, Any]], None], since: Any | None = None
+    ) -> None:
         for event in self.entries:
             apply(event)
 
@@ -1407,9 +1338,7 @@ def calculate_content_entropy(db: Session) -> float:
     time_threshold = datetime.datetime.utcnow() - datetime.timedelta(
         hours=Config.CONTENT_ENTROPY_WINDOW_HOURS
     )
-    results = db.query(VibeNode).filter(
-        VibeNode.created_at >= time_threshold
-    ).all()
+    results = db.query(VibeNode).filter(VibeNode.created_at >= time_threshold).all()
     if results is None:
         return 0.0
 
@@ -1798,9 +1727,7 @@ class Config:
     ALLOWED_POLICY_KEYS: List[str] = field(
         default_factory=lambda: ["DAILY_DECAY", "KARMA_MINT_THRESHOLD"]
     )
-    SPECIES: List[str] = field(
-        default_factory=lambda: ["human", "ai", "company"]
-    )
+    SPECIES: List[str] = field(default_factory=lambda: ["human", "ai", "company"])
 
     # --- Meta-evaluation tuning ---
     # Minimum number of records required before bias analysis is considered
@@ -1822,7 +1749,9 @@ LATEST_SYSTEM_PREDICTIONS: Dict[str, Any] = {}
 class User:
     """Lightweight user model for in-memory operations."""
 
-    def __init__(self, username: str, is_genesis: bool, species: str, config: Config) -> None:
+    def __init__(
+        self, username: str, is_genesis: bool, species: str, config: Config
+    ) -> None:
         self.username = username
         self.is_genesis = is_genesis
         self.species = species
@@ -1868,7 +1797,12 @@ class User:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any], config: Config) -> "User":
-        obj = cls(data.get("username", ""), data.get("is_genesis", False), data.get("species", "human"), config)
+        obj = cls(
+            data.get("username", ""),
+            data.get("is_genesis", False),
+            data.get("species", "human"),
+            config,
+        )
         obj.root_coin_id = data.get("root_coin_id", "")
         obj.coins_owned = list(data.get("coins_owned", []))
         obj.karma = Decimal(str(data.get("karma", "0")))
@@ -2157,8 +2091,9 @@ class CosmicNexus:
             else:
                 logging.warning("Ignoring invalid config key %s", key)
         self.sub_universes[fork_id] = fork_agent
+        from hooks import events
         self.hooks.register_hook(
-            "cross_remix", lambda data: self.handle_cross_remix(data, fork_id)
+            events.CROSS_REMIX, lambda data: self.handle_cross_remix(data, fork_id)
         )
 
         # persist fork info for DAO governance
@@ -2315,7 +2250,9 @@ class CosmicNexus:
 class EntropyTracker(RemixAgent):
     """RemixAgent variant that monitors interaction entropy."""
 
-    def __init__(self, cosmic_nexus: "CosmicNexus", entropy_threshold: float, **kwargs: Any) -> None:
+    def __init__(
+        self, cosmic_nexus: "CosmicNexus", entropy_threshold: float, **kwargs: Any
+    ) -> None:
         super().__init__(cosmic_nexus=cosmic_nexus, **kwargs)
         self.entropy_threshold = entropy_threshold
         self.current_entropy = 0.0
@@ -2330,8 +2267,9 @@ class EntropyTracker(RemixAgent):
             info = calculate_interaction_entropy(user, db)
             self.current_entropy = float(info.get("value", 0.0))
             if self.current_entropy > self.entropy_threshold:
+                from hooks import events
                 self.cosmic_nexus.hooks.fire_hooks(
-                    "entropy_divergence",
+                    events.ENTROPY_DIVERGENCE,
                     {"universe": id(self), "entropy": self.current_entropy},
                 )
         finally:
@@ -2352,6 +2290,7 @@ app = FastAPI(
     version="1.0",
 )
 if not hasattr(app, "post"):
+
     def _stub(*_a, **_kw):
         return lambda f: f
 
@@ -2363,6 +2302,7 @@ if not hasattr(app, "post"):
 
 cosmic_nexus = None
 agent = None
+
 
 # --- MODULE: api.py ---
 # FastAPI application factory
@@ -2376,6 +2316,7 @@ def create_app() -> FastAPI:
         if not hasattr(redis_client, "get"):
             raise AttributeError
     except Exception:  # pragma: no cover - fallback for test stubs
+
         class DummyRedis:
             def get(self, *a, **k):
                 return None
@@ -2396,7 +2337,9 @@ def create_app() -> FastAPI:
         engine_url,
         connect_args={"check_same_thread": False} if "sqlite" in engine_url else {},
     )
-    db_models.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_models.engine)
+    db_models.SessionLocal = sessionmaker(
+        autocommit=False, autoflush=False, bind=db_models.engine
+    )
     engine = db_models.engine
     SessionLocal = db_models.SessionLocal
     os.makedirs(s.UPLOAD_FOLDER, exist_ok=True)
@@ -2423,6 +2366,7 @@ def create_app() -> FastAPI:
     )
 
     return app
+
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -2470,9 +2414,7 @@ def get_current_user(
 ):
     s = get_settings()
     try:
-        payload = jwt.decode(
-            token, s.SECRET_KEY, algorithms=[s.ALGORITHM]
-        )
+        payload = jwt.decode(token, s.SECRET_KEY, algorithms=[s.ALGORITHM])
         username = payload.get("sub")
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -2634,6 +2576,35 @@ def follow_unfollow_user(
         message = "Followed"
     db.commit()
     return {"message": message}
+
+
+# STRICTLY A SOCIAL MEDIA PLATFORM - follower counts are symbolic only.
+
+
+@app.get("/users/{username}", response_model=HarmonizerOut, tags=["Harmonizers"])
+def get_user_by_username(username: str, db: Session = Depends(get_db)):
+    user = db.query(Harmonizer).filter(Harmonizer.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Harmonizer not found")
+    return user
+
+
+@app.get("/users/{username}/followers", tags=["Harmonizers"])
+def get_user_followers(username: str, db: Session = Depends(get_db)):
+    user = db.query(Harmonizer).filter(Harmonizer.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Harmonizer not found")
+    followers = [u.username for u in user.followers]
+    return {"count": len(followers), "followers": followers}
+
+
+@app.get("/users/{username}/following", tags=["Harmonizers"])
+def get_user_following(username: str, db: Session = Depends(get_db)):
+    user = db.query(Harmonizer).filter(Harmonizer.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Harmonizer not found")
+    following = [u.username for u in user.following]
+    return {"count": len(following), "following": following}
 
 
 @app.post(
@@ -3573,6 +3544,8 @@ async def adaptive_optimization_task(db_session_factory):
                 db.close()
             except Exception:
                 pass
+
+
 async def startup_event():
     loop = asyncio.get_event_loop()
     loop.create_task(passive_aura_resonance_task(SessionLocal))
@@ -3635,6 +3608,7 @@ class TranscendentalCLI(cmd.Cmd):
 
     # Add all other do_ methods, making it comprehensive with 50+ commands.
 
+
 # --- MODULE: deployment.py ---
 # Example Dockerfile
 # FROM python:3.12-slim
@@ -3668,7 +3642,6 @@ class TranscendentalCLI(cmd.Cmd):
 # Set environment variables for DATABASE_URL, REDIS_URL, SECRET_KEY, AI_API_KEY,
 # and ALLOWED_ORIGINS before running the containers. Ensure these values match
 # your production infrastructure.
-
 
 
 # --- MODULE: storage.py ---
@@ -4011,10 +3984,12 @@ if "pytest" in sys.modules and agent is None:
 
 # --- MODULE: hook_manager.py ---
 
+
 def _is_streamlit_context() -> bool:
     """Return True when executed via ``streamlit run``."""
     try:
         import streamlit.runtime.scriptrunner as stc  # type: ignore
+
         return stc.get_script_run_ctx() is not None
     except Exception:
         return False
@@ -4031,6 +4006,7 @@ def _run_boot_debug() -> None:
         st.subheader("Config Test")
         try:
             from config import Config
+
             st.success("Config import succeeded")
             st.write({"METRICS_PORT": Config.METRICS_PORT})
         except Exception as exc:  # pragma: no cover - debug only
@@ -4056,9 +4032,9 @@ def _run_boot_debug() -> None:
 
 
 if __name__ == "__main__":
-    import sys
     import argparse
     import os
+    import sys
 
     debug_boot = os.getenv("DEBUG_BOOT_UI")
     if debug_boot:
@@ -4066,7 +4042,13 @@ if __name__ == "__main__":
         sys.exit(0)
 
     parser = argparse.ArgumentParser(description="Launch superNova_2177")
-    parser.add_argument("command", nargs="?", default="run", choices=["run", "test", "cli"], help="Execution mode")
+    parser.add_argument(
+        "command",
+        nargs="?",
+        default="run",
+        choices=["run", "test", "cli"],
+        help="Execution mode",
+    )
     parser.add_argument("--db-mode", choices=["central", "local"], dest="db_mode")
     args = parser.parse_args()
 
