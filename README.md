@@ -242,12 +242,16 @@ The application will be available at [http://localhost:8000](http://localhost:80
 
 ## 🎛️ Local Streamlit UI
 
-To experiment with the validation analyzer locally, launch the Streamlit frontend:
+To experiment with the validation analyzer locally, first build the NiceGUI
+frontend found in `transcendental_resonance_frontend/` and launch the Streamlit
+dashboard:
 
 ```bash
-streamlit run ui.py
+python setup_env.py --build-ui --launch-ui
 ```
-Or run `make ui` from the repository root to start the demo.
+This command compiles the UI assets and starts the app on
+[http://localhost:8888](http://localhost:8888).
+You can still run `make ui` from the repository root to launch the demo only.
 `ui.py` replaces the previous `app.py` script and is now the canonical entry
 point for the Streamlit interface.  Common UI patterns like alerts, theme
 switching and layout containers live in `streamlit_helpers.py`:
@@ -264,7 +268,7 @@ directly as that bypasses Streamlit's runtime.
 Exporting plots as static images requires the `kaleido` package. Install it
 using `pip install -r requirements.txt` if it isn't already available.
 
-Open [http://localhost:8501](http://localhost:8501) in your browser to interact with the demo. Use the **Reset to Demo** button below the editor to reload `sample_validations.json` at any time.
+Open [http://localhost:8888](http://localhost:8888) in your browser to interact with the demo. Use the **Reset to Demo** button below the editor to reload `sample_validations.json` at any time.
 
 `ui.py` reads configuration from `st.secrets` when running under Streamlit. If
 the secrets dictionary is unavailable (such as during local development), the
