@@ -25,7 +25,7 @@ async def test_coordination_analysis_via_router():
         ]
     }
 
-    result = await dispatch_route("coordination_analysis", payload)
+    result = await dispatch_route("coordination_analysis", payload, db=object())
 
     assert "overall_risk_score" in result  # nosec B101
     assert "graph" in result  # nosec B101
