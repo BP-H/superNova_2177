@@ -14,6 +14,12 @@ def register_route(name: str, func: Handler) -> None:
     ROUTES[name] = func
 
 
+def register_route_once(name: str, func: Handler) -> None:
+    """Register ``func`` under ``name`` only if it isn't already set."""
+    if name not in ROUTES:
+        register_route(name, func)
+
+
 async def dispatch_route(
     name: str, payload: Dict[str, Any], **kwargs: Any
 ) -> Dict[str, Any]:
@@ -70,9 +76,9 @@ from predictions.ui_hook import (
 from optimization.ui_hook import tune_parameters_ui
 from quantum_sim.ui_hook import simulate_entanglement_ui
 
-register_route("store_prediction", store_prediction_ui)
-register_route("get_prediction", get_prediction_ui)
-register_route("update_prediction_status", update_prediction_status_ui)
+register_route_once("store_prediction", store_prediction_ui)
+register_route_once("get_prediction", get_prediction_ui)
+register_route_once("update_prediction_status", update_prediction_status_ui)
 
 # Protocol agent management routes
 from protocols.api_bridge import (
@@ -87,8 +93,19 @@ register_route("step_agents", step_agents_api)
 # Temporal analysis route
 from temporal.ui_hook import analyze_temporal_ui
 
-register_route("temporal_consistency", analyze_temporal_ui)
+register_route_once("temporal_consistency", analyze_temporal_ui)
 
 # Optimization-related route
 register_route("tune_parameters", tune_parameters_ui)
 register_route("simulate_entanglement", simulate_entanglement_ui)
+
+# Universe UI routes
+from ui_hooks.universe_ui import (
+    get_universe_overview,
+    list_available_proposals,
+    submit_universe_proposal,
+)
+
+register_route("get_universe_overview", get_universe_overview)
+register_route("list_available_proposals", list_available_proposals)
+register_route("submit_universe_proposal", submit_universe_proposal)
