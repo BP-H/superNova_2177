@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 
 import os
-from pathlib import Path
+import math
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
@@ -34,11 +34,67 @@ from network.network_coordination_detector import build_validation_graph
 from validation_integrity_pipeline import analyze_validation_integrity
 
 
-def summarize_text(text: str, max_len: int = 150) -> str:
-    """Basic text summarizer placeholder."""
-    if len(text) <= max_len:
-        return text
-    return text[: max_len - 3] + "..."
+def summarize_text(text: str, word_limit: int = 40) -> str:
+    """Return the first ``word_limit`` words of ``text`` with ellipsis if needed."""
+    words = text.split()
+    if len(words) <= word_limit:
+        return text.strip()
+    return " ".join(words[:word_limit]) + "..."
+
+
+def text_entropy(text: str) -> float:
+    """Compute a simple Shannon entropy based on word frequencies."""
+    words = text.split()
+    total = len(words)
+    if total == 0:
+        return 0.0
+    counts = {}
+    for w in words:
+        counts[w] = counts.get(w, 0) + 1
+    entropy = 0.0
+    for count in counts.values():
+        p = count / total
+        entropy -= p * (0 if p == 0 else math.log2(p))
+    return entropy
+
+
+def parse_rfcs():
+    """Parse RFC markdown files and return a list of info dicts."""
+    results = []
+    for path in Path("rfcs").rglob("*.md"):
+        if path.name == "TEMPLATE.md":
+            continue
+        text = path.read_text(encoding="utf-8")
+        lines = text.splitlines()
+        title = ""
+        paragraph_lines = []
+        got_title = False
+        for line in lines:
+            if not got_title and line.startswith("#"):
+                title = line.lstrip("#").strip()
+                got_title = True
+                continue
+            if got_title:
+                if line.strip() == "":
+                    if paragraph_lines:
+                        break
+                    continue
+                if line.startswith("#"):
+                    break
+                paragraph_lines.append(line.strip())
+        paragraph = " ".join(paragraph_lines)
+        summary = summarize_text(paragraph)
+        entropy = text_entropy(text)
+        results.append(
+            {
+                "title": title,
+                "path": path,
+                "summary": summary,
+                "entropy": entropy,
+            }
+        )
+    return results
+
 
 try:
     from validation_certifier import Config as VCConfig
@@ -53,15 +109,20 @@ except Exception:  # pragma: no cover - optional debug dependencies
     Config = None  # type: ignore
 
 if Config is None:
+
     class Config:
         METRICS_PORT = 1234
 
+
 if VCConfig is None:
+
     class VCConfig:
         HIGH_RISK_THRESHOLD = 0.7
         MEDIUM_RISK_THRESHOLD = 0.4
 
+
 if HarmonyScanner is None:
+
     class HarmonyScanner:
         def __init__(self, *_a, **_k):
             pass
@@ -279,7 +340,9 @@ def main() -> None:
         st.header("Environment")
         st.write(f"Database URL: {database_url or 'not set'}")
         st.write(f"ENV: {os.getenv('ENV', 'dev')}")
-        st.write(f"Session start: {datetime.utcnow().isoformat(timespec='seconds')} UTC")
+        st.write(
+            f"Session start: {datetime.utcnow().isoformat(timespec='seconds')} UTC"
+        )
 
         if secret_key:
             st.success("Secret key loaded")
@@ -299,9 +362,7 @@ def main() -> None:
         )
         run_clicked = st.button("Run Analysis")
 
-        st.markdown(
-            f"**Runs this session:** {st.session_state['run_count']}"
-        )
+        st.markdown(f"**Runs this session:** {st.session_state['run_count']}")
         if st.button("Clear Memory"):
             st.session_state["diary"] = []
         if st.button("Export Report"):
@@ -328,9 +389,7 @@ def main() -> None:
             except FileNotFoundError:
                 st.warning("Demo file not found, using default dataset.")
                 data = {
-                    "validations": [
-                        {"validator": "A", "target": "B", "score": 0.9}
-                    ]
+                    "validations": [{"validator": "A", "target": "B", "score": 0.9}]
                 }
             st.session_state["validations_json"] = json.dumps(data, indent=2)
         elif uploaded_file is not None:
@@ -376,32 +435,16 @@ def main() -> None:
         )
 
     st.subheader("RFCs and Agent Insights")
-    with st.expander("Proposed RFCs", expanded=False):
-        rfc_dir = Path("rfcs")
-        for path in sorted(rfc_dir.glob("rfc-*.md")):
-            text = path.read_text()
-            summary = ""
-            if "## Summary" in text:
-                part = text.split("## Summary", 1)[1]
-                summary_lines = []
-                for line in part.splitlines()[1:]:
-                    if line.startswith("##"):
-                        break
-                    if line.strip():
-                        summary_lines.append(line.strip())
-                summary = " ".join(summary_lines)
-            st.markdown(f"### {path.stem}")
-            st.write(summarize_text(summary))
-            st.markdown(f"[Read RFC]({path.as_posix()})")
+    with st.expander("RFCs and Agent Insights", expanded=False):
+        for rfc in parse_rfcs():
+            st.markdown(f"### [{rfc['title']}]({rfc['path'].as_posix()})")
+            st.write(rfc["summary"])
+            st.write(f"Entropy: {rfc['entropy']:.2f}")
 
-    notes_path = Path("AgentNotes.md")
-    if notes_path.exists():
-        notes_content = notes_path.read_text()
-    else:
-        notes_content = "No notes found."
-
-    with st.expander("Agent’s Internal Thoughts"):
-        st.markdown(notes_content)
+        notes_path = Path("AgentNotes.md")
+        if notes_path.exists():
+            st.markdown("---")
+            st.markdown(notes_path.read_text())
 
 
 if __name__ == "__main__":
