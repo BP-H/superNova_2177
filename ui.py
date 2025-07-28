@@ -4,7 +4,6 @@ import json
 import logging
 import math
 import os
-import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -187,13 +186,15 @@ def run_analysis(validations, *, layout: str = "force"):
             G.add_edge(v1, v2, weight=w)
 
         # Offer GraphML download of the constructed graph
+        gm_buf = io.BytesIO()
         try:
-            with tempfile.NamedTemporaryFile(suffix=".graphml") as tmp:
-                nx.write_graphml(G, tmp.name)
-                tmp.seek(0)
-                st.download_button(
-                    "Download GraphML", tmp.read(), file_name="graph.graphml"
-                )
+            nx.write_graphml(G, gm_buf)
+            gm_buf.seek(0)
+            st.download_button(
+                "Download GraphML",
+                gm_buf.getvalue(),
+                file_name="graph.graphml",
+            )
         except Exception as exc:  # pragma: no cover - optional
             logger.warning(f"GraphML export failed: {exc}")
 
@@ -277,18 +278,6 @@ def run_analysis(validations, *, layout: str = "force"):
                 )
             except Exception as exc:  # pragma: no cover - optional
                 logger.warning(f"Image export failed: {exc}")
-
-            gm_buf = io.BytesIO()
-            try:
-                nx.write_graphml(G, gm_buf)
-                gm_buf.seek(0)
-                st.download_button(
-                    "Download GraphML",
-                    gm_buf.getvalue(),
-                    file_name="graph.graphml",
-                )
-            except Exception as exc:  # pragma: no cover - optional
-                logger.warning(f"GraphML export failed: {exc}")
         elif Network is not None:
             net = Network(height="450px", width="100%")
             max_rep = max(reputations.values()) if reputations else 1.0
