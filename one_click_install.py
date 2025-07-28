@@ -9,12 +9,30 @@ import hashlib
 
 try:
     from tqdm import tqdm
-except ImportError:  # pragma: no cover - only triggered in rare cases
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "tqdm"])
+except Exception:  # pragma: no cover - optional dependency
+    subprocess.run([sys.executable, "-m", "pip", "install", "tqdm"], check=True)
     from tqdm import tqdm
 
 OFFLINE_DIR = "offline_deps"
 ENV_DIR = "venv"
+
+
+def run_cmd(cmd: list[str]) -> None:
+    """Run *cmd* with logging."""
+    print(f"$ {' '.join(cmd)}")
+    subprocess.run(cmd, check=True)
+
+
+def remove_temp_files() -> None:
+    """Delete known leftover files if they exist."""
+    for name in ["graph.html"]:
+        try:
+            os.remove(name)
+            print(f"Removed stale file {name}")
+        except FileNotFoundError:
+            continue
+        except Exception as exc:  # pragma: no cover - ignore cleanup issues
+            print(f"Could not remove {name}: {exc}")
 
 # Known SHA-256 checksums for bundled Python installers
 # These values are used to verify downloads before execution.
@@ -65,7 +83,9 @@ def ensure_python312() -> str:
         path = shutil.which(exe)
         if path:
             try:
-                out = subprocess.check_output([path, "--version"], text=True)
+                out = subprocess.run(
+                    [path, "--version"], capture_output=True, text=True, check=True
+                ).stdout
             except Exception:
                 continue
             if out.startswith("Python 3.12"):
@@ -75,25 +95,29 @@ def ensure_python312() -> str:
     if system == "Windows":
         installer = os.path.join(tmp, "python312.exe")
         download("https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe", installer)
-        subprocess.check_call([installer, "/quiet", "InstallAllUsers=1", "PrependPath=1"])
+        run_cmd([installer, "/quiet", "InstallAllUsers=1", "PrependPath=1"])
         os.remove(installer)
     elif system == "Darwin":
         pkg = os.path.join(tmp, "python312.pkg")
         download("https://www.python.org/ftp/python/3.12.0/python-3.12.0-macos11.pkg", pkg)
-        subprocess.check_call(["sudo", "installer", "-pkg", pkg, "-target", "/"])
+        run_cmd(["sudo", "installer", "-pkg", pkg, "-target", "/"])
         os.remove(pkg)
     else:
         if shutil.which("apt-get"):
-            subprocess.check_call(["sudo", "apt-get", "update"])
-            subprocess.check_call(["sudo", "apt-get", "install", "-y", "python3.12", "python3.12-venv"])
+            run_cmd(["sudo", "apt-get", "update"])
+            run_cmd(["sudo", "apt-get", "install", "-y", "python3.12", "python3.12-venv"])
         else:
             tarball = os.path.join(tmp, "Python-3.12.0.tgz")
             download("https://www.python.org/ftp/python/3.12.0/Python-3.12.0.tgz", tarball)
             build_dir = os.path.join(tmp, "python-build")
             os.makedirs(build_dir, exist_ok=True)
-            subprocess.check_call(["tar", "xf", tarball, "-C", build_dir])
+            run_cmd(["tar", "xf", tarball, "-C", build_dir])
             src = os.path.join(build_dir, "Python-3.12.0")
-            subprocess.check_call(["bash", "-c", f"cd {src} && ./configure --prefix=/usr/local && make -j$(nproc) && sudo make install"])
+            run_cmd([
+                "bash",
+                "-c",
+                f"cd {src} && ./configure --prefix=/usr/local && make -j$(nproc) && sudo make install",
+            ])
     path = shutil.which("python3.12")
     if path:
         return path
@@ -103,31 +127,42 @@ def ensure_python312() -> str:
 def bundle_dependencies(python: str) -> None:
     if not os.path.isdir(OFFLINE_DIR):
         print("Downloading dependencies for offline use...")
-        subprocess.check_call([python, "-m", "pip", "download", "-r", "requirements.txt", "-d", OFFLINE_DIR])
-        subprocess.check_call([python, "-m", "pip", "download", ".", "-d", OFFLINE_DIR])
+        run_cmd([python, "-m", "pip", "download", "-r", "requirements.txt", "-d", OFFLINE_DIR])
+        run_cmd([python, "-m", "pip", "download", ".", "-d", OFFLINE_DIR])
 
 
 def setup_environment(python: str) -> None:
     if not os.path.isdir(ENV_DIR):
-        subprocess.check_call([python, "-m", "venv", ENV_DIR])
+        run_cmd([python, "-m", "venv", ENV_DIR])
     pip = os.path.join(ENV_DIR, "Scripts" if os.name == "nt" else "bin", "pip")
-    subprocess.check_call([pip, "install", "--no-index", "--find-links", OFFLINE_DIR, "--upgrade", "pip"])
-    subprocess.check_call([pip, "install", "--no-index", "--find-links", OFFLINE_DIR, "-r", "requirements.txt"])
-    subprocess.check_call([pip, "install", "--no-index", "--find-links", OFFLINE_DIR, "-e", "."])
+    run_cmd([pip, "install", "--no-index", "--find-links", OFFLINE_DIR, "--upgrade", "pip"])
+    run_cmd([pip, "install", "--no-index", "--find-links", OFFLINE_DIR, "-r", "requirements.txt"])
+    run_cmd([pip, "install", "--no-index", "--find-links", OFFLINE_DIR, "-e", "."])
     if os.path.isfile(".env.example") and not os.path.isfile(".env"):
         shutil.copy(".env.example", ".env")
         print("Copied .env.example to .env")
 
 
 def main() -> None:
-    python = ensure_python312()
-    bundle_dependencies(python)
-    setup_environment(python)
+    print("\n## superNova_2177 One Click Installer")
+    remove_temp_files()
+    try:
+        print("### Ensuring Python 3.12...")
+        python = ensure_python312()
+        print(f"Using interpreter: {python}")
+        print("### Bundling dependencies...")
+        bundle_dependencies(python)
+        print("### Setting up virtual environment...")
+        setup_environment(python)
+    except Exception as exc:
+        print(f"❌ Installation failed: {exc}")
+        sys.exit(1)
+
     if os.name == "nt":
         activate = f"{ENV_DIR}\\Scripts\\activate"
     else:
         activate = f"source {ENV_DIR}/bin/activate"
-    print("Installation complete. Activate the environment with '\"%s\"'" % activate)
+    print(f"✅ Installation complete. Activate the environment with '{activate}'")
 
 
 if __name__ == "__main__":

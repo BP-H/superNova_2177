@@ -11,7 +11,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
-from streamlit_helpers import alert
+from streamlit_helpers import alert, header
 
 try:
     import plotly.graph_objects as go
@@ -301,11 +301,24 @@ def run_analysis(validations, *, layout: str = "force"):
                         net.add_node(node, label=node, size=size, color=color)
                 net.add_edge(u, v, value=w)
             st.subheader("Validator Coordination Graph")
+            try:
+                os.remove("graph.html")
+            except FileNotFoundError:
+                pass
+            except Exception as exc:
+                logger.warning(f"Old graph removal failed: {exc}")
             net.show("graph.html")
-            with open("graph.html") as f:
-                html_data = f.read()
-            os.remove("graph.html")
-            st.components.v1.html(html_data, height=500)
+            try:
+                with open("graph.html") as f:
+                    html_data = f.read()
+                st.components.v1.html(html_data, height=500)
+            finally:
+                try:
+                    os.remove("graph.html")
+                except FileNotFoundError:
+                    pass
+                except Exception as exc:
+                    logger.warning(f"Graph cleanup failed: {exc}")
         else:
             weights = [G[u][v]["weight"] * 3 for u, v in G.edges()]
             node_sizes = [300 + (reputations.get(n, 0) * 600) for n in G.nodes()]
@@ -334,8 +347,7 @@ def run_analysis(validations, *, layout: str = "force"):
 
 def boot_diagnostic_ui():
     """Render a simple diagnostics UI used during boot."""
-    st.set_page_config(page_title="Boot Diagnostic", layout="centered")
-    st.header("Boot Diagnostic")
+    header("Boot Diagnostic", layout="centered")
 
     st.subheader("Config Test")
     if Config is not None:
@@ -364,7 +376,7 @@ def boot_diagnostic_ui():
 
 def main() -> None:
     """Main entry point for the validation analysis UI."""
-    st.set_page_config(page_title="superNova_2177 Demo")
+    header("superNova_2177 Validation Analyzer", layout="wide")
 
     ts_placeholder = st.empty()
     if "session_start_ts" not in st.session_state:
@@ -398,7 +410,6 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
-    st.title("superNova_2177 Validation Analyzer")
     st.markdown(
         "Upload a JSON file with a `validations` array, paste JSON below, "
         "or enable demo mode to see the pipeline in action."
