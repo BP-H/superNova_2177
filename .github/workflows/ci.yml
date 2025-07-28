@@ -24,8 +24,6 @@ jobs:
       - name: Install dependencies with fallback mirror
         run: |
           python -m pip install --upgrade pip
-          # Ensure Streamlit is present for smoke tests
-          pip install streamlit
           if pip install -r requirements-minimal.txt -r requirements-dev.txt --index-url=https://pypi.org/simple; then
             echo "[INFO] Pip install succeeded using https://pypi.org/simple"
           else
