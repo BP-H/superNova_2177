@@ -19,7 +19,7 @@ from decimal import Decimal
 from types import SimpleNamespace
 from typing import Any, Dict, TYPE_CHECKING
 from virtual_diary import load_entries
-from config import get_emoji_weights
+from config import Config, get_emoji_weights
 
 if TYPE_CHECKING:
     from superNova_2177 import (
@@ -886,7 +886,7 @@ class RemixAgent:
             entries = load_entries(limit=20)
         except Exception:  # pragma: no cover - external deps
             logging.exception("Failed to load diary entries")
-            return []
+            entries = []
 
         fail_count = 0
         contradictions = 0
@@ -908,6 +908,15 @@ class RemixAgent:
             suggestions.append("multiple failures detected: revision recommended")
         if contradictions:
             suggestions.append("contradictory actions detected: review logic")
+        if not suggestions and not entries:
+            suggestions.append("no diary entries found")
+
+        if suggestions:
+            try:
+                Config.ENTROPY_MULTIPLIER += 0.01
+            except Exception:  # pragma: no cover - defensive
+                logging.exception("Failed to update ENTROPY_MULTIPLIER")
+
         return suggestions
 
 
