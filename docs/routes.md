@@ -42,6 +42,7 @@ backend handler.
 |`queue_full_audit`|Queue a full introspection audit job.|
 |`poll_full_audit`|Poll the status of an introspection audit.|
 |`explain_audit`|Create a textual explanation for an audit trace.|
+|`follow_user`|Follow or unfollow a user. Payload: `{"username": "<target>"}`|
 
 These routes are provided for research purposes only. STRICTLY A SOCIAL MEDIA PLATFORM.
 They incorporate Intellectual Property & Artistic Inspiration protections
