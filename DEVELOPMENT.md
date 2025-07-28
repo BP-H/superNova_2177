@@ -24,6 +24,20 @@ Tests are written with `pytest`. After installing dependencies you can run:
 pytest
 ```
 
+If you want the tests to use the real authentication libraries instead of
+the lightweight stubs provided in `tests/conftest.py`, install the
+optional packages first:
+
+```bash
+pip install redis passlib[bcrypt] python-jose[cryptography]
+```
+
+You can also install both requirement files to match the CI environment:
+
+```bash
+pip install -r requirements-minimal.txt -r requirements-dev.txt
+```
+
 The GitHub Actions workflows (`.github/workflows/ci.yml` and `pr-tests.yml`) run these commands automatically whenever you push or open a pull request.
 
 ## Pre-commit Hooks
