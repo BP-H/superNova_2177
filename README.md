@@ -260,6 +260,11 @@ docker-compose up
 
 The application will be available at [http://localhost:8000](http://localhost:8000).
 
+## Authentication
+
+Register first using `POST /users/register` then obtain a token with `POST /login`.
+The login route returns a JWT and a freshly initialized `universe_id` for your account.
+
 ## 🎛️ Local Streamlit UI
 
 To experiment with the validation analyzer locally, first build the NiceGUI
