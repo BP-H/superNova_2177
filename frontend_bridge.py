@@ -73,5 +73,10 @@ register_route("store_prediction", store_prediction_ui)
 register_route("get_prediction", get_prediction_ui)
 register_route("update_prediction_status", update_prediction_status_ui)
 
+# Temporal analysis route
+from temporal.ui_hook import analyze_temporal_ui
+
+register_route("temporal_consistency", analyze_temporal_ui)
+
 # Optimization-related route
 register_route("tune_parameters", tune_parameters_ui)
