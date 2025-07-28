@@ -10,8 +10,9 @@ fi
 cd superNova_2177
 pip install -r requirements.txt
 FRONTEND_DIR=transcendental_resonance_frontend
+# Legacy fallback for older clones
 if [ ! -d "$FRONTEND_DIR" ] && [ -d web_ui ]; then
-    echo "Warning: 'web_ui' has been renamed to 'transcendental_resonance_frontend'" >&2
+    echo "Using legacy 'web_ui' directory (deprecated)" >&2
     FRONTEND_DIR=web_ui
 fi
 if [ -d "$FRONTEND_DIR" ]; then
