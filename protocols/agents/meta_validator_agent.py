@@ -11,8 +11,10 @@ repair plans or other text analyses when provided.
 import random
 import time
 import uuid
+from typing import Callable
 
 from protocols.core.internal_protocol import InternalAgentProtocol
+from llm_backends import dummy_backend
 
 
 class MetaValidatorAgent(InternalAgentProtocol):
@@ -20,17 +22,23 @@ class MetaValidatorAgent(InternalAgentProtocol):
 
     Parameters
     ----------
-    trust_registry : dict
-        Mutable mapping of agent names to trust scores.
+    trust_registry : dict, optional
+        Mutable mapping of agent names to trust scores. Defaults to an empty
+        dictionary when omitted.
     llm_backend : callable, optional
-        Optional function used to generate repair plans or analyses.
+        Optional function used to generate repair plans or analyses. Defaults to
+        :func:`llm_backends.dummy_backend`.
     """
 
-    def __init__(self, trust_registry: dict, llm_backend=None):
+    def __init__(
+        self,
+        trust_registry: dict | None = None,
+        llm_backend: Callable[[str], str] | None = None,
+    ) -> None:
         super().__init__()
         self.name = "MetaValidator"
-        self.trust_registry = trust_registry  # {agent_name: float}
-        self.llm_backend = llm_backend
+        self.trust_registry = trust_registry or {}  # {agent_name: float}
+        self.llm_backend = llm_backend or dummy_backend
         self.receive("EVALUATE_PATCH", self.evaluate_patch)
         self.receive("LLM_RESPONSE", self.intercept_llm)
         self.receive("AGENT_REPORT", self.audit_agent_behavior)
@@ -103,21 +111,12 @@ class MetaValidatorAgent(InternalAgentProtocol):
         broken_patch = payload.get("patch")
         issue = payload.get("issue", "unknown")
 
-        if self.llm_backend:
-            prompt = (
-                "Generate a brief repair plan for" f" issue '{issue}':\n{broken_patch}"
-            )
-            plan_text = self.llm_backend(prompt)
-            plan = [plan_text]
-            estimate = "unknown"
-        else:
-            plan = [
-                f"Scan patch for unsafe functions related to '{issue}'",
-                "Apply CI sandbox test",
-                "Run hallucination detector on response trace",
-                "Propose 2-step retry patch with comment logging",
-            ]
-            estimate = "<2min"
+        prompt = (
+            "Generate a brief repair plan for" f" issue '{issue}':\n{broken_patch}"
+        )
+        plan_text = self.llm_backend(prompt)
+        plan = [plan_text]
+        estimate = "unknown"
         return {"repair_plan": plan, "estimated_fix_time": estimate}
 
 

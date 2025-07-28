@@ -11,9 +11,11 @@ analysis of observed results.
 import logging
 import time
 from collections import defaultdict, deque
+from typing import Callable
 
 from protocols.core.internal_protocol import InternalAgentProtocol
 from protocols.utils.forking import fork_agent
+from llm_backends import dummy_backend
 
 logger = logging.getLogger("ObserverAgent")
 
@@ -30,16 +32,24 @@ class ObserverAgent(InternalAgentProtocol):
     fatigue_tracker : object
         Tracker providing ``task_count`` and ``fatigue_score`` methods.
     llm_backend : callable, optional
-        Optional backend for future LLM-based observations.
+        Optional backend for future LLM-based observations. Defaults to
+        :func:`llm_backends.dummy_backend`.
     """
 
-    def __init__(self, hub, agent_registry, fatigue_tracker, llm_backend=None):
+    def __init__(
+        self,
+        hub,
+        agent_registry,
+        fatigue_tracker,
+        llm_backend: Callable[[str], str] | None = None,
+    ) -> None:
         super().__init__()
         self.name = "Observer"
         self.hub = hub
         self.registry = agent_registry
         self.fatigue_tracker = fatigue_tracker
-        self.llm_backend = llm_backend
+        # fall back to dummy backend when none supplied
+        self.llm_backend = llm_backend or dummy_backend
         self.task_history = defaultdict(deque)  # agent_id -> deque of (task, result)
         self.max_history = 20
         self.subscribed = False
@@ -59,11 +69,8 @@ class ObserverAgent(InternalAgentProtocol):
         task = payload.get("task")
         result = payload.get("result", {})
 
-        if self.llm_backend:
-            prompt = (
-                f"Analyze agent {agent_id} result for task '{task}': {result}"
-            )
-            self.llm_backend(prompt)
+        prompt = f"Analyze agent {agent_id} result for task '{task}': {result}"
+        self.llm_backend(prompt)
 
         self.task_history[agent_id].append((task, result))
         if len(self.task_history[agent_id]) > self.max_history:

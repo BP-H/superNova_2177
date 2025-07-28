@@ -16,8 +16,10 @@ Components:
 """
 
 import logging
+from typing import Callable
 
 from protocols.core.internal_protocol import InternalAgentProtocol
+from llm_backends import dummy_backend
 
 logger = logging.getLogger("CI_PR_PROTECTOR")
 
@@ -29,14 +31,14 @@ class CI_PRProtectorAgent(InternalAgentProtocol):
     ----------
     llm_backend : callable, optional
         Optional override used for all LLM requests. When omitted,
-        ``talk_to_llm_fn`` is used instead.
+        :func:`llm_backends.dummy_backend` is used instead.
     """
 
-    def __init__(self, llm_backend=None):
+    def __init__(self, llm_backend: Callable[[str], str] | None = None) -> None:
         super().__init__()
         self.name = "CI_PRProtector"
-        self.talk_to_llm = talk_to_llm_fn  # default function to call LLM
-        self.llm_backend = llm_backend
+        # use dummy backend when none provided
+        self.llm_backend = llm_backend or dummy_backend
         self.receive("CI_FAILURE", self.handle_ci_failure)
         self.receive("PR_DIFF_FAIL", self.handle_pr_error)
 
@@ -47,10 +49,7 @@ class CI_PRProtectorAgent(InternalAgentProtocol):
         logger.info(f"CI failure detected on {repo}:{branch}")
 
         prompt = self.construct_prompt(logs, context_type="CI")
-        if self.llm_backend:
-            llm_response = self.llm_backend(prompt)
-        else:
-            llm_response = self.talk_to_llm(prompt)
+        llm_response = self.llm_backend(prompt)
         patch = self.extract_code_block(llm_response)
         return {"proposed_patch": patch, "explanation": llm_response}
 
@@ -60,10 +59,7 @@ class CI_PRProtectorAgent(InternalAgentProtocol):
         logger.info(f"Review failure on PR: {error_msg}")
 
         prompt = self.construct_prompt(pr_diff + "\n" + error_msg, context_type="PR")
-        if self.llm_backend:
-            llm_response = self.llm_backend(prompt)
-        else:
-            llm_response = self.talk_to_llm(prompt)
+        llm_response = self.llm_backend(prompt)
         patch = self.extract_code_block(llm_response)
         return {"patch": patch, "justification": llm_response}
 

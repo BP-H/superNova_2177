@@ -12,7 +12,7 @@ The agent can optionally leverage an ``llm_backend`` callable for deeper text
 analysis when inspecting or proposing fixes.
 """
 
-from typing import Dict, List
+from typing import Callable, Dict, List
 import uuid
 import time  # retained for potential future hooks
 
@@ -39,10 +39,11 @@ class GuardianInterceptorAgent(InternalAgentProtocol):
     Parameters
     ----------
     llm_backend : callable, optional
-        Optional function used to perform advanced analysis of suggestions.
+        Optional function used to perform advanced analysis of suggestions. If
+        omitted, built-in heuristics operate without LLM assistance.
     """
 
-    def __init__(self, llm_backend=None) -> None:
+    def __init__(self, llm_backend: Callable[[str], str] | None = None) -> None:
         super().__init__()
         self.name = "GuardianInterceptor"
         self.llm_backend = llm_backend
