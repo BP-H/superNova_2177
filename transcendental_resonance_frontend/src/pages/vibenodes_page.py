@@ -33,14 +33,30 @@ async def vibenodes_page():
         tags = ui.input('Tags (comma-separated)').classes('w-full mb-2')
         parent_id = ui.input('Parent VibeNode ID (optional)').classes('w-full mb-2')
 
+        uploaded_media = {'url': None, 'type': None}
+
+        async def handle_upload(content, name):
+            files = {'file': (name, content.read(), 'multipart/form-data')}
+            resp = await api_call('POST', '/upload/', files=files)
+            if resp:
+                uploaded_media['url'] = resp.get('media_url')
+                uploaded_media['type'] = resp.get('media_type')
+                ui.notify('Media uploaded', color='positive')
+                if uploaded_media['type'] and uploaded_media['type'].startswith('image'):
+                    ui.image(uploaded_media['url']).classes('w-full mb-2')
+
+        ui.upload(on_upload=lambda e: handle_upload(e.content, e.name)).classes('w-full mb-2')
+
         async def create_vibenode():
             data = {
                 'name': name.value,
                 'description': description.value,
-                'media_type': media_type.value,
+                'media_type': uploaded_media.get('type') or media_type.value,
                 'tags': [t.strip() for t in tags.value.split(',')] if tags.value else None,
                 'parent_vibenode_id': int(parent_id.value) if parent_id.value else None,
             }
+            if uploaded_media.get('url'):
+                data['media_url'] = uploaded_media['url']
             resp = await api_call('POST', '/vibenodes/', data)
             if resp:
                 ui.notify('VibeNode created!', color='positive')
@@ -72,6 +88,14 @@ async def vibenodes_page():
                     with ui.card().classes('w-full mb-2').style('border: 1px solid #333; background: #1e1e1e;'):
                         ui.label(vn['name']).classes('text-lg')
                         ui.label(vn['description']).classes('text-sm')
+                        if vn.get('media_url'):
+                            mtype = vn.get('media_type', '')
+                            if mtype.startswith('image'):
+                                ui.image(vn['media_url']).classes('w-full')
+                            elif mtype.startswith('video'):
+                                ui.video(vn['media_url']).classes('w-full')
+                            elif mtype.startswith('audio') or mtype.startswith('music'):
+                                ui.audio(vn['media_url']).classes('w-full')
                         ui.label(f"Likes: {vn.get('likes_count', 0)}").classes('text-sm')
                         async def like_fn(vn_id=vn['id']):
                             await api_call('POST', f'/vibenodes/{vn_id}/like')
