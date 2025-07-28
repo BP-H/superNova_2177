@@ -299,17 +299,28 @@ After the build completes, you'll get a shareable URL to interact with the valid
 
 ## 🧪 Running Tests
 
-Install the testing requirements first using `requirements-dev.txt`:
+Before invoking `pre-commit` or `pytest`, install the minimal testing
+dependencies:
+
+```bash
+pip install -r requirements-minimal.txt
+```
+
+This ensures `pytest-asyncio` is available so that asynchronous test
+fixtures work correctly.
+
+You can then add the full development tools by installing
+`requirements-dev.txt`:
 
 ```bash
 pip install -r requirements-dev.txt
 pytest
 ```
 
-This file includes `pytest` and all libraries required for development.
-For a lightweight setup you can instead install the reduced set from
-`requirements-minimal.txt` or use `requirements.txt`/`requirements.lock`
-for the full environment.
+`requirements-dev.txt` includes `pytest` and all libraries required for
+development. For a lightweight setup you can instead install only the
+packages from `requirements-minimal.txt` or use
+`requirements.txt`/`requirements.lock` for the complete environment.
 
 Before running the tests, install the packages from `requirements.txt` (or the expanded minimal file) if you want the real dependencies. Otherwise, the built-in stubs will activate automatically. Use the setup script with locked versions or `pip` directly:
 
@@ -330,7 +341,8 @@ pip install -r requirements-minimal.txt
 `pydantic-settings`, `python-multipart`, `structlog`,
 `prometheus-client` and the core scientific packages (`numpy`,
 `python-dateutil`, `sqlalchemy`, `networkx`, `pytest-asyncio`, `httpx`,
-`email-validator`). With these installed, running `pytest` should
+`email-validator`). `pytest-asyncio` enables the async fixtures used
+throughout the test suite. With these installed, running `pytest` should
 succeed (`99 passed`).
 
 > **Important**
