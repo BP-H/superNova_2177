@@ -20,6 +20,13 @@ THEMES: Dict[str, Dict[str, str]] = {
         "text": "#000000",
         "gradient": "linear-gradient(135deg, #ffffff 0%, #f3f3f3 100%)",
     },
+    "modern": {
+        "primary": "#6200EE",
+        "accent": "#03DAC5",
+        "background": "#f5f5f5",
+        "text": "#333333",
+        "gradient": "linear-gradient(135deg, #6200EE 0%, #03DAC5 100%)",
+    },
 }
 
 # Currently active theme name and accent color. They can be changed at runtime
@@ -54,8 +61,11 @@ def apply_global_styles() -> None:
 
     ui.add_head_html(
         f"""
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
         <style id="global-theme">
-            body {{ background: {theme['background']}; color: {theme['text']}; }}
+            body {{ font-family: 'Inter', sans-serif; background: {theme['background']}; color: {theme['text']}; }}
             .q-btn:hover {{ border: 1px solid {theme['accent']}; }}
             .futuristic-gradient {{ background: {theme['gradient']}; }}
         </style>
