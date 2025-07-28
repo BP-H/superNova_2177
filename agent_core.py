@@ -840,7 +840,8 @@ class RemixAgent:
                     proposal["status"] = "closed"
                 self.storage.set_proposal(proposal["proposal_id"], proposal)
                 logging.info(
-                    f"Processed proposal {proposal['proposal_id']} to status {proposal['status']} with threshold {dynamic_threshold}"
+                    f"Processed proposal {proposal['proposal_id']} "
+                    f"to status {proposal['status']} with threshold {dynamic_threshold}"
                 )
 
 
