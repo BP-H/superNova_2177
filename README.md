@@ -24,6 +24,8 @@ A modular intelligence pipeline that evaluates hypotheses through evidence-based
 ```bash
 # create the virtual environment and install dependencies
 python setup_env.py
+# or install dependencies manually
+pip install -r requirements.txt
 
 # optional: launch the API immediately
 # python setup_env.py --run-app
@@ -298,6 +300,15 @@ streamlit run ui.py
 Use the sidebar file uploader to select or update your dataset, then click **Run Analysis** to refresh the report.
 Missing packages such as `tqdm` are installed automatically when you run `one_click_install.py` so progress bars work without extra setup.
 
+### Troubleshooting the UI
+
+- **Missing dependencies**: If the interface fails with `ModuleNotFoundError`, run
+  `pip install -r requirements.txt` to ensure all packages are available.
+- **Port already in use**: Pass `--server.port` to Streamlit or set the
+  `STREAMLIT_SERVER_PORT` environment variable to use a different port.
+- **Browser does not open**: Navigate manually to
+  [http://localhost:8888](http://localhost:8888) or the port you selected.
+
 ## 🌩️ Streamlit Cloud
 
 Deploy the demo UI online with Streamlit Cloud:
@@ -382,6 +393,15 @@ pip install -r requirements-minimal.txt -r requirements-dev.txt
 ```
 
 Run `pytest` after installing the packages to validate your setup.
+
+You can also run static type checks with `mypy`:
+
+```bash
+pytest
+mypy .
+```
+
+The provided `Makefile` exposes `make test` and `make lint` wrappers for these commands.
 
 ### Makefile Commands
 
