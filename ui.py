@@ -470,6 +470,9 @@ def main() -> None:
         st.subheader("Agent Playground")
         agent_names = list(AGENT_REGISTRY.keys())
         agent_choice = st.selectbox("Agent", agent_names)
+        agent_desc = AGENT_REGISTRY.get(agent_choice, {}).get("description")
+        if agent_desc:
+            st.caption(agent_desc)
         backend_choice = st.selectbox(
             "LLM Backend",
             ["dummy", "GPT-4o", "Claude-3", "Gemini"],
@@ -554,6 +557,10 @@ def main() -> None:
             alert(f"Invalid payload: {exc}", "error")
         else:
             backend_fn = get_backend(backend_choice.lower(), api_key or None)
+            if backend_fn is None:
+                alert("Invalid backend selected", "error")
+                st.session_state["agent_output"] = None
+                st.stop()
             agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get("cls")
             if agent_cls is None:
                 alert("Unknown agent selected", "error")
