@@ -10,17 +10,10 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
-from streamlit_helpers import alert, header
+from streamlit_helpers import alert, header, get_plotly, get_pyvis
 
-try:
-    import plotly.graph_objects as go
-except Exception:  # pragma: no cover - optional dependency
-    go = None
-
-try:
-    from pyvis.network import Network
-except Exception:  # pragma: no cover - optional dependency
-    Network = None
+go = get_plotly()
+Network = get_pyvis()
 
 from network.network_coordination_detector import build_validation_graph
 from validation_integrity_pipeline import analyze_validation_integrity
