@@ -6,6 +6,7 @@ from frontend_bridge import register_route
 from hook_manager import HookManager
 
 from .reputation_influence_tracker import compute_validator_reputations
+from validator_reputation_tracker import update_validator_reputations
 
 # Exposed hook manager for observers
 ui_hook_manager = HookManager()
@@ -37,5 +38,31 @@ async def compute_reputation_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return minimal
 
 
+async def trigger_reputation_update_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Update validator reputations from validation payload.
+
+    Parameters
+    ----------
+    payload : dict
+        Input dictionary containing ``"validations"``.
+
+    Returns
+    -------
+    dict
+        Minimal result with ``reputations`` and ``diversity`` summary.
+    """
+    validations = payload.get("validations", [])
+
+    result = update_validator_reputations(validations)
+    minimal = {
+        "reputations": result.get("reputations", {}),
+        "diversity": result.get("diversity", {}),
+    }
+
+    await ui_hook_manager.trigger("reputation_update_run", minimal)
+    return minimal
+
+
 # Register with the central frontend router
 register_route("reputation_analysis", compute_reputation_ui)
+register_route("reputation_update", trigger_reputation_update_ui)
