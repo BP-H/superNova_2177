@@ -6,6 +6,7 @@ from nicegui import ui
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
 from .login_page import login_page
+from utils.layout import header
 
 
 @ui.page('/network')
@@ -14,7 +15,7 @@ async def network_page():
     if not TOKEN:
         ui.open(login_page)
         return
-
+    header()
     THEME = get_theme()
     with ui.column().classes('w-full p-4').style(
         f'background: {THEME["gradient"]}; color: {THEME["text"]};'

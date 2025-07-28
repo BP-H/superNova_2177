@@ -17,6 +17,7 @@ from .events_page import events_page
 from .proposals_page import proposals_page
 from .notifications_page import notifications_page
 from .messages_page import messages_page
+from utils.layout import header
 
 
 @ui.page('/profile')
@@ -33,7 +34,7 @@ async def profile_page():
         return
 
     score_data = api_call('GET', '/users/me/influence-score') or {}
-
+    header()
     THEME = get_theme()
     with ui.column().classes('w-full p-4').style(
         f'background: {THEME["gradient"]}; color: {THEME["text"]};'
