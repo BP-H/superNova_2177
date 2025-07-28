@@ -42,7 +42,8 @@ dependencies = [
     "torch",
     "scikit-learn",
     "streamlit",
-    "asyncpg"
+    "asyncpg",
+    "email-validator"
 ]
 
 [project.scripts]
