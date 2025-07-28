@@ -4,6 +4,10 @@
 CI_PRProtectorAgent: Sentient CI/PR guardian that intercepts failures,
 communicates with LLMs to resolve issues, and offers validated patches.
 
+Agents may be configured with an optional ``llm_backend`` callable used for
+all LLM interactions, enabling custom model integration during testing or
+deployment.
+
 Components:
 - hooks into GitHub PRs and CI pipelines (via webhook or CLI wrapper)
 - sends error context to LLM (like GPT or Claude)
@@ -23,12 +27,22 @@ logger = logging.getLogger("CI_PR_PROTECTOR")
 
 
 class CI_PRProtectorAgent(InternalAgentProtocol):
-    """Suggests fixes for failing CI runs or PR diffs."""
+    """Suggests fixes for failing CI runs or PR diffs.
 
-    def __init__(self, talk_to_llm_fn):
+    Parameters
+    ----------
+    talk_to_llm_fn : callable
+        Default function used to query the LLM when ``llm_backend`` is not
+        provided.
+    llm_backend : callable, optional
+        Optional override used for all LLM requests.
+    """
+
+    def __init__(self, talk_to_llm_fn, llm_backend=None):
         super().__init__()
         self.name = "CI_PRProtector"
         self.talk_to_llm = talk_to_llm_fn  # Function to call LLM
+        self.llm_backend = llm_backend
         self.receive("CI_FAILURE", self.handle_ci_failure)
         self.receive("PR_DIFF_FAIL", self.handle_pr_error)
 
@@ -39,7 +53,10 @@ class CI_PRProtectorAgent(InternalAgentProtocol):
         logger.info(f"CI failure detected on {repo}:{branch}")
 
         prompt = self.construct_prompt(logs, context_type="CI")
-        llm_response = self.talk_to_llm(prompt)
+        if self.llm_backend:
+            llm_response = self.llm_backend(prompt)
+        else:
+            llm_response = self.talk_to_llm(prompt)
         patch = self.extract_code_block(llm_response)
         return {"proposed_patch": patch, "explanation": llm_response}
 
@@ -49,7 +66,10 @@ class CI_PRProtectorAgent(InternalAgentProtocol):
         logger.info(f"Review failure on PR: {error_msg}")
 
         prompt = self.construct_prompt(pr_diff + "\n" + error_msg, context_type="PR")
-        llm_response = self.talk_to_llm(prompt)
+        if self.llm_backend:
+            llm_response = self.llm_backend(prompt)
+        else:
+            llm_response = self.talk_to_llm(prompt)
         patch = self.extract_code_block(llm_response)
         return {"patch": patch, "justification": llm_response}
 

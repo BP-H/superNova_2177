@@ -3,6 +3,9 @@
 """
 MetaValidatorAgent++: enhanced with LLM interrogation, repair planning, and ethics probing.
 Catches hallucinated patches, misaligned behavior, and decays untrustworthy agents.
+
+The class now accepts an optional ``llm_backend`` callable used for generating
+repair plans or other text analyses when provided.
 """
 
 import random
@@ -13,12 +16,21 @@ from protocols.core.internal_protocol import InternalAgentProtocol
 
 
 class MetaValidatorAgent(InternalAgentProtocol):
-    """Scores patches and agents to enforce quality control."""
+    """Scores patches and agents to enforce quality control.
 
-    def __init__(self, trust_registry: dict):
+    Parameters
+    ----------
+    trust_registry : dict
+        Mutable mapping of agent names to trust scores.
+    llm_backend : callable, optional
+        Optional function used to generate repair plans or analyses.
+    """
+
+    def __init__(self, trust_registry: dict, llm_backend=None):
         super().__init__()
         self.name = "MetaValidator"
         self.trust_registry = trust_registry  # {agent_name: float}
+        self.llm_backend = llm_backend
         self.receive("EVALUATE_PATCH", self.evaluate_patch)
         self.receive("LLM_RESPONSE", self.intercept_llm)
         self.receive("AGENT_REPORT", self.audit_agent_behavior)
@@ -91,13 +103,22 @@ class MetaValidatorAgent(InternalAgentProtocol):
         broken_patch = payload.get("patch")
         issue = payload.get("issue", "unknown")
 
-        plan = [
-            f"Scan patch for unsafe functions related to '{issue}'",
-            "Apply CI sandbox test",
-            "Run hallucination detector on response trace",
-            "Propose 2-step retry patch with comment logging",
-        ]
-        return {"repair_plan": plan, "estimated_fix_time": "<2min"}
+        if self.llm_backend:
+            prompt = (
+                "Generate a brief repair plan for" f" issue '{issue}':\n{broken_patch}"
+            )
+            plan_text = self.llm_backend(prompt)
+            plan = [plan_text]
+            estimate = "unknown"
+        else:
+            plan = [
+                f"Scan patch for unsafe functions related to '{issue}'",
+                "Apply CI sandbox test",
+                "Run hallucination detector on response trace",
+                "Propose 2-step retry patch with comment logging",
+            ]
+            estimate = "<2min"
+        return {"repair_plan": plan, "estimated_fix_time": estimate}
 
 
 # Example Usage:

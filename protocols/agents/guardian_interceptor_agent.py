@@ -7,6 +7,9 @@ listens for LLM-suggested code edits, evaluates them for risk, and proposes safe
 alternatives.  The agent retains the original logic but is organized for easier
 extension.  Hooks are provided for integration with other validators like the
 ``MetaValidatorAgent`` or ``PatchReviewer``.
+
+The agent can optionally leverage an ``llm_backend`` callable for deeper text
+analysis when inspecting or proposing fixes.
 """
 
 from typing import Dict, List
@@ -31,11 +34,18 @@ RISK_PATTERNS = {
 
 
 class GuardianInterceptorAgent(InternalAgentProtocol):
-    """Intercepts LLM suggestions and guards CI/CD integrity."""
+    """Intercepts LLM suggestions and guards CI/CD integrity.
 
-    def __init__(self) -> None:
+    Parameters
+    ----------
+    llm_backend : callable, optional
+        Optional function used to perform advanced analysis of suggestions.
+    """
+
+    def __init__(self, llm_backend=None) -> None:
         super().__init__()
         self.name = "GuardianInterceptor"
+        self.llm_backend = llm_backend
         self.receive("LLM_INCOMING", self.inspect_suggestion)
         self.receive("REQUEST_PATCH_PROPOSAL", self.propose_fix)
         # TODO: integrate with MetaValidatorAgent for second-opinion audits
@@ -49,6 +59,9 @@ class GuardianInterceptorAgent(InternalAgentProtocol):
         suggestion = payload.get("content", "")
         llm_id = payload.get("llm_id", str(uuid.uuid4()))
 
+        if self.llm_backend:
+            suggestion = self.llm_backend(suggestion)
+
         red_flags = self._detect_risks(suggestion)
         judgment = self._build_judgment(llm_id, suggestion, red_flags)
 
@@ -61,11 +74,17 @@ class GuardianInterceptorAgent(InternalAgentProtocol):
         issue = payload.get("issue", "Unclear bug")
         context = payload.get("context", "")
 
-        fix_code = (
-            f"# Auto-generated patch to address: {issue}\n"
-            'print("[Fix applied]")\n'
-            f"# Context: {context[:60]}"
-        )
+        if self.llm_backend:
+            prompt = (
+                "Provide a safe patch for the following issue:" f" {issue}\n{context}"
+            )
+            fix_code = self.llm_backend(prompt)
+        else:
+            fix_code = (
+                f"# Auto-generated patch to address: {issue}\n"
+                'print("[Fix applied]")\n'
+                f"# Context: {context[:60]}"
+            )
 
         # TODO: Send to PatchReviewer agent before applying automatically
         return {
