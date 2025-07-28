@@ -188,6 +188,11 @@ class Select:
 
         return self.filter(pred)
 
+    def where(self, *predicates):
+        for predicate in predicates:
+            self.filter(predicate)
+        return self
+
 def create_engine(*args, **kwargs):
     return Engine(*args, **kwargs)
 
