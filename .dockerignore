@@ -30,7 +30,6 @@ docker-compose.yml
 .idea/
 
 # Auxiliary directories not required at runtime
-transcendental-resonance-frontend/
 transcendental_resonance_frontend/
 demos/
 scripts/

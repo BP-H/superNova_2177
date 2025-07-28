@@ -9,7 +9,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      PYTHONPATH: ${{ github.workspace }}/transcendental-resonance-frontend/src
+      PYTHONPATH: ${{ github.workspace }}/transcendental_resonance_frontend/src
     steps:
       - uses: actions/checkout@v4
         with:
