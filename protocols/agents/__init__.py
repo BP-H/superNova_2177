@@ -1,26 +1,36 @@
-# Aggregated agent imports for easy access
-from .coordination_sentinel_agent import CoordinationSentinelAgent
-from .harmony_synthesizer_agent import HarmonySynthesizerAgent
-from .temporal_audit_agent import TemporalAuditAgent
-from .anomaly_spotter_agent import AnomalySpotterAgent
-from .ci_pr_protector_agent import CI_PRProtectorAgent
-from .collaborative_planner_agent import CollaborativePlannerAgent
-from .cross_universe_bridge_agent import CrossUniverseBridgeAgent
-from .guardian_interceptor_agent import GuardianInterceptorAgent
-from .meta_validator_agent import MetaValidatorAgent
-from .observer_agent import ObserverAgent
-from .quantum_resonance_agent import QuantumResonanceAgent
+"""Convenience imports for all protocol agents.
 
-__all__ = [
-    "CoordinationSentinelAgent",
-    "HarmonySynthesizerAgent",
-    "TemporalAuditAgent",
-    "AnomalySpotterAgent",
-    "CI_PRProtectorAgent",
-    "CollaborativePlannerAgent",
-    "CrossUniverseBridgeAgent",
-    "GuardianInterceptorAgent",
-    "MetaValidatorAgent",
-    "ObserverAgent",
-    "QuantumResonanceAgent",
-]
+This package dynamically discovers agent classes defined in modules within the
+``protocols.agents`` package. Each discovered class is imported into the module
+namespace so that users can simply do ``from protocols.agents import FooAgent``.
+
+Any file inside this directory that defines a class ending with ``"Agent"`` and
+deriving from :class:`protocols.core.internal_protocol.InternalAgentProtocol`
+will be automatically imported.
+"""
+
+from __future__ import annotations
+
+import importlib
+import inspect
+import pkgutil
+from typing import List
+
+from protocols.core.internal_protocol import InternalAgentProtocol
+
+__all__: List[str] = []
+
+for _, module_name, is_pkg in pkgutil.iter_modules(__path__):
+    if is_pkg or module_name.startswith("_"):
+        continue
+    module = importlib.import_module(f"{__name__}.{module_name}")
+    for name, obj in inspect.getmembers(module, inspect.isclass):
+        if (
+            name.endswith("Agent")
+            and issubclass(obj, InternalAgentProtocol)
+            and obj is not InternalAgentProtocol
+        ):
+            globals()[name] = obj
+            __all__.append(name)
+
+__all__.sort()
