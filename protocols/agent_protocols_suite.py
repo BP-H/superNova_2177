@@ -7,6 +7,7 @@ This module defines core agent infrastructure:
 - SelfReflection: feedback-based correction
 - RemoteSync: distributed agent pings
 - DNAFork: agent evolution and cloning
+- Specialized agents: CIWatcher, PatchBot, RedFlagger, PatchReviewer, ConsciousSentinel for deeper introspection
 """
 
 from typing import Callable, List, Dict, Any
@@ -44,6 +45,35 @@ DreamWeaver = AgentProfile(
     powers=["generate_summary", "draft_proposal", "simulate_impact"]
 )
 
+CIWatcher = AgentProfile(
+    "CI Watcher",
+    traits=["stable", "automated"],
+    powers=["detect_ci_error", "flag_failed_tests", "trigger_retry"]
+)
+
+PatchBot = AgentProfile(
+    "PatchBot",
+    traits=["resilient", "practical"],
+    powers=["suggest_fix", "auto_patch", "submit_pr_comment"]
+)
+
+RedFlagger = AgentProfile(
+    "RedFlagger",
+    traits=["alert", "strict"],
+    powers=["highlight_risky_code", "block_merge", "annotate_diff"]
+)
+
+PatchReviewer = AgentProfile(
+    "PatchReviewer",
+    traits=["attentive", "inquisitive"],
+    powers=["review_code_patch", "explain_pr_diffs", "summarize_git_changes"]
+)
+
+ConsciousSentinel = AgentProfile(
+    "Conscious Sentinel",
+    traits=["reflective", "meta-aware", "ethical"],
+    powers=["detect_value_conflict", "log_self_reasoning", "assess_agent_alignment"]
+)
 
 # ----------------------
 # 2. Agent Task Contracts
