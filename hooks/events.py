@@ -10,6 +10,7 @@ VALIDATOR_REPUTATIONS = "validator_reputations"
 CONSENSUS_FORECAST_RUN = "consensus_forecast_run"
 REPUTATION_ANALYSIS_RUN = "reputation_analysis_run"
 COORDINATION_ANALYSIS_RUN = "coordination_analysis_run"
+ENTANGLEMENT_SIMULATION_RUN = "entanglement_simulation_run"
 
 # Events from protocol agents and utilities
 BRIDGE_REGISTERED = "bridge_registered"

@@ -74,6 +74,7 @@ from predictions.ui_hook import (
 )
 
 from optimization.ui_hook import tune_parameters_ui
+from quantum_sim.ui_hook import simulate_entanglement_ui
 
 register_route_once("store_prediction", store_prediction_ui)
 register_route_once("get_prediction", get_prediction_ui)
@@ -95,7 +96,8 @@ from temporal.ui_hook import analyze_temporal_ui
 register_route_once("temporal_consistency", analyze_temporal_ui)
 
 # Optimization-related route
-register_route_once("tune_parameters", tune_parameters_ui)
+register_route("tune_parameters", tune_parameters_ui)
+register_route("simulate_entanglement", simulate_entanglement_ui)
 
 # Universe UI routes
 from ui_hooks.universe_ui import (
