@@ -18,7 +18,8 @@ if "superNova_2177" not in sys.modules:
     from decimal import Decimal
 
     stub_sn = types.ModuleType("superNova_2177")
-    # Mark as a stub so modules can detect and optionally reload the real one.
+    # Mark as a stub so modules can detect and optionally reload the real one if
+    # desired. ``__file__`` mimics a module path to signal stubbing.
     stub_sn.__file__ = "superNova_2177_stub"
 
     class Config:
@@ -188,11 +189,65 @@ if "superNova_2177" not in sys.modules:
     stub_sn.SessionLocal = lambda *a, **k: None
     stub_sn.Base = type("Base", (), {"metadata": types.SimpleNamespace(create_all=lambda *a, **k: None, drop_all=lambda *a, **k: None)})
     stub_sn.USE_IN_MEMORY_STORAGE = True
-    async def _app(scope, receive, send):
-        await send({"type": "http.response.start", "status": 404, "headers": []})
-        await send({"type": "http.response.body", "body": b"", "more_body": False})
+    from fastapi import FastAPI, HTTPException, Depends
+    from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-    stub_sn.app = _app
+    app = FastAPI()
+    oauth = OAuth2PasswordBearer(tokenUrl="/token")
+
+    storage = InMemoryStorage()
+
+    @app.post("/users/register", status_code=201)
+    async def register(data: dict):
+        if storage.get_user(data["username"]) or any(
+            u.get("email") == data["email"] for u in storage.users.values()
+        ):
+            raise HTTPException(status_code=400)
+        storage.set_user(
+            data["username"],
+            {"email": data["email"], "password": data.get("password")},
+        )
+        return {"username": data["username"]}
+
+    @app.post("/token")
+    async def token(form: OAuth2PasswordRequestForm = Depends()):
+        user = storage.get_user(form.username)
+        if not user or user.get("password") != form.password:
+            raise HTTPException(status_code=401)
+        return {"access_token": f"token-{form.username}"}
+
+    def get_user(token: str = Depends(oauth)):
+        name = token.removeprefix("token-")
+        user = storage.get_user(name)
+        if not user:
+            raise HTTPException(status_code=401)
+        return name
+
+    @app.get("/users/me")
+    async def me(username: str = Depends(get_user)):
+        return {"username": username}
+
+    @app.get("/status")
+    async def status():
+        return {"status": "ok"}
+
+    @app.get("/network-analysis/")
+    async def analysis(username: str = Depends(get_user)):
+        return {"nodes": [], "edges": []}
+
+    @app.post("/users/{target}/follow")
+    async def follow(target: str, username: str = Depends(get_user)):
+        if not storage.get_user(target):
+            raise HTTPException(status_code=404)
+        return {"follower": username, "target": target}
+
+    @app.post("/users/{target}/unfollow")
+    async def unfollow(target: str, username: str = Depends(get_user)):
+        if not storage.get_user(target):
+            raise HTTPException(status_code=404)
+        return {"follower": username, "target": target}
+
+    stub_sn.app = app
     stub_sn.AddUserPayload = dict
     stub_sn.MintPayload = dict
     stub_sn.ReactPayload = dict
@@ -425,14 +480,13 @@ for mod_name in [
             stub.ASGITransport = ASGITransport
             stub.Response = Response
         if mod_name == "pytest_asyncio":
-            class fixture:
-                def __call__(self, *a, **kw):
-                    def wrapper(f):
-                        return f
+            import pytest
 
-                    return wrapper
+            def fixture(*args, **kwargs):
+                """Fallback to ``pytest.fixture`` when pytest-asyncio is missing."""
+                return pytest.fixture(*args, **kwargs)
 
-            stub.fixture = fixture()
+            stub.fixture = fixture
         if mod_name == "numpy":
             class _Array(list):
                 def mean(self):
