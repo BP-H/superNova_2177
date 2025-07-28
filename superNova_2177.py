@@ -278,38 +278,78 @@ import weakref
 from datetime import timedelta
 
 # Web and DB Imports from FastAPI files
-from fastapi import (
-    FastAPI,
-    Depends,
-    HTTPException,
-    status,
-    Query,
-    Body,
-    UploadFile,
-    File,
-    BackgroundTasks,
-)
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi.middleware.cors import CORSMiddleware
+USING_STUBS = False
+try:
+    from fastapi import (
+        FastAPI,
+        Depends,
+        HTTPException,
+        status,
+        Query,
+        Body,
+        UploadFile,
+        File,
+        BackgroundTasks,
+    )
+    from fastapi.responses import HTMLResponse, JSONResponse
+    from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+    from fastapi.middleware.cors import CORSMiddleware
+    from sqlalchemy import (
+        create_engine,
+        Column,
+        Integer,
+        String,
+        Text,
+        Boolean,
+        DateTime,
+        ForeignKey,
+        Table,
+        Float,
+        JSON,
+        func,
+    )
+    from sqlalchemy.orm import sessionmaker, relationship, Session, declarative_base
+    from sqlalchemy.exc import IntegrityError
+except ImportError:  # pragma: no cover - fallback when deps are missing
+    USING_STUBS = True
+    from stubs.fastapi_stub import (
+        FastAPI,
+        Depends,
+        HTTPException,
+        status,
+        Query,
+        Body,
+        UploadFile,
+        File,
+        BackgroundTasks,
+        HTMLResponse,
+        JSONResponse,
+        OAuth2PasswordBearer,
+        OAuth2PasswordRequestForm,
+        CORSMiddleware,
+    )
+    from stubs.sqlalchemy_stub import (
+        create_engine,
+        Column,
+        Integer,
+        String,
+        Text,
+        Boolean,
+        DateTime,
+        ForeignKey,
+        Table,
+        Float,
+        JSON,
+        func,
+        sessionmaker,
+        relationship,
+        Session,
+        declarative_base,
+        IntegrityError,
+    )
 from pydantic import BaseModel, Field, EmailStr, ValidationError
 from pydantic_settings import BaseSettings
 import redis
-from sqlalchemy import (
-    create_engine,
-    Column,
-    Integer,
-    String,
-    Text,
-    Boolean,
-    DateTime,
-    ForeignKey,
-    Table,
-    Float,
-    JSON,
-)
-from sqlalchemy.orm import sessionmaker, relationship, Session, declarative_base
-from sqlalchemy.exc import IntegrityError
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 
@@ -459,7 +499,6 @@ import structlog
 import prometheus_client as prom
 from prometheus_client import REGISTRY
 from config import Config
-from sqlalchemy import func
 from scientific_metrics import (
     calculate_influence_score,
     calculate_interaction_entropy,
