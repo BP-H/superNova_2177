@@ -5,9 +5,9 @@ from typing import Any, Dict
 from frontend_bridge import register_route
 from hook_manager import HookManager
 
-from . import load_entries
+from . import load_entries, add_entry
 
-# Exposed hook manager so external listeners can react to diary events
+# Expose hook manager for listeners
 ui_hook_manager = HookManager()
 
 
@@ -23,5 +23,15 @@ async def load_entries_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return {"entries": entries}
 
 
-# Register route with the frontend router
+async def add_entry_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Add a diary entry and emit an event."""
+    entry = payload.get("entry", payload)
+    add_entry(entry)
+    await ui_hook_manager.trigger("diary_entry_added", entry)
+    return {"status": "added"}
+
+
+# Register routes
 register_route("load_diary_entries", load_entries_ui)
+register_route("add_diary_entry", add_entry_ui)
+
