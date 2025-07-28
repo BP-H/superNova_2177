@@ -38,8 +38,14 @@ if HarmonyScanner is None:
 def run_analysis(validations):
     """Execute the validation integrity pipeline and display results."""
     if not validations:
-        st.error("No validations found in the uploaded file.")
-        return
+        try:
+            with open("sample_validations.json") as f:
+                sample = json.load(f)
+                validations = sample.get("validations", [])
+        except Exception:
+            validations = [{"validator": "A", "target": "B", "score": 0.5}]
+        st.warning("No validations provided – using fallback data.")
+        print("✅ UI diagnostic agent active")
 
     with st.spinner("Running analysis..."):
         result = analyze_validation_integrity(validations)
@@ -98,6 +104,9 @@ def boot_diagnostic_ui():
             st.success("Dummy scan completed")
         except Exception as exc:  # pragma: no cover - debug only
             st.error(f"Dummy scan error: {exc}")
+
+    st.subheader("Validation Analysis")
+    run_analysis([])
 
 
 def main() -> None:
