@@ -11,6 +11,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
+from streamlit_helpers import alert
 
 try:
     import plotly.graph_objects as go
@@ -143,7 +144,7 @@ def run_analysis(validations, *, layout: str = "force"):
                 validations = sample.get("validations", [])
         except Exception:
             validations = [{"validator": "A", "target": "B", "score": 0.5}]
-        st.warning("No validations provided – using fallback data.")
+        alert("No validations provided – using fallback data.", "warning")
         print("✅ UI diagnostic agent active")
 
     with st.spinner("Running analysis..."):
@@ -345,21 +346,21 @@ def boot_diagnostic_ui():
         st.success("Config import succeeded")
         st.write({"METRICS_PORT": Config.METRICS_PORT})
     else:
-        st.error("Config import failed")
+        alert("Config import failed", "error")
 
     st.subheader("Harmony Scanner Check")
     scanner = HarmonyScanner(Config()) if Config and HarmonyScanner else None
     if scanner:
         st.success("HarmonyScanner instantiated")
     else:
-        st.error("HarmonyScanner init failed")
+        alert("HarmonyScanner init failed", "error")
 
     if st.button("Run Dummy Scan") and scanner:
         try:
             scanner.scan("hello world")
             st.success("Dummy scan completed")
         except Exception as exc:  # pragma: no cover - debug only
-            st.error(f"Dummy scan error: {exc}")
+            alert(f"Dummy scan error: {exc}", "error")
 
     st.subheader("Validation Analysis")
     run_analysis([], layout="force")
@@ -369,6 +370,13 @@ def main() -> None:
     """Main entry point for the validation analysis UI."""
     st.set_page_config(page_title="superNova_2177 Demo")
 
+    ts_placeholder = st.empty()
+    if "session_start_ts" not in st.session_state:
+        st.session_state["session_start_ts"] = datetime.utcnow().isoformat(timespec="seconds")
+    ts_placeholder.markdown(
+        f"<div style='position:fixed;top:0;right:0;background:rgba(0,0,0,0.6);color:white;padding:0.25em 0.5em;border-radius:0 0 0 4px;'>Session start: {st.session_state['session_start_ts']} UTC</div>",
+        unsafe_allow_html=True,
+    )
     if "diary" not in st.session_state:
         st.session_state["diary"] = []
     if "analysis_diary" not in st.session_state:
@@ -426,7 +434,7 @@ def main() -> None:
                 demo_data = json.load(f)
             st.session_state["validations_json"] = json.dumps(demo_data, indent=2)
         except FileNotFoundError:
-            st.warning("Demo file not found")
+            alert("Demo file not found", "warning")
         st.experimental_rerun()
 
     secret_key = st_secrets.get("SECRET_KEY")
@@ -436,19 +444,20 @@ def main() -> None:
         st.header("Environment")
         st.write(f"Database URL: {database_url or 'not set'}")
         st.write(f"ENV: {os.getenv('ENV', 'dev')}")
-        st.write(
-            f"Session start: {datetime.utcnow().isoformat(timespec='seconds')} UTC"
-        )
+        st.write(f"Session start: {st.session_state['session_start_ts']} UTC")
 
         if secret_key:
             st.success("Secret key loaded")
         else:
-            st.warning("SECRET_KEY missing")
+            alert("SECRET_KEY missing", "warning")
 
         st.divider()
         st.subheader("Settings")
-        demo_mode = st.checkbox("Demo mode")
-        st.session_state["theme"] = "dark" if st.checkbox("Dark theme") else "light"
+        demo_mode_choice = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
+        demo_mode = demo_mode_choice == "Demo"
+        theme_choice = st.radio("Theme", ["Light", "Dark"], index=(1 if st.session_state["theme"]=="dark" else 0), horizontal=True)
+        st.session_state["theme"] = theme_choice.lower()
+
         VCConfig.HIGH_RISK_THRESHOLD = st.slider(
             "High Risk Threshold", 0.1, 1.0, float(VCConfig.HIGH_RISK_THRESHOLD), 0.05
         )
@@ -506,14 +515,14 @@ def main() -> None:
                     data = json.loads(validations_input)
                     st.session_state["validations_json"] = json.dumps(data, indent=2)
                 except json.JSONDecodeError as exc:
-                    st.error(f"Invalid JSON: {exc}")
+                    alert(f"Invalid JSON: {exc}", "error")
                     st.stop()
             elif demo_mode:
                 try:
                     with open("sample_validations.json") as f:
                         data = json.load(f)
                 except FileNotFoundError:
-                    st.warning("Demo file not found, using default dataset.")
+                    alert("Demo file not found, using default dataset.", "warning")
                     data = {
                         "validations": [{"validator": "A", "target": "B", "score": 0.9}]
                     }
@@ -522,13 +531,13 @@ def main() -> None:
                 data = json.load(uploaded_file)
                 st.session_state["validations_json"] = json.dumps(data, indent=2)
             else:
-                st.error("Please upload a file, paste JSON, or enable demo mode.")
+                alert("Please upload a file, paste JSON, or enable demo mode.", "error")
                 st.stop()
         else:
             try:
                 data = json.loads(st.session_state.get("validations_json", ""))
             except Exception as exc:
-                st.error(f"Stored validations invalid: {exc}")
+                alert(f"Stored validations invalid: {exc}", "error")
                 st.stop()
         prev_result = st.session_state.get("last_result")
         result = run_analysis(data.get("validations", []), layout=view)
@@ -559,12 +568,12 @@ def main() -> None:
         try:
             payload = json.loads(payload_txt or "{}")
         except Exception as exc:
-            st.error(f"Invalid payload: {exc}")
+            alert(f"Invalid payload: {exc}", "error")
         else:
             backend_fn = get_backend(backend_choice.lower(), api_key or None)
             agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get("cls")
             if agent_cls is None:
-                st.error("Unknown agent selected")
+                alert("Unknown agent selected", "error")
             else:
                 try:
                     if agent_choice == "CI_PRProtectorAgent":
@@ -583,7 +592,7 @@ def main() -> None:
                     st.success("Agent executed")
                 except Exception as exc:
                     st.session_state["agent_output"] = {"error": str(exc)}
-                    st.error(f"Agent error: {exc}")
+                    alert(f"Agent error: {exc}", "error")
 
     if st.session_state.get("agent_output") is not None:
         st.subheader("Agent Output")
