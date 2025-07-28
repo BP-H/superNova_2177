@@ -5,6 +5,8 @@ import logging
 import math
 import os
 import asyncio
+import sys
+import traceback
 from datetime import datetime
 from pathlib import Path
 import sys
@@ -22,6 +24,7 @@ try:
 except Exception:
     logger.exception("Failed to configure Streamlit page")
     print("Failed to configure Streamlit page", file=sys.stderr)
+
 else:
     st.title("superNova_2177")
     st.success("\u2705 Streamlit loaded!")
@@ -1013,10 +1016,18 @@ def main() -> None:
         render_agent_insights_tab()
 if __name__ == "__main__":
     logger.info("\u2705 Streamlit UI started. Launching main()...")
+    print("Starting Streamlit UI...", file=sys.stderr)
     try:
         main()
+    except Exception:
+        logger.exception("UI startup failed")
+        print("Startup failed", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+        raise
+    else:
         st.success("\u2705 UI Booted")
         print("UI Booted", file=sys.stderr)
     except Exception as exc:
         logger.exception("Startup failed")
         print(f"Startup failed: {exc}", file=sys.stderr)
+
