@@ -53,7 +53,16 @@ def run_app() -> None:
 
 def build_frontend(pip: list) -> None:
     """Install UI deps and build the Transcendental Resonance frontend."""
-    ui_reqs = Path('transcendental_resonance_frontend') / 'requirements.txt'
+    frontend_dir = Path('transcendental_resonance_frontend')
+    if not frontend_dir.exists():
+        legacy = Path('web_ui')
+        if legacy.exists():
+            print(
+                "Warning: 'web_ui' is deprecated; using it for compatibility.",
+                file=sys.stderr,
+            )
+            frontend_dir = legacy
+    ui_reqs = frontend_dir / 'requirements.txt'
     if ui_reqs.is_file():
         try:
             subprocess.check_call(pip + ['install', '-r', str(ui_reqs)])
@@ -61,7 +70,7 @@ def build_frontend(pip: list) -> None:
             logging.error('Failed to install UI dependencies: %s', exc)
             logging.error('Check your internet connection and try again.')
             raise
-    ui_script = Path('transcendental_resonance_frontend') / 'src' / 'main.py'
+    ui_script = frontend_dir / 'src' / 'main.py'
     nicegui = [venv_bin('nicegui')] if not in_virtualenv() else ['nicegui']
     try:
         subprocess.check_call(nicegui + ['build', str(ui_script)])

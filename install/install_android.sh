@@ -9,6 +9,15 @@ if [ ! -d superNova_2177 ]; then
 fi
 cd superNova_2177
 pip install -r requirements.txt
+FRONTEND_DIR=transcendental_resonance_frontend
+if [ ! -d "$FRONTEND_DIR" ] && [ -d web_ui ]; then
+    echo "Warning: 'web_ui' has been renamed to 'transcendental_resonance_frontend'" >&2
+    FRONTEND_DIR=web_ui
+fi
+if [ -d "$FRONTEND_DIR" ]; then
+    pip install -r "$FRONTEND_DIR/requirements.txt"
+    nicegui "$FRONTEND_DIR/src/main.py" --port 8080 &
+fi
 uvicorn superNova_2177:app --host 0.0.0.0 --port 8000 &
 sleep 2
 python - <<'PY'
