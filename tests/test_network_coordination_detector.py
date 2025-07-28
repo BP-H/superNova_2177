@@ -1,4 +1,8 @@
+import os
 import pytest
+
+os.environ["NOVA_COORDINATION_USE_THREADS"] = "1"
+
 from network.network_coordination_detector import (
     calculate_sophisticated_risk_score,
     analyze_coordination_patterns,
