@@ -268,13 +268,25 @@ class RemixAgent:
     def _simple_process_event(self, event: Dict[str, Any]) -> None:
         ev = event.get("event")
         if ev == "ADD_USER":
+            root_id = event.get("root_coin_id") or f"root_{uuid.uuid4().hex}"
             self.storage.set_user(
                 event["user"],
                 {
-                    "root_coin_id": event.get("root_coin_id") or "root",
+                    "root_coin_id": root_id,
                     "karma": event.get("karma", "0"),
                     "consent_given": event.get("consent", True),
                     "is_genesis": event.get("is_genesis", False),
+                    "coins_owned": [root_id],
+                },
+            )
+            self.storage.set_coin(
+                root_id,
+                {
+                    "owner": event["user"],
+                    "value": event.get(
+                        "root_coin_value", str(self.config.ROOT_INITIAL_VALUE)
+                    ),
+                    "is_root": True,
                 },
             )
         elif ev == "MINT":
@@ -320,8 +332,34 @@ class RemixAgent:
             listing = self.storage.get_marketplace_listing(event["listing_id"])
             if listing:
                 coin = self.storage.get_coin(listing["coin_id"])
-                if coin:
-                    coin["owner"] = event["buyer"]
+                buyer = self.storage.get_user(event["buyer"])
+                seller = self.storage.get_user(listing.get("seller"))
+                if (
+                    coin
+                    and buyer
+                    and seller
+                    and (buyer_root := self.storage.get_coin(buyer.get("root_coin_id")))
+                    and (seller_root := self.storage.get_coin(seller.get("root_coin_id")))
+                ):
+                    price = Decimal(str(listing.get("price", "0")))
+                    total = Decimal(str(event.get("total_cost", price)))
+                    buyer_root_value = Decimal(str(buyer_root.get("value", "0")))
+                    if buyer_root_value >= total:
+                        buyer_root["value"] = str(buyer_root_value - total)
+                        seller_root["value"] = str(
+                            Decimal(str(seller_root.get("value", "0"))) + price
+                        )
+                        coin["owner"] = event["buyer"]
+                        buyer.setdefault("coins_owned", []).append(coin["coin_id"])
+                        seller_coins = seller.setdefault("coins_owned", [])
+                        if coin["coin_id"] in seller_coins:
+                            seller_coins.remove(coin["coin_id"])
+                        self.storage.set_coin(buyer["root_coin_id"], buyer_root)
+                        self.storage.set_coin(seller["root_coin_id"], seller_root)
+                        self.storage.set_coin(coin["coin_id"], coin)
+                        self.storage.set_user(event["buyer"], buyer)
+                        self.storage.set_user(listing.get("seller"), seller)
+                        self.storage.delete_marketplace_listing(event["listing_id"])
         elif ev == "REACT":
             coin = self.storage.get_coin(event["coin_id"])
             if coin:
