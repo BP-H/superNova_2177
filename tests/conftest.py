@@ -1,5 +1,17 @@
 import sys
 from pathlib import Path
+import importlib.util
+
+_orig_find_spec = importlib.util.find_spec
+
+
+def _safe_find_spec(name, package=None):
+    try:
+        return _orig_find_spec(name, package)
+    except ValueError:
+        return None
+
+importlib.util.find_spec = _safe_find_spec
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
