@@ -265,7 +265,7 @@ cp .env.example .env  # set your own secrets
 docker-compose up
 ```
 
-The application will be available at [http://localhost:8000](http://localhost:8000).
+The application will be available at [http://localhost:8501](http://localhost:8501).
 
 ## Authentication
 
@@ -554,7 +554,7 @@ is optional because a secure one will be generated if omitted:
 # optional
 export SECRET_KEY="your-secret"
 export DATABASE_URL="postgresql+asyncpg://<username>:<password>@<hostname>/<database>"
-export BACKEND_URL="http://localhost:8000"
+export BACKEND_URL="http://localhost:8501"
 ```
 
 To connect to a central database instead of the local file, pass
