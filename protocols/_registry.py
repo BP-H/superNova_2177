@@ -5,9 +5,9 @@ from .agents.guardian_interceptor_agent import GuardianInterceptorAgent
 from .agents.meta_validator_agent import MetaValidatorAgent
 from .agents.observer_agent import ObserverAgent
 from .agents.collaborative_planner_agent import CollaborativePlannerAgent
-from .agents.CoordinationSentinelAgent import CoordinationSentinelAgent
-from .agents.HarmonySynthesizerAgent import HarmonySynthesizerAgent
-from .agents.TemporalAuditAgent import TemporalAuditAgent
+from .agents.coordination_sentinel_agent import CoordinationSentinelAgent
+from .agents.harmony_synthesizer_agent import HarmonySynthesizerAgent
+from .agents.temporal_audit_agent import TemporalAuditAgent
 from .agents.cross_universe_bridge_agent import CrossUniverseBridgeAgent
 from .agents.anomaly_spotter_agent import AnomalySpotterAgent
 from .agents.quantum_resonance_agent import QuantumResonanceAgent
