@@ -134,8 +134,9 @@ from prediction.ui_hook import (
 )
 from vote_registry.ui_hook import record_vote_ui, load_votes_ui
 from optimization.ui_hook import tune_parameters_ui
+from causal_graph.ui_hook import build_graph_ui, simulate_entanglement_ui as simulate_entanglement_causal_ui
 from predictions.ui_hook import update_prediction_status_ui
-
+from social.ui_hook import simulate_entanglement_ui as simulate_entanglement_social_ui
 
 register_route("store_prediction", store_prediction_ui)
 register_route("get_prediction", get_prediction_ui)
@@ -146,7 +147,7 @@ register_route("load_votes", load_votes_ui)
 
 # Additional routes
 from virtual_diary.ui_hook import fetch_entries_ui, add_entry_ui
-from quantum_sim.ui_hook import simulate_entanglement_ui
+from quantum_sim.ui_hook import simulate_entanglement_ui as simulate_entanglement_quantum_ui
 
 # Protocol agent management routes
 from protocols.api_bridge import launch_agents_api, list_agents_api, step_agents_api
@@ -155,18 +156,20 @@ register_route("list_agents", list_agents_api)
 register_route("launch_agents", launch_agents_api)
 register_route("step_agents", step_agents_api)
 
-
 register_route_once("temporal_consistency", analyze_temporal_ui)
 
 # Optimization route
 register_route("tune_parameters", tune_parameters_ui)
 
-# Optimization-related route
-register_route("tune_parameters", tune_parameters_ui)
+# Causal graph routes
+register_route("build_causal_graph", build_graph_ui)
+register_route("simulate_entanglement_causal", simulate_entanglement_causal_ui)
 
 # Social simulation route
-from social.ui_hook import simulate_entanglement_ui
-register_route("simulate_entanglement", simulate_entanglement_ui)
+register_route("simulate_entanglement_social", simulate_entanglement_social_ui)
+
+# Quantum simulation route
+register_route("simulate_entanglement_quantum", simulate_entanglement_quantum_ui)
 
 # Import additional UI hooks for side effects (route registration)
 import network.ui_hook  # noqa: F401,E402 - registers network analysis routes
@@ -177,4 +180,3 @@ import introspection.ui_hook  # noqa: F401,E402 - registers introspection routes
 import protocols.ui_hook  # noqa: F401,E402 - registers cross-universe bridge routes
 import protocols.agents.guardian_ui_hook  # noqa: F401,E402 - guardian agent routes
 import protocols.agents.harmony_ui_hook  # noqa: F401,E402 - harmony synth route
-
