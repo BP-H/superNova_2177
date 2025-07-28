@@ -71,3 +71,23 @@ def test_observer_agent_llm_backend_called():
     agent.observe(payload)
 
     assert calls and "agent a" in calls[0]
+
+
+def test_ci_pr_protector_handles_malformed_response_ci():
+    def backend(prompt):
+        return "no code"
+
+    agent = CI_PRProtectorAgent(llm_backend=backend)
+    result = agent.handle_ci_failure({"repo": "r", "branch": "b", "logs": "f"})
+
+    assert result["proposed_patch"] is None
+
+
+def test_ci_pr_protector_handles_malformed_response_pr():
+    def backend(prompt):
+        return "oops"
+
+    agent = CI_PRProtectorAgent(llm_backend=backend)
+    result = agent.handle_pr_error({"diff": "d", "error": "err"})
+
+    assert result["patch"] is None
