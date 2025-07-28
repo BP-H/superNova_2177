@@ -1,5 +1,6 @@
 import json
 import logging
+import datetime
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -51,6 +52,10 @@ if HarmonyScanner is None:
 
 def run_analysis(validations):
     """Execute the validation integrity pipeline and display results."""
+    diary = None
+    if isinstance(getattr(st, "session_state", None), dict):
+        diary = st.session_state.setdefault("diary", [])
+
     if not validations:
         try:
             with open("sample_validations.json") as f:
@@ -112,9 +117,18 @@ def run_analysis(validations):
         st.subheader("Validator Coordination Graph")
         st.pyplot(fig)
 
+    if diary is not None:
+        ts = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        if score is not None:
+            diary.append(f"{ts} - Integrity score: {score:.2f}")
+        else:
+            diary.append(f"{ts} - Integrity score unavailable")
+
 
 def boot_diagnostic_ui():
     """Render a simple diagnostics UI used during boot."""
+    if isinstance(getattr(st, "session_state", None), dict):
+        st.session_state.setdefault("diary", [])
     st.set_page_config(page_title="Boot Diagnostic", layout="centered")
     st.header("Boot Diagnostic")
 
@@ -145,6 +159,8 @@ def boot_diagnostic_ui():
 
 def main() -> None:
     """Main entry point for the validation analysis UI."""
+    if isinstance(getattr(st, "session_state", None), dict):
+        st.session_state.setdefault("diary", [])
     st.set_page_config(page_title="superNova_2177 Demo")
     st.title("superNova_2177 Validation Analyzer")
     st.markdown(
@@ -210,7 +226,36 @@ def main() -> None:
         else:
             st.error("Please upload a file, paste JSON, or enable demo mode.")
             st.stop()
+
         run_analysis(data.get("validations", []))
+
+    diary_entries = []
+    if isinstance(getattr(st, "session_state", None), dict):
+        diary_entries = st.session_state.get("diary", [])
+
+    with st.expander("Virtual Diary \U0001F4D8"):
+        if diary_entries:
+            for note in diary_entries:
+                st.write(note)
+        else:
+            st.write("No notes yet.")
+
+        if st.button("Clear Memory"):
+            st.session_state["diary"] = []
+            st.experimental_rerun()
+
+        st.download_button(
+            "Export Diary (Markdown)",
+            "\n".join(f"- {n}" for n in diary_entries),
+            file_name="diary.md",
+            mime="text/markdown",
+        )
+        st.download_button(
+            "Export Diary (JSON)",
+            json.dumps(diary_entries, indent=2),
+            file_name="diary.json",
+            mime="application/json",
+        )
 
 
 if __name__ == "__main__":
