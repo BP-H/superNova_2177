@@ -49,3 +49,23 @@ def test_process_event_register_and_fetch():
     prov = agent.process_event({"event": "GET_PROVENANCE", "payload": {"coin_id": "c1"}})
     assert prov == [payload]
 
+
+def test_duplicate_registration_rejected():
+    agent = CrossUniverseBridgeAgent()
+    payload = {
+        "coin_id": "dup",
+        "source_universe": "U9",
+        "source_coin": "s9",
+        "proof": "p9",
+    }
+
+    first = agent.register_bridge(payload)
+    assert first == {"valid": True}
+
+    second = agent.register_bridge(payload)
+    assert second == {"valid": False, "duplicate": True}
+
+    # provenance should still only contain the original record
+    prov = agent.get_provenance({"coin_id": "dup"})
+    assert prov == [payload]
+

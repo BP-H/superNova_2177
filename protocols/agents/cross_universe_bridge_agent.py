@@ -43,6 +43,10 @@ class CrossUniverseBridgeAgent(InternalAgentProtocol):
         if self.llm_backend:
             self.llm_backend(f"verify {proof}")
 
+        # avoid duplicate records for the same coin_id
+        if any(r["coin_id"] == coin_id for r in self._records):
+            return {"valid": False, "duplicate": True}
+
         entry = {
             "coin_id": coin_id,
             "source_universe": src_universe,
