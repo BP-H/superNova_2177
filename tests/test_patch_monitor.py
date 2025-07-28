@@ -39,3 +39,25 @@ def test_check_patch_compliance_missing():
     patch = "@@\n+print('hi')\n"
     issues = check_patch_compliance(patch)
     assert issues and "missing required disclaimers" in issues[0].lower()  # nosec B101
+
+
+def test_check_patch_compliance_existing_file(tmp_path, monkeypatch):
+    f = tmp_path / "module.py"
+    f.write_text(
+        (
+            "# STRICTLY A SOCIAL MEDIA PLATFORM\n"
+            "# Intellectual Property & Artistic Inspiration\n"
+            "# Legal & Ethical Safeguards\n"
+            "print('hello')\n"
+        )
+    )
+    patch = textwrap.dedent(
+        f"""diff --git a/{f.name} b/{f.name}
+        --- a/{f.name}
+        +++ b/{f.name}
+        @@
+        +print('world')
+        """
+    )
+    monkeypatch.chdir(tmp_path)
+    assert check_patch_compliance(patch) == []  # nosec B101

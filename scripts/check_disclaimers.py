@@ -29,7 +29,7 @@ def main() -> int:
     if issues:
         print("\n".join(issues))
         return 1
-    print("Patch contains required disclaimers.")
+    print("Patch contains required disclaimers or they already exist in files.")
     return 0
 
 
