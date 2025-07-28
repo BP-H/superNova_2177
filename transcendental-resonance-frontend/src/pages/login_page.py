@@ -24,7 +24,7 @@ async def login_page():
 
         async def handle_login():
             data = {'username': username.value, 'password': password.value}
-            resp = api_call('POST', '/token', data=data)
+            resp = await api_call('POST', '/token', data=data)
             if resp and 'access_token' in resp:
                 set_token(resp['access_token'])
                 ui.notify('Login successful!', color='positive')
@@ -68,7 +68,7 @@ async def register_page():
                 'email': email.value,
                 'password': password.value,
             }
-            resp = api_call('POST', '/users/register', data)
+            resp = await api_call('POST', '/users/register', data)
             if resp:
                 ui.notify('Registration successful! Please login.', color='positive')
                 ui.open(login_page)

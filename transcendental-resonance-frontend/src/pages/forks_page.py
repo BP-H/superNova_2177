@@ -27,7 +27,7 @@ async def forks_page() -> None:
 
         async def submit_vote() -> None:
             data = {'fork_id': fork_id.value, 'vote': vote_value.value}
-            resp = api_call('POST', '/vote', data)
+            resp = await api_call('POST', '/vote', data)
             if resp is not None:
                 ui.notify('Vote submitted!', color='positive')
                 await refresh_forks()
@@ -41,7 +41,7 @@ async def forks_page() -> None:
         forks_list = ui.column().classes('w-full')
 
         async def refresh_forks() -> None:
-            forks = api_call('GET', '/forks') or []
+            forks = await api_call('GET', '/forks') or []
             forks_list.clear()
             for f in forks:
                 with forks_list:

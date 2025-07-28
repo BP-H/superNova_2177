@@ -26,13 +26,13 @@ async def profile_page():
         ui.open(login_page)
         return
 
-    user_data = api_call('GET', '/users/me')
+    user_data = await api_call('GET', '/users/me')
     if not user_data:
         clear_token()
         ui.open(login_page)
         return
 
-    score_data = api_call('GET', '/users/me/influence-score') or {}
+    score_data = await api_call('GET', '/users/me/influence-score') or {}
 
     THEME = get_theme()
     with ui.column().classes('w-full p-4').style(
@@ -52,7 +52,7 @@ async def profile_page():
         bio = ui.input('Bio', value=user_data.get('bio', '')).classes('w-full mb-2')
 
         async def update_bio():
-            resp = api_call('PUT', '/users/me', {'bio': bio.value})
+            resp = await api_call('PUT', '/users/me', {'bio': bio.value})
             if resp:
                 ui.notify('Bio updated', color='positive')
 
