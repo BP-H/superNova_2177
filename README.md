@@ -256,9 +256,7 @@ For a lightweight setup you can instead install the reduced set from
 `requirements-minimal.txt` or use `requirements.txt`/`requirements.lock`
 for the full environment.
 
-Before running the tests, ensure the packages from `requirements.txt` (or the
-expanded minimal file) are installed. You can install them using the setup
-script with locked versions or via `pip` directly:
+Before running the tests, install the packages from `requirements.txt` (or the expanded minimal file) if you want the real dependencies. Otherwise, the built-in stubs will activate automatically. Use the setup script with locked versions or `pip` directly:
 
 ```bash
 python setup_env.py --locked  # install from requirements.lock
@@ -279,6 +277,7 @@ pip install -r requirements-minimal.txt
 `python-dateutil`, `sqlalchemy`, `networkx`, `pytest-asyncio`, `httpx`,
 `email-validator`). With these installed, running `pytest` should
 succeed (`99 passed`).
+Alternatively, the tests can run without these packages. Stub implementations in `stubs/` activate automatically when optional dependencies are missing, allowing `pytest` to succeed even if `requirements-minimal.txt` is not installed.
 
 ### Real Module Dependencies
 
