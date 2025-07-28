@@ -227,6 +227,7 @@ import predictions.ui_hook  # noqa: F401 - route registration
 import social.ui_hook  # noqa: F401 - route registration
 import quantum_sim.ui_hook  # noqa: F401 - route registration
 import virtual_diary.ui_hook  # noqa: F401 - route registration
+import proposals.ui_hook  # noqa: F401 - route registration
 
 
 # Protocol agent management routes
