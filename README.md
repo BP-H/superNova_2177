@@ -265,7 +265,7 @@ cp .env.example .env  # set your own secrets
 docker-compose up
 ```
 
-The application will be available at [http://localhost:8000](http://localhost:8000).
+The Streamlit dashboard will be available at [http://localhost:8501](http://localhost:8501).
 
 ## Authentication
 
