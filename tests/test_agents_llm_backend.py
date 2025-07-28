@@ -75,3 +75,54 @@ def test_observer_agent_llm_backend_called():
 
     assert calls and "agent a" in calls[0]
 
+
+from protocols.agents.anomaly_spotter_agent import AnomalySpotterAgent
+from protocols.agents.cross_universe_bridge_agent import CrossUniverseBridgeAgent
+from protocols.agents.quantum_resonance_agent import QuantumResonanceAgent
+
+
+def test_anomaly_spotter_llm_backend():
+    calls = []
+
+    def backend(text):
+        calls.append(text)
+        return text
+
+    agent = AnomalySpotterAgent(llm_backend=backend)
+    result = agent.inspect_data({"metrics": [1, 2], "notes": "attack"})
+
+    assert calls and "attack" in calls[0]
+    assert result["flagged"]
+
+
+def test_cross_universe_bridge_llm_backend():
+    calls = []
+
+    def backend(prompt):
+        calls.append(prompt)
+
+    agent = CrossUniverseBridgeAgent(llm_backend=backend)
+    agent.register_bridge(
+        {
+            "coin_id": "c1",
+            "source_universe": "u1",
+            "source_coin": "s1",
+            "proof": "p",
+        }
+    )
+
+    assert calls and calls[0].startswith("verify")
+
+
+def test_quantum_resonance_llm_backend():
+    calls = []
+
+    def backend(prompt):
+        calls.append(prompt)
+        return "note"
+
+    agent = QuantumResonanceAgent(llm_backend=backend)
+    result = agent.query_resonance({"users": ["a"]})
+
+    assert calls and "Resonance summary" in calls[0]
+    assert result["llm_note"] == "note"
