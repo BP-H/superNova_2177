@@ -525,7 +525,8 @@ jupyter notebook docs/Network_Graph_Visualization.ipynb
 * `diversity_analyzer.py` — Detects echo chambers and affiliation bias
 * `temporal_consistency_checker.py` — Tracks time-based volatility
 * `network_coordination_detector.py` — Spots suspicious group behavior using
-  sentence‑embedding similarity
+  sentence‑embedding similarity. Set `NOVA_COORDINATION_USE_THREADS=1` if
+  Streamlit cannot spawn processes
 
 ## 🧪 Status
 

@@ -11,6 +11,10 @@ This module can be profiled with ``cProfile`` to identify heavy NumPy or
 NetworkX sections when analyzing large validation graphs::
 
     python -m cProfile -s time network/network_coordination_detector.py
+
+Set environment variable ``NOVA_COORDINATION_USE_THREADS=1`` to use a
+``ThreadPoolExecutor`` for parallel workers instead of spawning processes. This
+avoids issues with Streamlit's restricted multiprocess environment.
 """
 
 import itertools
@@ -18,7 +22,7 @@ import logging
 import math
 import os
 from collections import defaultdict
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from datetime import datetime, timedelta
 from functools import lru_cache
 from multiprocessing import get_context
@@ -27,6 +31,13 @@ from typing import Any, Dict, List, Set, Tuple
 
 logger = logging.getLogger("superNova_2177.coordination")
 logger.propagate = False
+
+# Optionally use threads instead of processes for Streamlit compatibility.
+USE_THREAD_POOL = os.environ.get("NOVA_COORDINATION_USE_THREADS", "0").lower() in {
+    "1",
+    "true",
+    "yes",
+}
 
 
 class Config:
@@ -241,11 +252,18 @@ def detect_temporal_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
         for i in range(0, len(pairs), chunk_size)
     ]
 
-    with ProcessPoolExecutor(mp_context=get_context("spawn")) as executor:
-        results = executor.map(_temporal_worker, chunks, itertools.repeat(window))
-        for clusters, chunk_flags in results:
-            temporal_clusters.extend(clusters)
-            flags.extend(chunk_flags)
+    if USE_THREAD_POOL:
+        with ThreadPoolExecutor() as executor:
+            results = executor.map(_temporal_worker, chunks, itertools.repeat(window))
+            for clusters, chunk_flags in results:
+                temporal_clusters.extend(clusters)
+                flags.extend(chunk_flags)
+    else:
+        with ProcessPoolExecutor(mp_context=get_context("spawn")) as executor:
+            results = executor.map(_temporal_worker, chunks, itertools.repeat(window))
+            for clusters, chunk_flags in results:
+                temporal_clusters.extend(clusters)
+                flags.extend(chunk_flags)
 
     return {"temporal_clusters": temporal_clusters, "flags": flags}
 
@@ -297,11 +315,18 @@ def detect_score_coordination(validations: List[Dict[str, Any]]) -> Dict[str, An
         for i in range(0, len(items), chunk_size)
     ]
 
-    with ProcessPoolExecutor(mp_context=get_context("spawn")) as executor:
-        results = executor.map(_score_worker, chunks)
-        for clusters, chunk_flags in results:
-            score_clusters.extend(clusters)
-            flags.extend(chunk_flags)
+    if USE_THREAD_POOL:
+        with ThreadPoolExecutor() as executor:
+            results = executor.map(_score_worker, chunks)
+            for clusters, chunk_flags in results:
+                score_clusters.extend(clusters)
+                flags.extend(chunk_flags)
+    else:
+        with ProcessPoolExecutor(mp_context=get_context("spawn")) as executor:
+            results = executor.map(_score_worker, chunks)
+            for clusters, chunk_flags in results:
+                score_clusters.extend(clusters)
+                flags.extend(chunk_flags)
 
     return {"score_clusters": score_clusters, "flags": flags}
 
