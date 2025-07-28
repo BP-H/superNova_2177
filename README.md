@@ -237,7 +237,8 @@ To experiment with the validation analyzer locally, launch the Streamlit fronten
 ```bash
 streamlit run ui.py
 ```
-Run this command from the repository root. **Do not** execute `python ui.py`
+Or run `make ui` from the repository root to start the demo.
+Run these commands from the repository root. **Do not** execute `python ui.py`
 directly as that bypasses Streamlit's runtime.
 
 Open [http://localhost:8501](http://localhost:8501) in your browser to interact with the demo.
