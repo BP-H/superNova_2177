@@ -4,6 +4,7 @@ import json
 import logging
 import math
 import os
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -297,24 +298,11 @@ def run_analysis(validations, *, layout: str = "force"):
                         net.add_node(node, label=node, size=size, color=color)
                 net.add_edge(u, v, value=w)
             st.subheader("Validator Coordination Graph")
-            try:
-                os.remove("graph.html")
-            except FileNotFoundError:
-                pass
-            except Exception as exc:
-                logger.warning(f"Old graph removal failed: {exc}")
-            net.show("graph.html")
-            try:
-                with open("graph.html") as f:
-                    html_data = f.read()
+            with tempfile.NamedTemporaryFile("w+", suffix=".html") as tmp_file:
+                net.show(tmp_file.name)
+                tmp_file.seek(0)
+                html_data = tmp_file.read()
                 st.components.v1.html(html_data, height=500)
-            finally:
-                try:
-                    os.remove("graph.html")
-                except FileNotFoundError:
-                    pass
-                except Exception as exc:
-                    logger.warning(f"Graph cleanup failed: {exc}")
         else:
             weights = [G[u][v]["weight"] * 3 for u, v in G.edges()]
             node_sizes = [300 + (reputations.get(n, 0) * 600) for n in G.nodes()]
