@@ -1,7 +1,8 @@
 from collections import defaultdict
 
 from protocols.agents.ci_pr_protector_agent import CI_PRProtectorAgent
-from protocols.agents.guardian_interceptor_agent import GuardianInterceptorAgent
+from protocols.agents.guardian_interceptor_agent import \
+    GuardianInterceptorAgent
 from protocols.agents.meta_validator_agent import MetaValidatorAgent
 from protocols.agents.observer_agent import ObserverAgent
 
@@ -13,10 +14,7 @@ def test_ci_pr_protector_uses_llm_backend():
         calls.append(prompt)
         return """```python\nprint('ok')\n```"""
 
-    def default(prompt):
-        raise AssertionError("default LLM should not be called")
-
-    agent = CI_PRProtectorAgent(default, llm_backend=backend)
+    agent = CI_PRProtectorAgent(llm_backend=backend)
     result = agent.handle_ci_failure({"repo": "r", "branch": "b", "logs": "fail"})
 
     assert calls and "fail" in calls[0]
@@ -73,4 +71,3 @@ def test_observer_agent_llm_backend_called():
     agent.observe(payload)
 
     assert calls and "agent a" in calls[0]
-
