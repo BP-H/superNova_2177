@@ -43,6 +43,8 @@ except Exception:  # pragma: no cover - optional in dev/CI
         "DATABASE_URL": "sqlite:///:memory:",
     }
 
+sample_path = Path(__file__).resolve().parent / "sample_validations.json"
+
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
@@ -138,7 +140,7 @@ def run_analysis(validations, *, layout: str = "force"):
     """Execute the validation integrity pipeline and display results."""
     if not validations:
         try:
-            with open("sample_validations.json") as f:
+            with open(sample_path) as f:
                 sample = json.load(f)
                 validations = sample.get("validations", [])
         except Exception:
@@ -417,7 +419,7 @@ def main() -> None:
     )
     if st.button("Reset to Demo"):
         try:
-            with open("sample_validations.json") as f:
+            with open(sample_path) as f:
                 demo_data = json.load(f)
             st.session_state["validations_json"] = json.dumps(demo_data, indent=2)
         except FileNotFoundError:
@@ -505,7 +507,7 @@ def main() -> None:
                     st.stop()
             elif demo_mode:
                 try:
-                    with open("sample_validations.json") as f:
+                    with open(sample_path) as f:
                         data = json.load(f)
                 except FileNotFoundError:
                     st.warning("Demo file not found, using default dataset.")
