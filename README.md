@@ -366,6 +366,36 @@ routes = await dispatch_route("list_routes", {})
 print(routes["routes"])
 ```
 
+### Frontend Bridge & Social Hooks
+
+`frontend_bridge` now includes routes for cross-universe provenance and other
+social network operations. Events emitted by these routes trigger hooks defined
+in `hooks/events.py`.
+
+Example dispatch using the router:
+
+```python
+from frontend_bridge import dispatch_route
+from protocols.utils.messaging import MessageHub
+from hooks import events
+
+bus = MessageHub()
+bus.subscribe(events.CROSS_REMIX_CREATED, lambda m: print(m.data))
+
+await dispatch_route(
+    "cross_universe_register_bridge",
+    {
+        "coin_id": "abc123",
+        "source_universe": "testnet",
+        "source_coin": "xyz789",
+        "proof": "http://example.com/proof",
+    },
+)
+```
+
+The `MessageHub` message bus lets observers react to hook events in real time.
+See `docs/hooks.md` for the full list of event names.
+
 ## 🧪 Running Tests
 
 Before invoking `pre-commit` or `pytest`, install the minimal testing
