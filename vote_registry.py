@@ -55,3 +55,15 @@ def load_votes() -> Dict[str, Any]:
 #   including voter type (``human``, ``ai``, ``company``) and context so that
 #   threshold calculations can reference species distributions.
 
+# Design outline -------------------------------------------------------------
+#
+# The registry will ultimately link validator entries to OAuth identities or
+# blockchain wallet addresses, enabling transparent verification of vote
+# ownership. A lightweight public frontend will visualize each validator's
+# voting timeline by consuming this module's API. To track evolving consensus
+# dynamics, real-time graph components will subscribe to vote updates across
+# forks. The underlying ``tri_species_vote_registry.json`` structure will map
+# every vote to one of three voter categories—``human``, ``ai``, or
+# ``company``—so that cross-species participation and thresholds can be
+# analyzed programmatically.
+
