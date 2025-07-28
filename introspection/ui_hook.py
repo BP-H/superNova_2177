@@ -12,7 +12,9 @@ from .introspection_pipeline import run_full_audit
 ui_hook_manager = HookManager()
 
 
-async def trigger_full_audit_ui(payload: Dict[str, Any], db: Session) -> Dict[str, Any]:
+async def trigger_full_audit_ui(
+    payload: Dict[str, Any], db: Session, **_: Any
+) -> Dict[str, Any]:
     """Run a full introspection audit triggered from the UI.
 
     Parameters

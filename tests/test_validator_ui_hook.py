@@ -1,6 +1,11 @@
 import pytest
 
+from frontend_bridge import dispatch_route
 from validators import ui_hook
+
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 
 
 class DummyHookManager:
@@ -26,8 +31,8 @@ async def test_update_reputations_ui_emits_event(monkeypatch):
 
     payload = {"validations": [{"validator_id": "v1", "score": 0.7}]}
 
-    result = await ui_hook.update_reputations_ui(payload, object())
+    result = await dispatch_route("update_validator_reputations", payload, db=object())
 
-    assert result == {"reputations": {"v1": 0.5}, "diversity": {}}
-    assert called["vals"] == payload["validations"]
-    assert dummy.events == [("validator_reputations", (result,), {})]
+    assert result == {"reputations": {"v1": 0.5}, "diversity": {}}  # nosec B101
+    assert called["vals"] == payload["validations"]  # nosec B101
+    assert dummy.events == [("validator_reputations", (result,), {})]  # nosec B101
