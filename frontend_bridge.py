@@ -55,3 +55,8 @@ from consensus_forecaster_agent_ui_hook import forecast_consensus_ui
 
 register_route("rank_hypotheses_by_confidence", rank_hypotheses_by_confidence_ui)
 register_route("detect_conflicting_hypotheses", detect_conflicting_hypotheses_ui)
+
+# Built-in temporal analysis route
+from temporal.ui_hook import analyze_temporal_ui
+
+register_route("temporal_consistency", analyze_temporal_ui)
