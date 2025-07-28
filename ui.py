@@ -625,6 +625,8 @@ def render_logs_tab() -> None:
 def main() -> None:
     """Main entry point for the validation analysis UI."""
     header("superNova_2177 Validation Analyzer", layout="wide")
+    st.title("Welcome to superNova_2177")
+    st.success("\u2705 Streamlit loaded!")
 
     ts_placeholder = st.empty()
     if "session_start_ts" not in st.session_state:
