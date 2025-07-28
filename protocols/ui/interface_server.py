@@ -1,12 +1,13 @@
 # START: agent_ui_controller_setup
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 import importlib
 import pkgutil
-from typing import Dict, Type, Any, List, Optional
+from typing import Any, Dict, List, Optional, Type
 
-from protocols.core.runtime import set_provider_key, get_key
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
 from llm_backends import get_backend
+from protocols.core.runtime import set_provider_key
 
 app = FastAPI(title="Protocol Agent UI")
 
@@ -35,6 +36,8 @@ class LaunchRequest(BaseModel):
     api_key: str
     agents: List[str]
     llm_backend: Optional[str] = None
+
+
 # END: agent_ui_controller_setup
 
 
@@ -53,7 +56,9 @@ def launch_agents(req: LaunchRequest):
     if req.llm_backend:
         backend_fn = get_backend(req.llm_backend)
         if backend_fn is None:
-            raise HTTPException(status_code=404, detail=f"Backend {req.llm_backend} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Backend {req.llm_backend} not found"
+            )
 
     launched = []
     for name in req.agents:
@@ -73,7 +78,9 @@ def launch_agents(req: LaunchRequest):
                 instance.start()
             launched.append(name)
         except Exception as exc:
-            raise HTTPException(status_code=500, detail=f"Failed to launch {name}: {exc}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to launch {name}: {exc}"
+            )
 
     return {"launched": launched, "provider": req.provider}
 
@@ -88,4 +95,6 @@ def step_agents():
             tick()
             stepped.append(name)
     return {"stepped": stepped, "active_agents": list(active_agents.keys())}
+
+
 # END: agent_ui_routes
