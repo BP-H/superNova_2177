@@ -13,6 +13,15 @@ def _safe_find_spec(name, package=None):
 
 importlib.util.find_spec = _safe_find_spec
 
+# Ensure ``sqlalchemy.orm.select`` is available when SQLAlchemy is installed.
+try:  # pragma: no cover - optional dependency
+    import sqlalchemy
+    import sqlalchemy.orm
+    if not hasattr(sqlalchemy.orm, "select"):
+        sqlalchemy.orm.select = sqlalchemy.select
+except Exception:
+    pass
+
 ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
@@ -493,6 +502,7 @@ for mod_name in [
             stub.relationship = sa_stub.relationship
             stub.declarative_base = sa_stub.declarative_base
             stub.DeclarativeBase = sa_stub.declarative_base().__class__
+            stub.select = sa_stub.select
         if mod_name == "sqlalchemy":
             import stubs.sqlalchemy_stub as sa_stub
 
