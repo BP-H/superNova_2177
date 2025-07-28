@@ -366,6 +366,11 @@ routes = await dispatch_route("list_routes", {})
 print(routes["routes"])
 ```
 
+During development, you can also open `/ui/debug_panel` in the NiceGUI
+frontend to interactively invoke these routes. The panel lists every
+registered name with a JSON payload editor and uses `dispatch_route` under
+the hood.
+
 ## 🧪 Running Tests
 
 Before invoking `pre-commit` or `pytest`, install the minimal testing
