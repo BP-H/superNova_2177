@@ -4,6 +4,19 @@ from __future__ import annotations
 
 from typing import Any, Awaitable, Callable, Dict, Union
 
+
+class BackgroundTask:
+    """Wrapper indicating a coroutine should run in the background."""
+
+    def __init__(self, coro: Awaitable[Dict[str, Any]]) -> None:
+        self.coro = coro
+        self.long_running = True
+
+
+def long_running(coro: Awaitable[Dict[str, Any]]) -> BackgroundTask:
+    """Mark ``coro`` to be executed in the background."""
+    return BackgroundTask(coro)
+
 Handler = Callable[..., Union[Dict[str, Any], Awaitable[Dict[str, Any]]]]
 
 ROUTES: Dict[str, Handler] = {}
@@ -26,9 +39,21 @@ async def dispatch_route(
         raise KeyError(name)
     handler = ROUTES[name]
     result = handler(payload, **kwargs)
+    if isinstance(result, BackgroundTask):
+        async def job() -> Dict[str, Any]:
+            return await result.coro
+
+        job_id = queue_agent.enqueue_job(job)
+        return {"job_id": job_id}
     if isinstance(result, Awaitable):
         result = await result
     return result
+
+
+from protocols.core.job_queue_agent import JobQueueAgent
+
+
+queue_agent = JobQueueAgent()
 
 
 
@@ -37,7 +62,14 @@ def _list_routes(_: Dict[str, Any]) -> Dict[str, Any]:
     return {"routes": sorted(ROUTES.keys())}
 
 
+def _job_status(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Return the status of a background job."""
+    job_id = payload.get("job_id", "")
+    return queue_agent.get_status(job_id)
+
+
 register_route("list_routes", _list_routes)
+register_route("job_status", _job_status)
 
 # Built-in hypothesis-related routes
 from hypothesis.ui_hook import (
