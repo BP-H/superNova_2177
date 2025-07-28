@@ -864,7 +864,7 @@ if __name__ == "__main__":
         print("UI Booted", file=sys.stderr)
     except Exception as exc:  # pragma: no cover - startup diagnostics
         logger.exception("UI startup failed")
-        print("Startup failed", file=sys.stderr)
+        print(f"Startup failed: {exc}", file=sys.stderr)
         traceback.print_exc(file=sys.stderr)
         st.warning(f"UI startup failed — check logs for details: {exc}")
 
