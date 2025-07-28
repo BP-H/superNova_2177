@@ -2,6 +2,7 @@
 
 from functools import wraps, lru_cache
 from typing import Callable, List, Tuple, Dict, Any, Optional
+from config import get_emoji_weights
 import importlib
 import math
 import inspect
@@ -285,7 +286,7 @@ def is_valid_emoji(emoji: str, config: "Config") -> bool:
     validation_notes: unit tests ensure only configured emoji allowed
     approximation: exact
     """
-    return emoji in config.EMOJI_WEIGHTS
+    return emoji in get_emoji_weights()
 
 
 @VerifiedScientificModel(

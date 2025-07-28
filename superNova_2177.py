@@ -516,7 +516,7 @@ except Exception:  # pragma: no cover - optional dependency
 import structlog
 import prometheus_client as prom
 from prometheus_client import REGISTRY
-from config import Config
+from config import Config, get_emoji_weights
 from scientific_metrics import (
     calculate_influence_score,
     calculate_interaction_entropy,
@@ -1158,7 +1158,7 @@ def is_valid_username(name: str) -> bool:
 
 
 def is_valid_emoji(emoji: str, config: "Config") -> bool:
-    return emoji in config.EMOJI_WEIGHTS
+    return emoji in get_emoji_weights()
 
 
 def sanitize_text(text: str, config: "Config") -> str:

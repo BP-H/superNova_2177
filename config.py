@@ -3,6 +3,21 @@ from decimal import Decimal
 from typing import Dict, List
 import os
 
+EMOJI_WEIGHTS = None
+
+
+def load_from_config() -> Dict[str, Decimal]:
+    """Load emoji weights from the ``Config`` class."""
+    return Config.EMOJI_WEIGHTS
+
+
+def get_emoji_weights() -> Dict[str, Decimal]:
+    """Return cached emoji weights, loading them on first access."""
+    global EMOJI_WEIGHTS
+    if EMOJI_WEIGHTS is None:
+        EMOJI_WEIGHTS = load_from_config()
+    return EMOJI_WEIGHTS
+
 class Config:
     ROOT_INITIAL_VALUE: Decimal = Decimal("1000000")
     TREASURY_SHARE: Decimal = Decimal("0.3333")
