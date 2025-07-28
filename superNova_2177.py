@@ -2453,6 +2453,9 @@ def get_music_generator(
 ):
     return MusicGeneratorService(db, user)
 
+from login_router import router as login_router
+app.include_router(login_router)
+
 
 # Endpoints (Full implementation from FastAPI files, enhanced)
 @app.post(
@@ -2488,36 +2491,6 @@ def register_harmonizer(user: HarmonizerCreate, db: Session = Depends(get_db)):
     return new_user
 
 
-@app.post("/token", response_model=Token, tags=["Harmonizers"])
-def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
-):
-    user = (
-        db.query(Harmonizer).filter(Harmonizer.username == form_data.username).first()
-    )
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-        )
-    if not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    if not user.consent_given:
-        raise InvalidConsentError("User has revoked consent.")
-    streaks = user.engagement_streaks or {}
-    last_login = datetime.datetime.fromisoformat(
-        streaks.get("last_login", "1970-01-01T00:00:00")
-    )
-    now = datetime.datetime.utcnow()
-    if (now.date() - last_login.date()).days == 1:
-        streaks["daily"] = streaks.get("daily", 0) + 1
-    elif now.date() > last_login.date():
-        streaks["daily"] = 1
-    streaks["last_login"] = now.isoformat()
-    user.engagement_streaks = streaks
-    db.commit()
-    access_token = create_access_token({"sub": user.username})
-    return {"access_token": access_token, "token_type": "bearer"}
 
 
 @app.get("/users/me", response_model=HarmonizerOut, tags=["Harmonizers"])
