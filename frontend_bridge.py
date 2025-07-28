@@ -43,6 +43,8 @@ register_route("list_routes", _list_routes)
 from hypothesis.ui_hook import (
     rank_hypotheses_by_confidence_ui,
     detect_conflicting_hypotheses_ui,
+    register_hypothesis_ui,
+    update_hypothesis_score_ui,
     rank_hypotheses_ui,
     synthesize_consensus_ui,
 )
@@ -55,6 +57,8 @@ from consensus_forecaster_agent_ui_hook import forecast_consensus_ui
 
 register_route("rank_hypotheses_by_confidence", rank_hypotheses_by_confidence_ui)
 register_route("detect_conflicting_hypotheses", detect_conflicting_hypotheses_ui)
+register_route("register_hypothesis", register_hypothesis_ui)
+register_route("update_hypothesis_score", update_hypothesis_score_ui)
 
 # Prediction-related routes
 from predictions.ui_hook import (
