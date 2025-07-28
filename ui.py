@@ -34,6 +34,7 @@ except Exception:
                 return asyncio.run_coroutine_threadsafe(coro, loop).result()
             return loop.run_until_complete(coro)
 
+
 try:
     from frontend_bridge import dispatch_route
 except Exception:  # pragma: no cover - optional dependency
@@ -502,8 +503,14 @@ def render_proposals_tab() -> None:
     with st.form("vote_proposal_form"):
         st.write("Vote on Proposal")
         ids = [p.get("id") for p in proposals]
-        prop_id = st.selectbox("Proposal", ids) if ids else st.number_input("Proposal ID", value=1, step=1)
-        harmonizer_id = st.number_input("Harmonizer ID", value=1, step=1, key="harmonizer_id_vote")
+        prop_id = (
+            st.selectbox("Proposal", ids)
+            if ids
+            else st.number_input("Proposal ID", value=1, step=1)
+        )
+        harmonizer_id = st.number_input(
+            "Harmonizer ID", value=1, step=1, key="harmonizer_id_vote"
+        )
         vote_choice = st.selectbox("Vote", ["yes", "no", "abstain"])
         vote_sub = st.form_submit_button("Submit Vote")
     if vote_sub:
@@ -577,7 +584,9 @@ def render_agent_ops_tab() -> None:
 
     with st.form("launch_agents_form"):
         launch_sel = st.multiselect("Agents to launch", agents)
-        llm_backend = st.selectbox("LLM Backend", ["", "dummy", "GPT-4o", "Claude-3", "Gemini"])
+        llm_backend = st.selectbox(
+            "LLM Backend", ["", "dummy", "GPT-4o", "Claude-3", "Gemini"]
+        )
         provider = st.text_input("Provider")
         api_key = st.text_input("API Key", type="password")
         launch = st.form_submit_button("Launch Agents")
@@ -623,13 +632,16 @@ def render_logs_tab() -> None:
             except Exception as exc:
                 alert(f"Explain failed: {exc}", "error")
 
+
 def main() -> None:
     """Main entry point for the validation analysis UI."""
     header("superNova_2177 Validation Analyzer", layout="wide")
 
     ts_placeholder = st.empty()
     if "session_start_ts" not in st.session_state:
-        st.session_state["session_start_ts"] = datetime.utcnow().isoformat(timespec="seconds")
+        st.session_state["session_start_ts"] = datetime.utcnow().isoformat(
+            timespec="seconds"
+        )
     ts_placeholder.markdown(
         f"<div style='position:fixed;top:0;right:0;background:rgba(0,0,0,0.6);color:white;padding:0.25em 0.5em;border-radius:0 0 0 4px;'>Session start: {st.session_state['session_start_ts']} UTC</div>",
         unsafe_allow_html=True,
@@ -709,7 +721,9 @@ def main() -> None:
             "High Risk Threshold", 0.1, 1.0, float(VCConfig.HIGH_RISK_THRESHOLD), 0.05
         )
 
-        uploaded_file = st.file_uploader("Upload validations JSON (drag/drop)", type="json")
+        uploaded_file = st.file_uploader(
+            "Upload validations JSON (drag/drop)", type="json"
+        )
         run_clicked = st.button("Run Analysis")
         rerun_clicked = False
         if st.session_state.get("last_result") is not None:
@@ -757,6 +771,11 @@ def main() -> None:
         run_agent_clicked = st.button("Run Agent")
 
         st.divider()
+        governance_view = st.checkbox(
+            "Governance View", value=st.session_state.get("governance_view", False)
+        )
+        st.session_state["governance_view"] = governance_view
+
         show_dev = st.checkbox("Dev Tools")
         if show_dev:
             dev_tabs = st.tabs(
@@ -869,9 +888,14 @@ def main() -> None:
                 st.write("Available agents:", list(AGENT_REGISTRY.keys()))
                 if cosmic_nexus:
                     st.write(
-                        "Sub universes:", list(getattr(cosmic_nexus, "sub_universes", {}).keys())
+                        "Sub universes:",
+                        list(getattr(cosmic_nexus, "sub_universes", {}).keys()),
                     )
-                if agent and InMemoryStorage and isinstance(agent.storage, InMemoryStorage):
+                if (
+                    agent
+                    and InMemoryStorage
+                    and isinstance(agent.storage, InMemoryStorage)
+                ):
                     st.write(
                         f"Users: {len(agent.storage.users)} / Coins: {len(agent.storage.coins)}"
                     )
@@ -920,7 +944,9 @@ def main() -> None:
                         data = json.load(f)
                 except FileNotFoundError:
                     alert("Demo file not found, using default dataset.", "warning")
-                    data = {"validations": [{"validator": "A", "target": "B", "score": 0.9}]}
+                    data = {
+                        "validations": [{"validator": "A", "target": "B", "score": 0.9}]
+                    }
                 st.session_state["validations_json"] = json.dumps(data, indent=2)
             elif uploaded_file is not None:
                 data = json.load(uploaded_file)
@@ -943,7 +969,9 @@ def main() -> None:
         st.session_state["analysis_diary"].append(
             {
                 "timestamp": st.session_state["last_run"],
-                "score": result.get("integrity_analysis", {}).get("overall_integrity_score"),
+                "score": result.get("integrity_analysis", {}).get(
+                    "overall_integrity_score"
+                ),
                 "risk": result.get("integrity_analysis", {}).get("risk_level"),
             }
         )
@@ -982,7 +1010,9 @@ def main() -> None:
                         agent = agent_cls(llm_backend=backend_fn)
                     else:
                         agent = agent_cls(llm_backend=backend_fn)
-                    result = agent.process_event({"event": event_type, "payload": payload})
+                    result = agent.process_event(
+                        {"event": event_type, "payload": payload}
+                    )
                     st.session_state["agent_output"] = result
                     st.success("Agent executed")
                 except Exception as exc:
@@ -1020,7 +1050,11 @@ def main() -> None:
             "\n".join(
                 [
                     f"* {e['timestamp']}: {e.get('note', '')}"
-                    + (f" (RFCs: {', '.join(e['rfc_ids'])})" if e.get("rfc_ids") else "")
+                    + (
+                        f" (RFCs: {', '.join(e['rfc_ids'])})"
+                        if e.get("rfc_ids")
+                        else ""
+                    )
                     for e in st.session_state["diary"]
                 ]
             ),
@@ -1072,11 +1106,17 @@ def main() -> None:
             ids = set(e.strip().lower() for e in entry.get("rfc_ids", []) if e)
             for rfc in rfc_entries:
                 rid = str(rfc["id"]).lower()
-                if rid in note_lower or rid.replace("-", " ") in note_lower or rid in ids:
+                if (
+                    rid in note_lower
+                    or rid.replace("-", " ") in note_lower
+                    or rid in ids
+                ):
                     diary_mentions.setdefault(str(rfc["id"]), []).append(i)
                     continue
                 keywords = {
-                    w.strip(".,()[]{}:").lower() for w in str(rfc["summary"]).split() if len(w) > 4
+                    w.strip(".,()[]{}:").lower()
+                    for w in str(rfc["summary"]).split()
+                    if len(w) > 4
                 }
                 if any(k in note_lower for k in keywords):
                     diary_mentions.setdefault(str(rfc["id"]), []).append(i)
@@ -1093,7 +1133,9 @@ def main() -> None:
             st.markdown(f"### {heading}", unsafe_allow_html=True)
             st.write(summarize_text(str(rfc["summary"])))
             if mentions:
-                links = ", ".join([f"[entry {idx + 1}](#diary-{idx})" for idx in mentions])
+                links = ", ".join(
+                    [f"[entry {idx + 1}](#diary-{idx})" for idx in mentions]
+                )
                 st.markdown(f"Referenced in: {links}", unsafe_allow_html=True)
             st.markdown(f"[Read RFC]({cast(Path, rfc['path']).as_posix()})")
             if preview_all or st.checkbox("Show details", key=f"show_{rfc['id']}"):
@@ -1115,20 +1157,25 @@ def main() -> None:
     with st.expander("Agent’s Internal Thoughts"):
         st.markdown(notes_content)
 
-    tabs = st.tabs([
-        "Proposal Hub",
-        "Governance",
-        "Agent Ops",
-        "Logs",
-    ])
-    with tabs[0]:
-        render_proposals_tab()
-    with tabs[1]:
-        render_governance_tab()
-    with tabs[2]:
-        render_agent_ops_tab()
-    with tabs[3]:
-        render_logs_tab()
+    if st.session_state.get("governance_view"):
+        tabs = st.tabs(
+            [
+                "Proposal Hub",
+                "Governance",
+                "Agent Ops",
+                "Logs",
+            ]
+        )
+        with tabs[0]:
+            render_proposals_tab()
+        with tabs[1]:
+            render_governance_tab()
+        with tabs[2]:
+            render_agent_ops_tab()
+        with tabs[3]:
+            render_logs_tab()
+    else:
+        st.info("Enable Governance View in the sidebar to see governance features.")
 
 
 if __name__ == "__main__":
