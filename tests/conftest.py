@@ -324,6 +324,12 @@ if "superNova_2177" not in sys.modules:
     stub_sn.SessionLocal = sa_stub.sessionmaker(bind=stub_engine)
     stub_sn.Base = sa_stub.declarative_base()
     stub_sn.USE_IN_MEMORY_STORAGE = True
+    stub_sn.SQLAlchemyStorage = type(
+        "SQLAlchemyStorage",
+        (),
+        {"set_coin": lambda self, *_a, **_k: None},
+    )
+    stub_sn.UserCreationError = type("UserCreationError", (Exception,), {})
 
     # Import FastAPI components with a lightweight fallback when the real
     # package isn't installed.  This avoids ``ModuleNotFoundError`` during test

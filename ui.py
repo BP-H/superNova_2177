@@ -9,7 +9,9 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import networkx as nx
-import streamlit as st
+from optional_import import optional_import
+
+st = optional_import("streamlit")
 from streamlit_helpers import (
     alert,
     header,
@@ -18,23 +20,15 @@ from streamlit_helpers import (
     apply_theme,
 )
 
-try:
-    import plotly.graph_objects as go
-except Exception:  # pragma: no cover - optional dependency
-    go = None
-
-try:
-    from pyvis.network import Network
-except Exception:  # pragma: no cover - optional dependency
-    Network = None
+go = optional_import("plotly.graph_objects")
+Network = optional_import("pyvis.network", "Network")
 
 from network.network_coordination_detector import build_validation_graph
 from validation_integrity_pipeline import analyze_validation_integrity
 
-try:
-    from validator_reputation_tracker import update_validator_reputations
-except Exception:  # pragma: no cover - optional dependency
-    update_validator_reputations = None
+update_validator_reputations = optional_import(
+    "validator_reputation_tracker", "update_validator_reputations"
+)
 
 from typing import Any, cast
 
@@ -223,7 +217,7 @@ def run_analysis(validations, *, layout: str = "force"):
             except Exception as exc:  # pragma: no cover - optional
                 logger.warning(f"Reputation calc failed: {exc}")
 
-        if go is not None:
+        if go:
             edge_x = []
             edge_y = []
             for u, v in G.edges():
@@ -285,7 +279,7 @@ def run_analysis(validations, *, layout: str = "force"):
                 )
             except Exception as exc:  # pragma: no cover - optional
                 logger.warning(f"Image export failed: {exc}")
-        elif Network is not None:
+        elif Network:
             net = Network(height="450px", width="100%")
             max_rep = max(reputations.values()) if reputations else 1.0
             for u, v, w in edges:

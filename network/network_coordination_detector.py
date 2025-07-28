@@ -25,6 +25,16 @@ from multiprocessing import get_context
 from statistics import mean
 from typing import Any, Dict, List, Set, Tuple
 
+from optional_import import optional_import
+
+np = optional_import("numpy")
+SentenceTransformer = optional_import(
+    "sentence_transformers", "SentenceTransformer"
+)
+TfidfVectorizer = optional_import(
+    "sklearn.feature_extraction.text", "TfidfVectorizer"
+)
+
 logger = logging.getLogger("superNova_2177.coordination")
 logger.propagate = False
 
@@ -339,10 +349,7 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
     @lru_cache(maxsize=128)
     def _compute_embeddings(texts: Tuple[str, ...]):
         """Heavy embedding computation cached for reuse."""
-        try:
-            from sentence_transformers import SentenceTransformer
-
-            # Avoid accidental network downloads by forcing offline mode if unset
+        if SentenceTransformer:
             os.environ.setdefault("HF_HUB_OFFLINE", "1")
             os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
             try:
@@ -352,22 +359,16 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
                 logger.warning(
                     f"SentenceTransformer failed: {st_exc}; using TF-IDF fallback"
                 )
-        except Exception as import_exc:  # pragma: no cover - fallback rarely triggered
-            logger.warning(
-                f"SentenceTransformer unavailable: {import_exc}; using TF-IDF fallback"
-            )
-        try:
-            from sklearn.feature_extraction.text import TfidfVectorizer
-
-            vec = TfidfVectorizer().fit(list(texts))
-            return vec.transform(list(texts)).toarray()
-        except Exception as tfidf_exc:  # pragma: no cover - minimal fallback
-            logger.error(
-                f"TF-IDF fallback unavailable: {tfidf_exc}; using simple counts"
-            )
+        if TfidfVectorizer:
             try:
-                import numpy as np
-
+                vec = TfidfVectorizer().fit(list(texts))
+                return vec.transform(list(texts)).toarray()
+            except Exception as tfidf_exc:
+                logger.error(
+                    f"TF-IDF fallback unavailable: {tfidf_exc}; using simple counts"
+                )
+        if np:
+            try:
                 vocab = sorted({w for t in texts for w in t.split()})
 
                 def to_counts(text: str) -> np.ndarray:
@@ -375,15 +376,17 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
                     return np.array(counts, dtype=float)
 
                 return np.stack([to_counts(t) for t in texts])
-            except Exception as np_exc:  # pragma: no cover - extremely rare
-                logger.error(f"NumPy unavailable: {np_exc}; using pure Python counts")
+            except Exception as np_exc:
+                logger.error(
+                    f"NumPy unavailable: {np_exc}; using pure Python counts"
+                )
 
-                vocab = sorted({w for t in texts for w in t.split()})
+        vocab = sorted({w for t in texts for w in t.split()})
 
-                def to_counts_list(text: str) -> List[float]:
-                    return [float(text.split().count(tok)) for tok in vocab]
+        def to_counts_list(text: str) -> List[float]:
+            return [float(text.split().count(tok)) for tok in vocab]
 
-                return [to_counts_list(t) for t in texts]
+        return [to_counts_list(t) for t in texts]
 
     # Heavy embedding generation can dominate runtime on large datasets.
     # Profile with ``cProfile`` to verify and consider batching strategies.
@@ -391,16 +394,15 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
 
     def _average_vectors(vectors: List[Any]):
         """Compute mean of vectors supporting numpy arrays or lists."""
-        try:
-            import numpy as np
-
-            if isinstance(vectors, np.ndarray):
-                return vectors.mean(axis=0)
-            if vectors and isinstance(vectors[0], np.ndarray):
-                stacked = np.stack(vectors)
-                return stacked.mean(axis=0)
-        except Exception:
-            pass
+        if np:
+            try:
+                if isinstance(vectors, np.ndarray):
+                    return vectors.mean(axis=0)
+                if vectors and isinstance(vectors[0], np.ndarray):
+                    stacked = np.stack(vectors)
+                    return stacked.mean(axis=0)
+            except Exception:
+                pass
 
         length = len(vectors[0]) if vectors else 0
         sums = [0.0] * length
@@ -425,19 +427,12 @@ def detect_semantic_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
         emb2 = validator_embeddings[v2]
 
         def _cosine_similarity(a: Any, b: Any) -> float:
-            try:
-                import numpy as np
+            if np and isinstance(a, np.ndarray) and isinstance(b, np.ndarray):
+                pass  # numpy path disabled
 
-                if isinstance(a, np.ndarray) and isinstance(b, np.ndarray):
-                    dot = float(a @ b)
-                    norm = math.sqrt(float(a @ a) * float(b @ b))
-                    return dot / norm if norm else 0.0
-            except Exception:
-                pass
-
-            dot = sum(x * y for x, y in zip(a, b))
-            norm1 = math.sqrt(sum(x * x for x in a))
-            norm2 = math.sqrt(sum(y * y for y in b))
+            dot = sum(float(x) * float(y) for x, y in zip(a, b))
+            norm1 = math.sqrt(sum(float(x) * float(x) for x in a))
+            norm2 = math.sqrt(sum(float(y) * float(y) for y in b))
             norm = norm1 * norm2
             return dot / norm if norm else 0.0
 

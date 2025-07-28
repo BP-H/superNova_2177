@@ -633,10 +633,9 @@ file_handler.setFormatter(
 )
 logging.getLogger().addHandler(file_handler)
 
-try:  # pragma: no cover - optional in some environments
-    import streamlit as st  # type: ignore
-except Exception:  # pragma: no cover - optional dependency
-    st = None  # type: ignore
+from optional_import import optional_import
+
+st = optional_import("streamlit")  # type: ignore
 
 metrics_started = False
 
@@ -3952,46 +3951,47 @@ if "pytest" in sys.modules and agent is None:
 
 def _is_streamlit_context() -> bool:
     """Return True when executed via ``streamlit run``."""
+    get_ctx = optional_import(
+        "streamlit.runtime.scriptrunner", "get_script_run_ctx"
+    )
     try:
-        import streamlit.runtime.scriptrunner as stc  # type: ignore
-        return stc.get_script_run_ctx() is not None
+        return bool(get_ctx())
     except Exception:
         return False
 
 
 def _run_boot_debug() -> None:
     """Render a simple Streamlit diagnostics UI."""
+    if not st:
+        logger.error("Streamlit not installed")
+        return
+
+    st.set_page_config(page_title="Boot Diagnostic", layout="centered")
+    st.header("Boot Diagnostic")
+
+    st.subheader("Config Test")
     try:
-        import streamlit as st  # type: ignore
-
-        st.set_page_config(page_title="Boot Diagnostic", layout="centered")
-        st.header("Boot Diagnostic")
-
-        st.subheader("Config Test")
-        try:
-            from config import Config
-            st.success("Config import succeeded")
-            st.write({"METRICS_PORT": Config.METRICS_PORT})
-        except Exception as exc:  # pragma: no cover - debug only
-            st.error(f"Config import failed: {exc}")
-            Config = None  # type: ignore
-
-        st.subheader("Harmony Scanner Check")
-        scanner = None
-        try:
-            scanner = HarmonyScanner(Config()) if Config else None
-            st.success("HarmonyScanner instantiated")
-        except Exception as exc:  # pragma: no cover - debug only
-            st.error(f"HarmonyScanner init failed: {exc}")
-
-        if st.button("Run Dummy Scan") and scanner:
-            try:
-                scanner.scan("hello world")
-                st.success("Dummy scan completed")
-            except Exception as exc:  # pragma: no cover - debug only
-                st.error(f"Dummy scan error: {exc}")
+        from config import Config
+        st.success("Config import succeeded")
+        st.write({"METRICS_PORT": Config.METRICS_PORT})
     except Exception as exc:  # pragma: no cover - debug only
-        logger.error("Streamlit debug view failed: %s", exc)
+        st.error(f"Config import failed: {exc}")
+        Config = None  # type: ignore
+
+    st.subheader("Harmony Scanner Check")
+    scanner = None
+    try:
+        scanner = HarmonyScanner(Config()) if Config else None
+        st.success("HarmonyScanner instantiated")
+    except Exception as exc:  # pragma: no cover - debug only
+        st.error(f"HarmonyScanner init failed: {exc}")
+
+    if st.button("Run Dummy Scan") and scanner:
+        try:
+            scanner.scan("hello world")
+            st.success("Dummy scan completed")
+        except Exception as exc:  # pragma: no cover - debug only
+            st.error(f"Dummy scan error: {exc}")
 
 
 if __name__ == "__main__":

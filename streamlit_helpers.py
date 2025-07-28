@@ -9,15 +9,16 @@ from __future__ import annotations
 from typing import Literal
 from contextlib import contextmanager
 
-import streamlit as st
+from optional_import import optional_import
+
+st = optional_import("streamlit")
 
 
 try:  # pragma: no cover - depends on Streamlit version
     _escape_md = st.escape_markdown
-except AttributeError:  # pragma: no cover - fallback for older versions
-    try:  # pragma: no cover - optional text_util path
-        from streamlit.text_util import escape_markdown as _escape_md  # type: ignore
-    except Exception:  # pragma: no cover - final fallback
+except Exception:
+    _escape_md = optional_import("streamlit.text_util", "escape_markdown")
+    if getattr(_escape_md, "_optional_missing", False):
         def _escape_md(text: str) -> str:
             return (
                 text.replace("&", "&amp;")
