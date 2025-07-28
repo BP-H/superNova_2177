@@ -132,12 +132,17 @@ from prediction.ui_hook import (
     schedule_audit_proposal_ui,
     store_prediction_ui,
 )
+from vote_registry.ui_hook import record_vote_ui, load_votes_ui
+from optimization.ui_hook import tune_parameters_ui
 from predictions.ui_hook import update_prediction_status_ui
+
 
 register_route("store_prediction", store_prediction_ui)
 register_route("get_prediction", get_prediction_ui)
 register_route("schedule_audit_proposal", schedule_audit_proposal_ui)
 register_route("update_prediction_status", update_prediction_status_ui)
+register_route("record_vote", record_vote_ui)
+register_route("load_votes", load_votes_ui)
 
 # Additional routes
 from virtual_diary.ui_hook import fetch_entries_ui, add_entry_ui
