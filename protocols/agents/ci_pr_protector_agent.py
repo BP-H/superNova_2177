@@ -16,6 +16,7 @@ Components:
 """
 
 import logging
+import re
 
 from protocols.core.internal_protocol import InternalAgentProtocol
 
@@ -52,6 +53,8 @@ class CI_PRProtectorAgent(InternalAgentProtocol):
         else:
             llm_response = self.talk_to_llm(prompt)
         patch = self.extract_code_block(llm_response)
+        if patch is None:
+            logger.warning("No valid code block found in LLM response")
         return {"proposed_patch": patch, "explanation": llm_response}
 
     def handle_pr_error(self, payload):
@@ -65,6 +68,8 @@ class CI_PRProtectorAgent(InternalAgentProtocol):
         else:
             llm_response = self.talk_to_llm(prompt)
         patch = self.extract_code_block(llm_response)
+        if patch is None:
+            logger.warning("No valid code block found in LLM response")
         return {"patch": patch, "justification": llm_response}
 
     def construct_prompt(self, error_input: str, context_type: str):
@@ -85,11 +90,12 @@ Explanation:
 <text>
 """
 
-    def extract_code_block(self, llm_response: str) -> str:
-        if "```" in llm_response:
-            code = llm_response.split("```python")[-1].split("```")[0]
-            return code.strip()
-        return "# No valid patch found"
+    def extract_code_block(self, llm_response: str):
+        """Return first fenced code block or None."""
+        match = re.search(r"```(?:python)?\n?(.*?)```", llm_response, re.DOTALL)
+        if match:
+            return match.group(1).strip()
+        return None
 
 
 # --- Hook to LLM (example) ---
