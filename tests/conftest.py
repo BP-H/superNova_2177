@@ -596,10 +596,7 @@ for mod_name in [
             stub.log = lambda v: math.log(v)
             stub.exp = lambda v: math.exp(v)
 
-            # bool_ is used as an alias for Python's ``bool`` within the test
-            # suite.  Define it here so that the NumPy stub mirrors the real
-            # module interface and avoid ``AttributeError`` when ``numpy.bool_``
-            # is accessed.
+            # Provide ``bool_`` alias so tests referencing ``numpy.bool_`` work
             stub.bool_ = bool
         if mod_name == "dateutil":
             parser_mod = types.ModuleType("dateutil.parser")
