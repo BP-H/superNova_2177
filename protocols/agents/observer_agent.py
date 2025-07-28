@@ -3,6 +3,9 @@
 """
 ObserverAgent watches agent activity via MessageHub and suggests evolutionary forks,
 skill swaps, or role specialization based on performance trends and behavioral anomalies.
+
+An optional ``llm_backend`` callable can be supplied for additional LLM-driven
+analysis of observed results.
 """
 
 import logging
@@ -15,12 +18,25 @@ logger = logging.getLogger("ObserverAgent")
 
 
 class ObserverAgent:
-    """Watches tasks and recommends agent forks or upgrades."""
+    """Watches tasks and recommends agent forks or upgrades.
 
-    def __init__(self, hub, agent_registry, fatigue_tracker):
+    Parameters
+    ----------
+    hub : MessageHub-like
+        Event hub that the agent subscribes to.
+    agent_registry : dict
+        Mapping of agent names to agent instances.
+    fatigue_tracker : object
+        Tracker providing ``task_count`` and ``fatigue_score`` methods.
+    llm_backend : callable, optional
+        Optional backend for future LLM-based observations.
+    """
+
+    def __init__(self, hub, agent_registry, fatigue_tracker, llm_backend=None):
         self.hub = hub
         self.registry = agent_registry
         self.fatigue_tracker = fatigue_tracker
+        self.llm_backend = llm_backend
         self.task_history = defaultdict(deque)  # agent_id -> deque of (task, result)
         self.max_history = 20
         self.subscribed = False
@@ -36,6 +52,12 @@ class ObserverAgent:
         agent_id = data.get("agent")
         task = data.get("task")
         result = data.get("result", {})
+
+        if self.llm_backend:
+            prompt = (
+                f"Analyze agent {agent_id} result for task '{task}': {result}"
+            )
+            self.llm_backend(prompt)
 
         self.task_history[agent_id].append((task, result))
         if len(self.task_history[agent_id]) > self.max_history:
