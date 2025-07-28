@@ -12,12 +12,13 @@ import logging
 import time
 from collections import defaultdict, deque
 
+from protocols.core.internal_protocol import InternalAgentProtocol
 from protocols.utils.forking import fork_agent
 
 logger = logging.getLogger("ObserverAgent")
 
 
-class ObserverAgent:
+class ObserverAgent(InternalAgentProtocol):
     """Watches tasks and recommends agent forks or upgrades.
 
     Parameters
@@ -33,6 +34,8 @@ class ObserverAgent:
     """
 
     def __init__(self, hub, agent_registry, fatigue_tracker, llm_backend=None):
+        super().__init__()
+        self.name = "Observer"
         self.hub = hub
         self.registry = agent_registry
         self.fatigue_tracker = fatigue_tracker
@@ -40,18 +43,21 @@ class ObserverAgent:
         self.task_history = defaultdict(deque)  # agent_id -> deque of (task, result)
         self.max_history = 20
         self.subscribed = False
+        self.receive("AGENT_TASK_RESULT", self.observe)
 
     def start(self):
         if not self.subscribed:
-            self.hub.subscribe("AGENT_TASK_RESULT", self.observe)
+            self.hub.subscribe(
+                "AGENT_TASK_RESULT",
+                lambda m: self.process_event({"event": "AGENT_TASK_RESULT", "payload": m.data}),
+            )
             self.subscribed = True
             logger.info("ObserverAgent subscribed to AGENT_TASK_RESULT")
 
-    def observe(self, message):
-        data = message.data
-        agent_id = data.get("agent")
-        task = data.get("task")
-        result = data.get("result", {})
+    def observe(self, payload: dict):
+        agent_id = payload.get("agent")
+        task = payload.get("task")
+        result = payload.get("result", {})
 
         if self.llm_backend:
             prompt = (
@@ -74,6 +80,10 @@ class ObserverAgent:
             )
             # Optionally auto-register
             self.registry[new_agent.name] = new_agent
+            self.send(
+                "AGENT_FORKED",
+                {"original": agent_id, "fork": new_agent.name, "mutation": mutation},
+            )
 
     def should_fork(self, agent_id, task, fatigue, belief_score) -> bool:
         if fatigue > 10 and belief_score < 0.2:

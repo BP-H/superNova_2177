@@ -1,4 +1,3 @@
-import types
 from collections import defaultdict
 
 from protocols.agents.ci_pr_protector_agent import CI_PRProtectorAgent
@@ -70,8 +69,8 @@ def test_observer_agent_llm_backend_called():
 
     registry = {"a": object()}
     agent = ObserverAgent(Hub(), registry, Fatigue(), llm_backend=backend)
-    msg = types.SimpleNamespace(data={"agent": "a", "task": "t", "result": {}})
-    agent.observe(msg)
+    payload = {"agent": "a", "task": "t", "result": {}}
+    agent.observe(payload)
 
     assert calls and "agent a" in calls[0]
 
