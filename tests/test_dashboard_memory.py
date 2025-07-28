@@ -45,3 +45,12 @@ def test_export_latest_result(monkeypatch):
     blob = ui.export_latest_result(state)
     data = json.loads(blob)
     assert data == {"foo": "bar"}
+
+
+def test_diff_results(monkeypatch):
+    ui = load_ui(monkeypatch)
+    old = {"a": 1}
+    new = {"a": 2}
+    diff = ui.diff_results(old, new)
+    assert "-  \"a\": 1" in diff
+    assert "+  \"a\": 2" in diff
