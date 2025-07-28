@@ -11,6 +11,10 @@ This module can be profiled with ``cProfile`` to identify heavy NumPy or
 NetworkX sections when analyzing large validation graphs::
 
     python -m cProfile -s time network/network_coordination_detector.py
+
+Multiprocessing is optional because Streamlit cannot spawn child processes in
+certain hosted environments. Set ``COORDINATION_USE_MULTIPROCESS=1`` to enable
+process-based workers. Otherwise a ``ThreadPoolExecutor`` is used.
 """
 
 import logging
@@ -20,7 +24,7 @@ from datetime import datetime, timedelta
 from statistics import mean
 import itertools
 from functools import lru_cache
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import os
 import math
 
@@ -50,6 +54,9 @@ class Config:
     TEMPORAL_WEIGHT = 0.4
     SCORE_WEIGHT = 0.4
     SEMANTIC_WEIGHT = 0.2
+
+    # Concurrency: enable multiprocessing when the environment allows
+    USE_MULTIPROCESS = os.environ.get("COORDINATION_USE_MULTIPROCESS", "0") == "1"
 
 
 @lru_cache(maxsize=1024)
@@ -237,7 +244,8 @@ def detect_temporal_coordination(validations: List[Dict[str, Any]]) -> Dict[str,
     chunk_size = max(1, (len(pairs) + cpu_count - 1) // cpu_count)
     chunks = [pairs[i : i + chunk_size] for i in range(0, len(pairs), chunk_size)]
 
-    with ProcessPoolExecutor() as executor:
+    executor_cls = ProcessPoolExecutor if Config.USE_MULTIPROCESS else ThreadPoolExecutor
+    with executor_cls() as executor:
         results = executor.map(_temporal_worker, chunks, itertools.repeat(window))
         for clusters, chunk_flags in results:
             temporal_clusters.extend(clusters)
@@ -290,7 +298,8 @@ def detect_score_coordination(validations: List[Dict[str, Any]]) -> Dict[str, An
     chunk_size = max(1, (len(items) + cpu_count - 1) // cpu_count)
     chunks = [items[i : i + chunk_size] for i in range(0, len(items), chunk_size)]
 
-    with ProcessPoolExecutor() as executor:
+    executor_cls = ProcessPoolExecutor if Config.USE_MULTIPROCESS else ThreadPoolExecutor
+    with executor_cls() as executor:
         results = executor.map(_score_worker, chunks)
         for clusters, chunk_flags in results:
             score_clusters.extend(clusters)
