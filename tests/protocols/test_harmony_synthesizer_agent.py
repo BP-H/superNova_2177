@@ -1,5 +1,5 @@
-import protocols.agents.HarmonySynthesizerAgent as hs_agent_module
-from protocols.agents.HarmonySynthesizerAgent import HarmonySynthesizerAgent
+import protocols.agents.harmony_synthesizer_agent as hs_agent_module
+from protocols.agents.harmony_synthesizer_agent import HarmonySynthesizerAgent
 
 
 def test_handle_generate_with_provider(monkeypatch):

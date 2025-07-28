@@ -1,7 +1,7 @@
 # Aggregated agent imports for easy access
-from .CoordinationSentinelAgent import CoordinationSentinelAgent
-from .HarmonySynthesizerAgent import HarmonySynthesizerAgent
-from .TemporalAuditAgent import TemporalAuditAgent
+from .coordination_sentinel_agent import CoordinationSentinelAgent
+from .harmony_synthesizer_agent import HarmonySynthesizerAgent
+from .temporal_audit_agent import TemporalAuditAgent
 from .anomaly_spotter_agent import AnomalySpotterAgent
 from .ci_pr_protector_agent import CI_PRProtectorAgent
 from .collaborative_planner_agent import CollaborativePlannerAgent
