@@ -18,6 +18,9 @@ from streamlit_helpers import (
     centered_container,
     apply_theme,
 )
+from social_tabs import render_social_tab
+from voting_ui import render_voting_tab
+from agent_ui import render_agent_insights_tab
 
 try:
     from streamlit_app import _run_async
@@ -622,8 +625,8 @@ def render_logs_tab() -> None:
                 alert(f"Explain failed: {exc}", "error")
 
 
-def main() -> None:
-    """Main entry point for the validation analysis UI."""
+def render_validation_ui() -> None:
+    """Render the validation analysis interface."""
     header("superNova_2177 Validation Analyzer", layout="wide")
 
     ts_placeholder = st.empty()
@@ -1146,25 +1149,24 @@ def main() -> None:
     with st.expander("Agent’s Internal Thoughts"):
         st.markdown(notes_content)
 
-    if st.session_state.get("governance_view"):
-        tabs = st.tabs(
-            [
-                "Proposal Hub",
-                "Governance",
-                "Agent Ops",
-                "Logs",
-            ]
-        )
-        with tabs[0]:
-            render_proposals_tab()
-        with tabs[1]:
-            render_governance_tab()
-        with tabs[2]:
-            render_agent_ops_tab()
-        with tabs[3]:
-            render_logs_tab()
-    else:
-        st.info("Enable Governance View in the sidebar to see governance features.")
+
+def main() -> None:
+    """Entry point launching the tabbed interface."""
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "Validation",
+        "Friends",
+        "Votes",
+        "Agents",
+    ])
+    with tab1:
+        render_validation_ui()
+    with tab2:
+        render_social_tab()
+    with tab3:
+        render_voting_tab()
+    with tab4:
+        render_agent_insights_tab()
+
 
 
 if __name__ == "__main__":
