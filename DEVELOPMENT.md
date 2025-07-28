@@ -1,10 +1,10 @@
 # Development Setup
 
-This repository targets **Python 3.12** and uses standard tooling for managing dependencies and tests.
+This repository targets **Python 3.11** and uses standard tooling for managing dependencies and tests.
 
 ## Prerequisites
 
-1. Install Python 3.12.
+1. Install Python 3.11.
 2. Create a virtual environment:
    ```bash
    python -m venv venv

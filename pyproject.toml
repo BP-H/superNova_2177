@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "superNova_2177 social metaverse engine"
 authors = [{name = "BP-H"}]
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = [
     "sqlalchemy>=2.0",
     "networkx",

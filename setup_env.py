@@ -72,8 +72,8 @@ def build_web_ui(pip: list) -> None:
 
 
 def main() -> None:
-    if sys.version_info < (3, 12):
-        sys.exit("Python 3.12 or newer is required.")
+    if sys.version_info < (3, 11):
+        sys.exit("Python 3.11 or newer is required.")
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     parser = argparse.ArgumentParser(description='Set up the environment')
     parser.add_argument('--run-app', action='store_true', help='start the API after installation')
