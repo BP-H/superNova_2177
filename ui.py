@@ -9,7 +9,6 @@ import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
-import sys
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -858,14 +857,13 @@ if __name__ == "__main__":
     logger.info("\u2705 Streamlit UI started. Launching main()...")
     try:
         main()
-    try:
-        main()
-        st.success("✅ UI Booted")
-        print("UI Booted", file=sys.stderr)
     except Exception as exc:  # pragma: no cover - startup diagnostics
         logger.exception("UI startup failed")
         print(f"Startup failed: {exc}", file=sys.stderr)
         traceback.print_exc(file=sys.stderr)
         st.warning(f"UI startup failed — check logs for details: {exc}")
+    else:
+        st.success("✅ UI Booted")
+        print("UI Booted", file=sys.stderr)
 
 
