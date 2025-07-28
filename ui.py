@@ -4,7 +4,6 @@ import json
 import logging
 import math
 import os
-import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -17,6 +16,8 @@ from streamlit_helpers import (
     theme_selector,
     centered_container,
     apply_theme,
+    graph_to_graphml_buffer,
+    figure_to_png_buffer,
 )
 
 try:
@@ -193,10 +194,8 @@ def run_analysis(validations, *, layout: str = "force"):
             G.add_edge(v1, v2, weight=w)
 
         # Offer GraphML download of the constructed graph
-        gm_buf = io.BytesIO()
         try:
-            nx.write_graphml(G, gm_buf)
-            gm_buf.seek(0)
+            gm_buf = graph_to_graphml_buffer(G)
             st.download_button(
                 "Download GraphML",
                 gm_buf.getvalue(),
@@ -275,10 +274,8 @@ def run_analysis(validations, *, layout: str = "force"):
             st.subheader("Validator Coordination Graph")
             st.plotly_chart(fig, use_container_width=True)
 
-            img_buf = io.BytesIO()
             try:
-                fig.write_image(img_buf, format="png")
-                img_buf.seek(0)
+                img_buf = figure_to_png_buffer(fig)
                 st.download_button(
                     "Download Graph Image",
                     img_buf.getvalue(),
@@ -298,11 +295,10 @@ def run_analysis(validations, *, layout: str = "force"):
                         net.add_node(node, label=node, size=size, color=color)
                 net.add_edge(u, v, value=w)
             st.subheader("Validator Coordination Graph")
-            with tempfile.NamedTemporaryFile("w+", suffix=".html") as tmp_file:
-                net.show(tmp_file.name)
-                tmp_file.seek(0)
-                html_data = tmp_file.read()
-                st.components.v1.html(html_data, height=500)
+            html_buf = io.StringIO()
+            html_buf.write(net.generate_html())
+            html_data = html_buf.getvalue()
+            st.components.v1.html(html_data, height=500)
         else:
             weights = [G[u][v]["weight"] * 3 for u, v in G.edges()]
             node_sizes = [300 + (reputations.get(n, 0) * 600) for n in G.nodes()]

@@ -6,8 +6,9 @@ applications to keep the UI code concise and consistent.
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 import html
+import io
 import streamlit as st
 
 
@@ -74,11 +75,56 @@ def centered_container(max_width: str = "900px") -> "st.delta_generator.DeltaGen
     )
     return st.container()
 
+
+def graph_to_graphml_buffer(graph: Any) -> io.BytesIO:
+    """Return a ``BytesIO`` buffer containing GraphML for ``graph``."""
+    buf = io.BytesIO()
+    try:  # Prefer networkx when available
+        import networkx as nx  # type: ignore
+
+        write_fn = getattr(nx, "write_graphml", None)
+        if callable(write_fn):
+            write_fn(graph, buf)
+            buf.seek(0)
+            return buf
+    except Exception:
+        pass
+
+    nodes = list(getattr(graph, "nodes", []))
+    edges_iter = getattr(graph, "edges", lambda data=False: [])(data=True)
+    buf.write(b'<?xml version="1.0" encoding="utf-8"?>\n')
+    buf.write(b'<graphml xmlns="http://graphml.graphdrawing.org/xmlns">\n')
+    buf.write(b"  <graph edgedefault=\"undirected\">\n")
+    for n in nodes:
+        buf.write(f'    <node id="{n}"/>\n'.encode())
+    for edge in edges_iter:
+        if len(edge) == 3:
+            u, v, data = edge
+        else:
+            u, v = edge[:2]
+            data = {}
+        weight = data.get("weight") if isinstance(data, dict) else None
+        attr = f' weight="{weight}"' if weight is not None else ""
+        buf.write(f'    <edge source="{u}" target="{v}"{attr}/>\n'.encode())
+    buf.write(b"  </graph>\n</graphml>")
+    buf.seek(0)
+    return buf
+
+
+def figure_to_png_buffer(fig: Any) -> io.BytesIO:
+    """Return a ``BytesIO`` buffer containing a PNG of ``fig``."""
+    buf = io.BytesIO()
+    fig.write_image(buf, format="png")
+    buf.seek(0)
+    return buf
+
 __all__ = [
     "alert",
     "header",
     "apply_theme",
     "theme_selector",
     "centered_container",
+    "graph_to_graphml_buffer",
+    "figure_to_png_buffer",
 ]
 
