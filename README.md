@@ -243,6 +243,9 @@ point for the Streamlit interface.
 Run these commands from the repository root. **Do not** execute `python ui.py`
 directly as that bypasses Streamlit's runtime.
 
+Exporting plots as static images requires the `kaleido` package. Install it
+using `pip install -r requirements.txt` if it isn't already available.
+
 Open [http://localhost:8501](http://localhost:8501) in your browser to interact with the demo. Use the **Reset to Demo** button below the editor to reload `sample_validations.json` at any time.
 
 `ui.py` reads configuration from `st.secrets` when running under Streamlit. If
@@ -273,6 +276,8 @@ Deploy the demo UI online with Streamlit Cloud:
 3. Choose the repo and set `ui.py` as the entry point.
 4. Add your `SECRET_KEY` and set a `DATABASE_URL` secret with your connection string under **Secrets** in the app settings.
 5. Streamlit will install dependencies from `requirements.txt` and launch the app.
+
+`kaleido` is bundled in `requirements.txt` so image export features work on Streamlit Cloud.
 
 After the build completes, you'll get a shareable URL to interact with the validation demo in your browser.
 
