@@ -106,7 +106,7 @@ def format_analysis_output(result: Dict[str, Any]) -> str:
     }.get(certification, "❓")
     
     output.append(f"\n{status_emoji} CERTIFICATION: {certification.upper()}")
-    output.append(f"📊 Consensus Score: {consensus_score}/1.0")
+    output.append(f"📊 Consensus Score: {consensus_score}")
     output.append(f"👥 Validators: {validator_count}")
     
     # Integrity analysis (if available)
