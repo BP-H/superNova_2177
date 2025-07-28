@@ -852,11 +852,20 @@ def main() -> None:
         render_voting_tab()
     with tab4:
         render_agent_insights_tab()
+
+
 if __name__ == "__main__":
     logger.info("\u2705 Streamlit UI started. Launching main()...")
     try:
         main()
-        st.success("\u2705 UI Booted")
-    except Exception as exc:
-        st.error(f"Startup failed: {exc}")
+    try:
+        main()
+        st.success("✅ UI Booted")
+        print("UI Booted", file=sys.stderr)
+    except Exception as exc:  # pragma: no cover - startup diagnostics
+        logger.exception("UI startup failed")
+        print("Startup failed", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+        st.warning(f"UI startup failed — check logs for details: {exc}")
+
 
