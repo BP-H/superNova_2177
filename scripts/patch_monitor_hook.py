@@ -1,17 +1,15 @@
 import subprocess  # nosec B404
 import sys
 from pathlib import Path
-from shutil import which
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from governance.patch_monitor import check_patch_compliance  # noqa: E402
 
 
 def main() -> int:
-    git_cmd = which("git") or "git"
     try:
         diff = subprocess.check_output(  # nosec B607,B603
-            [git_cmd, "diff", "--cached"], text=True
+            ["git", "diff", "--cached"], text=True
         )
     except FileNotFoundError:
         print("git executable not found")
