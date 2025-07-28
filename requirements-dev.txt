@@ -13,3 +13,7 @@ bandit
 httpx==0.27.0
 streamlit-ace
 kaleido
+
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
