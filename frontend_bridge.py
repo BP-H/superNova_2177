@@ -52,7 +52,6 @@ from hypothesis_meta_evaluator_ui_hook import trigger_meta_evaluation_ui
 from hypothesis_reasoner_ui_hook import auto_flag_stale_ui
 from validation_certifier_ui_hook import run_integrity_analysis_ui
 from validator_reputation_tracker_ui_hook import update_reputations_ui
-from consensus_forecaster_agent_ui_hook import forecast_consensus_ui
 
 
 register_route("rank_hypotheses_by_confidence", rank_hypotheses_by_confidence_ui)

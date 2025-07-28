@@ -5,7 +5,7 @@ import hypothesis_meta_evaluator_ui_hook as meta_hook
 import hypothesis_reasoner_ui_hook as reasoner_hook
 import validation_certifier_ui_hook as cert_hook
 import validator_reputation_tracker_ui_hook as rep_hook
-import consensus_forecaster_agent_ui_hook as cf_hook
+from consensus import ui_hook as cf_hook
 
 
 class DummyManager:
@@ -121,7 +121,7 @@ async def test_update_reputations_route(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_forecast_consensus_agent_route(monkeypatch):
+async def test_forecast_consensus_route(monkeypatch):
     dummy = DummyManager()
     monkeypatch.setattr(cf_hook, "ui_hook_manager", dummy, raising=False)
 
@@ -137,7 +137,7 @@ async def test_forecast_consensus_agent_route(monkeypatch):
         "validations": [{"score": 0.6}],
         "network_analysis": {"overall_risk_score": 0.1},
     }
-    result = await dispatch_route("forecast_consensus_agent", payload)
+    result = await dispatch_route("forecast_consensus", payload)
 
     assert result == {"forecast_score": 0.7, "trend": "increasing"}
     assert called["args"] == (payload["validations"], payload["network_analysis"])
