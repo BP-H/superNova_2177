@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 import importlib.util
+import types
 
 _orig_find_spec = importlib.util.find_spec
 
@@ -469,7 +470,20 @@ for mod_name in [
             pass
         stub = types.ModuleType(mod_name)
         if mod_name == "fastapi":
-            stub.FastAPI = object
+            class FastAPI:
+                def __init__(self, *a, **kw):
+                    pass
+
+                def _decorator(self, *a, **kw):
+                    def wrapper(func):
+                        return func
+
+                    return wrapper
+
+                post = _decorator
+                get = _decorator
+
+            stub.FastAPI = FastAPI
             stub.Depends = lambda x=None: None
             stub.HTTPException = type("HTTPException", (), {})
             stub.Query = lambda *a, **kw: None
