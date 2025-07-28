@@ -218,7 +218,7 @@ CosmicNexus orchestrates the multiverse, coordinating forks, entropy reduction, 
 """
 # Core Imports from all files
 try:
-    from config import Config as SystemConfig
+    from config import Config as SystemConfig, get_emoji_weights
     CONFIG = SystemConfig
 except ImportError:
     class TempConfig:
@@ -587,7 +587,7 @@ from hook_manager import HookManager
 # when Prometheus metrics are initialised below, leading to a ``NameError`` at
 # runtime on Streamlit Cloud.
 try:  # pragma: no cover - fallback only used if optional import fails
-    from config import Config as SystemConfig
+    from config import Config as SystemConfig, get_emoji_weights
     CONFIG = SystemConfig
 except Exception:  # pragma: no cover - extremely defensive
     CONFIG = types.SimpleNamespace(METRICS_PORT=8001)
@@ -1160,7 +1160,7 @@ def is_valid_username(name: str) -> bool:
 def is_valid_emoji(emoji: str, config: "Config") -> bool:
     if emoji is None or config is None:
         return False
-    return emoji in config.EMOJI_WEIGHTS
+    return emoji in get_emoji_weights()
 
 
 def sanitize_text(text: str, config: "Config") -> str:

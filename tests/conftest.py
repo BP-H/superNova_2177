@@ -30,6 +30,7 @@ if "superNova_2177" not in sys.modules:
     import importlib
     import importlib.machinery
     from decimal import Decimal
+    from functools import lru_cache
 
     stub_sn = types.ModuleType("superNova_2177")
     # Mark as a stub so modules can detect and optionally reload the real one if
@@ -106,6 +107,11 @@ if "superNova_2177" not in sys.modules:
         ALLOWED_POLICY_KEYS = ["DAILY_DECAY", "KARMA_MINT_THRESHOLD"]
         SPECIES = ["human", "ai", "company"]
 
+        @staticmethod
+        @lru_cache(maxsize=1)
+        def get_emoji_weights() -> dict:
+            return Config.EMOJI_WEIGHTS
+
     stub_sn.Config = Config
     stub_sn.Harmonizer = type("Harmonizer", (), {})
     stub_sn.VibeNode = type("VibeNode", (), {})
@@ -162,13 +168,17 @@ if "superNova_2177" not in sys.modules:
                         "root_coin_id": event.get("root_coin_id") or "root",
                         "karma": event.get("karma", "0"),
                         "consent_given": event.get("consent", True),
+                        "is_genesis": event.get("is_genesis", False),
                     },
                 )
             elif ev == "MINT":
                 user = self.storage.get_user(event["user"])
                 if user:
                     karma = Decimal(user.get("karma", "0"))
-                    if karma >= self.config.KARMA_MINT_THRESHOLD:
+                    if not user.get("is_genesis") and karma < self.config.KARMA_MINT_THRESHOLD:
+                        return
+                    root_coin = self.storage.get_coin(event.get("root_coin_id"))
+                    if root_coin and root_coin.get("owner") == event["user"]:
                         self.storage.set_coin(
                             event["coin_id"],
                             {"owner": event["user"], "value": event.get("value", "0")},

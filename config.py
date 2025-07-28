@@ -1,6 +1,7 @@
 # --- MODULE: config.py ---
 from decimal import Decimal
 from typing import Dict, List
+from functools import lru_cache
 import os
 
 class Config:
@@ -103,3 +104,9 @@ class Config:
     LOW_ENTROPY_DELTA_THRESHOLD: float = 0.1
     # Days before unresolved hypotheses are considered stale in meta analyses
     UNRESOLVED_HYPOTHESIS_THRESHOLD_DAYS: int = 60
+
+
+@lru_cache(maxsize=1)
+def get_emoji_weights() -> Dict[str, Decimal]:
+    """Return configured emoji reaction weights."""
+    return Config.EMOJI_WEIGHTS
