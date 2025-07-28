@@ -13,6 +13,6 @@ def test_sample_data_analysis():
     result = analyze_validation_integrity(validations)
     
     assert "recommended_certification" in result
-    assert result["consensus_score"] > 0
+    assert result["consensus_score"] in (0, 100)
     assert result["validator_count"] == len(validations)
     assert isinstance(result["integrity_analysis"], dict)

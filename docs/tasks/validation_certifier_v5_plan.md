@@ -53,3 +53,8 @@ The tasks below break down these features and suggest initial API endpoints or m
 ---
 
 These tasks should be created as GitHub issues or added to the project backlog. They can be addressed independently but share dependencies on the new v5 API namespace.
+
+### Future Work – Decentralized Ownership Verification
+* **Binary Trust Output**: Expand the new 100/0 scoring scaffold into a full ownership verification module.
+* **Distributed Ledger**: Store binary validation outcomes on-chain for transparent audit trails.
+* **Reputation Weighting**: Integrate validator reputation into binary approval decisions.
