@@ -1,4 +1,8 @@
-import protocols.agents.harmony_synthesizer_agent as hs_agent_module
+import importlib
+
+hs_agent_module = importlib.import_module(
+    "protocols.agents.harmony_synthesizer_agent"
+)
 from protocols.agents.harmony_synthesizer_agent import HarmonySynthesizerAgent
 
 
