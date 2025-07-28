@@ -568,6 +568,7 @@ for mod_name in [
             stub.stack = lambda arrays: arrays
             stub.zeros = lambda shape, dtype=float: [0.0] * shape if isinstance(shape, int) else [[0.0] * shape[1] for _ in range(shape[0])]
             stub.isscalar = lambda obj: not hasattr(obj, "__iter__")
+            stub.bool_ = bool
 
             def _trapz(y, x):
                 area = 0.0
@@ -593,7 +594,6 @@ for mod_name in [
             stub.linspace = _linspace
             stub.log = lambda v: math.log(v)
             stub.exp = lambda v: math.exp(v)
-            stub.bool_ = bool
         if mod_name == "dateutil":
             parser_mod = types.ModuleType("dateutil.parser")
             def _parse(val):
