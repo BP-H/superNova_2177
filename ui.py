@@ -11,13 +11,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
-from streamlit_helpers import (
-    alert,
-    header,
-    theme_selector,
-    centered_container,
-    apply_theme,
-)
+
+from streamlit_helpers import (alert, apply_theme, centered_container, header,
+                               theme_selector)
 
 try:
     import plotly.graph_objects as go
@@ -365,7 +361,9 @@ def main() -> None:
 
     ts_placeholder = st.empty()
     if "session_start_ts" not in st.session_state:
-        st.session_state["session_start_ts"] = datetime.utcnow().isoformat(timespec="seconds")
+        st.session_state["session_start_ts"] = datetime.utcnow().isoformat(
+            timespec="seconds"
+        )
     ts_placeholder.markdown(
         f"<div style='position:fixed;top:0;right:0;background:rgba(0,0,0,0.6);color:white;padding:0.25em 0.5em;border-radius:0 0 0 4px;'>Session start: {st.session_state['session_start_ts']} UTC</div>",
         unsafe_allow_html=True,
@@ -554,7 +552,7 @@ def main() -> None:
             alert(f"Invalid payload: {exc}", "error")
         else:
             backend_fn = get_backend(backend_choice.lower(), api_key or None)
-            agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get("cls")
+            agent_cls = AGENT_REGISTRY.get(agent_choice, {}).get("class")
             if agent_cls is None:
                 alert("Unknown agent selected", "error")
             else:

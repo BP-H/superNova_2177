@@ -11,15 +11,19 @@ from .utils.remote import handshake, ping_agent
 
 # Expose agent classes for convenience
 for _name, _info in AGENT_REGISTRY.items():
-    globals()[_name] = _info["cls"]
+    globals()[_name] = _info["class"]
 
-__all__ = [
-    "AgentProfile",
-    "AgentTaskContract",
-    "self_reflect",
-    "ping_agent",
-    "handshake",
-    "fork_agent",
-    "ValidatorElf",
-    "DreamWeaver",
-] + list(AGENT_REGISTRY.keys()) + ["AGENT_REGISTRY"]
+__all__ = (
+    [
+        "AgentProfile",
+        "AgentTaskContract",
+        "self_reflect",
+        "ping_agent",
+        "handshake",
+        "fork_agent",
+        "ValidatorElf",
+        "DreamWeaver",
+    ]
+    + list(AGENT_REGISTRY.keys())
+    + ["AGENT_REGISTRY"]
+)

@@ -1,77 +1,77 @@
 """Registry of core protocol agents and their purposes."""
 
+from .agents.anomaly_spotter_agent import AnomalySpotterAgent
 from .agents.ci_pr_protector_agent import CI_PRProtectorAgent
-from .agents.guardian_interceptor_agent import GuardianInterceptorAgent
-from .agents.meta_validator_agent import MetaValidatorAgent
-from .agents.observer_agent import ObserverAgent
+from .agents.codex_agent import CodexAgent
 from .agents.collaborative_planner_agent import CollaborativePlannerAgent
 from .agents.coordination_sentinel_agent import CoordinationSentinelAgent
-from .agents.harmony_synthesizer_agent import HarmonySynthesizerAgent
-from .agents.temporal_audit_agent import TemporalAuditAgent
 from .agents.cross_universe_bridge_agent import CrossUniverseBridgeAgent
-from .agents.anomaly_spotter_agent import AnomalySpotterAgent
+from .agents.guardian_interceptor_agent import GuardianInterceptorAgent
+from .agents.harmony_synthesizer_agent import HarmonySynthesizerAgent
+from .agents.meta_validator_agent import MetaValidatorAgent
+from .agents.observer_agent import ObserverAgent
 from .agents.quantum_resonance_agent import QuantumResonanceAgent
-from .agents.codex_agent import CodexAgent
+from .agents.temporal_audit_agent import TemporalAuditAgent
 
 # Mapping of agent names to metadata dictionaries
 AGENT_REGISTRY = {
     "CI_PRProtectorAgent": {
-        "cls": CI_PRProtectorAgent,
+        "class": CI_PRProtectorAgent,
         "description": "Repairs CI/PR failures by proposing patches.",
         "llm_capable": True,
     },
     "GuardianInterceptorAgent": {
-        "cls": GuardianInterceptorAgent,
+        "class": GuardianInterceptorAgent,
         "description": "Inspects LLM suggestions for risky content.",
         "llm_capable": True,
     },
     "MetaValidatorAgent": {
-        "cls": MetaValidatorAgent,
+        "class": MetaValidatorAgent,
         "description": "Audits patches and adjusts trust scores.",
         "llm_capable": True,
     },
     "ObserverAgent": {
-        "cls": ObserverAgent,
+        "class": ObserverAgent,
         "description": "Monitors agent outputs and suggests forks when needed.",
         "llm_capable": False,
     },
     "CollaborativePlannerAgent": {
-        "cls": CollaborativePlannerAgent,
+        "class": CollaborativePlannerAgent,
         "description": "Coordinates tasks and delegates to the best agent.",
         "llm_capable": False,
     },
     "CoordinationSentinelAgent": {
-        "cls": CoordinationSentinelAgent,
+        "class": CoordinationSentinelAgent,
         "description": "Detects suspicious validator coordination patterns.",
         "llm_capable": False,
     },
     "HarmonySynthesizerAgent": {
-        "cls": HarmonySynthesizerAgent,
+        "class": HarmonySynthesizerAgent,
         "description": "Transforms metrics into short MIDI snippets.",
         "llm_capable": False,
     },
     "TemporalAuditAgent": {
-        "cls": TemporalAuditAgent,
+        "class": TemporalAuditAgent,
         "description": "Audits timestamps for suspicious gaps or disorder.",
         "llm_capable": False,
     },
     "CrossUniverseBridgeAgent": {
-        "cls": CrossUniverseBridgeAgent,
+        "class": CrossUniverseBridgeAgent,
         "description": "Validates cross-universe remix provenance.",
         "llm_capable": True,
     },
     "AnomalySpotterAgent": {
-        "cls": AnomalySpotterAgent,
+        "class": AnomalySpotterAgent,
         "description": "Flags anomalies in metrics streams.",
         "llm_capable": True,
     },
     "QuantumResonanceAgent": {
-        "cls": QuantumResonanceAgent,
+        "class": QuantumResonanceAgent,
         "description": "Tracks resonance via quantum simulation.",
         "llm_capable": True,
     },
     "CodexAgent": {
-        "cls": CodexAgent,
+        "class": CodexAgent,
         "description": "Base agent with in-memory utilities.",
         "llm_capable": False,
     },

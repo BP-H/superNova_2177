@@ -24,5 +24,4 @@ def test_registry_classes_correct():
         module = importlib.import_module(f"protocols.agents.{mod_name}")
         for name, obj in inspect.getmembers(module, inspect.isclass):
             if name.endswith("Agent"):
-                assert AGENT_REGISTRY[name]["cls"] is obj
-
+                assert AGENT_REGISTRY[name]["class"] is obj
