@@ -13,7 +13,7 @@ import sys
 import superNova_2177 as sn
 
 # Reload the real module if a lightweight stub was installed by conftest
-if getattr(sn, "__file__", None) is None:
+if getattr(sn, "__file__", "") in (None, "superNova_2177_stub") or str(getattr(sn, "__file__", "")).endswith("_stub"):
     for mod in list(sys.modules):
         if mod.startswith("fastapi") or mod.startswith("pydantic") or mod.startswith("sqlalchemy"):
             sys.modules.pop(mod, None)
