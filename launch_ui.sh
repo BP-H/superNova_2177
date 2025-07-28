@@ -1,2 +1,2 @@
 #!/bin/bash
-streamlit run ui.py
+streamlit run streamlit_app.py

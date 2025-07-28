@@ -315,7 +315,7 @@ module falls back to a development setup equivalent to:
 The dashboard provides real-time integrity metrics and network graphs built with `streamlit`, `networkx`, and `matplotlib`. Upload your validations JSON or enable demo mode to populate the table. You can edit rows inline before re-running the analysis to see how scores change.
 
 ```bash
-streamlit run ui.py
+streamlit run streamlit_app.py
 ```
 
 Use the sidebar file uploader to select or update your dataset, then click **Run Analysis** to refresh the report.
@@ -354,7 +354,7 @@ Deploy the demo UI online with Streamlit Cloud:
 
 1. Fork this repository on GitHub.
 2. Sign in to [Streamlit Cloud](https://streamlit.io/cloud) and select **New app**.
-3. Choose the repo and set `ui.py` as the entry point.
+3. Choose the repo and set `streamlit_app.py` as the entry point.
 4. Add your `SECRET_KEY` and set a `DATABASE_URL` secret with your connection string under **Secrets** in the app settings.
 5. Streamlit will install dependencies from `requirements.txt` and launch the app.
 
