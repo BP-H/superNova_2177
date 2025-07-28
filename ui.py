@@ -1,5 +1,6 @@
 import json
 import logging
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -211,6 +212,15 @@ def main() -> None:
             st.error("Please upload a file, paste JSON, or enable demo mode.")
             st.stop()
         run_analysis(data.get("validations", []))
+
+    notes_path = Path("AgentNotes.md")
+    if notes_path.exists():
+        notes_content = notes_path.read_text()
+    else:
+        notes_content = "No notes found."
+
+    with st.expander("Agent’s Internal Thoughts"):
+        st.markdown(notes_content)
 
 
 if __name__ == "__main__":
