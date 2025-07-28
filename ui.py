@@ -13,6 +13,18 @@ except Exception:  # pragma: no cover - optional debug dependencies
     HarmonyScanner = None  # type: ignore
     Config = None  # type: ignore
 
+if Config is None:
+    class Config:
+        METRICS_PORT = 1234
+
+if HarmonyScanner is None:
+    class HarmonyScanner:
+        def __init__(self, *_a, **_k):
+            pass
+
+        def scan(self, _data):
+            return {"dummy": True}
+
 
 def run_analysis(validations):
     """Execute the validation integrity pipeline and display results."""
