@@ -63,3 +63,8 @@ def test_karma_percentile_cutoff_single_user_bounds(test_db):
 
     assert karma_percentile_cutoff(0.0, db=test_db) == pytest.approx(42.0)
     assert karma_percentile_cutoff(1.0, db=test_db) == pytest.approx(42.0)
+
+
+def test_karma_percentile_cutoff_empty_returns_zero(test_db):
+    """When no karma values exist the cutoff should be 0.0."""
+    assert karma_percentile_cutoff(0.5, db=test_db) == pytest.approx(0.0)
