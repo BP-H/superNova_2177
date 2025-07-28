@@ -451,6 +451,12 @@ def boot_diagnostic_ui():
 
 def render_proposals_tab() -> None:
     """Display proposal creation, listing and voting controls."""
+    if dispatch_route is None:
+        alert(
+            "Governance routes not enabled—enable them in config.",
+            "warning",
+        )
+        return
     if st.button("Refresh Proposals"):
         try:
             res = _run_async(dispatch_route("list_proposals", {}))
@@ -515,6 +521,12 @@ def render_proposals_tab() -> None:
 
 def render_governance_tab() -> None:
     """Display generic vote registry operations."""
+    if dispatch_route is None:
+        alert(
+            "Governance routes not enabled—enable them in config.",
+            "warning",
+        )
+        return
     if st.button("Refresh Votes"):
         try:
             res = _run_async(dispatch_route("load_votes", {}))
@@ -547,6 +559,12 @@ def render_governance_tab() -> None:
 
 def render_agent_ops_tab() -> None:
     """Expose protocol agent management routes."""
+    if dispatch_route is None:
+        alert(
+            "Governance routes not enabled—enable them in config.",
+            "warning",
+        )
+        return
     if st.button("Reload Agent List"):
         try:
             res = _run_async(dispatch_route("list_agents", {}))
@@ -586,6 +604,12 @@ def render_agent_ops_tab() -> None:
 
 def render_logs_tab() -> None:
     """Provide simple audit trace explanation."""
+    if dispatch_route is None:
+        alert(
+            "Governance routes not enabled—enable them in config.",
+            "warning",
+        )
+        return
     trace_text = st.text_area("Audit Trace JSON", value="{}", height=200)
     if st.button("Explain Trace"):
         try:

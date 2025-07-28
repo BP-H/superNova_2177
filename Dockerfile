@@ -42,7 +42,7 @@ RUN chown -R appuser:appuser /app
 
 USER appuser
 
-# Expose Streamlit default port
+# Expose Streamlit port
 EXPOSE 8501
 
 # Launch Streamlit UI explicitly
