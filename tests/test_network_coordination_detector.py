@@ -133,3 +133,35 @@ def test_detect_semantic_coordination_no_numpy_sklearn(monkeypatch):
     assert result["semantic_clusters"]
     assert result["semantic_clusters"][0]["similarity_score"] >= 0.8
 
+
+def test_detect_semantic_coordination_sentence_transformer_failure(monkeypatch):
+    validations = [
+        {
+            "validator_id": "v1",
+            "hypothesis_id": "h1",
+            "score": 0.8,
+            "timestamp": "2025-01-01T00:00:00Z",
+            "note": "the quick brown fox jumps over the lazy dog",
+        },
+        {
+            "validator_id": "v2",
+            "hypothesis_id": "h2",
+            "score": 0.8,
+            "timestamp": "2025-01-01T00:01:00Z",
+            "note": "the quick brown fox leaps over the lazy dog",
+        },
+    ]
+
+    import types, sys
+
+    class FailingST:
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError("no model")
+
+    fake_module = types.SimpleNamespace(SentenceTransformer=FailingST)
+    monkeypatch.setitem(sys.modules, "sentence_transformers", fake_module)
+
+    result = detect_semantic_coordination(validations)
+    assert result["semantic_clusters"]
+    assert result["semantic_clusters"][0]["similarity_score"] >= 0.8
+
