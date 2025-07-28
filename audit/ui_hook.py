@@ -3,15 +3,18 @@ from typing import Any, Dict
 
 from sqlalchemy.orm import Session
 
+# isort: off
 from audit_bridge import (
     attach_trace_to_logentry,
     export_causal_path,
     log_hypothesis_with_trace,
 )
-from hook_manager import HookManager
-from protocols.utils.messaging import MessageHub
-from causal_graph import InfluenceGraph
 
+# isort: on
+from causal_graph import InfluenceGraph
+from hook_manager import HookManager
+from hooks import events
+from protocols.utils.messaging import MessageHub
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -22,7 +25,7 @@ hook_manager = HookManager()
 message_hub = MessageHub()
 
 
-async def log_hypothesis_ui(payload: Dict[str, Any], db: Session) -> str:
+async def log_hypothesis_ui(payload: Dict[str, Any], db: Session, **_: Any) -> str:
     """Asynchronously log a hypothesis from the UI.
 
     Parameters
@@ -45,14 +48,14 @@ async def log_hypothesis_ui(payload: Dict[str, Any], db: Session) -> str:
         metadata=payload.get("metadata"),
     )
     await hook_manager.trigger(
-        "audit_log",
+        events.AUDIT_LOG,
         {"action": "log_hypothesis", "key": key},
     )
     message_hub.publish("audit_log", {"action": "log_hypothesis", "key": key})
     return key
 
 
-async def attach_trace_ui(payload: Dict[str, Any], db: Session) -> None:
+async def attach_trace_ui(payload: Dict[str, Any], db: Session, **_: Any) -> None:
     """Attach trace metadata to an existing log entry via the UI."""
     attach_trace_to_logentry(
         int(payload["log_id"]),
@@ -61,17 +64,16 @@ async def attach_trace_ui(payload: Dict[str, Any], db: Session) -> None:
         summary=payload.get("summary"),
     )
     await hook_manager.trigger(
-        "audit_log",
+        events.AUDIT_LOG,
         {"action": "attach_trace", "log_id": int(payload["log_id"])},
     )
 
     message_hub.publish(
-        "audit_log",
-        {"action": "attach_trace", "log_id": int(payload["log_id"])}
+        "audit_log", {"action": "attach_trace", "log_id": int(payload["log_id"])}
     )
 
 
-async def export_causal_path_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
+async def export_causal_path_ui(payload: Dict[str, Any], **_: Any) -> Dict[str, Any]:
     """Run :func:`export_causal_path` with params from the UI payload."""
     graph: InfluenceGraph = payload["graph"]
     node_id = payload.get("node_id")
@@ -88,5 +90,3 @@ async def export_causal_path_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
         },
     )
     return result
-
-
