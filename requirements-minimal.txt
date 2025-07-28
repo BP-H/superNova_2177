@@ -3,7 +3,7 @@ python-dateutil
 networkx
 sqlalchemy>=2.0
 pytest-asyncio
-httpx
+httpx==0.27.0
 email-validator
 fastapi
 python-multipart
