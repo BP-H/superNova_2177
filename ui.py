@@ -19,6 +19,9 @@ from streamlit_helpers import (
     apply_theme,
 )
 
+from social_tabs import render_social_tab
+from voting_ui import render_voting_tab
+from agent_ui import render_agent_insights_tab
 try:
     from streamlit_app import _run_async
 except Exception:
@@ -622,10 +625,8 @@ def render_logs_tab() -> None:
                 alert(f"Explain failed: {exc}", "error")
 
 
-def main() -> None:
+def render_validation_ui() -> None:
     """Main entry point for the validation analysis UI."""
-    header("superNova_2177 Validation Analyzer", layout="wide")
-
     ts_placeholder = st.empty()
     if "session_start_ts" not in st.session_state:
         st.session_state["session_start_ts"] = datetime.utcnow().isoformat(
@@ -1167,6 +1168,18 @@ def main() -> None:
         st.info("Enable Governance View in the sidebar to see governance features.")
 
 
+def main() -> None:
+    """Render high level tabs."""
+    header("superNova_2177 Validation Analyzer", layout="wide")
+    tab1, tab2, tab3, tab4 = st.tabs(["Validation", "Friends", "Votes", "Agents"])
+    with tab1:
+        render_validation_ui()
+    with tab2:
+        render_social_tab()
+    with tab3:
+        render_voting_tab()
+    with tab4:
+        render_agent_insights_tab()
 if __name__ == "__main__":
-    logger.info("\u2705 Streamlit UI started. Launching main()...")
+    logger.info("\u2705 Streamlit UI started. Launching app()...")
     main()
