@@ -7,6 +7,11 @@ from .agent_protocols_suite import (
     ping_agent,
     handshake,
     fork_agent,
-    ValidatorElf,
-    DreamWeaver,
+    MessageHub,
+    Skill,
+    EmbodiedAgent,
+    AgentNegotiation,
+    FatigueMemoryMixin,
+    ProbabilisticBeliefSystem,
+    IntrospectiveMixin,
 )
