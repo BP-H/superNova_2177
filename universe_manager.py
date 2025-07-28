@@ -1,10 +1,9 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-"""Basic universe management utilities."""
+"""Universe lifecycle management utilities.
 
 from __future__ import annotations
-
 import uuid
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
