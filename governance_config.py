@@ -87,10 +87,10 @@ def karma_percentile_cutoff(percentile: float, db: Session | None = None) -> flo
             return 0.0
         values.sort()
         # Clamp percentile-derived index so ``percentile`` values of exactly 0
-        # or 1 map to the list bounds rather than falling outside them.
+        # or 1 map to list bounds, even when only a single value exists.
         index = round((1 - percentile) * (len(values) - 1))
-        index = max(0, min(int(index), len(values) - 1))
-        return values[index]
+        index = max(0, min(index, len(values) - 1))
+        return values[int(index)]
     finally:
         if close_session:
             db.close()
