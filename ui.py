@@ -35,6 +35,7 @@ from streamlit_helpers import (
     centered_container,
     apply_theme,
 )
+from ui_utils import summarize_text, parse_summary, load_rfc_entries
 
 try:
     from streamlit_app import _run_async
@@ -145,15 +146,6 @@ if HarmonyScanner is None:
 
         def scan(self, _data):
             return {"dummy": True}
-
-
-def summarize_text(text: str, max_len: int = 150) -> str:
-    """Basic text summarizer placeholder."""
-    if len(text) <= max_len:
-        return text
-    return text[: max_len - 3] + "..."
-
-
 def clear_memory(state: dict) -> None:
     """Reset analysis tracking state."""
     state["analysis_diary"] = []
@@ -898,32 +890,7 @@ def render_validation_ui() -> None:
         filter_text = st.text_input("Filter RFCs")
         preview_all = st.checkbox("Preview full text")
 
-        def parse_summary(text: str) -> str:
-            if "## Summary" not in text:
-                return ""
-            part = text.split("## Summary", 1)[1]
-            lines = []
-            for line in part.splitlines()[1:]:
-                if line.startswith("##"):
-                    break
-                if line.strip():
-                    lines.append(line.strip())
-            return " ".join(lines)
-
-        rfc_paths = sorted(rfc_dir.rglob("rfc-*.md"))
-        rfc_entries: list[dict[str, Any]] = []
-        rfc_index: dict[str, dict[str, Any]] = {}
-        for path in rfc_paths:
-            text = path.read_text()
-            summary = parse_summary(text)
-            entry = {
-                "id": path.stem,
-                "summary": summary,
-                "text": text,
-                "path": path,
-            }
-            rfc_entries.append(entry)
-            rfc_index[path.stem.lower()] = entry
+        rfc_entries, rfc_index = load_rfc_entries(rfc_dir)
 
         diary_mentions: dict[str, list[int]] = {str(e["id"]): [] for e in rfc_entries}
         for i, entry in enumerate(st.session_state.get("diary", [])):
