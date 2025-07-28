@@ -5,11 +5,14 @@ from typing import Any, Dict
 
 from frontend_bridge import register_route
 from hook_manager import HookManager
+from protocols.core import JobQueueAgent
 
 from .network_coordination_detector import analyze_coordination_patterns
 
 # Exposed hook manager for external subscribers
 ui_hook_manager = HookManager()
+
+queue_agent = JobQueueAgent()
 
 # Hook manager used for run_coordination_analysis
 hook_manager = HookManager()
@@ -41,8 +44,33 @@ async def trigger_coordination_analysis_ui(
     return minimal
 
 
+async def queue_coordination_analysis_ui(payload: Dict[str, Any]) -> Dict[str, str]:
+    """Queue coordination analysis and return its job ID."""
+    validations = payload.get("validations", [])
+
+    async def job() -> Dict[str, Any]:
+        result = analyze_coordination_patterns(validations)
+        minimal = {
+            "overall_risk_score": result.get("overall_risk_score", 0.0),
+            "graph": result.get("graph", {}),
+        }
+        await ui_hook_manager.trigger("coordination_analysis_run", minimal)
+        return minimal
+
+    job_id = queue_agent.enqueue_job(job)
+    return {"job_id": job_id}
+
+
+async def poll_coordination_analysis_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Return the status of a queued coordination analysis."""
+    job_id = payload.get("job_id", "")
+    return queue_agent.get_status(job_id)
+
+
 # Register with the central frontend router
 register_route("coordination_analysis", trigger_coordination_analysis_ui)
+register_route("queue_coordination_analysis", queue_coordination_analysis_ui)
+register_route("poll_coordination_analysis", poll_coordination_analysis_ui)
 
 
 async def run_coordination_analysis(payload: Dict[str, Any]) -> Dict[str, Any]:
