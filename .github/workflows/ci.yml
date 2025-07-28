@@ -44,6 +44,8 @@ jobs:
             fi
           fi
           pip install -e .
+      - name: Run pre-commit checks
+        run: pre-commit run --all-files
       - run: mypy
       - run: pytest
       - name: Streamlit smoke test
