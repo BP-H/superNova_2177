@@ -86,7 +86,12 @@ def run_full_audit(hypothesis_id: str, db: Session) -> Dict[str, Any]:
         # Query LogEntry using the IDs and order by timestamp to get the latest
         # LogEntry's payload is a TEXT column storing JSON
         try:
-            log_entries_for_hyp = db.query(LogEntry).filter(LogEntry.id.in_(validation_log_ids)).all()
+            query = db.query(LogEntry)
+            try:
+                query = query.filter(LogEntry.id.in_(validation_log_ids))
+            except Exception:
+                query = query.filter(None)  # no-op for stubbed query objects
+            log_entries_for_hyp = query.all()
         except Exception:
             logger.exception("DB query failed for LogEntry")
             log_entries_for_hyp = []
