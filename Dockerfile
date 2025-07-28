@@ -1,3 +1,7 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 # Builder stage
 # Use slim Python image for smaller footprint
 FROM python:3.12-slim AS builder
@@ -37,7 +41,8 @@ RUN chown -R appuser:appuser /app
 
 USER appuser
 
-# Expose FastAPI default port
-EXPOSE 8000
+# Expose Streamlit default port
+EXPOSE 8501
 
-CMD ["uvicorn", "superNova_2177:app", "--host", "0.0.0.0", "--port", "8000"]
+# Launch Streamlit UI explicitly
+CMD ["streamlit", "run", "ui.py", "--server.port=8501", "--server.address=0.0.0.0"]
