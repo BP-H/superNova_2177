@@ -33,6 +33,7 @@ _VOTES: List[Dict[str, Any]] = []
 # Placeholder functions
 # ---------------------------------------------------------------------------
 
+
 def record_vote(vote: Dict[str, Any]) -> None:
     """Record a single vote entry.
 
@@ -58,6 +59,7 @@ def load_votes() -> Dict[str, Any]:
     # TODO: load species field from tri_species_vote_registry.json
     return {"votes": list(_VOTES)}
 
+
 # Future considerations ------------------------------------------------------
 #
 # - OAuth or wallet integrations will require secure token handling and possibly
@@ -76,6 +78,9 @@ def load_votes() -> Dict[str, Any]:
 # - TODO: log voter class to GraphML metadata for analysis tools
 # - TODO: finalize ``tri_species_vote_registry.json`` format for persistent
 #   storage of species-aware vote records
+# - TODO: implement OAuth/wallet identity linking
+# - TODO: expose vote timeline API for the frontend
+# - TODO: store species data in tri_species_vote_registry.json
 
 # Design outline -------------------------------------------------------------
 #
@@ -92,4 +97,9 @@ def load_votes() -> Dict[str, Any]:
 # TODO: Implement OAuth or wallet-based identity linking for validators.
 # TODO: Build public frontend pages to display vote timelines per species.
 # TODO: Generate real-time consensus graphs across divergent forks.
-
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+# TODO: implement OAuth/wallet identity linking
+# TODO: expose vote timeline API for the frontend
+# TODO: store species data in tri_species_vote_registry.json
