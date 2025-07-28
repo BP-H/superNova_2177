@@ -1,10 +1,11 @@
 import json
-import streamlit as st
-import networkx as nx
-import matplotlib.pyplot as plt
 
-from validation_integrity_pipeline import analyze_validation_integrity
+import matplotlib.pyplot as plt
+import networkx as nx
+import streamlit as st
+
 from network.network_coordination_detector import build_validation_graph
+from validation_integrity_pipeline import analyze_validation_integrity
 
 try:
     from config import Config
@@ -88,13 +89,13 @@ def main() -> None:
         "mode to see the pipeline in action."
     )
 
-    secret_key = st.secrets.get("SECRET_KEY", "not set")
-    database_url = st.secrets.get("DATABASE_URL", "not set")
+    secret_key = st.secrets.get("SECRET_KEY")
+    database_url = st.secrets.get("DATABASE_URL")
 
     with st.sidebar:
         st.header("Environment")
-        st.write(f"Database URL: {database_url}")
-        if secret_key != "not set":
+        st.write(f"Database URL: {database_url or 'not set'}")
+        if secret_key:
             st.success("Secret key loaded")
         else:
             st.warning("SECRET_KEY missing")
@@ -115,4 +116,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    print("✅ Streamlit UI started. Launching main()...")
     main()
