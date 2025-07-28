@@ -4,27 +4,50 @@ import os  # Added for DATABASE_URL environment variable
 import uuid
 import hashlib
 import logging
-from sqlalchemy import (
-    create_engine,
-    Column,
-    Integer,
-    String,
-    Text,
-    Boolean,
-    DateTime,
-    ForeignKey,
-    UniqueConstraint,
-    Table,
-    Float,
-    JSON,
-)
-from sqlalchemy.orm import sessionmaker, relationship, Session
+try:
+    from sqlalchemy import (
+        create_engine,
+        Column,
+        Integer,
+        String,
+        Text,
+        Boolean,
+        DateTime,
+        ForeignKey,
+        UniqueConstraint,
+        Table,
+        Float,
+        JSON,
+    )
+    from sqlalchemy.orm import sessionmaker, relationship, Session, DeclarativeBase
+except Exception:  # pragma: no cover - optional dependency
+    from stubs.sqlalchemy_stub import (
+        create_engine,
+        Column,
+        Integer,
+        String,
+        Text,
+        Boolean,
+        DateTime,
+        ForeignKey,
+        Table,
+        Float,
+        JSON,
+        sessionmaker,
+        relationship,
+        Session,
+        declarative_base,
+    )
 
-try:  # DeclarativeBase may not exist in stubbed sqlalchemy
-    from sqlalchemy.orm import DeclarativeBase
-except Exception:  # pragma: no cover - fallback class for tests
+    def UniqueConstraint(*_a, **_kw):
+        return None
+
     class DeclarativeBase:
-        metadata = type("Meta", (), {"create_all": lambda *a, **k: None, "drop_all": lambda *a, **k: None})()
+        metadata = type(
+            "Meta",
+            (),
+            {"create_all": lambda *a, **k: None, "drop_all": lambda *a, **k: None},
+        )()
 from typing import TYPE_CHECKING
 import datetime # Ensure datetime is imported for default values
 
