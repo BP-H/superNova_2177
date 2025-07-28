@@ -1,4 +1,10 @@
-"""Basic skill system for agents."""
+"""Skill management utilities.
+
+This module defines a minimal skill system consisting of the ``Skill``
+class and an ``EmbodiedAgent`` capable of registering and invoking skills.
+"""
+
+__all__ = ["Skill", "EmbodiedAgent"]
 from typing import Callable, Dict
 from protocols.core.internal_protocol import InternalAgentProtocol
 

@@ -1,4 +1,6 @@
-"""Utility for self-corrective reflection based on memory logs."""
+"""Self-reflection helpers for agents."""
+
+__all__ = ["self_reflect"]
 from typing import List
 
 def self_reflect(agent, memory_log: List[dict]) -> dict:
