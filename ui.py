@@ -105,8 +105,16 @@ def main() -> None:
 
     if run_clicked:
         if demo_mode:
-            with open("sample_validations.json") as f:
-                data = json.load(f)
+            try:
+                with open("sample_validations.json") as f:
+                    data = json.load(f)
+            except FileNotFoundError:
+                st.warning("Demo file not found, using default dataset.")
+                data = {
+                    "validations": [
+                        {"validator": "A", "target": "B", "score": 0.9}
+                    ]
+                }
         elif uploaded_file is not None:
             data = json.load(uploaded_file)
         else:
