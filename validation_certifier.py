@@ -10,7 +10,7 @@ This is the primary interface for comprehensive validation analysis in superNova
 
 import logging
 from typing import List, Dict, Any, Tuple
-from datetime import datetime
+from datetime import datetime, UTC
 from statistics import mean
 
 # Import all v4.x analysis modules
@@ -328,7 +328,7 @@ def certify_validations_comprehensive(
         "flags": flags,
         "integrity_analysis": integrity_analysis,
         "recommendations": recommendations or ["No specific recommendations"],
-        "analysis_timestamp": datetime.utcnow().isoformat(),
+        "analysis_timestamp": datetime.now(UTC).isoformat(),
         "validator_count": len(set(v.get("validator_id") for v in validations if v.get("validator_id")))
     }
 

@@ -3,6 +3,7 @@
 
 import json
 import datetime
+from datetime import UTC
 from typing import Any, Dict
 
 from sqlalchemy import select
@@ -21,7 +22,7 @@ def log_event(db: Session, category: str, payload: Dict[str, Any]) -> None:
             events = json.loads(state.value)
         except Exception:
             events = []
-    entry = {"timestamp": datetime.datetime.utcnow().isoformat(), **payload}
+    entry = {"timestamp": datetime.datetime.now(UTC).isoformat(), **payload}
     events.append(entry)
     if state:
         state.value = json.dumps(events)

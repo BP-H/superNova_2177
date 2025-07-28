@@ -8,7 +8,7 @@ been active for more than a configurable number of days.
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("superNova_2177.participation")
@@ -44,7 +44,7 @@ def detect_inactive_users(
     threshold_days = (
         threshold_days if threshold_days is not None else Config.DEFAULT_THRESHOLD_DAYS
     )
-    now = current_time or datetime.utcnow()
+    now = current_time or datetime.now(UTC)
 
     last_seen: Dict[str, datetime] = {}
     for entry in activity_logs:

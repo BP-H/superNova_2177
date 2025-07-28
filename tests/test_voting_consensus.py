@@ -1,4 +1,5 @@
 import datetime
+from datetime import UTC
 
 from validators.strategies.voting_consensus_engine import (
     aggregate_validator_votes,
@@ -17,7 +18,7 @@ def test_ranked_choice_basic():
         votes,
         method=VotingMethod.RANKED_CHOICE,
         reputations=reps,
-        current_time=datetime.datetime.utcnow(),
+        current_time=datetime.datetime.now(UTC),
     )
     assert result["consensus_decision"] == "y"
     assert result["vote_breakdown"]["method"] == "ranked_choice"
@@ -34,7 +35,7 @@ def test_quadratic_voting():
         votes,
         method=VotingMethod.QUADRATIC,
         reputations=reps,
-        current_time=datetime.datetime.utcnow(),
+        current_time=datetime.datetime.now(UTC),
     )
     assert result["consensus_decision"] == "yes"
     assert result["vote_breakdown"]["method"] == "quadratic"
@@ -52,13 +53,13 @@ def test_delegation_support():
         votes,
         method=VotingMethod.MAJORITY_RULE,
         reputations=reps,
-        current_time=datetime.datetime.utcnow(),
+        current_time=datetime.datetime.now(UTC),
     )
     assert result["consensus_decision"] == "x"
 
 
 def test_time_decay_affects_outcome():
-    now = datetime.datetime.utcnow().replace(microsecond=0)
+    now = datetime.datetime.now(UTC).replace(microsecond=0)
     old = (now - datetime.timedelta(days=60)).isoformat()
     votes = [
         {"validator_id": "a", "decision": "yes", "timestamp": old},
@@ -77,7 +78,7 @@ def test_time_decay_affects_outcome():
 
 def test_cross_validation_tracking():
     history = []
-    now = datetime.datetime.utcnow().replace(microsecond=0)
+    now = datetime.datetime.now(UTC).replace(microsecond=0)
     reps = {"a": 1.0, "b": 1.0, "c": 1.0}
     votes1 = [
         {"validator_id": "a", "decision": "yes"},

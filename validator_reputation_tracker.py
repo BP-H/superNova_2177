@@ -8,7 +8,7 @@ review selection, and governance escalation in superNova_2177.
 
 import logging
 from typing import List, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from statistics import mean
 from exceptions import DataAccessError
 import sys
@@ -82,7 +82,7 @@ def update_validator_reputations(
         if timestamp_str:
             try:
                 timestamp = datetime.fromisoformat(timestamp_str)
-                age_days = (datetime.utcnow() - timestamp).days
+                age_days = (datetime.now(UTC) - timestamp).days
                 half_life = Config.DECAY_HALF_LIFE_DAYS
                 decay_factor = 0.5 ** (age_days / half_life)
             except Exception as e:

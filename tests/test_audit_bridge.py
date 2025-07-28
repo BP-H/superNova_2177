@@ -2,6 +2,7 @@ import json
 import time
 from decimal import Decimal
 import datetime
+from datetime import UTC
 
 # Import the functions to be tested
 import pytest
@@ -227,7 +228,7 @@ def test_attach_trace_to_logentry_updates_payload(test_db):
     from db_models import LogEntry
 
     log = LogEntry(
-        timestamp=datetime.datetime.utcnow(),
+        timestamp=datetime.datetime.now(UTC),
         event_type="test",
         payload=json.dumps({"foo": "bar"}),
         previous_hash="p",
@@ -252,7 +253,7 @@ def test_attach_trace_to_logentry_invalid_json_does_not_modify(test_db, caplog):
 
     bad_payload = "{invalid json]"
     log = LogEntry(
-        timestamp=datetime.datetime.utcnow(),
+        timestamp=datetime.datetime.now(UTC),
         event_type="test",
         payload=bad_payload,
         previous_hash="p",

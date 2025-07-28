@@ -3,6 +3,7 @@ import sys
 import logging
 import math
 import datetime
+from datetime import UTC
 from decimal import Decimal
 import pytest
 from unittest.mock import MagicMock
@@ -165,7 +166,7 @@ def test_interaction_entropy_zero():
 
 def test_interaction_entropy_with_decay():
     """Non-zero decay should not raise and returns bounded entropy."""
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(UTC)
     dummy = types.SimpleNamespace(
         vibenodes=[types.SimpleNamespace(created_at=now)],
         comments=[types.SimpleNamespace(created_at=now - datetime.timedelta(seconds=30))],
@@ -245,7 +246,7 @@ def test_estimate_lag_effects():
     change occurs at a fixed delay after an intervention.
     """
     # 1. Setup: Create logs with a known 60-second lag
-    base_time = datetime.datetime.utcnow()
+    base_time = datetime.datetime.now(UTC)
     
     intervention_log = [
         {"timestamp": base_time, "metric_id": "engagement"},

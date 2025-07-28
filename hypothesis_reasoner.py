@@ -7,7 +7,7 @@ evidence strength, conflicting predictions, and entropy deltas.
 """
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import List, Dict, Optional, Any, Tuple
 import math
 import itertools # For combinations in conflict detection
@@ -264,7 +264,7 @@ def synthesize_consensus_hypothesis(hypothesis_ids: List[str], db: Session) -> s
     
     # Update history for this new record
     new_hypothesis_record["history"].append({
-        "t": datetime.utcnow().isoformat(),
+        "t": datetime.now(UTC).isoformat(),
         "score": new_score,
         "status": new_status,
         "reason": "Synthesis"
@@ -295,7 +295,7 @@ def auto_flag_stale_or_redundant(db: Session) -> List[str]:
     all_hypotheses = _get_all_hypotheses(db)
     affected_hypothesis_ids = []
     
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     staleness_threshold_date = now - timedelta(days=CONFIG.HYPOTHESIS_STALENESS_THRESHOLD_DAYS)
 
     validated_hypotheses = [h for h in all_hypotheses if h.get("status") == "validated"]

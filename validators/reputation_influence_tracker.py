@@ -12,7 +12,7 @@ import logging
 from typing import List, Dict, Any, Optional
 from collections import defaultdict
 from statistics import mean, stdev
-from datetime import datetime
+from datetime import datetime, UTC
 
 logger = logging.getLogger("superNova_2177.reputation")
 
@@ -81,7 +81,7 @@ def compute_validator_reputations(
 
     temporal_trust = temporal_trust or {}
     diversity_scores = diversity_scores or {}
-    current_time = current_time or datetime.utcnow()
+    current_time = current_time or datetime.now(UTC)
     half_life = half_life_days or Config.DECAY_HALF_LIFE_DAYS
     if half_life <= 0:
         half_life = Config.DECAY_HALF_LIFE_DAYS

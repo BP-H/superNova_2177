@@ -4,6 +4,7 @@ import os
 import json
 import uuid
 import datetime
+from datetime import UTC
 import threading
 import time
 import logging
@@ -562,9 +563,9 @@ class RemixAgent:
             "payload": event["payload"],
             "status": "open",
             "votes": {},
-            "created_at": datetime.datetime.utcnow().isoformat(),
+            "created_at": datetime.datetime.now(UTC).isoformat(),
             "voting_deadline": (
-                datetime.datetime.utcnow()
+                datetime.datetime.now(UTC)
                 + datetime.timedelta(hours=Config.VOTING_DEADLINE_HOURS)
             ).isoformat(),  # Example duration
             "execution_time": None,
@@ -577,7 +578,7 @@ class RemixAgent:
             return
         proposal = proposal_data
         deadline = datetime.datetime.fromisoformat(proposal["voting_deadline"])
-        if datetime.datetime.utcnow() > deadline:
+        if datetime.datetime.now(UTC) > deadline:
             return
         proposal["votes"][event["voter"]] = event["vote"]
         self.storage.set_proposal(event["proposal_id"], proposal)
@@ -634,7 +635,7 @@ class RemixAgent:
         if (
             proposal["status"] == "approved"
             and execution_time
-            and datetime.datetime.utcnow() >= execution_time
+            and datetime.datetime.now(UTC) >= execution_time
         ):
             target = proposal["target"]
             value = proposal["payload"].get("value")
@@ -822,7 +823,7 @@ class RemixAgent:
                         if proposal["execution_time"]
                         else None
                     )
-                    if execution_time and datetime.datetime.utcnow() >= execution_time:
+                    if execution_time and datetime.datetime.now(UTC) >= execution_time:
                         target = proposal["target"]
                         if target in self.config.ALLOWED_POLICY_KEYS:
                             value = proposal["payload"].get("value")
@@ -836,7 +837,7 @@ class RemixAgent:
             voting_deadline = datetime.datetime.fromisoformat(
                 proposal["voting_deadline"]
             )
-            if datetime.datetime.utcnow() > voting_deadline:
+            if datetime.datetime.now(UTC) > voting_deadline:
                 tally = self._tally_proposal(proposal["proposal_id"])
                 if tally["quorum"] < self.config.GOV_QUORUM_THRESHOLD:
                     proposal["status"] = "rejected"
@@ -855,7 +856,7 @@ class RemixAgent:
                     ):
                         proposal["status"] = "approved"
                         proposal["execution_time"] = (
-                            datetime.datetime.utcnow()
+                            datetime.datetime.now(UTC)
                             + datetime.timedelta(
                                 seconds=self.config.GOV_EXECUTION_TIMELOCK_SEC
                             )
@@ -869,5 +870,4 @@ class RemixAgent:
                     f"Processed proposal {proposal['proposal_id']} "
                     f"to status {proposal['status']} with threshold {dynamic_threshold}"
                 )
-
 

@@ -1,5 +1,6 @@
 import argparse
 import datetime
+from datetime import UTC
 from decimal import Decimal
 from types import SimpleNamespace
 
@@ -52,7 +53,7 @@ def _make_fork():
         creator_id=1,
         karma_at_fork=0.0,
         config={"d": Decimal("1.5")},
-        timestamp=datetime.datetime.utcnow(),
+        timestamp=datetime.datetime.now(UTC),
         status="active",
         entropy_divergence=0.0,
         consensus=0.0,

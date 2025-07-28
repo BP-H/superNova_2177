@@ -1,4 +1,5 @@
 import datetime
+from datetime import UTC
 from validators.reputation_influence_tracker import compute_validator_reputations
 
 def _build_validations(ts):
@@ -10,7 +11,7 @@ def _build_validations(ts):
 
 
 def test_reputation_decays_with_age():
-    now = datetime.datetime.utcnow().replace(microsecond=0)
+    now = datetime.datetime.now(UTC).replace(microsecond=0)
     old_ts = now - datetime.timedelta(days=60)
 
     recent_vals = _build_validations(now)
@@ -28,7 +29,7 @@ def test_reputation_decays_with_age():
 
 
 def test_half_life_zero_defaults_to_config():
-    now = datetime.datetime.utcnow().replace(microsecond=0)
+    now = datetime.datetime.now(UTC).replace(microsecond=0)
     vals = _build_validations(now)
     consensus = {"h1": 0.8}
 

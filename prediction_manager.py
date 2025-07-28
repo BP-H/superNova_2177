@@ -3,6 +3,7 @@
 import json
 import uuid
 import datetime
+from datetime import UTC
 import logging
 from typing import Any, Dict, Optional, Callable
 
@@ -102,7 +103,7 @@ class PredictionManager:
         prediction_id = uuid.uuid4().hex
         record = {
             "prediction_id": prediction_id,
-            "created_at": datetime.datetime.utcnow().isoformat(),
+            "created_at": datetime.datetime.now(UTC).isoformat(),
             "status": prediction_data.get("status", "pending"),
             "data": prediction_data,
         }
@@ -122,7 +123,7 @@ class PredictionManager:
         experiment_id = uuid.uuid4().hex
         record = {
             "experiment_id": experiment_id,
-            "created_at": datetime.datetime.utcnow().isoformat(),
+            "created_at": datetime.datetime.now(UTC).isoformat(),
             "data": experiment_data,
         }
         self._set_value(f"experiment:{experiment_id}", json.dumps(record))
@@ -154,7 +155,7 @@ class PredictionManager:
         record["status"] = new_status
         if actual_outcome is not None:
             record["actual_outcome"] = actual_outcome
-            record["updated_at"] = datetime.datetime.utcnow().isoformat()
+            record["updated_at"] = datetime.datetime.now(UTC).isoformat()
         self._set_value(f"prediction:{prediction_id}", json.dumps(record))
         logging.debug(
             "Updated prediction status",
@@ -177,7 +178,7 @@ class PredictionManager:
             Identifier of the created proposal or ``None`` if not scheduled.
         """
 
-        now = current_time or datetime.datetime.utcnow()
+        now = current_time or datetime.datetime.now(UTC)
 
         last_run_raw = self._get_value("audit_scheduler_last_run")
         if last_run_raw:
@@ -201,4 +202,3 @@ class PredictionManager:
         self._set_value(f"audit_proposal:{proposal_id}", json.dumps(payload))
         self._set_value("audit_scheduler_last_run", now.isoformat())
         return proposal_id
-

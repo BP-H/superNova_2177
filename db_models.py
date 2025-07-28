@@ -55,6 +55,7 @@ except Exception:  # pragma: no cover - optional dependency
         )()
 from typing import TYPE_CHECKING
 import datetime # Ensure datetime is imported for default values
+from datetime import UTC
 
 # NOTE: In a real project, DATABASE_URL and SessionLocal would typically be imported from a central config/db module.
 # For this extraction, we'll keep it self-contained for clarity, assuming it would be integrated.
@@ -133,7 +134,7 @@ class Harmonizer(Base):
     profile_pic = Column(String, default="default.jpg")
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(UTC))
     species = Column(String, default="human", nullable=False)
     harmony_score = Column(String, default="100.0")
     creative_spark = Column(String, default="1000000.0")
@@ -143,7 +144,7 @@ class Harmonizer(Base):
     engagement_streaks = Column(JSON, default=dict)
     network_centrality = Column(Float, default=0.0)
     karma_score = Column(Float, default=0.0)
-    last_passive_aura_timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    last_passive_aura_timestamp = Column(DateTime, default=lambda: datetime.datetime.now(UTC))
     vibenodes = relationship(
         "VibeNode", back_populates="author", cascade="all, delete-orphan"
     )
@@ -187,7 +188,7 @@ class VibeNode(Base):
     description = Column(Text)
     author_id = Column(Integer, ForeignKey("harmonizers.id"), nullable=False)
     parent_vibenode_id = Column(Integer, ForeignKey("vibenodes.id"), nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(UTC))
     media_type = Column(String, default="text")
     media_url = Column(String, nullable=True)
     fractal_depth = Column(Integer, default=0)
@@ -232,7 +233,7 @@ class CreativeGuild(Base):
     owner_id = Column(Integer, ForeignKey("harmonizers.id"), nullable=False)
     legal_name = Column(String, nullable=False)
     guild_type = Column(String, default="art_collective")
-    registration_timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    registration_timestamp = Column(DateTime, default=lambda: datetime.datetime.now(UTC))
     vibenode = relationship("VibeNode", back_populates="creative_guild")
     owner = relationship("Harmonizer", back_populates="node_companies")
 
@@ -244,7 +245,7 @@ class GuinnessClaim(Base):
     claim_type = Column(String, nullable=False)
     evidence_details = Column(Text)
     status = Column(String, default="pending")
-    submission_timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    submission_timestamp = Column(DateTime, default=lambda: datetime.datetime.now(UTC))
 
 
 class AIPersona(Base):
@@ -262,7 +263,7 @@ class Group(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True, nullable=False)
     description = Column(Text)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(UTC))
     members = relationship(
         "Harmonizer", secondary=group_members, back_populates="groups"
     )
@@ -283,7 +284,7 @@ class Comment(Base):
     parent_comment_id = Column(
         Integer, ForeignKey("comments.id"), nullable=True, index=True
     )
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(UTC))
     author = relationship("Harmonizer", back_populates="comments")
     vibenode = relationship("VibeNode", back_populates="comments")
     replies = relationship(
@@ -319,7 +320,7 @@ class Proposal(Base):
     group_id = Column(Integer, ForeignKey("groups.id"), nullable=True, index=True)
     author_id = Column(Integer, ForeignKey("harmonizers.id"), nullable=False)
     status = Column(String, default="open", index=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(UTC))
     voting_deadline = Column(DateTime(timezone=True), nullable=False)
     payload = Column(JSON, nullable=True)
     group = relationship("Group", back_populates="proposals")
@@ -347,7 +348,7 @@ class Notification(Base):
     )
     message = Column(Text, nullable=False)
     is_read = Column(Boolean, default=False, index=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(UTC))
     harmonizer = relationship("Harmonizer", back_populates="notifications")
 
 
@@ -361,7 +362,7 @@ class Message(Base):
         Integer, ForeignKey("harmonizers.id"), nullable=False, index=True
     )
     content = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(UTC))
     sender = relationship(
         "Harmonizer", foreign_keys=[sender_id], back_populates="messages_sent"
     )
@@ -377,14 +378,14 @@ class SimulationLog(Base):
     sim_type = Column(String, nullable=False, index=True)
     parameters = Column(JSON)
     results = Column(JSON)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(UTC))
     harmonizer = relationship("Harmonizer", back_populates="simulations")
 
 
 class LogEntry(Base):
     __tablename__ = "log_chain"
     id = Column(Integer, primary_key=True, index=True)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    timestamp = Column(DateTime, default=lambda: datetime.datetime.now(UTC), nullable=False)
     event_type = Column(String, nullable=False)
     payload = Column(Text)
     previous_hash = Column(String, nullable=False)
@@ -423,8 +424,8 @@ class ValidatorReputation(Base):
 
     validator_id = Column(String, primary_key=True)
     reputation = Column(Float, nullable=False, default=0.0)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow,
-                        onupdate=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(UTC),
+                        onupdate=lambda: datetime.datetime.now(UTC))
 
 
 class ValidatorProfile(Base):
@@ -459,8 +460,8 @@ class HypothesisRecord(Base):
     audit_sources = Column(JSON, default=lambda: [])
     # causal_trigger.py, audit_bridge.py etc. refs (SystemState keys)
 
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(UTC))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(UTC), onupdate=lambda: datetime.datetime.now(UTC))
 
     tags = Column(JSON, default=lambda: []) #
     notes = Column(Text, default="") # Summary of events/updates
@@ -555,7 +556,7 @@ class BranchVote(Base):
     branch_id = Column(ForeignKey("universe_branches.id"), nullable=False)
     voter_id = Column(ForeignKey("harmonizers.id"), nullable=False)
     vote = Column(Boolean, nullable=False)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    timestamp = Column(DateTime, default=lambda: datetime.datetime.now(UTC))
 
     __table_args__ = (
         UniqueConstraint("branch_id", "voter_id", name="unique_branch_voter"),
@@ -597,4 +598,3 @@ MarketplaceListing = TokenListing
 def init_db() -> None:
     """Create all tables defined in this module."""
     Base.metadata.create_all(bind=engine)
-

@@ -275,7 +275,7 @@ from typing import (
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 import weakref
-from datetime import timedelta
+from datetime import timedelta, UTC
 
 # Web and DB Imports from FastAPI files
 USING_STUBS = False
@@ -433,9 +433,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def create_access_token(data: Dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.datetime.utcnow() + expires_delta
+        expire = datetime.datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.datetime.now(UTC) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     s = get_settings()
     encoded_jwt = jwt.encode(
@@ -1374,7 +1374,7 @@ def calculate_content_entropy(db: Session) -> float:
     assumptions: tags independent
     validation_notes: counts within Config.CONTENT_ENTROPY_WINDOW_HOURS-hour window
     """
-    time_threshold = datetime.datetime.utcnow() - datetime.timedelta(
+    time_threshold = datetime.datetime.now(UTC) - datetime.timedelta(
         hours=Config.CONTENT_ENTROPY_WINDOW_HOURS
     )
     nodes = db.query(VibeNode).filter(VibeNode.created_at >= time_threshold).all()
@@ -2134,7 +2134,7 @@ class CosmicNexus:
                 creator_id=user.id,
                 karma_at_fork=user.karma_score,
                 config=custom_config,
-                timestamp=datetime.datetime.utcnow(),
+                timestamp=datetime.datetime.now(UTC),
                 status="active",
                 entropy_divergence=divergence,
             )
@@ -2267,7 +2267,7 @@ class CosmicNexus:
                 title="Annual Quantum Audit",
                 description="Automated yearly audit to ensure protocol integrity.",
                 author_id=system_user.id,
-                voting_deadline=datetime.datetime.utcnow() + timedelta(days=7),
+                voting_deadline=datetime.datetime.now(UTC) + timedelta(days=7),
                 payload={"action": "quantum_audit"},
             )
             db.add(proposal)
@@ -2502,7 +2502,7 @@ def register_harmonizer(user: HarmonizerCreate, db: Session = Depends(get_db)):
         species="human",
         engagement_streaks={
             "daily": 0,
-            "last_login": datetime.datetime.utcnow().isoformat(),
+            "last_login": datetime.datetime.now(UTC).isoformat(),
         },
     )
     db.add(new_user)
@@ -2531,7 +2531,7 @@ def login_for_access_token(
     last_login = datetime.datetime.fromisoformat(
         streaks.get("last_login", "1970-01-01T00:00:00")
     )
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(UTC)
     if (now.date() - last_login.date()).days == 1:
         streaks["daily"] = streaks.get("daily", 0) + 1
     elif now.date() > last_login.date():
@@ -2613,7 +2613,7 @@ def get_system_status(
     )
     return {
         "status": "online",
-        "timestamp": datetime.datetime.utcnow().isoformat(),
+        "timestamp": datetime.datetime.now(UTC).isoformat(),
         "metrics": {
             "total_harmonizers": total_harmonizers,
             "total_vibenodes": total_vibenodes,
@@ -2645,7 +2645,7 @@ def get_entropy_details(
     """Return entropy metrics and current tag distribution."""
     state_service = SystemStateService(db)
     entropy_value = float(state_service.get_state("content_entropy", "0"))
-    time_threshold = datetime.datetime.utcnow() - datetime.timedelta(hours=24)
+    time_threshold = datetime.datetime.now(UTC) - datetime.timedelta(hours=24)
     nodes = db.query(VibeNode).filter(VibeNode.created_at >= time_threshold).all()
     distribution: Dict[str, int] = {}
     for node in nodes:
@@ -2656,7 +2656,7 @@ def get_entropy_details(
     return EntropyDetails(
         current_entropy=entropy_value,
         tag_distribution=distribution,
-        last_calculated=datetime.datetime.utcnow(),
+        last_calculated=datetime.datetime.now(UTC),
     )
 
 
@@ -3200,7 +3200,7 @@ async def passive_aura_resonance_task(db_session_factory):
             )
             for u in influential:
                 elapsed = (
-                    datetime.datetime.utcnow() - u.last_passive_aura_timestamp
+                    datetime.datetime.now(UTC) - u.last_passive_aura_timestamp
                 ).total_seconds()
                 gain = (
                     Decimal(u.network_centrality)
@@ -3208,7 +3208,7 @@ async def passive_aura_resonance_task(db_session_factory):
                     * Config.PASSIVE_AURA_GAIN_MULTIPLIER
                 )
                 u.creative_spark = str(Decimal(u.creative_spark) + gain)
-                u.last_passive_aura_timestamp = datetime.datetime.utcnow()
+                u.last_passive_aura_timestamp = datetime.datetime.now(UTC)
             db.commit()
         finally:
             db.close()
@@ -3302,7 +3302,7 @@ async def ai_guinness_pursuit_task(db_session_factory):
                     title="Incentivize Guild Creation",
                     description="Temporary reduction in guild creation costs to boost numbers for Guinness record.",
                     author_id=ai_user.id,
-                    voting_deadline=datetime.datetime.utcnow() + timedelta(days=7),
+                    voting_deadline=datetime.datetime.now(UTC) + timedelta(days=7),
                     payload={"action": "reduce_guild_cost", "value": 0.5},
                 )
                 db.add(proposal)
@@ -3395,7 +3395,7 @@ async def scientific_reasoning_cycle_task(db_session_factory):
                     try:
                         expired = (
                             datetime.datetime.fromisoformat(exp_str)
-                            <= datetime.datetime.utcnow()
+                            <= datetime.datetime.now(UTC)
                         )
                     except Exception as exc:
                         logger.error(
