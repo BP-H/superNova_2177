@@ -453,22 +453,27 @@ def _safe_import(module_name: str, alias: Optional[str] = None, attrs: Optional[
     """Import a module and expose it in globals, logging a warning on failure."""
     try:
         module = importlib.import_module(module_name)
-        if alias:
-            globals()[alias] = module
-        if attrs:
-            for attr in attrs:
-                globals()[attr] = getattr(module, attr)
     except ImportError as exc:
-        logging.warning(
-            "Optional library '%s' is not installed: %s. Some functionality may be unavailable.",
-            module_name,
-            exc,
-        )
-        if alias:
-            globals()[alias] = None
-        if attrs:
-            for attr in attrs:
-                globals()[attr] = None
+        try:
+            module = importlib.import_module(f"stubs.{module_name}_stub")
+        except ImportError:
+            logging.warning(
+                "Optional library '%s' is not installed: %s. Some functionality may be unavailable.",
+                module_name,
+                exc,
+            )
+            if alias:
+                globals()[alias] = None
+            if attrs:
+                for attr in attrs:
+                    globals()[attr] = None
+            return
+
+    if alias:
+        globals()[alias] = module
+    if attrs:
+        for attr in attrs:
+            globals()[attr] = getattr(module, attr, None)
 
 
 _safe_import("numpy", alias="np")
