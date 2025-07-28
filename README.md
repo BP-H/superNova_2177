@@ -171,6 +171,7 @@ docker-compose up --build
 
 ```bash
 python one_click_install.py
+# python one_click_install.py --launch-ui  # open the Streamlit UI on port 8888
 ```
 
 This script automatically installs the `tqdm` package if it isn't available so
@@ -468,6 +469,7 @@ If you prefer to build everything locally, run:
 
 ```bash
 python one_click_install.py
+# python one_click_install.py --launch-ui  # open the Streamlit UI on port 8888
 ```
 
 The script detects your OS, downloads Python 3.11 if necessary, bundles the
