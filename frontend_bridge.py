@@ -28,10 +28,14 @@ async def dispatch_route(name: str, payload: Dict[str, Any]) -> Dict[str, Any]:
 from hypothesis.ui_hook import (
     rank_hypotheses_by_confidence_ui,
     detect_conflicting_hypotheses_ui,
+    register_hypothesis_ui,
+    update_hypothesis_score_ui,
 )
 
 register_route("rank_hypotheses_by_confidence", rank_hypotheses_by_confidence_ui)
 register_route("detect_conflicting_hypotheses", detect_conflicting_hypotheses_ui)
+register_route("register_hypothesis", register_hypothesis_ui)
+register_route("update_hypothesis_score", update_hypothesis_score_ui)
 
 # Prediction-related routes
 from predictions.ui_hook import (
