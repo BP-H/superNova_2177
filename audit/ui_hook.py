@@ -2,6 +2,7 @@ import logging
 from typing import Any, Dict
 
 from sqlalchemy.orm import Session
+from frontend_bridge import register_route
 
 # isort: off
 from audit_bridge import (
@@ -94,6 +95,7 @@ async def export_causal_path_ui(payload: Dict[str, Any], **_: Any) -> Dict[str, 
     return result
 
 
+# Register causal audit route
 async def causal_audit_ui(payload: Dict[str, Any], db: Session, **_: Any) -> Dict[str, Any]:
     """Run :func:`trigger_causal_audit` from UI payload.
 
@@ -138,5 +140,9 @@ async def causal_audit_ui(payload: Dict[str, Any], db: Session, **_: Any) -> Dic
     return minimal
 
 
-# Register route with the frontend bridge
+# Register routes with the frontend bridge
 register_route("causal_audit", causal_audit_ui)
+register_route("log_hypothesis", log_hypothesis_ui)
+register_route("attach_trace", attach_trace_ui)
+register_route("export_causal_path", export_causal_path_ui)
+
