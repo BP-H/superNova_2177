@@ -219,13 +219,11 @@ if "superNova_2177" not in sys.modules:
     stub_sn.CosmicNexus = CosmicNexus
     stub_sn.RemixAgent = RemixAgent
     stub_sn.LogChain = type("LogChain", (), {"__init__": lambda self, f: None, "add": lambda self, e: None})
-    stub_sn.SessionLocal = lambda *a, **k: None
-    stub_sn.Base = type("Base", (), {
-        "metadata": types.SimpleNamespace(
-            create_all=lambda *a, **k: None,
-            drop_all=lambda *a, **k: None,
-        )
-    })
+    import stubs.sqlalchemy_stub as sa_stub
+    stub_engine = sa_stub.create_engine("sqlite:///:memory:")
+    stub_sn.engine = stub_engine
+    stub_sn.SessionLocal = sa_stub.sessionmaker(bind=stub_engine)
+    stub_sn.Base = sa_stub.declarative_base()
     stub_sn.USE_IN_MEMORY_STORAGE = True
 
     # Import FastAPI components with a lightweight fallback when the real
@@ -398,53 +396,35 @@ for mod_name in [
             middleware.CORSMiddleware = object
             sys.modules["fastapi.middleware.cors"] = middleware
         if mod_name == "sqlalchemy.orm":
-            class Session:
-                pass
+            import stubs.sqlalchemy_stub as sa_stub
 
-            stub.Session = Session
-            stub.sessionmaker = lambda *a, **kw: None
-            stub.relationship = lambda *a, **kw: None
-            class DeclarativeBase:
-                metadata = types.SimpleNamespace(
-                    create_all=lambda *a, **kw: None,
-                    drop_all=lambda *a, **kw: None,
-                )
-            stub.DeclarativeBase = DeclarativeBase
-            def _base():
-                class B:
-                    metadata = types.SimpleNamespace()
-                    metadata.create_all = lambda *a, **kw: None
-                    metadata.drop_all = lambda *a, **kw: None
-
-                return B
-
-            stub.declarative_base = lambda *a, **kw: _base()
+            stub.Session = sa_stub.Session
+            stub.sessionmaker = sa_stub.sessionmaker
+            stub.relationship = sa_stub.relationship
+            stub.declarative_base = sa_stub.declarative_base
+            stub.DeclarativeBase = sa_stub.declarative_base().__class__
         if mod_name == "sqlalchemy":
-            class SQLA(types.ModuleType):
-                def __init__(self):
-                    super().__init__("sqlalchemy")
-                    self.__path__ = []
+            import stubs.sqlalchemy_stub as sa_stub
 
-                    class Column:
-                        def __init__(self, name, *a, **kw):
-                            self.name = name
-
-                    def Table(_name, _metadata, *cols, **_kw):
-                        c = types.SimpleNamespace()
-                        for col in cols:
-                            if hasattr(col, "name"):
-                                setattr(c, col.name, object())
-                        return types.SimpleNamespace(c=c)
-
-                    self.Column = Column
-                    self.Table = Table
-
-                def __getattr__(self, name):
-                    return lambda *a, **kw: None
-
-            stub = SQLA()
+            stub.__path__ = []
+            for attr in [
+                "Column",
+                "Integer",
+                "String",
+                "Text",
+                "Boolean",
+                "DateTime",
+                "ForeignKey",
+                "Table",
+                "Float",
+                "JSON",
+                "create_engine",
+                "select",
+                "func",
+            ]:
+                setattr(stub, attr, getattr(sa_stub, attr))
             exc_mod = types.ModuleType("sqlalchemy.exc")
-            exc_mod.IntegrityError = type("IntegrityError", (), {})
+            exc_mod.IntegrityError = sa_stub.IntegrityError
             sys.modules["sqlalchemy.exc"] = exc_mod
         if mod_name == "pydantic":
             class BaseModel:

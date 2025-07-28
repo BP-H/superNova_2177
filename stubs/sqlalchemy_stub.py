@@ -1,35 +1,64 @@
+import types
+
+
 class Column:
-    def __init__(self, *args, **kwargs):
-        pass
+    def __init__(self, *args, **kwargs):  # pragma: no cover - simplified
+        self.name = args[0] if args and isinstance(args[0], str) else None
+
+    def __set_name__(self, owner, name):  # pragma: no cover - simplified
+        self.name = name
+
+    def __get__(self, instance, owner):  # pragma: no cover - simplified
+        if instance is None:
+            return self
+        return instance.__dict__.get(self.name)
+
+    def __set__(self, instance, value):  # pragma: no cover - simplified
+        instance.__dict__[self.name] = value
+
+    def __eq__(self, other):  # pragma: no cover - simplified
+        return lambda obj: getattr(obj, self.name) == other
 
 class Integer:
-    pass
+    def __init__(self, *args, **kwargs):  # pragma: no cover - trivial
+        pass
 
 class String:
-    pass
+    def __init__(self, *args, **kwargs):  # pragma: no cover - trivial
+        pass
 
 class Text:
-    pass
+    def __init__(self, *args, **kwargs):  # pragma: no cover - trivial
+        pass
 
 class Boolean:
-    pass
+    def __init__(self, *args, **kwargs):  # pragma: no cover - trivial
+        pass
 
 class DateTime:
-    pass
+    def __init__(self, *args, **kwargs):  # pragma: no cover - trivial
+        pass
 
 class ForeignKey:
     def __init__(self, *args, **kwargs):
         pass
 
 class Table:
-    def __init__(self, *args, **kwargs):
-        pass
+    def __init__(self, name, metadata, *columns, **_kw):  # pragma: no cover - simplified
+        self.name = name
+        c = types.SimpleNamespace()
+        for col in columns:
+            if hasattr(col, "name") and col.name is not None:
+                setattr(c, col.name, object())
+        self.c = c
 
 class Float:
-    pass
+    def __init__(self, *args, **kwargs):  # pragma: no cover - trivial
+        pass
 
 class JSON:
-    pass
+    def __init__(self, *args, **kwargs):  # pragma: no cover - trivial
+        pass
 
 class Engine:
     """Lightweight stand-in for :class:`sqlalchemy.engine.Engine`."""
@@ -103,11 +132,57 @@ class Session:
         data += [o for o in self._pending if isinstance(o, model)]
         return Session._Query(data)
 
+    # Simple execute/select emulation ----------------------------------------
+    def execute(self, statement):
+        if isinstance(statement, Select):
+            data = self.engine.storage.get(statement.model, [])
+            data += [o for o in self._pending if isinstance(o, statement.model)]
+            for pred in statement.predicates:
+                data = [o for o in data if pred(o)]
+            return Result(data)
+        return Result([])
+
     def close(self) -> None:  # pragma: no cover - trivial
         pass
 
 class IntegrityError(Exception):
     pass
+
+
+class Result:
+    """Minimal result wrapper mimicking SQLAlchemy execution results."""
+
+    def __init__(self, data):
+        self._data = list(data)
+
+    # Support ``scalars().first()`` pattern used in the code
+    def scalars(self):  # pragma: no cover - trivial
+        return self
+
+    def first(self):  # pragma: no cover - trivial
+        return self._data[0] if self._data else None
+
+    def all(self):  # pragma: no cover - trivial
+        return list(self._data)
+
+
+class Select:
+    """Very small subset of :func:`sqlalchemy.select`."""
+
+    def __init__(self, model):
+        self.model = model
+        self.predicates = []
+
+    def filter(self, predicate):
+        if predicate is not None:
+            self.predicates.append(predicate)
+        return self
+
+    def filter_by(self, **kw):
+        def pred(obj):
+            return all(getattr(obj, k, None) == v for k, v in kw.items())
+
+        return self.filter(pred)
 
 def create_engine(*args, **kwargs):
     return Engine(*args, **kwargs)
@@ -133,7 +208,15 @@ def declarative_base():
     class Base:
         metadata = Meta()
 
+        def __init__(self, **kw):  # pragma: no cover - simplified
+            for k, v in kw.items():
+                setattr(self, k, v)
+
     return Base
 
 class func:
     pass
+
+
+def select(model):  # pragma: no cover - simplified
+    return Select(model)
