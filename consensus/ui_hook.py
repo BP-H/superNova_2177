@@ -4,6 +4,7 @@ from typing import Any, Dict
 
 from frontend_bridge import register_route
 from hook_manager import HookManager
+from hooks import events
 from protocols.core import JobQueueAgent
 from consensus_forecaster_agent import forecast_consensus_trend
 
@@ -27,7 +28,7 @@ async def forecast_consensus_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     if "flags" in result:
         minimal["flags"] = result["flags"]
 
-    await ui_hook_manager.trigger("consensus_forecast_run", minimal)
+    await ui_hook_manager.trigger(events.CONSENSUS_FORECAST_RUN, minimal)
     return minimal
 
 

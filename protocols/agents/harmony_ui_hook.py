@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, Optional
 
 from frontend_bridge import register_route
 from hook_manager import HookManager
+from hooks import events
 
 from .harmony_synthesizer_agent import HarmonySynthesizerAgent
 
@@ -22,7 +23,7 @@ async def generate_midi_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     """Generate a MIDI snippet and return base64-encoded data."""
     midi = synth_agent.handle_generate(payload)
     encoded = base64.b64encode(midi).decode()
-    await ui_hook_manager.trigger("midi_generated", midi)
+    await ui_hook_manager.trigger(events.MIDI_GENERATED, midi)
     return {"midi_base64": encoded}
 
 
