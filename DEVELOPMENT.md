@@ -38,14 +38,18 @@ You can also install both requirement files to match the CI environment:
 pip install -r requirements-minimal.txt -r requirements-dev.txt
 ```
 
+If the packages are missing, stub implementations found under `stubs/`
+will activate automatically and may cause confusing test failures.
+
 The GitHub Actions workflows (`.github/workflows/ci.yml` and `pr-tests.yml`) run these commands automatically whenever you push or open a pull request.
 
 ## Pre-commit Hooks
 
-Install the development tools and enable the git hooks so code is automatically formatted and linted:
+Install the development tools and enable the git hooks so code is automatically
+formatted and linted. The hooks rely on packages from both requirement files:
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -r requirements-minimal.txt -r requirements-dev.txt
 pre-commit install
 ```
 

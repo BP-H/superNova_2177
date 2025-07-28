@@ -126,10 +126,12 @@ make lint     # run mypy type checks
 
 ### Pre-commit Hooks
 
-Set up pre-commit to automatically format and lint the code:
+Set up pre-commit to automatically format and lint the code. The hooks depend on
+packages from **both** `requirements-minimal.txt` and
+`requirements-dev.txt`:
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -r requirements-minimal.txt -r requirements-dev.txt
 pre-commit install
 ```
 
@@ -320,10 +322,11 @@ pip install -r requirements.txt  # installs streamlit-ace
 
 ### Test Requirements
 
-Before running `pre-commit` or `pytest`, install the minimal set of packages required for the tests:
+Before running `pre-commit` or `pytest`, install **both** requirement
+files so that all dependencies are available:
 
 ```bash
-pip install -r requirements-minimal.txt
+pip install -r requirements-minimal.txt -r requirements-dev.txt
 ```
 
 `requirements-minimal.txt` installs `fastapi`, `pydantic`,
@@ -333,15 +336,8 @@ pip install -r requirements-minimal.txt
 `email-validator`). With these installed, running `pytest` should
 succeed (`99 passed`).
 
-> **Important**
-> CI and local testing rely on these packages. Always run
-> `pip install -r requirements-minimal.txt` **before** invoking
-> `pre-commit` or `pytest`. Skipping this step triggers the simplified
-> stubs in `stubs/` and can cause numerous test failures.
-
-If the packages are missing, stub implementations in `stubs/`
-activate automatically. This allows `pytest` to succeed but may not
-exercise the full functionality of optional modules.
+Missing packages trigger the simplified stubs in `stubs/`, which can
+lead to confusing test failures.
 
 ### Real Module Dependencies
 
