@@ -16,6 +16,7 @@ __all__ = [
     "status_page",
     "network_page",
     "system_insights_page",
+    "forks_page",
 ]
 
 

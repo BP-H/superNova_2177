@@ -169,7 +169,7 @@ def vote_fork(args: argparse.Namespace) -> None:
         )
     finally:
         db.close()
-    # TODO: Add web UI for vote submission
+    # Web UI for vote submission implemented in ``forks_page``
 
 
 def main() -> None:
