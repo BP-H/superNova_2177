@@ -33,7 +33,7 @@ def create_fork(args: argparse.Namespace) -> None:
     try:
         stmt = (
             select(Harmonizer)  # from sqlalchemy.orm
-            .filter_by(username=args.creator)
+            .where(Harmonizer.username == args.creator)
         )
         user = db.execute(stmt).scalar_one_or_none()
         if not user:
@@ -106,7 +106,7 @@ def fork_info(args: argparse.Namespace) -> None:
     try:
         stmt = (
             select(UniverseBranch)  # from sqlalchemy.orm
-            .filter_by(id=args.fork_id)
+            .where(UniverseBranch.id == args.fork_id)
         )
         fork = db.execute(stmt).scalar_one_or_none()
         if not fork:
@@ -138,12 +138,12 @@ def vote_fork(args: argparse.Namespace) -> None:
     try:
         stmt = (
             select(UniverseBranch)  # from sqlalchemy.orm
-            .filter_by(id=args.fork_id)
+            .where(UniverseBranch.id == args.fork_id)
         )
         fork = db.execute(stmt).scalar_one_or_none()
         stmt = (
             select(Harmonizer)  # from sqlalchemy.orm
-            .filter_by(username=args.voter)
+            .where(Harmonizer.username == args.voter)
         )
         voter = db.execute(stmt).scalar_one_or_none()
         if not fork or not voter:
@@ -152,7 +152,10 @@ def vote_fork(args: argparse.Namespace) -> None:
         # Avoid duplicate votes from the same harmonizer
         stmt = (
             select(BranchVote)  # from sqlalchemy.orm
-            .filter_by(branch_id=fork.id, voter_id=voter.id)
+            .where(
+                BranchVote.branch_id == fork.id,
+                BranchVote.voter_id == voter.id,
+            )
         )
         existing = db.execute(stmt).scalar_one_or_none()
         if existing:
