@@ -30,3 +30,13 @@ def test_handle_generate_payload_only(monkeypatch):
     assert result == midi
     assert agent.inbox[-1]["topic"] == "MIDI_CREATED"
     assert agent.inbox[-1]["payload"] == {"midi": midi, "metrics": metrics}
+
+def test_process_event_generate(monkeypatch):
+    midi = b"evt"
+    monkeypatch.setattr(hs_agent_module, "generate_midi_from_metrics", lambda m: midi)
+    agent = HarmonySynthesizerAgent()
+    result = agent.process_event({"event": "GENERATE_MIDI", "payload": {"metrics": {"a": 1}}})
+    assert result == midi
+    assert agent.inbox[-1]["topic"] == "MIDI_CREATED"
+    assert agent.inbox[-1]["payload"]["midi"] == midi
+

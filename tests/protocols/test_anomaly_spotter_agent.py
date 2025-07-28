@@ -40,3 +40,11 @@ def test_llm_backend_called_and_flags_notes():
     assert result["flagged"] is True
     assert result["outliers"] == []
 
+
+def test_process_event_routes_and_returns():
+    agent = AnomalySpotterAgent()
+    metrics = [1, 2, 1, 1]
+    result = agent.process_event({"event": "DATA_METRICS", "payload": {"metrics": metrics}})
+    assert result["flagged"] is False
+    assert result["outliers"] == []
+

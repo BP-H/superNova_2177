@@ -73,3 +73,24 @@ def test_adjust_for_entropy(monkeypatch):
     assert result == {"decoherence_rate": 0.123}
     assert stub_decoherence.calls == [10.0]
 
+
+def test_process_event_query_resonance_backend(monkeypatch):
+    stub_prediction.calls = []
+    stub_measure.calls = []
+    monkeypatch.setattr(QuantumContext, "quantum_prediction_engine", stub_prediction)
+    monkeypatch.setattr(QuantumContext, "measure_superposition", stub_measure)
+
+    llm_calls = []
+    def backend(prompt):
+        llm_calls.append(prompt)
+        return "note"
+
+    agent = QuantumResonanceAgent(llm_backend=backend)
+    event = {"event": "QUERY_RESONANCE", "payload": {"users": ["x", "y"]}}
+    result = agent.process_event(event)
+
+    assert result["resonance_level"] == 0.42
+    assert result["llm_note"] == "note"
+    assert llm_calls
+    assert stub_prediction.calls == [["x", "y"]]
+
