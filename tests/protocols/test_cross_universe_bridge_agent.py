@@ -1,0 +1,37 @@
+import pytest
+
+from protocols.agents.cross_universe_bridge_agent import CrossUniverseBridgeAgent
+
+
+def test_register_and_get_provenance():
+    agent = CrossUniverseBridgeAgent()
+    payload = {
+        "coin_id": "c123",
+        "source_universe": "U1",
+        "source_coin": "s456",
+        "proof": "p789",
+    }
+    result = agent.register_bridge(payload)
+    assert result == {"valid": True}
+
+    provenance = agent.get_provenance({"coin_id": "c123"})
+    assert provenance == [payload]
+
+
+def test_llm_backend_called():
+    calls = []
+
+    def backend(prompt: str):
+        calls.append(prompt)
+
+    agent = CrossUniverseBridgeAgent(llm_backend=backend)
+    payload = {
+        "coin_id": "c42",
+        "source_universe": "U2",
+        "source_coin": "s42",
+        "proof": "proof42",
+    }
+    agent.register_bridge(payload)
+
+    assert calls == ["verify proof42"]
+
