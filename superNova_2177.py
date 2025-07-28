@@ -260,8 +260,18 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 from decimal import (ROUND_FLOOR, ROUND_HALF_UP, Decimal, InvalidOperation,
                      getcontext, localcontext)
-from typing import (Any, Awaitable, Callable, Dict, List, Literal, Optional,
-                    TypedDict, Union)
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    TypedDict,
+    Union,
+    NotRequired,
+)
 
 import immutable_tri_species_adjust
 import optimization_engine
@@ -713,6 +723,8 @@ class ProposalCreate(BaseModel):
     group_id: Optional[int] = None
     proposal_type: Literal["general", "system_parameter_change"] = "general"
     payload: Optional[Dict[str, Any]] = None
+    min_karma: Optional[float] = None
+    requires_certification: bool = False
 
 
 class ProposalOut(ProposalCreate):
@@ -878,6 +890,8 @@ ProposalPayload = TypedDict(
         "description": str,
         "target": str,
         "payload": Dict[str, Any],
+        "min_karma": NotRequired[str],
+        "requires_certification": NotRequired[bool],
         "nonce": str,
     },
 )
