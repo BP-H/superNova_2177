@@ -11,6 +11,7 @@ from typing import List, Dict, Any
 from datetime import datetime, timedelta
 from statistics import mean
 from exceptions import DataAccessError
+import sys
 
 from diversity_analyzer import compute_diversity_score
 from semantic_contradiction_resolver import semantic_contradiction_resolver
@@ -141,6 +142,7 @@ def save_reputations(reputations: Dict[str, float], db) -> None:
         from db_models import ValidatorReputation
     except Exception as e:  # pragma: no cover - fallback handling
         logger.error(f"DB models unavailable: {e}")
+        sys.modules.pop("db_models", None)  # allow later imports
         return
 
     for vid, rep in reputations.items():
@@ -163,6 +165,7 @@ def load_reputations(db) -> Dict[str, float]:
         from db_models import ValidatorReputation
     except Exception as e:  # pragma: no cover - fallback handling
         logger.error(f"DB models unavailable: {e}")
+        sys.modules.pop("db_models", None)  # allow later imports
         raise DataAccessError("ValidatorReputation model unavailable") from e
 
     rows = db.query(ValidatorReputation).all()
