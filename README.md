@@ -69,7 +69,7 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
    # python setup_env.py --run-app    # launch API after install
    # python setup_env.py --locked     # install from requirements.lock
     # python setup_env.py --build-ui   # build Transcendental Resonance frontend assets
-    # python setup_env.py --launch-ui  # run the Streamlit UI on port 8888
+    # python setup_env.py --launch-ui  # run the Streamlit UI on port 8501
    ```
   You can also let `install.py` choose the appropriate installer for your
   platform:

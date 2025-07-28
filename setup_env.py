@@ -66,7 +66,7 @@ def run_ui() -> None:
             'run',
             'ui.py',
             '--server.port',
-            '8888',
+            '8501',
         ])
     except subprocess.CalledProcessError as exc:
         logging.error('Failed to launch the Streamlit UI: %s', exc)
