@@ -280,6 +280,25 @@ pip install -r requirements-minimal.txt
 `email-validator`). With these installed, running `pytest` should
 succeed (`99 passed`).
 
+### Real Module Dependencies
+
+The test suite falls back to lightweight stubs when optional packages
+are missing. To exercise the real authentication module, install the
+actual libraries:
+
+```bash
+pip install redis passlib[bcrypt] python-jose[cryptography]
+```
+
+Installing both requirement files ensures all dependencies used in CI
+are available:
+
+```bash
+pip install -r requirements-minimal.txt -r requirements-dev.txt
+```
+
+Run `pytest` after installing the packages to validate your setup.
+
 ### Makefile Commands
 
 For a quicker workflow you can use the provided `Makefile`:
