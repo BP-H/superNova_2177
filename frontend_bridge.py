@@ -24,6 +24,14 @@ async def dispatch_route(name: str, payload: Dict[str, Any]) -> Dict[str, Any]:
         result = await result
     return result
 
+
+def _list_routes(_: Dict[str, Any]) -> Dict[str, Any]:
+    """Return the names of all registered routes."""
+    return {"routes": sorted(ROUTES.keys())}
+
+
+register_route("list_routes", _list_routes)
+
 # Built-in hypothesis-related routes
 from hypothesis.ui_hook import (
     rank_hypotheses_by_confidence_ui,
@@ -37,8 +45,4 @@ from consensus_forecaster_agent_ui_hook import forecast_consensus_ui
 
 register_route("rank_hypotheses_by_confidence", rank_hypotheses_by_confidence_ui)
 register_route("detect_conflicting_hypotheses", detect_conflicting_hypotheses_ui)
-register_route("trigger_meta_evaluation", trigger_meta_evaluation_ui)
-register_route("auto_flag_stale", auto_flag_stale_ui)
-register_route("run_integrity_analysis", run_integrity_analysis_ui)
-register_route("update_reputations", update_reputations_ui)
-register_route("forecast_consensus_agent", forecast_consensus_ui)
+

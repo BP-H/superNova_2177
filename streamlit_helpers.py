@@ -41,14 +41,18 @@ def header(title: str, *, layout: str = "centered") -> None:
 def apply_theme(theme: str) -> None:
     """Apply light or dark theme styles based on ``theme``."""
     if theme == "dark":
-        st.markdown(
-            """
+        css = """
             <style>
             body, .stApp { background-color: #1e1e1e; color: #f0f0f0; }
             </style>
-            """,
-            unsafe_allow_html=True,
-        )
+        """
+    else:
+        css = """
+            <style>
+            body, .stApp { background-color: #ffffff; color: #000000; }
+            </style>
+        """
+    st.markdown(css, unsafe_allow_html=True)
 
 
 def theme_selector(label: str = "Theme") -> str:
