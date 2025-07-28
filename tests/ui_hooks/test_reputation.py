@@ -33,6 +33,32 @@ async def test_reputation_analysis_via_router():
 
     result = await dispatch_route("reputation_analysis", payload)
 
-    assert "validator_reputations" in result
-    assert "stats" in result
-    assert calls == [result]
+    assert "validator_reputations" in result  # nosec B101
+    assert "stats" in result  # nosec B101
+    assert calls == [result]  # nosec B101
+
+
+@pytest.mark.asyncio
+async def test_reputation_update_via_router():
+    events = []
+
+    async def listener(data):
+        events.append(data)
+
+    ui_hook_manager.register_hook("reputation_update_run", listener)
+
+    payload = {
+        "validations": [
+            {"validator_id": "v1", "score": 0.6},
+            {"validator_id": "v1", "score": 0.7},
+            {"validator_id": "v2", "score": 0.4},
+            {"validator_id": "v2", "score": 0.5},
+        ]
+    }
+
+    result = await dispatch_route("reputation_update", payload)
+
+    assert "reputations" in result  # nosec B101
+    assert "diversity" in result  # nosec B101
+    assert "stats" in result  # nosec B101
+    assert events == [result]  # nosec B101
