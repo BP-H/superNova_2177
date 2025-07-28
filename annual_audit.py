@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 logger = logging.getLogger(__name__)
+logger.propagate = False
 
 class Config:
     """Default configuration for the audit task."""

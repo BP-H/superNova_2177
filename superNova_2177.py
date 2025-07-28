@@ -3540,7 +3540,7 @@ class TranscendentalCLI(cmd.Cmd):
     def do_add_user(self, arg):
         args = arg.split()
         if len(args) < 3:
-            print("Usage: add_user <name> <species> <is_genesis>")
+            logger.info("Usage: add_user <name> <species> <is_genesis>")
             return
         name, species, is_genesis = args[0], args[1], args[2] == "True"
         event = AddUserPayload(
@@ -3560,7 +3560,7 @@ class TranscendentalCLI(cmd.Cmd):
             nonce=uuid.uuid4().hex,
         )
         self.agent.process_event(event)
-        print(f"User {name} added.")
+        logger.info("User %s added.", name)
 
     # Add all other do_ methods, making it comprehensive with 50+ commands.
 
@@ -3981,7 +3981,7 @@ def _run_boot_debug() -> None:
             except Exception as exc:  # pragma: no cover - debug only
                 st.error(f"Dummy scan error: {exc}")
     except Exception as exc:  # pragma: no cover - debug only
-        print(f"Streamlit debug view failed: {exc}")
+        logger.error("Streamlit debug view failed: %s", exc)
 
 
 if __name__ == "__main__":
@@ -4008,7 +4008,7 @@ if __name__ == "__main__":
         try:
             import pytest  # type: ignore
         except ImportError:
-            print("pytest not installed.")
+            logger.error("pytest not installed.")
             sys.exit(1)
 
         pytest.main(["-vv"])
@@ -4018,10 +4018,11 @@ if __name__ == "__main__":
         try:
             import uvicorn
         except ImportError:
-            print("uvicorn not installed.")
+            logger.error("uvicorn not installed.")
             sys.exit(1)
 
-        run_validation_cycle()
+        if os.getenv("RUN_STARTUP_VALIDATIONS", "1") != "0":
+            run_validation_cycle()
         uvicorn.run(app, host="0.0.0.0", port=8000)
 
 # COMMUNITY_GUIDELINES_V40 GENERATED SUCCESSFULLY — ZERO DELETION CONFIRMED

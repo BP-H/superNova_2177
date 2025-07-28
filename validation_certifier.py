@@ -20,6 +20,7 @@ from network.network_coordination_detector import analyze_coordination_patterns
 from temporal_consistency_checker import analyze_temporal_consistency, assess_temporal_trust_factor
 
 logger = logging.getLogger("superNova_2177.certifier")
+logger.propagate = False
 
 class Config:
     """Unified configuration for all validation analysis components."""

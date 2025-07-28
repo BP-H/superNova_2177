@@ -17,6 +17,7 @@ from db_models import LogEntry # LogEntry is still needed here for querying vali
 import hypothesis_tracker as ht # hypothesis_tracker is now ORM-based internally, but its public methods return dicts
 
 logger = logging.getLogger(__name__)
+logger.propagate = False
 
 
 from exceptions import DataParseError

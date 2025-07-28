@@ -50,6 +50,7 @@ class InvalidEventError(Exception):
     pass
 
 logger = logging.getLogger(__name__)
+logger.propagate = False
 
 class ImmutableTriSpeciesAgent(RemixAgent):
     """

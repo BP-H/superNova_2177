@@ -15,6 +15,7 @@ from statistics import mean, stdev
 from datetime import datetime
 
 logger = logging.getLogger("superNova_2177.reputation")
+logger.propagate = False
 
 class Config:
     DEFAULT_REPUTATION = 0.5

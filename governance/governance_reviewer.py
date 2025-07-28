@@ -12,6 +12,7 @@ import logging
 import networkx as nx  # Required for cycle detection
 
 logger = logging.getLogger("superNova_2177.governance")
+logger.propagate = False
 
 # Configurable thresholds and rule toggles
 class Config:

@@ -12,6 +12,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("superNova_2177.participation")
+logger.propagate = False
 
 
 class Config:

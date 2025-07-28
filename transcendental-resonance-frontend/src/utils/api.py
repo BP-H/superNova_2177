@@ -11,6 +11,7 @@ from nicegui import ui
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
 logger = logging.getLogger(__name__)
+logger.propagate = False
 
 TOKEN: Optional[str] = None
 

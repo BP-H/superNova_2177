@@ -1,8 +1,12 @@
 import json
+import logging
 
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
+
+logger = logging.getLogger(__name__)
+logger.propagate = False
 
 try:
     st_secrets = st.secrets
@@ -153,5 +157,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    print("✅ Streamlit UI started. Launching main()...")
+    logger.info("\u2705 Streamlit UI started. Launching main()...")
     main()

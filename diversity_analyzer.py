@@ -26,6 +26,7 @@ from temporal_consistency_checker import analyze_temporal_consistency
 from network.network_coordination_detector import detect_score_coordination
 
 logger = logging.getLogger("superNova_2177.certifier")
+logger.propagate = False
 
 
 # --- Configuration ---
