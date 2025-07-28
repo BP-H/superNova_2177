@@ -22,3 +22,6 @@ async def trigger_meta_evaluation_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
+register_route("trigger_meta_evaluation", trigger_meta_evaluation_ui)
+
+
