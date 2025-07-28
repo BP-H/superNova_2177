@@ -493,6 +493,7 @@ for mod_name in [
                 add_log_level=None,
                 add_logger_name=None,
                 LoggerFactory=object,
+                BoundLogger=object,
             )
             stub.processors = types.SimpleNamespace(
                 TimeStamper=lambda **_kw: None,
