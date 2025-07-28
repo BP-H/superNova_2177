@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from frontend_bridge import register_route
 from hook_manager import HookManager
 from prediction_manager import PredictionManager
 
@@ -20,9 +19,7 @@ async def store_prediction_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
 
     prediction_data = payload.get("prediction", payload)
     prediction_id = prediction_manager.store_prediction(prediction_data)
-    await ui_hook_manager.trigger(
-        "prediction_stored", {"prediction_id": prediction_id}
-    )
+    await ui_hook_manager.trigger("prediction_stored", {"prediction_id": prediction_id})
     return {"prediction_id": prediction_id}
 
 
@@ -49,12 +46,7 @@ async def update_prediction_status_ui(payload: Dict[str, Any]) -> Dict[str, Any]
         prediction_id, new_status, actual_outcome=outcome
     )
     await ui_hook_manager.trigger(
-        "prediction_status_updated", {"prediction_id": prediction_id, "status": new_status}
+        "prediction_status_updated",
+        {"prediction_id": prediction_id, "status": new_status},
     )
     return {"prediction_id": prediction_id, "status": new_status}
-
-
-# Register routes with the frontend bridge
-register_route("store_prediction", store_prediction_ui)
-register_route("get_prediction", get_prediction_ui)
-register_route("update_prediction_status", update_prediction_status_ui)
