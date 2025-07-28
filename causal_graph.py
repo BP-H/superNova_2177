@@ -1,6 +1,6 @@
 """Causal influence graph utilities."""
 import math
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Any, Optional, Iterable, Dict, List
 import inspect
 import json
@@ -158,7 +158,7 @@ class CausalGraph:
         """Add a node with standardized causal metadata."""
 
         if timestamp is None:
-            timestamp = datetime.utcnow()
+            timestamp = datetime.now(UTC)
 
         if debug_payload is None:
             frame = inspect.currentframe()
@@ -252,7 +252,7 @@ class CausalGraph:
         dictionary. Missing timestamps default to ``datetime.utcnow``.
         """
         if timestamp is None:
-            timestamp = datetime.utcnow()
+            timestamp = datetime.now(UTC)
         w = -abs(weight) if negative else weight
         self.graph.add_edge(source, target, weight=w)
         try:
@@ -285,8 +285,8 @@ class CausalGraph:
         """
         data = self.graph.get_edge_data(source, target, {})
         weight = data.get("weight", 0.0)
-        ts = data.get("timestamp", datetime.utcnow())
-        age = (datetime.utcnow() - ts).total_seconds()
+        ts = data.get("timestamp", datetime.now(UTC))
+        age = (datetime.now(UTC) - ts).total_seconds()
         value = weight * math.exp(-decay_rate * age)
         assert not math.isnan(value)
         return {
@@ -499,7 +499,7 @@ class InfluenceGraph(CausalGraph):
     def snapshot_graph(self, db_session, key_prefix: str = "graph_snapshot") -> str:
         """Serialize the graph and store it in ``SystemState``."""
         snapshot = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "nodes": [
                 {"id": n, **(self.graph.nodes.get(n, {}))} for n in self.graph.nodes
             ],
@@ -516,7 +516,7 @@ class InfluenceGraph(CausalGraph):
         except Exception:
             return ""
 
-        key = f"{key_prefix}_{int(datetime.utcnow().timestamp())}"
+        key = f"{key_prefix}_{int(datetime.now(UTC).timestamp())}"
         stmt = select(SystemState).where(SystemState.key == key)
         state = db_session.execute(stmt).scalar_one_or_none()
         if state:
@@ -654,9 +654,9 @@ def discover_causal_mechanisms(
             try:
                 ts = datetime.fromisoformat(ts)
             except Exception:
-                ts = datetime.utcnow()
+                ts = datetime.now(UTC)
         if ts is None:
-            ts = datetime.utcnow()
+            ts = datetime.now(UTC)
 
         target = iv.get("target_entity")
         metric = iv.get("effect_metric", "metric")
@@ -769,7 +769,7 @@ def temporal_causality_analysis(
         return timedelta(hours=24 * qty)
 
     analyses: list[dict] = []
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
 
     for period in time_periods:
         start = now - _period_delta(period)

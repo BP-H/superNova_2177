@@ -2,7 +2,7 @@
 
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import List, Dict, Optional, Any
 import logging
 
@@ -38,7 +38,7 @@ def log_hypothesis_with_trace(
     metadata. Returns the key used in SystemState.
     """
     payload = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "hypothesis_text": hypothesis_text,
         "causal_node_ids": causal_node_ids,
         "metadata": metadata or {},

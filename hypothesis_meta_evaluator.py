@@ -7,7 +7,7 @@ simulates a "scientific conscience"—closing the feedback loop of automated rea
 """
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import List, Dict, Optional, Any, Tuple, cast
 import collections
 import math
@@ -262,7 +262,7 @@ def score_hypothesis_judgment_quality(db: Session) -> float:
     if total_hypotheses == 0:
         return 0.0
 
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
 
     # Metric 1: % of open hypotheses still unresolved after X days
     unresolved_stale_count = 0
@@ -334,7 +334,7 @@ def propose_judgment_heuristic_tweaks(db: Session) -> List[str]:
     # Tweak 1: Based on Staleness
     unresolved_stale_count = 0
     total_open_hypotheses = 0
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     for hyp in all_hypotheses:
         if hyp.get("status") == "open":
             total_open_hypotheses += 1
@@ -388,7 +388,7 @@ def run_meta_evaluation(db: Session) -> str:
     """
     Executes the full meta-evaluation workflow and stores the results in SystemState.
     """
-    timestamp = datetime.utcnow().isoformat()
+    timestamp = datetime.now(UTC).isoformat()
     
     validation_trends = analyze_validation_patterns(db)
     bias_detections = detect_judgment_biases(db)

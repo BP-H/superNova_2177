@@ -16,7 +16,7 @@ import argparse
 import json
 import sys
 from typing import Dict, Any, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 import random
 
 from sqlalchemy import create_engine, select
@@ -46,7 +46,7 @@ def generate_demo_validations() -> List[Dict[str, Any]]:
     ]
     
     # Generate timestamps with some clustering for temporal analysis
-    base_time = datetime.utcnow() - timedelta(days=2)
+    base_time = datetime.now(UTC) - timedelta(days=2)
     
     validations = []
     for i, validator in enumerate(validators):

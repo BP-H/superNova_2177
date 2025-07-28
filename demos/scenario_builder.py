@@ -10,7 +10,7 @@ analysis results to a JSON file for later inspection.
 import argparse
 import json
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import List, Dict
 
 from dateutil import parser as date_parser
@@ -54,7 +54,7 @@ def main() -> None:
     parser.add_argument(
         "--start",
         type=str,
-        default=datetime.utcnow().isoformat(),
+        default=datetime.now(UTC).isoformat(),
         help="ISO timestamp for the first validation",
     )
     parser.add_argument(

@@ -1,5 +1,6 @@
 import json
 import datetime
+from datetime import UTC
 from causal_trigger import trigger_causal_audit
 from db_models import LogEntry, SystemState
 from causal_graph import InfluenceGraph
@@ -22,7 +23,7 @@ def test_trigger_causal_audit_uses_audit_ref(test_db):
 
     payload = json.dumps({"causal_audit_ref": ref})
     log = LogEntry(
-        timestamp=datetime.datetime.utcnow(),
+        timestamp=datetime.datetime.now(UTC),
         event_type="test",
         payload=payload,
         previous_hash="p",
@@ -36,4 +37,3 @@ def test_trigger_causal_audit_uses_audit_ref(test_db):
     chain = result.get("causal_chain")
     assert isinstance(chain, list)
     assert chain and chain[0].get("type") == "node_event"
-

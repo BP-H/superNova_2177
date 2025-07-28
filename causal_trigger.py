@@ -2,6 +2,7 @@ from typing import Optional, Dict, Any, List, cast
 from sqlalchemy.orm import Session
 import logging
 import datetime
+from datetime import UTC
 import json
 
 from db_models import LogEntry, HypothesisRecord
@@ -65,7 +66,7 @@ def trigger_causal_audit(
     audit_summary: Dict[str, Any] = {
         "log_id": log_id,
         "hypothesis_id": hypothesis_id,
-        "timestamp": datetime.datetime.utcnow().isoformat(),
+        "timestamp": datetime.datetime.now(UTC).isoformat(),
         "causal_chain": [],
         "governance_review": {},
         "commentary": None,

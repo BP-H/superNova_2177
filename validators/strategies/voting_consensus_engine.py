@@ -14,7 +14,7 @@ from collections import Counter, defaultdict
 from statistics import mean
 from math import sqrt
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, UTC
 
 logger = logging.getLogger("superNova_2177.voting")
 
@@ -95,7 +95,7 @@ def aggregate_validator_votes(
     reputations = reputations or {}
     temporal_trust = temporal_trust or {}
     diversity_score = diversity_score or 0.0
-    current_time = current_time or datetime.utcnow()
+    current_time = current_time or datetime.now(UTC)
 
     # Filter valid votes
     valid_votes = []

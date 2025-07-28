@@ -7,7 +7,7 @@ import time
 import random
 import json
 import argparse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from validation_certifier import analyze_validation_integrity
 
 def typewriter_print(text, delay=0.03):
@@ -55,7 +55,7 @@ def create_dramatic_scenario(
     )
     
     # First wave - normal looking
-    base_time = datetime.utcnow()
+    base_time = datetime.now(UTC)
     for i in range(normal_count):
         validator = f"validator_{chr(65+i)}"
         typewriter_print(f"  📥 {validator} submitted validation... ", 0.02)
@@ -171,7 +171,7 @@ def create_dramatic_scenario(
     if save_output:
         output_data = {
             "scenario": "Coordinated validator manipulation",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "validations": validations,
             "analysis_result": result,
             "summary": {
@@ -193,7 +193,7 @@ def create_dramatic_scenario(
         md_filename = f"demo_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
         with open(md_filename, 'w') as f:
             f.write(f"# superNova_2177 Demo Analysis Report\n\n")
-            f.write(f"**Generated:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}\n\n")
+            f.write(f"**Generated:** {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S UTC')}\n\n")
             f.write(f"## Summary\n")
             f.write(f"- **Certification:** {certification}\n")
             f.write(f"- **Risk Level:** {risk_level}\n")

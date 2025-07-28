@@ -8,7 +8,7 @@ hypothesis storage.
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, UTC
 import uuid
 from typing import List, Dict, Optional, Any
 import math # For isfinite check
@@ -111,7 +111,7 @@ def register_hypothesis(text: str, db: Session, metadata: Optional[Dict[str, Any
     Returns:
         str: The generated hypothesis_id.
     """
-    now_dt = datetime.utcnow()  # Get datetime object
+    now_dt = datetime.now(UTC)  # Get datetime object
     now_iso = now_dt.isoformat()  # Convert to ISO string for storage
     timestamp_for_id = int(now_dt.timestamp())  # Use timestamp from datetime object for ID
     unique_part = uuid.uuid4().hex[:8]
@@ -197,7 +197,7 @@ def update_hypothesis_score(
         record.metadata_json = current_metadata
 
     history_entry = {
-        "t": datetime.utcnow().isoformat(), # Use ISO string for history entry
+        "t": datetime.now(UTC).isoformat(), # Use ISO string for history entry
         "score": new_score,
         "status": status if status else record.status,
         "event": "score_update"
@@ -209,9 +209,9 @@ def update_hypothesis_score(
         record.audit_sources.append(source_audit_id)
     if reason:
         history_entry["reason"] = reason
-        record.notes = (record.notes or "") + f"[{datetime.utcnow().isoformat()}] Score updated ({reason}): {new_score}.\n"
+        record.notes = (record.notes or "") + f"[{datetime.now(UTC).isoformat()}] Score updated ({reason}): {new_score}.\n"
     else:
-        record.notes = (record.notes or "") + f"[{datetime.utcnow().isoformat()}] Score updated: {new_score}.\n"
+        record.notes = (record.notes or "") + f"[{datetime.now(UTC).isoformat()}] Score updated: {new_score}.\n"
 
     # Append to history (JSON column, list)
     if not isinstance(record.history, list): record.history = [] # Defensive
@@ -265,7 +265,7 @@ def attach_evidence_to_hypothesis(
     note_text = f"Evidence attached: Nodes {node_ids}, Logs {log_ids}."
     if summary_note:
         note_text += f" Summary: {summary_note}"
-    record.notes = (record.notes or "") + f"[{datetime.utcnow().isoformat()}] {note_text}\n"
+    record.notes = (record.notes or "") + f"[{datetime.now(UTC).isoformat()}] {note_text}\n"
 
     _store_hypothesis_record_to_db(record, db)
     return True
