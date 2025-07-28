@@ -3,6 +3,7 @@ import logging
 
 import matplotlib.pyplot as plt
 import networkx as nx
+from datetime import datetime
 import streamlit as st
 
 logger = logging.getLogger(__name__)
@@ -49,6 +50,39 @@ if HarmonyScanner is None:
             return {"dummy": True}
 
 
+def clear_memory() -> None:
+    """Reset analysis history and run counters."""
+    st.session_state["analysis_diary"] = []
+    st.session_state["run_count"] = 0
+    st.session_state["last_run"] = None
+    st.session_state["last_result"] = None
+    st.session_state["show_explanation"] = False
+
+
+def export_latest_result() -> str | None:
+    """Return the most recent analysis result as a JSON string."""
+    result = st.session_state.get("last_result")
+    if not result:
+        return None
+    return json.dumps(result, indent=2)
+
+
+def generate_explanation(result: dict) -> str:
+    """Return a human-readable explanation for the integrity score."""
+    integrity = result.get("integrity_analysis", {})
+    score = integrity.get("overall_integrity_score")
+    risk = integrity.get("risk_level")
+    recs = result.get("recommendations", [])
+    if score is None:
+        return "No integrity information available."
+    text = (
+        f"The overall integrity score is {score:.2f}, indicating {risk} risk level."
+    )
+    if recs:
+        text += " Recommended actions: " + "; ".join(recs)
+    return text
+
+
 def run_analysis(validations):
     """Execute the validation integrity pipeline and display results."""
     if not validations:
@@ -63,6 +97,13 @@ def run_analysis(validations):
 
     with st.spinner("Running analysis..."):
         result = analyze_validation_integrity(validations)
+
+    st.session_state.setdefault("run_count", 0)
+    st.session_state.setdefault("analysis_diary", [])
+    st.session_state["run_count"] += 1
+    st.session_state["last_run"] = datetime.utcnow().isoformat()
+    st.session_state["last_result"] = result
+    st.session_state["analysis_diary"].append(result)
 
     consensus = result.get("consensus_score")
     if consensus is not None:
@@ -152,8 +193,16 @@ def main() -> None:
         "or enable demo mode to see the pipeline in action."
     )
 
-    if "validations_json" not in st.session_state:
-        st.session_state["validations_json"] = ""
+    defaults = {
+        "validations_json": "",
+        "analysis_diary": [],
+        "run_count": 0,
+        "last_run": None,
+        "last_result": None,
+        "show_explanation": False,
+    }
+    for k, v in defaults.items():
+        st.session_state.setdefault(k, v)
 
     validations_input = st.text_area(
         "Validations JSON",
@@ -184,6 +233,25 @@ def main() -> None:
         uploaded_file = st.file_uploader("Upload validations JSON", type="json")
         run_clicked = st.button("Run Analysis")
 
+        st.divider()
+        st.subheader("Dashboard")
+        st.write(f"Run count: {st.session_state['run_count']}")
+        st.write(f"Last run: {st.session_state.get('last_run', 'Never')}")
+
+        if st.button("Clear Memory"):
+            clear_memory()
+            st.experimental_rerun()
+
+        if st.session_state.get("last_result"):
+            st.download_button(
+                "Export Report",
+                export_latest_result(),
+                file_name="analysis_report.json",
+                mime="application/json",
+            )
+        if st.button("Explain This Score", key="explain_btn"):
+            st.session_state["show_explanation"] = True
+
     if run_clicked:
         if validations_input.strip():
             try:
@@ -211,6 +279,9 @@ def main() -> None:
             st.error("Please upload a file, paste JSON, or enable demo mode.")
             st.stop()
         run_analysis(data.get("validations", []))
+        if st.session_state.get("show_explanation"):
+            with st.expander("Score Explanation", expanded=True):
+                st.write(generate_explanation(st.session_state["last_result"]))
 
 
 if __name__ == "__main__":
