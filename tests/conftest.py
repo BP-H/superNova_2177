@@ -638,6 +638,29 @@ for mod_name in [
             stub.log = lambda v: math.log(v)
             stub.exp = lambda v: math.exp(v)
 
+            def _clip(a, a_min, a_max):
+                try:
+                    return [
+                        _clip(x, a_min, a_max) for x in a
+                    ]  # type: ignore[arg-type]
+                except TypeError:
+                    return max(a_min, min(a_max, float(a)))
+
+            def _polyfit(x, y, deg):
+                n = len(x)
+                if n == 0:
+                    return 0.0, 0.0
+                mean_x = sum(x) / n
+                mean_y = sum(y) / n
+                num = sum((xi - mean_x) * (yi - mean_y) for xi, yi in zip(x, y))
+                den = sum((xi - mean_x) ** 2 for xi in x) or 1.0
+                slope = num / den
+                intercept = mean_y - slope * mean_x
+                return slope, intercept
+
+            stub.clip = _clip
+            stub.polyfit = _polyfit
+
             # bool_ is used as an alias for Python's ``bool`` within the test
             # suite.  Define it here so that the NumPy stub mirrors the real
             # module interface and avoid ``AttributeError`` when ``numpy.bool_``
