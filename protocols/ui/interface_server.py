@@ -3,9 +3,10 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import importlib
 import pkgutil
-from typing import Dict, Type, Any, List
+from typing import Dict, Type, Any, List, Optional
 
 from protocols.core.runtime import set_provider_key, get_key
+from llm_backends import get_backend
 
 app = FastAPI(title="Protocol Agent UI")
 
@@ -33,6 +34,7 @@ class LaunchRequest(BaseModel):
     provider: str
     api_key: str
     agents: List[str]
+    llm_backend: Optional[str] = None
 # END: agent_ui_controller_setup
 
 
@@ -47,6 +49,11 @@ def list_agents():
 def launch_agents(req: LaunchRequest):
     """Instantiate and launch selected agents."""
     set_provider_key(req.provider, req.api_key)
+    backend_fn = None
+    if req.llm_backend:
+        backend_fn = get_backend(req.llm_backend)
+        if backend_fn is None:
+            raise HTTPException(status_code=404, detail=f"Backend {req.llm_backend} not found")
 
     launched = []
     for name in req.agents:
@@ -54,7 +61,13 @@ def launch_agents(req: LaunchRequest):
         if cls is None:
             raise HTTPException(status_code=404, detail=f"Agent {name} not found")
         try:
-            instance = cls()
+            if backend_fn is not None:
+                try:
+                    instance = cls(backend_fn)
+                except TypeError:
+                    instance = cls()
+            else:
+                instance = cls()
             active_agents[name] = instance
             if hasattr(instance, "start") and callable(getattr(instance, "start")):
                 instance.start()
