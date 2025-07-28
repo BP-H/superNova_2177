@@ -5,14 +5,18 @@ ObserverAgent watches agent activity via MessageHub and suggests evolutionary fo
 skill swaps, or role specialization based on performance trends and behavioral anomalies.
 """
 
-from protocols.utils.forking import fork_agent
-from collections import defaultdict, deque
-import time
 import logging
+import time
+from collections import defaultdict, deque
+
+from protocols.utils.forking import fork_agent
 
 logger = logging.getLogger("ObserverAgent")
 
+
 class ObserverAgent:
+    """Watches tasks and recommends agent forks or upgrades."""
+
     def __init__(self, hub, agent_registry, fatigue_tracker):
         self.hub = hub
         self.registry = agent_registry
@@ -43,7 +47,9 @@ class ObserverAgent:
         if self.should_fork(agent_id, task, fatigue, belief_score):
             mutation = {"name": f"{agent_id}_forked_{int(time.time())}"}
             new_agent = fork_agent(self.registry[agent_id], mutation)
-            logger.info(f"Forked agent {agent_id} -> {new_agent.name} due to fatigue={fatigue}, belief={belief_score:.2f}")
+            logger.info(
+                f"Forked agent {agent_id} -> {new_agent.name} due to fatigue={fatigue}, belief={belief_score:.2f}"
+            )
             # Optionally auto-register
             self.registry[new_agent.name] = new_agent
 

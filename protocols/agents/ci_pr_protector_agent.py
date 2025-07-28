@@ -11,16 +11,20 @@ Components:
 - writes safe response directly into PR comment or diff patch
 """
 
+import json
+import logging
+import subprocess
+import uuid
+
 from protocols.core.internal_protocol import InternalAgentProtocol
 from protocols.utils.skills import Skill
-import subprocess
-import json
-import uuid
-import logging
 
 logger = logging.getLogger("CI_PR_PROTECTOR")
 
+
 class CI_PRProtectorAgent(InternalAgentProtocol):
+    """Suggests fixes for failing CI runs or PR diffs."""
+
     def __init__(self, talk_to_llm_fn):
         super().__init__()
         self.name = "CI_PRProtector"
@@ -33,7 +37,7 @@ class CI_PRProtectorAgent(InternalAgentProtocol):
         branch = payload.get("branch")
         logs = payload.get("logs")
         logger.info(f"CI failure detected on {repo}:{branch}")
-        
+
         prompt = self.construct_prompt(logs, context_type="CI")
         llm_response = self.talk_to_llm(prompt)
         patch = self.extract_code_block(llm_response)
@@ -69,12 +73,13 @@ Explanation:
 
     def extract_code_block(self, llm_response: str) -> str:
         if "```" in llm_response:
-            code = llm_response.split("```python")[-1].split("```") [0]
+            code = llm_response.split("```python")[-1].split("```")[0]
             return code.strip()
         return "# No valid patch found"
 
 
 # --- Hook to LLM (example) ---
+
 
 def dummy_llm_talker(prompt):
     # Replace with real API call to GPT/Claude etc.
@@ -86,6 +91,7 @@ print(\"Fix applied\")
 Explanation:
 This is a dummy patch. Replace me.
 """
+
 
 # Usage:
 # agent = CI_PRProtectorAgent(dummy_llm_talker)

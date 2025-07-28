@@ -5,12 +5,16 @@ MetaValidatorAgent++: enhanced with LLM interrogation, repair planning, and ethi
 Catches hallucinated patches, misaligned behavior, and decays untrustworthy agents.
 """
 
-from protocols.core.internal_protocol import InternalAgentProtocol
-import uuid
-import time
 import random
+import time
+import uuid
+
+from protocols.core.internal_protocol import InternalAgentProtocol
+
 
 class MetaValidatorAgent(InternalAgentProtocol):
+    """Scores patches and agents to enforce quality control."""
+
     def __init__(self, trust_registry: dict):
         super().__init__()
         self.name = "MetaValidator"
@@ -46,16 +50,25 @@ class MetaValidatorAgent(InternalAgentProtocol):
     def intercept_llm(self, payload):
         content = payload.get("text", "")
         tokens = len(content.split())
-        hallucination_warning = any(word in content.lower() for word in ["obviously", "clearly", "definitely", "guaranteed"])
-        oversell = any(phrase in content.lower() for phrase in ["perfect fix", "always works"])
+        hallucination_warning = any(
+            word in content.lower()
+            for word in ["obviously", "clearly", "definitely", "guaranteed"]
+        )
+        oversell = any(
+            phrase in content.lower() for phrase in ["perfect fix", "always works"]
+        )
 
-        quality = "HIGH" if tokens > 50 and not hallucination_warning and not oversell else "LOW"
+        quality = (
+            "HIGH"
+            if tokens > 50 and not hallucination_warning and not oversell
+            else "LOW"
+        )
         return {
             "length": tokens,
             "hallucination": hallucination_warning,
             "oversell": oversell,
             "quality": quality,
-            "llm_id": payload.get("llm_id", str(uuid.uuid4()))
+            "llm_id": payload.get("llm_id", str(uuid.uuid4())),
         }
 
     def audit_agent_behavior(self, payload):
@@ -64,8 +77,14 @@ class MetaValidatorAgent(InternalAgentProtocol):
         drift = sum(1 for op in ops if op.get("alignment_score", 1) < 0.5)
 
         if drift > 3:
-            self.trust_registry[agent_name] = max(0.0, self.trust_registry.get(agent_name, 0.5) - 0.1)
-            return {"drift_detected": True, "action": "decayed_trust", "new_score": self.trust_registry[agent_name]}
+            self.trust_registry[agent_name] = max(
+                0.0, self.trust_registry.get(agent_name, 0.5) - 0.1
+            )
+            return {
+                "drift_detected": True,
+                "action": "decayed_trust",
+                "new_score": self.trust_registry[agent_name],
+            }
         return {"status": "ok"}
 
     def suggest_repair_plan(self, payload):
@@ -76,7 +95,7 @@ class MetaValidatorAgent(InternalAgentProtocol):
             f"Scan patch for unsafe functions related to '{issue}'",
             "Apply CI sandbox test",
             "Run hallucination detector on response trace",
-            "Propose 2-step retry patch with comment logging"
+            "Propose 2-step retry patch with comment logging",
         ]
         return {"repair_plan": plan, "estimated_fix_time": "<2min"}
 
