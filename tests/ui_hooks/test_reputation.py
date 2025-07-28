@@ -2,6 +2,7 @@ import pytest
 
 from frontend_bridge import dispatch_route
 from validators.ui_hook import ui_hook_manager
+from hooks import events
 
 
 @pytest.mark.asyncio
@@ -11,7 +12,7 @@ async def test_reputation_analysis_via_router():
     async def listener(data):
         calls.append(data)
 
-    ui_hook_manager.register_hook("reputation_analysis_run", listener)
+    ui_hook_manager.register_hook(events.REPUTATION_ANALYSIS_RUN, listener)
 
     payload = {
         "validations": [

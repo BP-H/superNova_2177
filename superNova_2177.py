@@ -582,6 +582,7 @@ DB_ENGINE_URL = None
 from prediction_manager import PredictionManager
 from resonance_music import generate_midi_from_metrics
 from hook_manager import HookManager
+from hooks import events
 
 # Import system configuration early so metrics can be started with the proper
 # port value. Other modules follow the same pattern by exposing a ``CONFIG``
@@ -2330,7 +2331,7 @@ class EntropyTracker(RemixAgent):
             self.current_entropy = float(info.get("value", 0.0))
             if self.current_entropy > self.entropy_threshold:
                 self.cosmic_nexus.hooks.fire_hooks(
-                    "entropy_divergence",
+                    events.ENTROPY_DIVERGENCE,
                     {"universe": id(self), "entropy": self.current_entropy},
                 )
         finally:

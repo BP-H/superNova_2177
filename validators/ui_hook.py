@@ -4,6 +4,7 @@ from typing import Any, Dict
 
 from frontend_bridge import register_route
 from hook_manager import HookManager
+from hooks import events
 
 from .reputation_influence_tracker import compute_validator_reputations
 
@@ -33,7 +34,7 @@ async def compute_reputation_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
         "stats": result.get("stats", {}),
     }
 
-    await ui_hook_manager.trigger("reputation_analysis_run", minimal)
+    await ui_hook_manager.trigger(events.REPUTATION_ANALYSIS_RUN, minimal)
     return minimal
 
 

@@ -150,6 +150,11 @@ You can run all checks manually with:
 pre-commit run --all-files
 ```
 
+### Hook Events
+
+See `docs/hooks.md` for a list of canonical hook events emitted by the
+application.
+
 ### Platform Quick Commands
 
 **Windows PowerShell**

@@ -20,6 +20,7 @@ from types import SimpleNamespace
 from typing import Any, Dict, TYPE_CHECKING
 from virtual_diary import load_entries
 from config import Config, get_emoji_weights
+from hooks import events
 
 if TYPE_CHECKING:
     from superNova_2177 import (
@@ -131,7 +132,7 @@ class RemixAgent:
         # Track awarded fork badges for users
         self.fork_badges: Dict[str, list[str]] = {}
         # Register hook for cross remix creation events
-        self.hooks.register_hook("cross_remix_created", self.on_cross_remix_created)
+        self.hooks.register_hook(events.CROSS_REMIX_CREATED, self.on_cross_remix_created)
         self.event_count = 0
         self.processed_nonces = {}
         self._cleanup_thread = threading.Thread(
@@ -837,7 +838,7 @@ class RemixAgent:
         self.storage.set_coin(new_coin_id, new_coin.to_dict())
         # Trigger hooks after a successful cross remix
         self.hooks.fire_hooks(
-            "cross_remix_created", {"coin_id": new_coin_id, "user": user}
+            events.CROSS_REMIX_CREATED, {"coin_id": new_coin_id, "user": user}
         )
 
     def _apply_DAILY_DECAY(self, event: ApplyDailyDecayPayload) -> None:

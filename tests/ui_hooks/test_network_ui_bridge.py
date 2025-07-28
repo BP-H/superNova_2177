@@ -1,16 +1,17 @@
 import pytest
 
 from network import ui_hook as net_ui_hook
+from hooks import events
 
 
 @pytest.mark.asyncio
 async def test_trigger_coordination_analysis_ui(monkeypatch):
-    events = []
+    captured = []
 
     async def listener(data):
-        events.append(data)
+        captured.append(data)
 
-    net_ui_hook.ui_hook_manager.register_hook("coordination_analysis_run", listener)
+    net_ui_hook.ui_hook_manager.register_hook(events.COORDINATION_ANALYSIS_RUN, listener)
 
     called = {}
 
@@ -29,5 +30,5 @@ async def test_trigger_coordination_analysis_ui(monkeypatch):
     result = await net_ui_hook.trigger_coordination_analysis_ui(payload)
 
     assert result == {"overall_risk_score": 0.5, "graph": {"nodes": [], "edges": []}}
-    assert events == [result]
+    assert captured == [result]
     assert called["validations"] == payload["validations"]

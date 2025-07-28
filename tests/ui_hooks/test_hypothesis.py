@@ -3,6 +3,7 @@ import pytest
 
 from frontend_bridge import dispatch_route
 from hypothesis.ui_hook import ui_hook_manager
+from hooks import events
 from hypothesis_tracker import (
     register_hypothesis,
     update_hypothesis_score,
@@ -44,16 +45,16 @@ def _sync_state(db, hyp_id):
 
 @pytest.mark.asyncio
 async def test_hypothesis_ui_routes(patched_db):
-    events = []
+    calls = []
 
     async def ranking_listener(data):
-        events.append(("rank", data))
+        calls.append(("rank", data))
 
     async def conflict_listener(data):
-        events.append(("conflict", data))
+        calls.append(("conflict", data))
 
-    ui_hook_manager.register_hook("hypothesis_ranking", ranking_listener)
-    ui_hook_manager.register_hook("hypothesis_conflicts", conflict_listener)
+    ui_hook_manager.register_hook(events.HYPOTHESIS_RANKING, ranking_listener)
+    ui_hook_manager.register_hook(events.HYPOTHESIS_CONFLICTS, conflict_listener)
 
     h1 = register_hypothesis("same text", patched_db)
     h2 = register_hypothesis("same text", patched_db)
@@ -69,8 +70,8 @@ async def test_hypothesis_ui_routes(patched_db):
 
     ranking = await dispatch_route("rank_hypotheses_by_confidence", {"top_k": 2})
     assert len(ranking["ranking"]) == 2
-    assert events[0] == ("rank", ranking["ranking"])
+    assert calls[0] == ("rank", ranking["ranking"])
 
     conflicts = await dispatch_route("detect_conflicting_hypotheses", {})
-    assert events[1] == ("conflict", conflicts["conflicts"])
+    assert calls[1] == ("conflict", conflicts["conflicts"])
     assert any(set(pair) == {h1, h2} for pair in conflicts["conflicts"])
