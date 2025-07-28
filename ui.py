@@ -9,6 +9,10 @@ import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
+import sys
+
+logger = logging.getLogger(__name__)
+logger.propagate = False
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -18,8 +22,9 @@ import streamlit as st
 try:
     st.set_page_config(page_title="superNova_2177", layout="wide")
 except Exception:
-    logging.exception("Failed to set Streamlit page config")
-    print("Failed to set Streamlit page config", file=sys.stderr)
+    logger.exception("Failed to configure Streamlit page")
+    print("Failed to configure Streamlit page", file=sys.stderr)
+
 else:
     st.title("superNova_2177")
     st.success("\u2705 Streamlit loaded!")
@@ -106,9 +111,6 @@ except Exception:  # pragma: no cover - optional in dev/CI
     }
 
 sample_path = Path(__file__).resolve().parent / "sample_validations.json"
-
-logger = logging.getLogger(__name__)
-logger.propagate = False
 
 try:
     from validation_certifier import Config as VCConfig
@@ -1024,4 +1026,8 @@ if __name__ == "__main__":
         raise
     else:
         st.success("\u2705 UI Booted")
-        print("Startup successful", file=sys.stderr)
+        print("UI Booted", file=sys.stderr)
+    except Exception as exc:
+        logger.exception("Startup failed")
+        print(f"Startup failed: {exc}", file=sys.stderr)
+
