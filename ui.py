@@ -6,6 +6,7 @@ import math
 import os
 from datetime import datetime
 from pathlib import Path
+import asyncio
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -17,6 +18,44 @@ from streamlit_helpers import (
     centered_container,
     apply_theme,
 )
+
+try:
+    from streamlit_app import _run_async
+except Exception:
+
+    def _run_async(coro):
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(coro)
+        else:
+            if loop.is_running():
+                return asyncio.run_coroutine_threadsafe(coro, loop).result()
+            return loop.run_until_complete(coro)
+
+try:
+    from frontend_bridge import dispatch_route
+except Exception:  # pragma: no cover - optional dependency
+    dispatch_route = None
+
+try:
+    from db_models import SessionLocal, Harmonizer, UniverseBranch
+except Exception:  # pragma: no cover - missing ORM
+    SessionLocal = None  # type: ignore
+    Harmonizer = None  # type: ignore
+    UniverseBranch = None  # type: ignore
+
+try:
+    from introspection.introspection_pipeline import run_full_audit
+except Exception:  # pragma: no cover - optional module
+    run_full_audit = None  # type: ignore
+
+try:
+    from superNova_2177 import cosmic_nexus, agent, InMemoryStorage
+except Exception:  # pragma: no cover - optional runtime globals
+    cosmic_nexus = None  # type: ignore
+    agent = None  # type: ignore
+    InMemoryStorage = None  # type: ignore
 
 try:
     import plotly.graph_objects as go
@@ -528,6 +567,155 @@ def main() -> None:
         event_type = st.text_input("Event", value="LLM_INCOMING")
         payload_txt = st.text_area("Payload JSON", value="{}", height=100)
         run_agent_clicked = st.button("Run Agent")
+
+        st.divider()
+        show_dev = st.checkbox("Dev Tools")
+        if show_dev:
+            dev_tabs = st.tabs(
+                [
+                    "Fork Universe",
+                    "Universe State Viewer",
+                    "Run Introspection Audit",
+                    "Agent Logs",
+                    "Inject Event",
+                    "Session Inspector",
+                    "Playground",
+                ]
+            )
+
+            with dev_tabs[0]:
+                if cosmic_nexus and SessionLocal and Harmonizer:
+                    with SessionLocal() as db:
+                        user = db.query(Harmonizer).first()
+                        if user and st.button("Fork with Mock Config"):
+                            try:
+                                fork_id = cosmic_nexus.fork_universe(
+                                    user, {"entropy_threshold": 0.5}
+                                )
+                                st.success(f"Forked universe {fork_id}")
+                            except Exception as exc:
+                                st.error(f"Fork failed: {exc}")
+                        elif not user:
+                            st.info("No users available to fork")
+                else:
+                    st.info("Fork operation unavailable")
+
+            with dev_tabs[1]:
+                if SessionLocal and UniverseBranch:
+                    with SessionLocal() as db:
+                        records = (
+                            db.query(UniverseBranch)
+                            .order_by(UniverseBranch.timestamp.desc())
+                            .limit(5)
+                            .all()
+                        )
+                        if records:
+                            for r in records:
+                                st.write(
+                                    {
+                                        "id": r.id,
+                                        "status": r.status,
+                                        "timestamp": r.timestamp,
+                                    }
+                                )
+                        else:
+                            st.write("No forks recorded")
+                else:
+                    st.info("Database unavailable")
+
+            with dev_tabs[2]:
+                hid = st.text_input("Hypothesis ID", key="audit_id")
+                if st.button("Run Audit") and hid:
+                    if dispatch_route and SessionLocal:
+                        with SessionLocal() as db:
+                            try:
+                                result = _run_async(
+                                    dispatch_route(
+                                        "trigger_full_audit",
+                                        {"hypothesis_id": hid},
+                                        db=db,
+                                    )
+                                )
+                                st.json(result)
+                            except Exception as exc:
+                                st.error(f"Audit failed: {exc}")
+                    elif run_full_audit and SessionLocal:
+                        with SessionLocal() as db:
+                            try:
+                                result = run_full_audit(hid, db)
+                                st.json(result)
+                            except Exception as exc:
+                                st.error(f"Audit failed: {exc}")
+                    else:
+                        st.info("Audit functionality unavailable")
+
+            with dev_tabs[3]:
+                log_path = Path("logchain_main.log")
+                if not log_path.exists():
+                    log_path = Path("remix_logchain.log")
+                if log_path.exists():
+                    try:
+                        lines = log_path.read_text().splitlines()[-100:]
+                        st.text("\n".join(lines))
+                    except Exception as exc:
+                        st.error(f"Log read failed: {exc}")
+                else:
+                    st.info("No log file found")
+
+            with dev_tabs[4]:
+                event_json = st.text_area(
+                    "Event JSON", value="{}", height=150, key="inject_event"
+                )
+                if st.button("Process Event"):
+                    if agent:
+                        try:
+                            event = json.loads(event_json or "{}")
+                            agent.process_event(event)
+                            st.success("Event processed")
+                        except Exception as exc:
+                            st.error(f"Event failed: {exc}")
+                    else:
+                        st.info("Agent unavailable")
+
+            with dev_tabs[5]:
+                st.write("Available agents:", list(AGENT_REGISTRY.keys()))
+                if cosmic_nexus:
+                    st.write(
+                        "Sub universes:", list(getattr(cosmic_nexus, "sub_universes", {}).keys())
+                    )
+                if agent and InMemoryStorage and isinstance(agent.storage, InMemoryStorage):
+                    st.write(
+                        f"Users: {len(agent.storage.users)} / Coins: {len(agent.storage.coins)}"
+                    )
+                elif agent:
+                    try:
+                        user_count = len(agent.storage.get_all_users())
+                    except Exception:
+                        user_count = "?"
+                    st.write(f"User count: {user_count}")
+
+            with dev_tabs[6]:
+                flow_txt = st.text_area(
+                    "Agent Flow JSON",
+                    "[]",
+                    height=150,
+                    key="flow_json",
+                )
+                if st.button("Run Flow"):
+                    try:
+                        steps = json.loads(flow_txt or "[]")
+                        results = []
+                        for step in steps:
+                            a_name = step.get("agent")
+                            agent_cls = AGENT_REGISTRY.get(a_name, {}).get("class")
+                            evt = step.get("event", {})
+                            if agent_cls:
+                                backend_fn = get_backend("dummy")
+                                a = agent_cls(llm_backend=backend_fn)
+                                results.append(a.process_event(evt))
+                        st.json(results)
+                    except Exception as exc:
+                        st.error(f"Flow execution failed: {exc}")
 
     if run_clicked or rerun_clicked:
         if run_clicked:
