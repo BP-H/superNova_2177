@@ -5,6 +5,7 @@ from pathlib import Path
 
 import os
 import io
+import tempfile
 import math
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -170,6 +171,17 @@ def run_analysis(validations, *, layout: str = "force"):
         G = nx.Graph()
         for v1, v2, w in edges:
             G.add_edge(v1, v2, weight=w)
+
+        # Offer GraphML download of the constructed graph
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".graphml") as tmp:
+                nx.write_graphml(G, tmp.name)
+            with open(tmp.name, "rb") as gm_file:
+                st.download_button(
+                    "Download GraphML", gm_file.read(), file_name="graph.graphml"
+                )
+        except Exception as exc:  # pragma: no cover - optional
+            logger.warning(f"GraphML export failed: {exc}")
 
         # Determine layout
         if layout == "circular":
