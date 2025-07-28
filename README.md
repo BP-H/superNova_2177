@@ -243,7 +243,7 @@ point for the Streamlit interface.
 Run these commands from the repository root. **Do not** execute `python ui.py`
 directly as that bypasses Streamlit's runtime.
 
-Open [http://localhost:8501](http://localhost:8501) in your browser to interact with the demo.
+Open [http://localhost:8501](http://localhost:8501) in your browser to interact with the demo. Use the **Reset to Demo** button below the editor to reload `sample_validations.json` at any time.
 
 `ui.py` reads configuration from `st.secrets` when running under Streamlit. If
 the secrets dictionary is unavailable (such as during local development), the

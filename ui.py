@@ -148,9 +148,27 @@ def main() -> None:
     st.set_page_config(page_title="superNova_2177 Demo")
     st.title("superNova_2177 Validation Analyzer")
     st.markdown(
-        "Upload a JSON file with a `validations` array or enable demo "
-        "mode to see the pipeline in action."
+        "Upload a JSON file with a `validations` array, paste JSON below, "
+        "or enable demo mode to see the pipeline in action."
     )
+
+    if "validations_json" not in st.session_state:
+        st.session_state["validations_json"] = ""
+
+    validations_input = st.text_area(
+        "Validations JSON",
+        value=st.session_state["validations_json"],
+        height=200,
+        key="validations_editor",
+    )
+    if st.button("Reset to Demo"):
+        try:
+            with open("sample_validations.json") as f:
+                demo_data = json.load(f)
+            st.session_state["validations_json"] = json.dumps(demo_data, indent=2)
+        except FileNotFoundError:
+            st.warning("Demo file not found")
+        st.experimental_rerun()
 
     secret_key = st_secrets.get("SECRET_KEY")
     database_url = st_secrets.get("DATABASE_URL")
@@ -167,7 +185,14 @@ def main() -> None:
         run_clicked = st.button("Run Analysis")
 
     if run_clicked:
-        if demo_mode:
+        if validations_input.strip():
+            try:
+                data = json.loads(validations_input)
+                st.session_state["validations_json"] = json.dumps(data, indent=2)
+            except json.JSONDecodeError as exc:
+                st.error(f"Invalid JSON: {exc}")
+                st.stop()
+        elif demo_mode:
             try:
                 with open("sample_validations.json") as f:
                     data = json.load(f)
@@ -178,10 +203,12 @@ def main() -> None:
                         {"validator": "A", "target": "B", "score": 0.9}
                     ]
                 }
+            st.session_state["validations_json"] = json.dumps(data, indent=2)
         elif uploaded_file is not None:
             data = json.load(uploaded_file)
+            st.session_state["validations_json"] = json.dumps(data, indent=2)
         else:
-            st.error("Please upload a file or enable demo mode.")
+            st.error("Please upload a file, paste JSON, or enable demo mode.")
             st.stop()
         run_analysis(data.get("validations", []))
 
