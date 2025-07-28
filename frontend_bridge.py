@@ -15,32 +15,53 @@ from __future__ import annotations
 
 from typing import Any, Awaitable, Callable, Dict, Union
 
-from hypothesis.ui_hook import (detect_conflicting_hypotheses_ui,
-                                rank_hypotheses_by_confidence_ui,
-                                register_hypothesis_ui,
-                                update_hypothesis_score_ui)
+
+# background task support
+class BackgroundTask:
+    """Wrapper indicating a coroutine should run in the background."""
+    def __init__(self, coro: Awaitable[Dict[str, Any]]) -> None:
+        self.coro = coro
+        self.long_running = True
+
+def long_running(coro: Awaitable[Dict[str, Any]]) -> BackgroundTask:
+    """Mark ``coro`` to be executed in the background."""
+    return BackgroundTask(coro)
+
+from protocols.core.job_queue_agent import JobQueueAgent
+queue_agent = JobQueueAgent()
+
+# routes from main branch (DO NOT delete)
+from hypothesis.ui_hook import (
+    detect_conflicting_hypotheses_ui,
+    rank_hypotheses_by_confidence_ui,
+    register_hypothesis_ui,
+    update_hypothesis_score_ui,
+)
 from optimization.ui_hook import tune_parameters_ui
-from predictions.ui_hook import (get_prediction_ui, store_prediction_ui,
-                                 update_prediction_status_ui)
-from protocols.api_bridge import (launch_agents_api, list_agents_api,
-                                  step_agents_api)
+from predictions.ui_hook import (
+    get_prediction_ui,
+    store_prediction_ui,
+    update_prediction_status_ui,
+)
+from protocols.api_bridge import (
+    launch_agents_api,
+    list_agents_api,
+    step_agents_api,
+)
 from temporal.ui_hook import analyze_temporal_ui
 
 Handler = Callable[..., Union[Dict[str, Any], Awaitable[Dict[str, Any]]]]
 
 ROUTES: Dict[str, Handler] = {}
 
-
 def register_route(name: str, func: Handler) -> None:
     """Register a handler for ``name`` events."""
     ROUTES[name] = func
-
 
 def register_route_once(name: str, func: Handler) -> None:
     """Register ``func`` under ``name`` only if it isn't already set."""
     if name not in ROUTES:
         register_route(name, func)
-
 
 async def dispatch_route(
     name: str, payload: Dict[str, Any], **kwargs: Any
@@ -50,17 +71,28 @@ async def dispatch_route(
         raise KeyError(name)
     handler = ROUTES[name]
     result = handler(payload, **kwargs)
+    if isinstance(result, BackgroundTask):
+        async def job() -> Dict[str, Any]:
+            return await result.coro
+        job_id = queue_agent.enqueue_job(job)
+        return {"job_id": job_id}
     if isinstance(result, Awaitable):
         result = await result
     return result
-
 
 def _list_routes(_: Dict[str, Any]) -> Dict[str, Any]:
     """Return the names of all registered routes."""
     return {"routes": sorted(ROUTES.keys())}
 
 
+def _job_status(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Return the status of a background job."""
+    job_id = payload.get("job_id", "")
+    return queue_agent.get_status(job_id)
+
+
 register_route("list_routes", _list_routes)
+register_route("job_status", _job_status)
 
 from consensus_forecaster_agent_ui_hook import forecast_consensus_ui
 
