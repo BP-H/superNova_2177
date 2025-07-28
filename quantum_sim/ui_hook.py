@@ -1,14 +1,29 @@
 from __future__ import annotations
 
 from typing import Any, Dict
+from importlib import import_module
 
 from frontend_bridge import register_route
 from hook_manager import HookManager
 from hooks import events
-from importlib import import_module
 
-# Exposed hook manager so external modules can subscribe to simulation events
+from . import quantum_prediction_engine
+
+# Shared hook manager for external modules
 ui_hook_manager = HookManager()
+
+
+async def quantum_prediction_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Run quantum_prediction_engine on user_ids from payload."""
+    user_ids = payload.get("user_ids", [])
+    result = quantum_prediction_engine(user_ids)
+    minimal = {
+        "predicted_interactions": result.get("predicted_interactions", {}),
+        "overall_quantum_coherence": result.get("overall_quantum_coherence", 0.0),
+        "uncertainty_estimate": result.get("uncertainty_estimate", 0.0),
+    }
+    await ui_hook_manager.trigger("quantum_prediction_run", minimal)
+    return minimal
 
 
 async def simulate_entanglement_ui(
@@ -16,21 +31,8 @@ async def simulate_entanglement_ui(
     db,
     **_: Any,
 ) -> Dict[str, Any]:
-    """Run social entanglement simulation between two users.
-
-    Parameters
-    ----------
-    payload:
-        Must contain ``"user1_id"`` and ``"user2_id"`` keys.
-    db:
-        Database session passed through from the UI layer.
-
-    Returns
-    -------
-    dict
-        Result of :func:`simulate_social_entanglement`.
-    """
-    user1_id = payload["user1_id"]  # raises KeyError if missing
+    """Run social entanglement simulation between two users."""
+    user1_id = payload["user1_id"]
     user2_id = payload["user2_id"]
 
     module = import_module("superNova_2177")
@@ -41,5 +43,6 @@ async def simulate_entanglement_ui(
     return result
 
 
-# Register the route with the central router so UIs can invoke it
+# Register routes with frontend
+register_route("quantum_prediction", quantum_prediction_ui)
 register_route("simulate_entanglement", simulate_entanglement_ui)

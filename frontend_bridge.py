@@ -139,17 +139,23 @@ from optimization.ui_hook import tune_parameters_ui
 from causal_graph.ui_hook import build_graph_ui, simulate_entanglement_ui as simulate_entanglement_causal_ui
 from predictions.ui_hook import update_prediction_status_ui
 from social.ui_hook import simulate_entanglement_ui as simulate_entanglement_social_ui
+from quantum_sim.ui_hook import simulate_entanglement_ui as simulate_entanglement_quantum_ui, quantum_prediction_ui
+from vote_registry.ui_hook import record_vote_ui, load_votes_ui
+from virtual_diary.ui_hook import fetch_entries_ui, add_entry_ui
 
 register_route("store_prediction", store_prediction_ui)
 register_route("get_prediction", get_prediction_ui)
 register_route("schedule_audit_proposal", schedule_audit_proposal_ui)
 register_route("update_prediction_status", update_prediction_status_ui)
+register_route("quantum_prediction", quantum_prediction_ui)
 register_route("record_vote", record_vote_ui)
 register_route("load_votes", load_votes_ui)
+register_route("fetch_diary_entries", fetch_entries_ui)
+register_route("add_diary_entry", add_entry_ui)
+register_route("simulate_entanglement_causal", simulate_entanglement_causal_ui)
+register_route("simulate_entanglement_social", simulate_entanglement_social_ui)
+register_route("simulate_entanglement_quantum", simulate_entanglement_quantum_ui)
 
-# Additional routes
-from virtual_diary.ui_hook import fetch_entries_ui, add_entry_ui
-from quantum_sim.ui_hook import simulate_entanglement_ui as simulate_entanglement_quantum_ui
 
 # Protocol agent management routes
 from protocols.api_bridge import launch_agents_api, list_agents_api, step_agents_api
