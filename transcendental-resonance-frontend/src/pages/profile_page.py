@@ -10,6 +10,7 @@ from utils.styles import (
     get_theme_name,
     THEMES,
 )
+from utils.layout import page_container
 from .login_page import login_page
 from .vibenodes_page import vibenodes_page
 from .groups_page import groups_page
@@ -35,9 +36,7 @@ async def profile_page():
     score_data = api_call('GET', '/users/me/influence-score') or {}
 
     THEME = get_theme()
-    with ui.column().classes('w-full p-4').style(
-        f'background: {THEME["gradient"]}; color: {THEME["text"]};'
-    ):
+    with page_container(THEME):
         ui.label(f'Welcome, {user_data["username"]}').classes(
             'text-2xl font-bold mb-4'
         ).style(f'color: {THEME["accent"]};')
