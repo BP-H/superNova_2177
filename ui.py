@@ -1,16 +1,16 @@
+import difflib
+import io
 import json
 import logging
-import difflib
+import math
+import os
+import tempfile
+from datetime import datetime
 from pathlib import Path
 
-import os
-import io
-import tempfile
-import math
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
-from datetime import datetime
 
 try:
     import plotly.graph_objects as go
@@ -22,8 +22,18 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     Network = None
 
-logger = logging.getLogger(__name__)
-logger.propagate = False
+from network.network_coordination_detector import build_validation_graph
+from validation_integrity_pipeline import analyze_validation_integrity
+
+try:
+    from validator_reputation_tracker import update_validator_reputations
+except Exception:  # pragma: no cover - optional dependency
+    update_validator_reputations = None
+
+from typing import Any, cast
+
+from llm_backends import get_backend
+from protocols import AGENT_REGISTRY
 
 try:
     st_secrets = st.secrets
@@ -33,15 +43,8 @@ except Exception:  # pragma: no cover - optional in dev/CI
         "DATABASE_URL": "sqlite:///:memory:",
     }
 
-from network.network_coordination_detector import build_validation_graph
-from validation_integrity_pipeline import analyze_validation_integrity
-try:
-    from validator_reputation_tracker import update_validator_reputations
-except Exception:  # pragma: no cover - optional dependency
-    update_validator_reputations = None
-
-from protocols import AGENT_REGISTRY
-from llm_backends import get_backend
+logger = logging.getLogger(__name__)
+logger.propagate = False
 
 
 def summarize_text(text: str, max_len: int = 150) -> str:
@@ -95,6 +98,7 @@ def generate_explanation(result: dict) -> str:
             lines.append(f"- {r}")
     return "\n".join(lines)
 
+
 try:
     from validation_certifier import Config as VCConfig
 except Exception:  # pragma: no cover - optional debug dependencies
@@ -108,16 +112,21 @@ except Exception:  # pragma: no cover - optional debug dependencies
     Config = None  # type: ignore
 
 if Config is None:
-    class Config:
+
+    class Config:  # type: ignore[no-redef]
         METRICS_PORT = 1234
 
+
 if VCConfig is None:
-    class VCConfig:
+
+    class VCConfig:  # type: ignore[no-redef]
         HIGH_RISK_THRESHOLD = 0.7
         MEDIUM_RISK_THRESHOLD = 0.4
 
+
 if HarmonyScanner is None:
-    class HarmonyScanner:
+
+    class HarmonyScanner:  # type: ignore[no-redef]
         def __init__(self, *_a, **_k):
             pass
 
@@ -179,10 +188,11 @@ def run_analysis(validations, *, layout: str = "force"):
         try:
             with tempfile.NamedTemporaryFile(delete=False, suffix=".graphml") as tmp:
                 nx.write_graphml(G, tmp.name)
-            with open(tmp.name, "rb") as gm_file:
-                st.download_button(
-                    "Download GraphML", gm_file.read(), file_name="graph.graphml"
-                )
+                tmp_path = tmp.name
+            with open(tmp_path, "rb") as gm_file:
+                data = gm_file.read()
+            os.remove(tmp_path)
+            st.download_button("Download GraphML", data, file_name="graph.graphml")
         except Exception as exc:  # pragma: no cover - optional
             logger.warning(f"GraphML export failed: {exc}")
 
@@ -292,7 +302,9 @@ def run_analysis(validations, *, layout: str = "force"):
             st.subheader("Validator Coordination Graph")
             net.show("graph.html")
             with open("graph.html") as f:
-                st.components.v1.html(f.read(), height=500)
+                html_data = f.read()
+            os.remove("graph.html")
+            st.components.v1.html(html_data, height=500)
         else:
             weights = [G[u][v]["weight"] * 3 for u, v in G.edges()]
             node_sizes = [300 + (reputations.get(n, 0) * 600) for n in G.nodes()]
@@ -420,7 +432,9 @@ def main() -> None:
         st.header("Environment")
         st.write(f"Database URL: {database_url or 'not set'}")
         st.write(f"ENV: {os.getenv('ENV', 'dev')}")
-        st.write(f"Session start: {datetime.utcnow().isoformat(timespec='seconds')} UTC")
+        st.write(
+            f"Session start: {datetime.utcnow().isoformat(timespec='seconds')} UTC"
+        )
 
         if secret_key:
             st.success("Secret key loaded")
@@ -443,9 +457,7 @@ def main() -> None:
         if st.session_state.get("last_result") is not None:
             rerun_clicked = st.button("Re-run This Dataset with New Thresholds")
 
-        st.markdown(
-            f"**Runs this session:** {st.session_state['run_count']}"
-        )
+        st.markdown(f"**Runs this session:** {st.session_state['run_count']}")
         if st.session_state.get("last_run"):
             st.write(f"Last run: {st.session_state['last_run']}")
         if st.button("Clear Memory"):
@@ -499,9 +511,7 @@ def main() -> None:
                 except FileNotFoundError:
                     st.warning("Demo file not found, using default dataset.")
                     data = {
-                        "validations": [
-                            {"validator": "A", "target": "B", "score": 0.9}
-                        ]
+                        "validations": [{"validator": "A", "target": "B", "score": 0.9}]
                     }
                 st.session_state["validations_json"] = json.dumps(data, indent=2)
             elif uploaded_file is not None:
@@ -525,7 +535,9 @@ def main() -> None:
         st.session_state["analysis_diary"].append(
             {
                 "timestamp": st.session_state["last_run"],
-                "score": result.get("integrity_analysis", {}).get("overall_integrity_score"),
+                "score": result.get("integrity_analysis", {}).get(
+                    "overall_integrity_score"
+                ),
                 "risk": result.get("integrity_analysis", {}).get("risk_level"),
             }
         )
@@ -560,7 +572,9 @@ def main() -> None:
                         agent = agent_cls(llm_backend=backend_fn)
                     else:
                         agent = agent_cls(llm_backend=backend_fn)
-                    result = agent.process_event({"event": event_type, "payload": payload})
+                    result = agent.process_event(
+                        {"event": event_type, "payload": payload}
+                    )
                     st.session_state["agent_output"] = result
                     st.success("Agent executed")
                 except Exception as exc:
@@ -597,8 +611,12 @@ def main() -> None:
             "Export Diary as Markdown",
             "\n".join(
                 [
-                    f"* {e['timestamp']}: {e.get('note','')}"
-                    + (f" (RFCs: {', '.join(e['rfc_ids'])})" if e.get("rfc_ids") else "")
+                    f"* {e['timestamp']}: {e.get('note', '')}"
+                    + (
+                        f" (RFCs: {', '.join(e['rfc_ids'])})"
+                        if e.get("rfc_ids")
+                        else ""
+                    )
                     for e in st.session_state["diary"]
                 ]
             ),
@@ -630,33 +648,43 @@ def main() -> None:
             return " ".join(lines)
 
         rfc_paths = sorted(rfc_dir.rglob("rfc-*.md"))
-        rfc_entries = []
+        rfc_entries: list[dict[str, Any]] = []
         for path in rfc_paths:
             text = path.read_text()
             summary = parse_summary(text)
-            rfc_entries.append({"id": path.stem, "summary": summary, "text": text, "path": path})
+            rfc_entries.append(
+                {"id": path.stem, "summary": summary, "text": text, "path": path}
+            )
 
-        diary_mentions: dict[str, list[int]] = {e["id"]: [] for e in rfc_entries}
+        diary_mentions: dict[str, list[int]] = {e["id"]: [] for e in rfc_entries}  # type: ignore[misc]
         for i, entry in enumerate(st.session_state.get("diary", [])):
             note_lower = entry.get("note", "").lower()
             ids = set(e.strip().lower() for e in entry.get("rfc_ids", []) if e)
             for rfc in rfc_entries:
-                rid = rfc["id"].lower()
-                if rid in note_lower or rid.replace("-", " ") in note_lower or rid in ids:
+                rid = str(rfc["id"]).lower()
+                if (
+                    rid in note_lower
+                    or rid.replace("-", " ") in note_lower
+                    or rid in ids
+                ):
                     diary_mentions.setdefault(rfc["id"], []).append(i)
 
         for rfc in rfc_entries:
-            if filter_text and filter_text.lower() not in rfc["summary"].lower() and filter_text.lower() not in rfc["id"].lower():
+            if (
+                filter_text
+                and filter_text.lower() not in rfc["summary"].lower()
+                and filter_text.lower() not in rfc["id"].lower()
+            ):
                 continue
             st.markdown(f"### {rfc['id']}")
-            st.write(summarize_text(rfc["summary"]))
+            st.write(summarize_text(str(rfc["summary"])))
             mentions = diary_mentions.get(rfc["id"], [])
             if mentions:
-                links = ", ".join([
-                    f"[entry {idx + 1}](#diary-{idx})" for idx in mentions
-                ])
+                links = ", ".join(
+                    [f"[entry {idx + 1}](#diary-{idx})" for idx in mentions]
+                )
                 st.markdown(f"Referenced in: {links}", unsafe_allow_html=True)
-            st.markdown(f"[Read RFC]({rfc['path'].as_posix()})")
+            st.markdown(f"[Read RFC]({cast(Path, rfc['path']).as_posix()})")
             if preview_all or st.checkbox("Show details", key=f"show_{rfc['id']}"):
                 st.markdown(rfc["text"], unsafe_allow_html=True)
 
