@@ -102,17 +102,12 @@ register_route_once("temporal_consistency", analyze_temporal_ui)
 # Optimization route
 register_route("tune_parameters", tune_parameters_ui)
 
-register_route("fetch_diary_entries", fetch_entries_ui)
-register_route("add_diary_entry", add_entry_ui)
-register_route("simulate_entanglement", simulate_entanglement_ui)
-
-# Universe UI routes
-from ui_hooks.universe_ui import (
-    get_universe_overview,
-    list_available_proposals,
-    submit_universe_proposal,
-)
-
-register_route("get_universe_overview", get_universe_overview)
-register_route("list_available_proposals", list_available_proposals)
-register_route("submit_universe_proposal", submit_universe_proposal)
+# Import additional UI hooks for side effects (route registration)
+import network.ui_hook  # noqa: F401,E402 - registers network analysis routes
+import consensus.ui_hook  # noqa: F401,E402 - registers consensus forecast routes
+import validators.ui_hook  # noqa: F401,E402 - registers validator reputation routes
+import audit.ui_hook  # noqa: F401,E402 - exposes audit utilities
+import introspection.ui_hook  # noqa: F401,E402 - registers introspection routes
+import protocols.ui_hook  # noqa: F401,E402 - registers cross-universe bridge routes
+import protocols.agents.guardian_ui_hook  # noqa: F401,E402 - guardian agent routes
+import protocols.agents.harmony_ui_hook  # noqa: F401,E402 - harmony synth route
