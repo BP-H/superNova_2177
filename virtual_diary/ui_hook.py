@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from typing import Any, Dict
 
 from frontend_bridge import register_route
@@ -12,11 +11,15 @@ from . import load_entries, add_entry
 ui_hook_manager = HookManager()
 
 
-async def fetch_entries_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Return recent diary entries based on ``limit``."""
-    limit = int(payload.get("limit", 20))
+async def load_entries_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Load diary entries and emit a hook event."""
+    try:
+        limit = int(payload.get("limit", 20))
+    except (TypeError, ValueError):
+        limit = 20
+
     entries = load_entries(limit=limit)
-    await ui_hook_manager.trigger("diary_entries_fetched", entries)
+    await ui_hook_manager.trigger("diary_entries_loaded", entries)
     return {"entries": entries}
 
 
@@ -29,5 +32,6 @@ async def add_entry_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # Register routes
-register_route("fetch_diary_entries", fetch_entries_ui)
+register_route("load_diary_entries", load_entries_ui)
 register_route("add_diary_entry", add_entry_ui)
+

@@ -33,6 +33,7 @@ def load_entries(limit: int = 20) -> List[Dict[str, Any]]:
         logger.exception("Failed to load virtual diary")
     return []
 
+__all__ = ["load_entries"]
 
 def add_entry(entry: Dict[str, Any]) -> None:
     """Append ``entry`` to the virtual diary file."""
@@ -49,4 +50,5 @@ def add_entry(entry: Dict[str, Any]) -> None:
             json.dump(data, f, default=str)
     except Exception:
         logger.exception("Failed to update virtual diary")
+
 
