@@ -12,9 +12,11 @@ from audit_bridge import (
 
 # isort: on
 from causal_graph import InfluenceGraph
+from causal_trigger import trigger_causal_audit
 from hook_manager import HookManager
 from hooks import events
 from protocols.utils.messaging import MessageHub
+from frontend_bridge import register_route
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -90,3 +92,51 @@ async def export_causal_path_ui(payload: Dict[str, Any], **_: Any) -> Dict[str, 
         },
     )
     return result
+
+
+async def causal_audit_ui(payload: Dict[str, Any], db: Session, **_: Any) -> Dict[str, Any]:
+    """Run :func:`trigger_causal_audit` from UI payload.
+
+    Parameters
+    ----------
+    payload : dict
+        Dictionary containing ``"log_id"`` and ``"graph"`` keys. Optional
+        ``"hypothesis_id"`` may associate the audit with a hypothesis.
+    db : Session
+        Active database session used during the audit.
+
+    Returns
+    -------
+    dict
+        Minimal audit summary with ``causal_chain``, ``governance_review`` and
+        ``commentary``.
+    """
+    log_id = payload["log_id"]
+    graph: InfluenceGraph = payload["graph"]
+
+    audit_result = trigger_causal_audit(
+        db,
+        log_id,
+        graph,
+        hypothesis_id=payload.get("hypothesis_id"),
+        skip_commentary=payload.get("skip_commentary", False),
+        skip_validation=payload.get("skip_validation", False),
+    )
+
+    minimal = {
+        "causal_chain": audit_result.get("causal_chain"),
+        "governance_review": audit_result.get("governance_review"),
+        "commentary": audit_result.get("commentary"),
+    }
+
+    await hook_manager.trigger(
+        events.AUDIT_LOG, {"action": "causal_audit", "log_id": log_id}
+    )
+    message_hub.publish(
+        "audit_log", {"action": "causal_audit", "log_id": log_id}
+    )
+    return minimal
+
+
+# Register route with the frontend bridge
+register_route("causal_audit", causal_audit_ui)
