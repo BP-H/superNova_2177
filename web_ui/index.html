@@ -4,46 +4,42 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="manifest.json">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <title>superNova 2177 UI</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; }
-    button { margin: 0.5rem 0; }
-    #proposals li { margin-bottom: 0.25rem; }
-  </style>
 </head>
-<body>
-  <h1>superNova 2177</h1>
+<body class="container py-4">
+  <h1 class="mb-4">superNova 2177</h1>
 
-  <section>
+  <section class="mb-4">
     <h2>Create Universe</h2>
-    <input id="universe-name" placeholder="Universe name">
-    <button onclick="createUniverse()">Create</button>
+    <input id="universe-name" placeholder="Universe name" class="form-control mb-2">
+    <button class="btn btn-primary" onclick="createUniverse()">Create</button>
   </section>
 
-  <section>
+  <section class="mb-4">
     <h2>Propose</h2>
-    <textarea id="proposal-text" placeholder="Proposal text"></textarea><br>
-    <button onclick="submitProposal()">Submit Proposal</button>
+    <textarea id="proposal-text" placeholder="Proposal text" class="form-control mb-2"></textarea>
+    <button class="btn btn-primary" onclick="submitProposal()">Submit Proposal</button>
   </section>
 
-  <section>
+  <section class="mb-4">
     <h2>Vote</h2>
-    <input id="vote-id" placeholder="Proposal ID">
-    <select id="vote-value">
+    <input id="vote-id" placeholder="Proposal ID" class="form-control mb-2">
+    <select id="vote-value" class="form-select mb-2">
       <option value="yes">Yes</option>
       <option value="no">No</option>
     </select>
-    <button onclick="submitVote()">Vote</button>
+    <button class="btn btn-primary" onclick="submitVote()">Vote</button>
   </section>
 
-  <section>
+  <section class="mb-4">
     <h2>Universe Metadata</h2>
-    <pre id="universe-meta">Loading...</pre>
+    <pre id="universe-meta" class="bg-light p-3">Loading...</pre>
   </section>
 
-  <section>
+  <section class="mb-4">
     <h2>Proposals</h2>
-    <ul id="proposals"></ul>
+    <ul id="proposals" class="list-group"></ul>
   </section>
 
   <script src="script.js"></script>

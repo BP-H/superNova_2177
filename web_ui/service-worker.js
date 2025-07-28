@@ -2,7 +2,8 @@ const CACHE_NAME = 'supernova-cache-v1';
 const OFFLINE_URLS = [
   '/web_ui/index.html',
   '/web_ui/script.js',
-  '/web_ui/manifest.json'
+  '/web_ui/manifest.json',
+  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css'
 ];
 
 self.addEventListener('install', event => {
