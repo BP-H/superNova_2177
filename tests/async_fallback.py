@@ -11,5 +11,9 @@ if not _has_pytest_asyncio:
     def pytest_pyfunc_call(pyfuncitem):
         testfunc = pyfuncitem.obj
         if inspect.iscoroutinefunction(testfunc):
-            asyncio.run(testfunc(**pyfuncitem.funcargs))
+            funcargs = pyfuncitem.funcargs
+            testargs = {
+                arg: funcargs[arg] for arg in pyfuncitem._fixtureinfo.argnames
+            }
+            asyncio.run(testfunc(**testargs))
             return True
