@@ -49,11 +49,17 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
 
 ### Step-by-Step
 
-1. **Install Python 3.12 or newer** from [python.org](https://www.python.org/)
+1. **Clone this repository** and move into the project directory:
+   ```bash
+   git clone https://github.com/BP-H/superNova_2177.git
+   cd superNova_2177
+   ```
+
+2. **Install Python 3.12 or newer** from [python.org](https://www.python.org/)
    if it isn't already on your machine. This project requires Python 3.12+.
    You can check by running `python --version` in your terminal.
-2. **Run the setup script** to create the virtual environment and install all
-   dependencies locally. Install any missing system libraries first (see
+3. **Run the setup script** after cloning. It installs the required packages and prepares a virtual environment.
+   Install any missing system libraries first (see
    [System Packages](#system-packages)). You can also pass `--locked` to install packages from
    `requirements.lock` for deterministic builds. Additional flags `--run-app`
    and `--build-ui` can automatically start the API or compile the frontend:
@@ -81,14 +87,14 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
    # Windows
   ./online_install.ps1
   ```
-3. **Activate the environment**:
+4. **Activate the environment**:
    ```bash
    # Linux/macOS
    source venv/bin/activate
    # Windows
    .\venv\Scripts\activate
    ```
-4. You're ready to run the demo commands shown in [Quick Start](#-quick-start).
+5. You're ready to run the demo commands shown in [Quick Start](#-quick-start).
 
 ### System Packages
 
