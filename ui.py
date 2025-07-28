@@ -1,5 +1,6 @@
 import json
 import logging
+from pathlib import Path
 
 import os
 from pathlib import Path
@@ -392,6 +393,15 @@ def main() -> None:
             st.markdown(f"### {path.stem}")
             st.write(summarize_text(summary))
             st.markdown(f"[Read RFC]({path.as_posix()})")
+
+    notes_path = Path("AgentNotes.md")
+    if notes_path.exists():
+        notes_content = notes_path.read_text()
+    else:
+        notes_content = "No notes found."
+
+    with st.expander("Agent’s Internal Thoughts"):
+        st.markdown(notes_content)
 
 
 if __name__ == "__main__":
