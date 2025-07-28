@@ -759,6 +759,8 @@ def _setup_sqlite(monkeypatch, db_path):
     except Exception:
         pytest.skip("SQLAlchemy not available")
 
+    # When using the SQLAlchemy stub ``create_engine`` may return ``None`` which
+    # would break subsequent calls. Skip tests in that scenario.
     if engine is None:
         pytest.skip("SQLAlchemy not available")
 
