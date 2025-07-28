@@ -54,6 +54,31 @@ async def update_reputations_ui(payload: Dict[str, Any], db) -> Dict[str, Any]:
     return result
 
 
+async def trigger_reputation_update_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Update reputations from UI payload and notify listeners.
+
+    Parameters
+    ----------
+    payload : dict
+        Dictionary containing ``"validations"`` list.
+
+    Returns
+    -------
+    dict
+        Summary with ``reputations`` and ``diversity``.
+    """
+    validations = payload.get("validations", [])
+    result = update_validator_reputations(validations)
+    summary = {
+        "reputations": result.get("reputations", {}),
+        "diversity": result.get("diversity", {}),
+    }
+
+    await ui_hook_manager.trigger("reputation_update_run", summary)
+    return summary
+
+
 # Register with the central frontend router
 register_route("reputation_analysis", compute_reputation_ui)
 register_route("update_validator_reputations", update_reputations_ui)
+register_route("reputation_update", trigger_reputation_update_ui)
