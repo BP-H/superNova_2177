@@ -19,7 +19,7 @@ from typing import Dict, Any, List
 from datetime import datetime, timedelta
 import random
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from db_models import HypothesisRecord, LogEntry
 
@@ -271,7 +271,13 @@ For more information: https://github.com/yourusername/superNova_2177
         Session = sessionmaker(bind=engine)
         session = Session()
         try:
-            record = session.query(HypothesisRecord).filter_by(id=args.hypothesis).first()
+            record = (
+                session.execute(
+                    select(HypothesisRecord).filter_by(id=args.hypothesis)
+                )
+                .scalars()
+                .first()
+            )
             if not record:
                 print(f"❌ Hypothesis {args.hypothesis} not found in database")
                 return 1
@@ -281,7 +287,13 @@ For more information: https://github.com/yourusername/superNova_2177
                 print(f"❌ No validations found for hypothesis {args.hypothesis}")
                 return 1
 
-            log_entries = session.query(LogEntry).filter(LogEntry.id.in_(log_ids)).all()
+            log_entries = (
+                session.execute(
+                    select(LogEntry).filter(LogEntry.id.in_(log_ids))
+                )
+                .scalars()
+                .all()
+            )
             for entry in log_entries:
                 try:
                     payload = json.loads(entry.payload) if entry.payload else {}

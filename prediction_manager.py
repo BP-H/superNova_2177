@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional, Callable
 
 from quantum_sim import QuantumContext
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 try:  # Prefer SystemState from db_models if available
@@ -62,7 +63,13 @@ class PredictionManager:
             return
         session = self.session_factory()
         try:
-            state = session.query(SystemState).filter(SystemState.key == key).first()
+            state = (
+                session.execute(
+                    select(SystemState).filter(SystemState.key == key)
+                )
+                .scalars()
+                .first()
+            )
             if state:
                 state.value = value
             else:
@@ -77,7 +84,13 @@ class PredictionManager:
             return self.state_service.get_state(key, None)
         session = self.session_factory()
         try:
-            state = session.query(SystemState).filter(SystemState.key == key).first()
+            state = (
+                session.execute(
+                    select(SystemState).filter(SystemState.key == key)
+                )
+                .scalars()
+                .first()
+            )
             return state.value if state else None
         finally:
             session.close()

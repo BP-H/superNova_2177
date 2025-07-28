@@ -3,7 +3,7 @@ import importlib.util
 import sys
 
 import superNova_2177 as sn
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 
 # Reload the real module if a lightweight stub is installed
 if (
@@ -24,6 +24,6 @@ def test_orm_consistency():
     sn.Base.metadata.create_all(engine)
     session = sn.SessionLocal(bind=engine)
     try:
-        session.query(sn.Harmonizer).all()
+        session.execute(select(sn.Harmonizer)).scalars().all()
     finally:
         session.close()
