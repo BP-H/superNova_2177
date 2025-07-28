@@ -11,6 +11,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
+
 from streamlit_helpers import alert
 
 try:
@@ -304,7 +305,10 @@ def run_analysis(validations, *, layout: str = "force"):
             net.show("graph.html")
             with open("graph.html") as f:
                 html_data = f.read()
-            os.remove("graph.html")
+            try:
+                os.remove("graph.html")
+            except FileNotFoundError:  # pragma: no cover - safety
+                pass
             st.components.v1.html(html_data, height=500)
         else:
             weights = [G[u][v]["weight"] * 3 for u, v in G.edges()]
@@ -368,9 +372,15 @@ def main() -> None:
 
     ts_placeholder = st.empty()
     if "session_start_ts" not in st.session_state:
-        st.session_state["session_start_ts"] = datetime.utcnow().isoformat(timespec="seconds")
+        st.session_state["session_start_ts"] = datetime.utcnow().isoformat(
+            timespec="seconds"
+        )
     ts_placeholder.markdown(
-        f"<div style='position:fixed;top:0;right:0;background:rgba(0,0,0,0.6);color:white;padding:0.25em 0.5em;border-radius:0 0 0 4px;'>Session start: {st.session_state['session_start_ts']} UTC</div>",
+        (
+            "<div style='position:fixed;top:0;right:0;background:rgba(0,0,0,0.6);"
+            "color:white;padding:0.25em 0.5em;border-radius:0 0 0 4px;'>Session "
+            f"start: {st.session_state['session_start_ts']} UTC</div>"
+        ),
         unsafe_allow_html=True,
     )
     if "diary" not in st.session_state:
@@ -451,7 +461,12 @@ def main() -> None:
         st.subheader("Settings")
         demo_mode_choice = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
         demo_mode = demo_mode_choice == "Demo"
-        theme_choice = st.radio("Theme", ["Light", "Dark"], index=(1 if st.session_state["theme"]=="dark" else 0), horizontal=True)
+        theme_choice = st.radio(
+            "Theme",
+            ["Light", "Dark"],
+            index=(1 if st.session_state["theme"] == "dark" else 0),
+            horizontal=True,
+        )
         st.session_state["theme"] = theme_choice.lower()
 
         VCConfig.HIGH_RISK_THRESHOLD = st.slider(
