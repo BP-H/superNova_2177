@@ -185,20 +185,15 @@ def run_analysis(validations, *, layout: str = "force"):
             G.add_edge(v1, v2, weight=w)
 
         # Offer GraphML download of the constructed graph
-        tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".graphml")
         try:
-            nx.write_graphml(G, tmp_file.name)
-            with open(tmp_file.name, "rb") as gm_file:
-                data = gm_file.read()
-            st.download_button("Download GraphML", data, file_name="graph.graphml")
+            with tempfile.NamedTemporaryFile(suffix=".graphml") as tmp:
+                nx.write_graphml(G, tmp.name)
+                tmp.seek(0)
+                st.download_button(
+                    "Download GraphML", tmp.read(), file_name="graph.graphml"
+                )
         except Exception as exc:  # pragma: no cover - optional
             logger.warning(f"GraphML export failed: {exc}")
-        finally:
-            tmp_file.close()
-            try:
-                os.remove(tmp_file.name)
-            except OSError:
-                pass
 
         # Determine layout
         if layout == "circular":
