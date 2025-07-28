@@ -167,6 +167,21 @@ async def test_follow_unfollow(client):
 
 
 @pytest.mark.asyncio
+async def test_follow_counts(client):
+    token = await register_and_get_token(client, "countfollower", "cf@example.com")
+    await register(client, "counttarget", "ct@example.com")
+    await client.post(
+        "/users/counttarget/follow", headers={"Authorization": f"Bearer {token}"}
+    )
+    r1 = await client.get("/users/counttarget/followers")
+    assert r1.status_code == 200
+    assert r1.json()["followers"] == 1
+    r2 = await client.get("/users/countfollower/following")
+    assert r2.status_code == 200
+    assert r2.json()["following"] == 1
+
+
+@pytest.mark.asyncio
 async def test_unknown_endpoint(client):
     r = await client.get("/does-not-exist")
     assert r.status_code == 404

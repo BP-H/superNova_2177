@@ -2582,6 +2582,14 @@ def read_users_me(current_user: Harmonizer = Depends(get_current_active_user)):
     return current_user
 
 
+@app.get("/users/{username}", response_model=HarmonizerOut, tags=["Harmonizers"])
+def read_user(username: str, db: Session = Depends(get_db)):
+    user = db.query(Harmonizer).filter(Harmonizer.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Harmonizer not found")
+    return user
+
+
 @app.get("/users/me/influence-score", tags=["Harmonizers"])
 def get_user_influence_score(
     db: Session = Depends(get_db),
@@ -2633,6 +2641,22 @@ def follow_unfollow_user(
         message = "Followed"
     db.commit()
     return {"message": message}
+
+
+@app.get("/users/{username}/followers", tags=["Harmonizers"])
+def get_follower_count(username: str, db: Session = Depends(get_db)):
+    user = db.query(Harmonizer).filter(Harmonizer.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Harmonizer not found")
+    return {"followers": len(user.followers)}
+
+
+@app.get("/users/{username}/following", tags=["Harmonizers"])
+def get_following_count(username: str, db: Session = Depends(get_db)):
+    user = db.query(Harmonizer).filter(Harmonizer.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Harmonizer not found")
+    return {"following": len(user.following)}
 
 
 @app.get("/status", tags=["System"])

@@ -82,3 +82,13 @@ def clear_token() -> None:
     """Clear the stored access token."""
     global TOKEN
     TOKEN = None
+
+
+async def get_followers(username: str) -> Optional[Dict[str, Any]]:
+    """Return follower count for ``username``."""
+    return await api_call("GET", f"/users/{username}/followers")
+
+
+async def get_following(username: str) -> Optional[Dict[str, Any]]:
+    """Return following count for ``username``."""
+    return await api_call("GET", f"/users/{username}/following")

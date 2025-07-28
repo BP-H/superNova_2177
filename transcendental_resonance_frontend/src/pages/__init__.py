@@ -4,6 +4,7 @@ __all__ = [
     "login_page",
     "register_page",
     "profile_page",
+    "other_profile_page",
     "vibenodes_page",
     "groups_page",
     "events_page",
