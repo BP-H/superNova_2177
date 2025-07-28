@@ -736,7 +736,7 @@ def _setup_sqlite(monkeypatch, db_path):
     from sqlalchemy.orm import sessionmaker
     import db_models, sys, pytest
 
-    if getattr(create_engine, "__module__", "") == "stubs.sqlalchemy_stub":
+    if "stubs" in getattr(create_engine, "__module__", ""):
         pytest.skip("SQLAlchemy not available")
 
     engine = create_engine(
@@ -763,7 +763,7 @@ def _setup_sqlite(monkeypatch, db_path):
             base = getattr(mod, "Base", None)
             if base is not None:
                 metadata = getattr(base, "metadata", None)
-                if getattr(metadata, "bind", None) is old_engine:
+                if metadata and getattr(metadata, "bind", None) is old_engine:
                     monkeypatch.setattr(metadata, "bind", engine, raising=False)
         except AttributeError:
             continue
