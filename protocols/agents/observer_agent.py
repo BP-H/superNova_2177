@@ -5,7 +5,7 @@ ObserverAgent watches agent activity via MessageHub and suggests evolutionary fo
 skill swaps, or role specialization based on performance trends and behavioral anomalies.
 """
 
-from protocols.agent_protocols_suite import fork_agent
+from protocols.utils.forking import fork_agent
 from collections import defaultdict, deque
 import time
 import logging

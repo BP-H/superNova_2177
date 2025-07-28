@@ -5,7 +5,7 @@ MetaValidatorAgent++: enhanced with LLM interrogation, repair planning, and ethi
 Catches hallucinated patches, misaligned behavior, and decays untrustworthy agents.
 """
 
-from protocols.agent_protocols_suite import InternalAgentProtocol
+from protocols.core.internal_protocol import InternalAgentProtocol
 import uuid
 import time
 import random
