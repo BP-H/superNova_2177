@@ -48,11 +48,27 @@ async def update_prediction_status_ui(payload: Dict[str, Any]) -> Dict[str, Any]
         prediction_id, new_status, actual_outcome=outcome
     )
     await ui_hook_manager.trigger(
-        "prediction_status_updated", {"prediction_id": prediction_id, "status": new_status}
+        "prediction_status_updated",
+        {"prediction_id": prediction_id, "status": new_status},
     )
     return {"prediction_id": prediction_id, "status": new_status}
 
 
-register_route_once("store_prediction", store_prediction_ui)
-register_route_once("get_prediction", get_prediction_ui)
-register_route_once("update_prediction_status", update_prediction_status_ui)
+register_route_once(
+    "store_prediction",
+    store_prediction_ui,
+    "Persist prediction data",
+    "prediction",
+)
+register_route_once(
+    "get_prediction",
+    get_prediction_ui,
+    "Retrieve a stored prediction",
+    "prediction",
+)
+register_route_once(
+    "update_prediction_status",
+    update_prediction_status_ui,
+    "Update prediction status",
+    "prediction",
+)

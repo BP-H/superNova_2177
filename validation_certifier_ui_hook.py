@@ -16,13 +16,18 @@ async def run_integrity_analysis_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     minimal = {
         "consensus_score": result.get("consensus_score"),
         "recommended_certification": result.get("recommended_certification"),
-        "integrity_score": result.get("integrity_analysis", {}).get("overall_integrity_score"),
+        "integrity_score": result.get("integrity_analysis", {}).get(
+            "overall_integrity_score"
+        ),
         "risk_level": result.get("integrity_analysis", {}).get("risk_level"),
     }
     await ui_hook_manager.trigger("integrity_analysis_run", minimal)
     return minimal
 
 
-register_route_once("run_integrity_analysis", run_integrity_analysis_ui)
-
-
+register_route_once(
+    "run_integrity_analysis",
+    run_integrity_analysis_ui,
+    "Analyze validation integrity",
+    "audit",
+)

@@ -10,7 +10,9 @@ from . import log_event
 ui_hook_manager = HookManager()
 
 
-async def log_event_ui(payload: Dict[str, Any], db: Session, **_: Any) -> Dict[str, Any]:
+async def log_event_ui(
+    payload: Dict[str, Any], db: Session, **_: Any
+) -> Dict[str, Any]:
     """Persist an event triggered via the UI and emit a hook."""
     category = payload.get("category")
     if not isinstance(category, str) or not category:
@@ -29,4 +31,9 @@ async def log_event_ui(payload: Dict[str, Any], db: Session, **_: Any) -> Dict[s
     return {"category": category, **event_payload}
 
 
-register_route_once("log_event", log_event_ui)
+register_route_once(
+    "log_event",
+    log_event_ui,
+    "Log a system state event",
+    "system",
+)

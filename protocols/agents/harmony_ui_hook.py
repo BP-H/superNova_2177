@@ -28,4 +28,9 @@ async def generate_midi_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # Register route with the central frontend router
-register_route_once("generate_midi", generate_midi_ui)
+register_route_once(
+    "generate_midi",
+    generate_midi_ui,
+    "Generate a MIDI snippet",
+    "protocols",
+)

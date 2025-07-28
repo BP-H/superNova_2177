@@ -28,5 +28,15 @@ async def propose_fix_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # Register with the central frontend router
-register_route_once("inspect_suggestion", inspect_suggestion_ui)
-register_route_once("propose_fix", propose_fix_ui)
+register_route_once(
+    "inspect_suggestion",
+    inspect_suggestion_ui,
+    "Inspect a suggestion via the Guardian agent",
+    "protocols",
+)
+register_route_once(
+    "propose_fix",
+    propose_fix_ui,
+    "Propose a fix via the Guardian agent",
+    "protocols",
+)

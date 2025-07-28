@@ -48,12 +48,25 @@ async def submit_universe_proposal(payload: Dict[str, Any]) -> Dict[str, Any]:
     universe_id = payload.get("universe_id")
     proposal = payload.get("proposal", {})
     proposal_id = universe_manager.submit_proposal(universe_id, proposal)
-    await ui_hook_manager.trigger(
-        "proposal_submitted", {"proposal_id": proposal_id}
-    )
+    await ui_hook_manager.trigger("proposal_submitted", {"proposal_id": proposal_id})
     return {"proposal_id": proposal_id}
 
 
-register_route_once("get_universe_overview", get_universe_overview)
-register_route_once("list_available_proposals", list_available_proposals)
-register_route_once("submit_universe_proposal", submit_universe_proposal)
+register_route_once(
+    "get_universe_overview",
+    get_universe_overview,
+    "Get an overview of the universe",
+    "universe",
+)
+register_route_once(
+    "list_available_proposals",
+    list_available_proposals,
+    "List available proposals",
+    "universe",
+)
+register_route_once(
+    "submit_universe_proposal",
+    submit_universe_proposal,
+    "Submit a universe proposal",
+    "universe",
+)
