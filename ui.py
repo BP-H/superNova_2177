@@ -196,11 +196,39 @@ def run_analysis(validations, *, layout: str = "force"):
     edges = graph_data.get("edges", [])
     if edges:
         G = nx.Graph()
+
+        # Collect voter metadata from the validations
+        voter_meta: dict[str, dict[str, str]] = {}
+        for entry in validations:
+            vid = entry.get("validator_id")
+            if not vid:
+                continue
+            meta = voter_meta.setdefault(vid, {})
+            cls = (
+                entry.get("validator_class")
+                or entry.get("class")
+                or entry.get("affiliation")
+                or entry.get("specialty")
+            )
+            species = entry.get("species") or entry.get("validator_species")
+            if cls and "voter_class" not in meta:
+                meta["voter_class"] = str(cls)
+            if species and "species" not in meta:
+                meta["species"] = str(species)
+
+        # Add nodes with metadata and default fallbacks
+        for node in graph_data.get("nodes", []):
+            meta = voter_meta.get(node, {})
+            G.add_node(
+                node,
+                voter_class=meta.get("voter_class", "unknown"),
+                species=meta.get("species", "unknown"),
+            )
+
         for v1, v2, w in edges:
             G.add_edge(v1, v2, weight=w)
 
-        # Offer GraphML download of the constructed graph
-        # TODO: log voter class/species as metadata when exporting GraphML
+        # Offer GraphML download of the constructed graph including metadata
         gm_buf = io.BytesIO()
         try:
             nx.write_graphml(G, gm_buf)
@@ -454,9 +482,7 @@ def main() -> None:
             "High Risk Threshold", 0.1, 1.0, float(VCConfig.HIGH_RISK_THRESHOLD), 0.05
         )
 
-        uploaded_file = st.file_uploader(
-            "Upload validations JSON (drag/drop)", type="json"
-        )
+        uploaded_file = st.file_uploader("Upload validations JSON (drag/drop)", type="json")
         run_clicked = st.button("Run Analysis")
         rerun_clicked = False
         if st.session_state.get("last_result") is not None:
@@ -518,9 +544,7 @@ def main() -> None:
                         data = json.load(f)
                 except FileNotFoundError:
                     alert("Demo file not found, using default dataset.", "warning")
-                    data = {
-                        "validations": [{"validator": "A", "target": "B", "score": 0.9}]
-                    }
+                    data = {"validations": [{"validator": "A", "target": "B", "score": 0.9}]}
                 st.session_state["validations_json"] = json.dumps(data, indent=2)
             elif uploaded_file is not None:
                 data = json.load(uploaded_file)
@@ -543,9 +567,7 @@ def main() -> None:
         st.session_state["analysis_diary"].append(
             {
                 "timestamp": st.session_state["last_run"],
-                "score": result.get("integrity_analysis", {}).get(
-                    "overall_integrity_score"
-                ),
+                "score": result.get("integrity_analysis", {}).get("overall_integrity_score"),
                 "risk": result.get("integrity_analysis", {}).get("risk_level"),
             }
         )
@@ -584,9 +606,7 @@ def main() -> None:
                         agent = agent_cls(llm_backend=backend_fn)
                     else:
                         agent = agent_cls(llm_backend=backend_fn)
-                    result = agent.process_event(
-                        {"event": event_type, "payload": payload}
-                    )
+                    result = agent.process_event({"event": event_type, "payload": payload})
                     st.session_state["agent_output"] = result
                     st.success("Agent executed")
                 except Exception as exc:
@@ -624,11 +644,7 @@ def main() -> None:
             "\n".join(
                 [
                     f"* {e['timestamp']}: {e.get('note', '')}"
-                    + (
-                        f" (RFCs: {', '.join(e['rfc_ids'])})"
-                        if e.get("rfc_ids")
-                        else ""
-                    )
+                    + (f" (RFCs: {', '.join(e['rfc_ids'])})" if e.get("rfc_ids") else "")
                     for e in st.session_state["diary"]
                 ]
             ),
@@ -680,17 +696,11 @@ def main() -> None:
             ids = set(e.strip().lower() for e in entry.get("rfc_ids", []) if e)
             for rfc in rfc_entries:
                 rid = str(rfc["id"]).lower()
-                if (
-                    rid in note_lower
-                    or rid.replace("-", " ") in note_lower
-                    or rid in ids
-                ):
+                if rid in note_lower or rid.replace("-", " ") in note_lower or rid in ids:
                     diary_mentions.setdefault(str(rfc["id"]), []).append(i)
                     continue
                 keywords = {
-                    w.strip(".,()[]{}:").lower()
-                    for w in str(rfc["summary"]).split()
-                    if len(w) > 4
+                    w.strip(".,()[]{}:").lower() for w in str(rfc["summary"]).split() if len(w) > 4
                 }
                 if any(k in note_lower for k in keywords):
                     diary_mentions.setdefault(str(rfc["id"]), []).append(i)
@@ -707,9 +717,7 @@ def main() -> None:
             st.markdown(f"### {heading}", unsafe_allow_html=True)
             st.write(summarize_text(str(rfc["summary"])))
             if mentions:
-                links = ", ".join(
-                    [f"[entry {idx + 1}](#diary-{idx})" for idx in mentions]
-                )
+                links = ", ".join([f"[entry {idx + 1}](#diary-{idx})" for idx in mentions])
                 st.markdown(f"Referenced in: {links}", unsafe_allow_html=True)
             st.markdown(f"[Read RFC]({cast(Path, rfc['path']).as_posix()})")
             if preview_all or st.checkbox("Show details", key=f"show_{rfc['id']}"):
