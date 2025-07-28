@@ -1,13 +1,17 @@
 import json
 import logging
+import math
+import os
+from collections import Counter
+from datetime import datetime
 from pathlib import Path
 
-import os
-from pathlib import Path
 import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
-from datetime import datetime
+
+from network.network_coordination_detector import build_validation_graph
+from validation_integrity_pipeline import analyze_validation_integrity
 
 try:
     import plotly.graph_objects as go
@@ -30,15 +34,60 @@ except Exception:  # pragma: no cover - optional in dev/CI
         "DATABASE_URL": "sqlite:///:memory:",
     }
 
-from network.network_coordination_detector import build_validation_graph
-from validation_integrity_pipeline import analyze_validation_integrity
+
+def summarize_text(text: str, word_limit: int = 40) -> str:
+    """Naively truncate text to the first ``word_limit`` words."""
+    words = text.split()
+    if len(words) <= word_limit:
+        return text.strip()
+    return " ".join(words[:word_limit]) + "..."
 
 
-def summarize_text(text: str, max_len: int = 150) -> str:
-    """Basic text summarizer placeholder."""
-    if len(text) <= max_len:
-        return text
-    return text[: max_len - 3] + "..."
+def _text_entropy(text: str) -> float:
+    """Calculate Shannon entropy of word distribution."""
+    tokens = [w.strip(".,!?:;()[]{}").lower() for w in text.split()]
+    counts = Counter(t for t in tokens if t)
+    total = sum(counts.values())
+    if not total:
+        return 0.0
+    return -sum((c / total) * math.log2(c / total) for c in counts.values())
+
+
+def parse_rfcs():
+    """Collect RFC markdown files with summaries and entropy metric."""
+    rfc_dir = Path("rfcs")
+    rfc_entries = []
+    for path in rfc_dir.rglob("*.md"):
+        if path.name.lower() == "template.md":
+            continue
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        if not lines:
+            continue
+        title = lines[0].lstrip("#").strip()
+        summary = ""
+        if "## Summary" in text:
+            part = text.split("## Summary", 1)[1]
+            block = part.split("##", 1)[0]
+            summary = " ".join(
+                line.strip() for line in block.splitlines()[1:] if line.strip()
+            )
+        if not summary:
+            paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+            if len(paragraphs) > 1:
+                summary = paragraphs[1]
+            else:
+                summary = paragraphs[0]
+        rfc_entries.append(
+            {
+                "title": title or path.stem,
+                "path": path.as_posix(),
+                "summary": summarize_text(summary, word_limit=40),
+                "entropy": round(_text_entropy(text), 2),
+            }
+        )
+    return sorted(rfc_entries, key=lambda r: r["title"])
+
 
 try:
     from validation_certifier import Config as VCConfig
@@ -53,16 +102,21 @@ except Exception:  # pragma: no cover - optional debug dependencies
     Config = None  # type: ignore
 
 if Config is None:
-    class Config:
+
+    class Config:  # type: ignore[no-redef]
         METRICS_PORT = 1234
 
+
 if VCConfig is None:
-    class VCConfig:
+
+    class VCConfig:  # type: ignore[no-redef]
         HIGH_RISK_THRESHOLD = 0.7
         MEDIUM_RISK_THRESHOLD = 0.4
 
+
 if HarmonyScanner is None:
-    class HarmonyScanner:
+
+    class HarmonyScanner:  # type: ignore[no-redef]
         def __init__(self, *_a, **_k):
             pass
 
@@ -279,7 +333,9 @@ def main() -> None:
         st.header("Environment")
         st.write(f"Database URL: {database_url or 'not set'}")
         st.write(f"ENV: {os.getenv('ENV', 'dev')}")
-        st.write(f"Session start: {datetime.utcnow().isoformat(timespec='seconds')} UTC")
+        st.write(
+            f"Session start: {datetime.utcnow().isoformat(timespec='seconds')} UTC"
+        )
 
         if secret_key:
             st.success("Secret key loaded")
@@ -299,9 +355,7 @@ def main() -> None:
         )
         run_clicked = st.button("Run Analysis")
 
-        st.markdown(
-            f"**Runs this session:** {st.session_state['run_count']}"
-        )
+        st.markdown(f"**Runs this session:** {st.session_state['run_count']}")
         if st.button("Clear Memory"):
             st.session_state["diary"] = []
         if st.button("Export Report"):
@@ -328,9 +382,7 @@ def main() -> None:
             except FileNotFoundError:
                 st.warning("Demo file not found, using default dataset.")
                 data = {
-                    "validations": [
-                        {"validator": "A", "target": "B", "score": 0.9}
-                    ]
+                    "validations": [{"validator": "A", "target": "B", "score": 0.9}]
                 }
             st.session_state["validations_json"] = json.dumps(data, indent=2)
         elif uploaded_file is not None:
@@ -376,23 +428,11 @@ def main() -> None:
         )
 
     st.subheader("RFCs and Agent Insights")
-    with st.expander("Proposed RFCs", expanded=False):
-        rfc_dir = Path("rfcs")
-        for path in sorted(rfc_dir.glob("rfc-*.md")):
-            text = path.read_text()
-            summary = ""
-            if "## Summary" in text:
-                part = text.split("## Summary", 1)[1]
-                summary_lines = []
-                for line in part.splitlines()[1:]:
-                    if line.startswith("##"):
-                        break
-                    if line.strip():
-                        summary_lines.append(line.strip())
-                summary = " ".join(summary_lines)
-            st.markdown(f"### {path.stem}")
-            st.write(summarize_text(summary))
-            st.markdown(f"[Read RFC]({path.as_posix()})")
+    with st.expander("RFCs and Agent Insights", expanded=False):
+        for rfc in parse_rfcs():
+            st.markdown(f"**[{rfc['title']}]({rfc['path']})**")
+            st.write(rfc["summary"])
+            st.caption(f"Entropy: {rfc['entropy']}")
 
     notes_path = Path("AgentNotes.md")
     if notes_path.exists():
