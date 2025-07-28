@@ -2519,6 +2519,10 @@ def login_for_access_token(
     access_token = create_access_token({"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
 
+from login_router import router as login_router
+
+app.include_router(login_router)
+
 
 @app.get("/users/me", response_model=HarmonizerOut, tags=["Harmonizers"])
 def read_users_me(current_user: Harmonizer = Depends(get_current_active_user)):
