@@ -1,11 +1,11 @@
 import os
-import platform
-import shutil
 import subprocess
 import sys
-import tempfile
 import urllib.request
-import hashlib
+from hashlib import sha256
+from platform import system
+from shutil import which, copy
+from tempfile import gettempdir
 
 try:
     from tqdm import tqdm
@@ -18,9 +18,12 @@ ENV_DIR = "venv"
 
 
 def run_cmd(cmd: list[str]) -> None:
-    """Run *cmd* with logging."""
+    """Run *cmd* with logging and error reporting."""
     print(f"$ {' '.join(cmd)}")
-    subprocess.run(cmd, check=True)
+    try:
+        subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError as exc:
+        raise RuntimeError(f"Command failed with {exc.returncode}: {' '.join(cmd)}") from exc
 
 
 def remove_temp_files() -> None:
@@ -54,17 +57,17 @@ def download(url: str, dest: str, expected_sha256: str | None = None) -> None:
                 f"Warning: no SHA256 checksum available for {url}; skipping verification."
             )
     print(f"Downloading {url}...")
-    with urllib.request.urlopen(url) as resp, open(dest, "wb") as f:
-        total = resp.length or int(resp.headers.get("Content-Length", 0))
-        with tqdm(total=total, unit="B", unit_scale=True, desc=os.path.basename(dest)) as pbar:
-            while True:
-                chunk = resp.read(8192)
-                if not chunk:
-                    break
-                f.write(chunk)
-                pbar.update(len(chunk))
+    try:
+        with urllib.request.urlopen(url) as resp, open(dest, "wb") as f:
+            total = resp.length or int(resp.headers.get("Content-Length", 0))
+            with tqdm(total=total, unit="B", unit_scale=True, desc=os.path.basename(dest)) as pbar:
+                for chunk in iter(lambda: resp.read(8192), b""):
+                    f.write(chunk)
+                    pbar.update(len(chunk))
+    except Exception as exc:
+        raise RuntimeError(f"Failed to download {url}: {exc}") from exc
     if expected_sha256:
-        hasher = hashlib.sha256()
+        hasher = sha256()
         with open(dest, "rb") as f:
             for block in iter(lambda: f.read(8192), b""):
                 hasher.update(block)
@@ -80,30 +83,32 @@ def ensure_python312() -> str:
     if sys.version_info >= (3, 12):
         return sys.executable
     for exe in ("python3.12", "python312", "python3.12.exe", "python.exe"):
-        path = shutil.which(exe)
+        path = which(exe)
         if path:
             try:
                 out = subprocess.run(
                     [path, "--version"], capture_output=True, text=True, check=True
                 ).stdout
-            except Exception:
+            except subprocess.CalledProcessError:
                 continue
             if out.startswith("Python 3.12"):
                 return path
-    system = platform.system()
-    tmp = tempfile.gettempdir()
-    if system == "Windows":
+    os_name = system()
+    tmp = gettempdir()
+    if os_name == "Windows":
         installer = os.path.join(tmp, "python312.exe")
         download("https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe", installer)
         run_cmd([installer, "/quiet", "InstallAllUsers=1", "PrependPath=1"])
-        os.remove(installer)
-    elif system == "Darwin":
+        if os.path.exists(installer):
+            os.remove(installer)
+    elif os_name == "Darwin":
         pkg = os.path.join(tmp, "python312.pkg")
         download("https://www.python.org/ftp/python/3.12.0/python-3.12.0-macos11.pkg", pkg)
         run_cmd(["sudo", "installer", "-pkg", pkg, "-target", "/"])
-        os.remove(pkg)
+        if os.path.exists(pkg):
+            os.remove(pkg)
     else:
-        if shutil.which("apt-get"):
+        if which("apt-get"):
             run_cmd(["sudo", "apt-get", "update"])
             run_cmd(["sudo", "apt-get", "install", "-y", "python3.12", "python3.12-venv"])
         else:
@@ -118,7 +123,7 @@ def ensure_python312() -> str:
                 "-c",
                 f"cd {src} && ./configure --prefix=/usr/local && make -j$(nproc) && sudo make install",
             ])
-    path = shutil.which("python3.12")
+    path = which("python3.12")
     if path:
         return path
     raise RuntimeError("Python 3.12 installation failed")
@@ -139,7 +144,7 @@ def setup_environment(python: str) -> None:
     run_cmd([pip, "install", "--no-index", "--find-links", OFFLINE_DIR, "-r", "requirements.txt"])
     run_cmd([pip, "install", "--no-index", "--find-links", OFFLINE_DIR, "-e", "."])
     if os.path.isfile(".env.example") and not os.path.isfile(".env"):
-        shutil.copy(".env.example", ".env")
+        copy(".env.example", ".env")
         print("Copied .env.example to .env")
 
 
