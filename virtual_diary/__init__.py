@@ -32,3 +32,6 @@ def load_entries(limit: int = 20) -> List[Dict[str, Any]]:
     except Exception:
         logger.exception("Failed to load virtual diary")
     return []
+
+__all__ = ["load_entries"]
+
