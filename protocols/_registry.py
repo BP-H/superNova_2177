@@ -11,7 +11,7 @@ from .agents.temporal_audit_agent import TemporalAuditAgent
 from .agents.cross_universe_bridge_agent import CrossUniverseBridgeAgent
 from .agents.anomaly_spotter_agent import AnomalySpotterAgent
 from .agents.quantum_resonance_agent import QuantumResonanceAgent
-from .agents.codex_agent import CodexAgent
+from protocols.agents.codex_agent import CodexAgent
 
 # Mapping of agent names to metadata dictionaries
 AGENT_REGISTRY = {
@@ -72,7 +72,9 @@ AGENT_REGISTRY = {
     },
     "CodexAgent": {
         "cls": CodexAgent,
-        "description": "Base agent class for Codex experiments.",
-        "llm_capable": False,
+        "description": "Base class for Codex experiments.",
+        "llm_capable": True,
     },
 }
+
+__all__ = ["AGENT_REGISTRY"]
