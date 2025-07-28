@@ -1,5 +1,6 @@
 import json
 import logging
+import difflib
 from pathlib import Path
 
 import os
@@ -57,6 +58,22 @@ def clear_memory(state: dict) -> None:
 def export_latest_result(state: dict) -> str:
     """Return the latest result as a JSON blob."""
     return json.dumps(state.get("last_result", {}), indent=2)
+
+
+def diff_results(old: dict | None, new: dict) -> str:
+    """Return a unified diff between two result dictionaries."""
+    if not old:
+        return ""
+    old_txt = json.dumps(old, indent=2, sort_keys=True).splitlines()
+    new_txt = json.dumps(new, indent=2, sort_keys=True).splitlines()
+    diff = difflib.unified_diff(
+        old_txt,
+        new_txt,
+        fromfile="previous",
+        tofile="new",
+        lineterm="",
+    )
+    return "\n".join(diff)
 
 
 def generate_explanation(result: dict) -> str:
@@ -405,6 +422,9 @@ def main() -> None:
             "Upload validations JSON (drag/drop)", type="json"
         )
         run_clicked = st.button("Run Analysis")
+        rerun_clicked = False
+        if st.session_state.get("last_result") is not None:
+            rerun_clicked = st.button("Re-run This Dataset with New Thresholds")
 
         st.markdown(
             f"**Runs this session:** {st.session_state['run_count']}"
@@ -422,33 +442,42 @@ def main() -> None:
         )
         st.divider()
 
-    if run_clicked:
-        if validations_input.strip():
-            try:
-                data = json.loads(validations_input)
+    if run_clicked or rerun_clicked:
+        if run_clicked:
+            if validations_input.strip():
+                try:
+                    data = json.loads(validations_input)
+                    st.session_state["validations_json"] = json.dumps(data, indent=2)
+                except json.JSONDecodeError as exc:
+                    st.error(f"Invalid JSON: {exc}")
+                    st.stop()
+            elif demo_mode:
+                try:
+                    with open("sample_validations.json") as f:
+                        data = json.load(f)
+                except FileNotFoundError:
+                    st.warning("Demo file not found, using default dataset.")
+                    data = {
+                        "validations": [
+                            {"validator": "A", "target": "B", "score": 0.9}
+                        ]
+                    }
                 st.session_state["validations_json"] = json.dumps(data, indent=2)
-            except json.JSONDecodeError as exc:
-                st.error(f"Invalid JSON: {exc}")
+            elif uploaded_file is not None:
+                data = json.load(uploaded_file)
+                st.session_state["validations_json"] = json.dumps(data, indent=2)
+            else:
+                st.error("Please upload a file, paste JSON, or enable demo mode.")
                 st.stop()
-        elif demo_mode:
-            try:
-                with open("sample_validations.json") as f:
-                    data = json.load(f)
-            except FileNotFoundError:
-                st.warning("Demo file not found, using default dataset.")
-                data = {
-                    "validations": [
-                        {"validator": "A", "target": "B", "score": 0.9}
-                    ]
-                }
-            st.session_state["validations_json"] = json.dumps(data, indent=2)
-        elif uploaded_file is not None:
-            data = json.load(uploaded_file)
-            st.session_state["validations_json"] = json.dumps(data, indent=2)
         else:
-            st.error("Please upload a file, paste JSON, or enable demo mode.")
-            st.stop()
+            try:
+                data = json.loads(st.session_state.get("validations_json", ""))
+            except Exception as exc:
+                st.error(f"Stored validations invalid: {exc}")
+                st.stop()
+        prev_result = st.session_state.get("last_result")
         result = run_analysis(data.get("validations", []), layout=view)
+        diff = diff_results(prev_result, result)
         st.session_state["run_count"] += 1
         st.session_state["last_result"] = result
         st.session_state["last_run"] = datetime.utcnow().isoformat(timespec="seconds")
@@ -465,6 +494,9 @@ def main() -> None:
                 "note": f"Run {st.session_state['run_count']} completed",
             }
         )
+        if diff:
+            st.subheader("Result Diff vs Previous Run")
+            st.code(diff)
 
     st.subheader("Virtual Diary")
     with st.expander("📘 Notes", expanded=False):
