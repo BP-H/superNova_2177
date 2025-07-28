@@ -5,6 +5,7 @@ import json
 import datetime
 from typing import Any, Dict
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from db_models import SystemState
 
@@ -12,7 +13,8 @@ from db_models import SystemState
 def log_event(db: Session, category: str, payload: Dict[str, Any]) -> None:
     """Append an event record to SystemState under ``log:<category>``."""
     key = f"log:{category}"
-    state = db.query(SystemState).filter(SystemState.key == key).first()
+    stmt = select(SystemState).where(SystemState.key == key)
+    state = db.execute(stmt).scalar_one_or_none()
     events = []
     if state:
         try:
