@@ -36,7 +36,7 @@ async def network_page():
                 'label': node_label.value,
                 'type': node_type.value,
             }
-            resp = api_call('POST', '/network-analysis/nodes', data)
+            resp = await api_call('POST', '/network-analysis/nodes', data)
             if resp is not None:
                 ui.notify('Node created', color='positive')
                 node_id.value = ''
@@ -59,7 +59,7 @@ async def network_page():
                 'target': edge_target.value,
                 'type': edge_type.value,
             }
-            resp = api_call('POST', '/network-analysis/edges', data)
+            resp = await api_call('POST', '/network-analysis/edges', data)
             if resp is not None:
                 ui.notify('Edge created', color='positive')
                 edge_source.value = ''
@@ -74,7 +74,7 @@ async def network_page():
         graph = ui.html('').classes('w-full h-96')
 
         async def refresh_network() -> None:
-            analysis = api_call('GET', '/network-analysis/')
+            analysis = await api_call('GET', '/network-analysis/')
             if analysis:
                 nodes_label.text = f"Nodes: {analysis['metrics']['node_count']}"
                 edges_label.text = f"Edges: {analysis['metrics']['edge_count']}"

@@ -36,7 +36,7 @@ async def events_page():
                 'start_time': e_start.value,
                 'group_id': int(group_id.value),
             }
-            resp = api_call('POST', '/events/', data)
+            resp = await api_call('POST', '/events/', data)
             if resp:
                 ui.notify('Event created!', color='positive')
                 await refresh_events()
@@ -53,7 +53,7 @@ async def events_page():
                 params['search'] = search_query.value
             if sort_select.value:
                 params['sort'] = sort_select.value
-            events = api_call('GET', '/events/', params) or []
+            events = await api_call('GET', '/events/', params) or []
             if search_query.value:
                 events = [e for e in events if search_query.value.lower() in e['name'].lower()]
             if sort_select.value:
@@ -69,7 +69,7 @@ async def events_page():
                         ui.label(e['description']).classes('text-sm')
                         ui.label(f"Start: {e['start_time']}").classes('text-sm')
                         async def attend_fn(e_id=e['id']):
-                            api_call('POST', f'/events/{e_id}/attend')
+                            await api_call('POST', f'/events/{e_id}/attend')
                             await refresh_events()
                         ui.button('Attend/Leave', on_click=attend_fn).style(
                             f'background: {THEME["accent"]}; color: {THEME["background"]};'

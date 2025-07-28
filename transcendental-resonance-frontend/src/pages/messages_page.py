@@ -26,7 +26,7 @@ async def messages_page():
 
         async def send_message():
             data = {'content': content.value}
-            resp = api_call('POST', f'/messages/{recipient.value}', data)
+            resp = await api_call('POST', f'/messages/{recipient.value}', data)
             if resp:
                 ui.notify('Message sent!', color='positive')
                 await refresh_messages()
@@ -38,7 +38,7 @@ async def messages_page():
         messages_list = ui.column().classes('w-full')
 
         async def refresh_messages():
-            messages = api_call('GET', '/messages/') or []
+            messages = await api_call('GET', '/messages/') or []
             messages_list.clear()
             for m in messages:
                 with messages_list:

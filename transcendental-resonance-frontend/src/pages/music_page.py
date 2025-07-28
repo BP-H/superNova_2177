@@ -37,7 +37,7 @@ async def music_page():
                 'harmony': harmony_slider.value,
                 'length': length_input.value,
             }
-            resp = api_call('POST', '/generate-music', data)
+            resp = await api_call('POST', '/generate-music', data)
             if resp and 'url' in resp:
                 download_link.href = resp['url']
                 download_link.classes(remove='hidden')
