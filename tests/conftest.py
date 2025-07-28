@@ -1,6 +1,6 @@
+import importlib.util
 import sys
 from pathlib import Path
-import importlib.util
 
 _orig_find_spec = importlib.util.find_spec
 
@@ -10,6 +10,7 @@ def _safe_find_spec(name, package=None):
         return _orig_find_spec(name, package)
     except ValueError:
         return None
+
 
 importlib.util.find_spec = _safe_find_spec
 
@@ -26,9 +27,9 @@ except Exception:  # pragma: no cover - handle optional dependency
 # Provide a lightweight stub for the heavy ``superNova_2177`` module so tests do
 # not require optional scientific dependencies.
 if "superNova_2177" not in sys.modules:
-    import types
     import importlib
     import importlib.machinery
+    import types
     from decimal import Decimal
 
     stub_sn = types.ModuleType("superNova_2177")
@@ -114,6 +115,7 @@ if "superNova_2177" not in sys.modules:
         (),
         {"c": types.SimpleNamespace(harmonizer_id=None, vibenode_id=None)},
     )
+
     class InMemoryStorage:
         def __init__(self):
             self.users = {}
@@ -199,21 +201,27 @@ if "superNova_2177" not in sys.modules:
     stub_sn.SystemStateService = SystemStateService
     stub_sn.CosmicNexus = CosmicNexus
     stub_sn.RemixAgent = RemixAgent
-    stub_sn.LogChain = type("LogChain", (), {"__init__": lambda self, f: None, "add": lambda self, e: None})
+    stub_sn.LogChain = type(
+        "LogChain", (), {"__init__": lambda self, f: None, "add": lambda self, e: None}
+    )
     stub_sn.SessionLocal = lambda *a, **k: None
-    stub_sn.Base = type("Base", (), {
-        "metadata": types.SimpleNamespace(
-            create_all=lambda *a, **k: None,
-            drop_all=lambda *a, **k: None,
-        )
-    })
+    stub_sn.Base = type(
+        "Base",
+        (),
+        {
+            "metadata": types.SimpleNamespace(
+                create_all=lambda *a, **k: None,
+                drop_all=lambda *a, **k: None,
+            )
+        },
+    )
     stub_sn.USE_IN_MEMORY_STORAGE = True
 
     # Import FastAPI components with a lightweight fallback when the real
     # package isn't installed.  This avoids ``ModuleNotFoundError`` during test
     # collection in minimal environments.
     try:
-        from fastapi import FastAPI, HTTPException, Depends
+        from fastapi import Depends, FastAPI, HTTPException
         from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
     except Exception:  # pragma: no cover - optional dependency
         import types
@@ -231,6 +239,7 @@ if "superNova_2177" not in sys.modules:
             def _decorator(self, *a, **kw):
                 def wrapper(func):
                     return func
+
                 return wrapper
 
             post = _decorator
@@ -250,7 +259,7 @@ if "superNova_2177" not in sys.modules:
 
         sys.modules.setdefault("fastapi", fastapi_stub)
         sys.modules.setdefault("fastapi.security", security)
-        from fastapi import FastAPI, HTTPException, Depends
+        from fastapi import Depends, FastAPI, HTTPException
         from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
     app = FastAPI()
@@ -368,6 +377,7 @@ for mod_name in [
             responses.JSONResponse = object
             sys.modules["fastapi.responses"] = responses
             security = types.ModuleType("fastapi.security")
+
             class OAuth2PasswordBearer:
                 def __init__(self, tokenUrl: str, **_kw):
                     self.tokenUrl = tokenUrl
@@ -379,18 +389,22 @@ for mod_name in [
             middleware.CORSMiddleware = object
             sys.modules["fastapi.middleware.cors"] = middleware
         if mod_name == "sqlalchemy.orm":
+
             class Session:
                 pass
 
             stub.Session = Session
             stub.sessionmaker = lambda *a, **kw: None
             stub.relationship = lambda *a, **kw: None
+
             class DeclarativeBase:
                 metadata = types.SimpleNamespace(
                     create_all=lambda *a, **kw: None,
                     drop_all=lambda *a, **kw: None,
                 )
+
             stub.DeclarativeBase = DeclarativeBase
+
             def _base():
                 class B:
                     metadata = types.SimpleNamespace()
@@ -401,6 +415,7 @@ for mod_name in [
 
             stub.declarative_base = lambda *a, **kw: _base()
         if mod_name == "sqlalchemy":
+
             class SQLA(types.ModuleType):
                 def __init__(self):
                     super().__init__("sqlalchemy")
@@ -428,6 +443,7 @@ for mod_name in [
             exc_mod.IntegrityError = type("IntegrityError", (), {})
             sys.modules["sqlalchemy.exc"] = exc_mod
         if mod_name == "pydantic":
+
             class BaseModel:
                 pass
 
@@ -436,6 +452,7 @@ for mod_name in [
             stub.EmailStr = str
             stub.ValidationError = type("ValidationError", (), {})
         if mod_name == "pydantic_settings":
+
             class BaseSettings:
                 pass
 
@@ -450,6 +467,7 @@ for mod_name in [
             redis_stub.from_url = from_url
             stub = redis_stub
         if mod_name == "passlib":
+
             class CryptContext:
                 def __init__(self, *a, **kw):
                     pass
@@ -459,6 +477,7 @@ for mod_name in [
             stub.context = ctx_mod
             sys.modules["passlib.context"] = ctx_mod
         if mod_name == "jose":
+
             def _encode(payload, *_a, **_kw):
                 """Return a predictable token for tests."""
                 return f"token-{payload['sub']}"
@@ -467,22 +486,26 @@ for mod_name in [
                 """Reverse ``_encode`` back to a payload."""
                 prefix = "token-"
                 if token.startswith(prefix):
-                    return {"sub": token[len(prefix):]}
+                    return {"sub": token[len(prefix) :]}
                 return {}
 
             stub.jwt = types.SimpleNamespace(encode=_encode, decode=_decode)
             stub.JWTError = type("JWTError", (), {})
         if mod_name == "governance_reviewer":
+
             def _noop(*_a, **_kw):
                 return {}
 
             stub.evaluate_governance_risks = _noop
             stub.apply_governance_actions = _noop
         if mod_name == "structlog":
+
             def _logger(*_a, **_kw):
                 ns = types.SimpleNamespace()
+
                 def _noop(*a, **k):
                     return None
+
                 ns.info = _noop
                 ns.warning = _noop
                 ns.error = _noop
@@ -506,6 +529,7 @@ for mod_name in [
                 JSONRenderer=lambda: None,
             )
         if mod_name == "prometheus_client":
+
             class _Collector:
                 def __init__(self, *a, **k):
                     pass
@@ -516,6 +540,7 @@ for mod_name in [
             stub.start_http_server = lambda *a, **kw: None
             stub.REGISTRY = types.SimpleNamespace(_names_to_collectors={})
         if mod_name == "httpx":
+
             class Response:
                 def __init__(self, status_code=200, json_data=None):
                     self.status_code = status_code
@@ -557,6 +582,7 @@ for mod_name in [
             stub.fixture = fixture
         if mod_name == "numpy":
             import math
+
             class _Array(list):
                 def mean(self):
                     return sum(float(x) for x in self) / len(self) if self else 0.0
@@ -564,7 +590,11 @@ for mod_name in [
             stub.array = lambda x, dtype=float: _Array(dtype(v) for v in x)
             stub.ndarray = list
             stub.stack = lambda arrays: arrays
-            stub.zeros = lambda shape, dtype=float: [0.0] * shape if isinstance(shape, int) else [[0.0] * shape[1] for _ in range(shape[0])]
+            stub.zeros = lambda shape, dtype=float: (
+                [0.0] * shape
+                if isinstance(shape, int)
+                else [[0.0] * shape[1] for _ in range(shape[0])]
+            )
             stub.isscalar = lambda obj: not hasattr(obj, "__iter__")
 
             def _trapz(y, x):
@@ -591,11 +621,15 @@ for mod_name in [
             stub.linspace = _linspace
             stub.log = lambda v: math.log(v)
             stub.exp = lambda v: math.exp(v)
+            stub.bool_ = bool
         if mod_name == "dateutil":
             parser_mod = types.ModuleType("dateutil.parser")
+
             def _parse(val):
                 from datetime import datetime
+
                 return datetime.fromisoformat(val.replace("Z", "+00:00"))
+
             parser_mod.parse = _parse
             parser_mod.isoparse = _parse
             stub.parser = parser_mod
@@ -607,7 +641,7 @@ try:  # pragma: no cover - prefer real networkx when present
     import networkx as nx  # noqa: F401
 except Exception:  # pragma: no cover - lightweight fallback
     import types
-    from typing import Dict, Iterable, Any, List
+    from typing import Any, Dict, Iterable, List
 
     class _NodeView(dict):
         """Minimal dictionary-like node view supporting call syntax."""
@@ -667,7 +701,9 @@ except Exception:  # pragma: no cover - lightweight fallback
         def __getitem__(self, node: Any):
             return self._adj[node]
 
-    def pagerank(graph: DiGraph, alpha: float = 0.85, max_iter: int = 100) -> Dict[Any, float]:
+    def pagerank(
+        graph: DiGraph, alpha: float = 0.85, max_iter: int = 100
+    ) -> Dict[Any, float]:
         nodes = list(graph._adj)
         n = len(nodes)
         if n == 0:
@@ -699,7 +735,9 @@ except Exception:  # pragma: no cover - lightweight fallback
             stack.extend(graph._adj.get(node, {}))
         return False
 
-    def all_simple_paths(graph: DiGraph, source: Any, target: Any) -> Iterable[List[Any]]:
+    def all_simple_paths(
+        graph: DiGraph, source: Any, target: Any
+    ) -> Iterable[List[Any]]:
         path = [source]
         visited = {source}
 
@@ -729,9 +767,13 @@ import pytest
 
 def _setup_sqlite(monkeypatch, db_path):
     """Return engine, sessionmaker and db_models bound to a temporary SQLite file."""
+    import sys
+
+    import pytest
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
-    import db_models, sys, pytest
+
+    import db_models
 
     if getattr(create_engine, "__module__", "") == "stubs.sqlalchemy_stub":
         pytest.skip("SQLAlchemy not available")
@@ -749,16 +791,23 @@ def _setup_sqlite(monkeypatch, db_path):
     if getattr(db_models.Base.metadata, "bind", None) is not engine:
         monkeypatch.setattr(db_models.Base.metadata, "bind", engine, raising=False)
 
-    for mod in list(sys.modules.values()):
-        if getattr(mod, "engine", None) is old_engine:
-            monkeypatch.setattr(mod, "engine", engine, raising=False)
-        if getattr(mod, "SessionLocal", None) is old_session:
-            monkeypatch.setattr(mod, "SessionLocal", Session, raising=False)
-        base = getattr(mod, "Base", None)
-        if base is not None:
-            metadata = getattr(base, "metadata", None)
-            if getattr(metadata, "bind", None) is old_engine:
-                monkeypatch.setattr(metadata, "bind", engine, raising=False)
+    if old_engine is not None or old_session is not None:
+        for mod in list(sys.modules.values()):
+            if old_engine is not None and getattr(mod, "engine", None) is old_engine:
+                monkeypatch.setattr(mod, "engine", engine, raising=False)
+            if (
+                old_session is not None
+                and getattr(mod, "SessionLocal", None) is old_session
+            ):
+                monkeypatch.setattr(mod, "SessionLocal", Session, raising=False)
+            base = getattr(mod, "Base", None)
+            if base is not None:
+                metadata = getattr(base, "metadata", None)
+                if (
+                    old_engine is not None
+                    and getattr(metadata, "bind", None) is old_engine
+                ):
+                    monkeypatch.setattr(metadata, "bind", engine, raising=False)
 
     db_models.Base.metadata.create_all(bind=engine)
     return engine, Session, db_models
