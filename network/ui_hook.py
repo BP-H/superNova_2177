@@ -69,9 +69,24 @@ async def poll_coordination_analysis_ui(payload: Dict[str, Any]) -> Dict[str, An
 
 
 # Register with the central frontend router
-register_route("coordination_analysis", trigger_coordination_analysis_ui)
-register_route("queue_coordination_analysis", queue_coordination_analysis_ui)
-register_route("poll_coordination_analysis", poll_coordination_analysis_ui)
+register_route(
+    "coordination_analysis",
+    trigger_coordination_analysis_ui,
+    description="Run coordination analysis",
+    category="network",
+)
+register_route(
+    "queue_coordination_analysis",
+    queue_coordination_analysis_ui,
+    description="Queue coordination analysis",
+    category="network",
+)
+register_route(
+    "poll_coordination_analysis",
+    poll_coordination_analysis_ui,
+    description="Check coordination job status",
+    category="network",
+)
 
 
 async def run_coordination_analysis(payload: Dict[str, Any]) -> Dict[str, Any]:

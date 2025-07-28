@@ -5,6 +5,7 @@ from typing import Any, Dict, List
 from frontend_bridge import register_route
 from llm_backends import get_backend
 from protocols.core.runtime import set_provider_key
+
 from . import interface_server as server
 
 
@@ -64,6 +65,21 @@ async def step_agents_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # Register routes with the frontend bridge
-register_route("protocol_agents_list", list_agents_ui)
-register_route("protocol_agents_launch", launch_agents_ui)
-register_route("protocol_agents_step", step_agents_ui)
+register_route(
+    "protocol_agents_list",
+    list_agents_ui,
+    description="List available protocol agents",
+    category="protocols",
+)
+register_route(
+    "protocol_agents_launch",
+    launch_agents_ui,
+    description="Launch protocol agents",
+    category="protocols",
+)
+register_route(
+    "protocol_agents_step",
+    step_agents_ui,
+    description="Step active protocol agents",
+    category="protocols",
+)

@@ -3,11 +3,11 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict
 
+from diversity_analyzer import compute_diversity_score
 from frontend_bridge import register_route
 from hook_manager import HookManager
 from hooks import events
 from validator_reputation_tracker import update_validator_reputations
-from diversity_analyzer import compute_diversity_score
 
 from .reputation_influence_tracker import compute_validator_reputations
 
@@ -105,7 +105,27 @@ async def trigger_reputation_update_ui(payload: Dict[str, Any]) -> Dict[str, Any
 
 
 # Register with the central frontend router
-register_route("reputation_analysis", compute_reputation_ui)
-register_route("update_validator_reputations", update_reputations_ui)
-register_route("reputation_update", trigger_reputation_update_ui)
-register_route("compute_diversity", compute_diversity_ui)
+register_route(
+    "reputation_analysis",
+    compute_reputation_ui,
+    description="Compute validator reputations",
+    category="validation",
+)
+register_route(
+    "update_validator_reputations",
+    update_reputations_ui,
+    description="Update validator reputations in DB",
+    category="validation",
+)
+register_route(
+    "reputation_update",
+    trigger_reputation_update_ui,
+    description="Update reputations and compute diversity",
+    category="validation",
+)
+register_route(
+    "compute_diversity",
+    compute_diversity_ui,
+    description="Compute diversity score",
+    category="validation",
+)

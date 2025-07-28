@@ -2,14 +2,13 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from frontend_bridge import register_route
-from db_models import SessionLocal
-from protocols.core import JobQueueAgent
-
 from sqlalchemy.orm import Session
 
+from db_models import SessionLocal
+from frontend_bridge import register_route
 from hook_manager import HookManager
 from hooks import events
+from protocols.core import JobQueueAgent
 
 from .introspection_pipeline import run_full_audit
 
@@ -69,5 +68,15 @@ async def poll_full_audit_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return queue_agent.get_status(job_id)
 
 
-register_route("queue_full_audit", queue_full_audit_ui)
-register_route("poll_full_audit", poll_full_audit_ui)
+register_route(
+    "queue_full_audit",
+    queue_full_audit_ui,
+    description="Queue a full introspection audit",
+    category="introspection",
+)
+register_route(
+    "poll_full_audit",
+    poll_full_audit_ui,
+    description="Check queued audit status",
+    category="introspection",
+)

@@ -45,6 +45,21 @@ async def submit_universe_proposal(payload: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-register_route("get_universe_overview", get_universe_overview)
-register_route("list_available_proposals", list_available_proposals)
-register_route("submit_universe_proposal", submit_universe_proposal)
+register_route(
+    "get_universe_overview",
+    get_universe_overview,
+    description="Summarize a universe",
+    category="universe",
+)
+register_route(
+    "list_available_proposals",
+    list_available_proposals,
+    description="List proposals for a universe",
+    category="universe",
+)
+register_route(
+    "submit_universe_proposal",
+    submit_universe_proposal,
+    description="Submit a universe proposal",
+    category="universe",
+)

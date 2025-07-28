@@ -5,8 +5,8 @@ from typing import Any, Dict, List
 from frontend_bridge import register_route
 from hook_manager import HookManager
 from hooks import events
-
-from protocols.agents.cross_universe_bridge_agent import CrossUniverseBridgeAgent
+from protocols.agents.cross_universe_bridge_agent import \
+    CrossUniverseBridgeAgent
 
 # Exposed hook manager and agent instance
 bridge_hook_manager = HookManager()
@@ -28,5 +28,15 @@ async def get_provenance_ui(payload: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 # Register with the central frontend router
-register_route("cross_universe_register_bridge", register_bridge_ui)
-register_route("cross_universe_get_provenance", get_provenance_ui)
+register_route(
+    "cross_universe_register_bridge",
+    register_bridge_ui,
+    description="Register cross-universe bridge data",
+    category="protocols",
+)
+register_route(
+    "cross_universe_get_provenance",
+    get_provenance_ui,
+    description="Retrieve cross-universe provenance",
+    category="protocols",
+)
