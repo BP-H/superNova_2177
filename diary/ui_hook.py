@@ -21,4 +21,9 @@ async def get_diary_entries_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return {"entries": entries}
 
 
-register_route("get_diary_entries", get_diary_entries_ui)
+register_route(
+    "get_diary_entries",
+    get_diary_entries_ui,
+    "Return diary entries",
+    "diary",
+)

@@ -53,6 +53,21 @@ async def schedule_audit_proposal_ui(
 
 
 # Register handlers with the frontend bridge
-register_route("store_prediction", store_prediction_ui)
-register_route("get_prediction", get_prediction_ui)
-register_route("schedule_audit_proposal", schedule_audit_proposal_ui)
+register_route(
+    "store_prediction",
+    store_prediction_ui,
+    "Persist prediction data",
+    "prediction",
+)
+register_route(
+    "get_prediction",
+    get_prediction_ui,
+    "Return prediction record",
+    "prediction",
+)
+register_route(
+    "schedule_audit_proposal",
+    schedule_audit_proposal_ui,
+    "Schedule an annual audit proposal",
+    "prediction",
+)

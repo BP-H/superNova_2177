@@ -1,12 +1,13 @@
 # UI Routes
 
 This document lists the default routes registered with `frontend_bridge`.
-Each route name is dispatched via `dispatch_route` and maps to a
-backend handler.
+Each route name is dispatched via `dispatch_route` and maps to a backend handler.
+Use the `help` route to retrieve these mappings grouped by category at runtime.
 
 | Route | Description |
 |-------|-------------|
 |`list_routes`|Return the names of all registered routes.|
+|`help`|Structured list of routes grouped by category.|
 |`describe_routes`|Return each route name with its handler docstring.|
 |`rank_hypotheses_by_confidence`|Rank hypotheses using the reasoning layer.|
 |`detect_conflicting_hypotheses`|Detect contradictions between hypotheses.|

@@ -50,5 +50,15 @@ async def calculate_influence_ui(
 
 
 # Register routes for the UI
-register_route("predict_user_interactions", predict_user_interactions_ui)
-register_route("calculate_influence", calculate_influence_ui)
+register_route(
+    "predict_user_interactions",
+    predict_user_interactions_ui,
+    "Predict future user interactions",
+    "metrics",
+)
+register_route(
+    "calculate_influence",
+    calculate_influence_ui,
+    "Calculate influence scores",
+    "metrics",
+)

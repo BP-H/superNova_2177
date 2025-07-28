@@ -34,5 +34,15 @@ async def certify_validations_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return minimal
 
 
-register_route("diversity_score", compute_diversity_ui)
-register_route("certify_validations", certify_validations_ui)
+register_route(
+    "diversity_score",
+    compute_diversity_ui,
+    "Compute diversity score",
+    "diversity",
+)
+register_route(
+    "certify_validations",
+    certify_validations_ui,
+    "Certify validations from a payload",
+    "diversity",
+)

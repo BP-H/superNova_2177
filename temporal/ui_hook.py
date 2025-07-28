@@ -26,4 +26,9 @@ async def analyze_temporal_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return minimal
 
 
-register_route("temporal_consistency", analyze_temporal_ui)
+register_route(
+    "temporal_consistency",
+    analyze_temporal_ui,
+    "Analyze temporal consistency across validations",
+    "temporal",
+)

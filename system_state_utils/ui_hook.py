@@ -29,4 +29,9 @@ async def log_event_ui(payload: Dict[str, Any], db: Session, **_: Any) -> Dict[s
     return {"category": category, **event_payload}
 
 
-register_route("log_event", log_event_ui)
+register_route(
+    "log_event",
+    log_event_ui,
+    "Persist a system state event",
+    "system",
+)

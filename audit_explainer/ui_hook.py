@@ -24,4 +24,9 @@ async def _explain_validation_route(payload: Dict[str, Any], db: Session) -> Dic
     return await explain_validation_ui(payload, db)
 
 
-register_route("explain_validation_reasoning", _explain_validation_route)
+register_route(
+    "explain_validation_reasoning",
+    _explain_validation_route,
+    "Explain reasoning behind a validation",
+    "audit",
+)

@@ -64,6 +64,21 @@ async def step_agents_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # Register routes with the frontend bridge
-register_route("protocol_agents_list", list_agents_ui)
-register_route("protocol_agents_launch", launch_agents_ui)
-register_route("protocol_agents_step", step_agents_ui)
+register_route(
+    "protocol_agents_list",
+    list_agents_ui,
+    "Return names of available protocol agent classes",
+    "protocols",
+)
+register_route(
+    "protocol_agents_launch",
+    launch_agents_ui,
+    "Launch protocol agents",
+    "protocols",
+)
+register_route(
+    "protocol_agents_step",
+    step_agents_ui,
+    "Trigger a single step on running protocol agents",
+    "protocols",
+)

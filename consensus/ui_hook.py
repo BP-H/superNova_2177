@@ -61,6 +61,21 @@ async def poll_consensus_forecast_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # Register route with the frontend bridge
-register_route("forecast_consensus", forecast_consensus_ui)
-register_route("queue_consensus_forecast", queue_consensus_forecast_ui)
-register_route("poll_consensus_forecast", poll_consensus_forecast_ui)
+register_route(
+    "forecast_consensus",
+    forecast_consensus_ui,
+    "Forecast consensus trend",
+    "consensus",
+)
+register_route(
+    "queue_consensus_forecast",
+    queue_consensus_forecast_ui,
+    "Queue consensus forecast job",
+    "consensus",
+)
+register_route(
+    "poll_consensus_forecast",
+    poll_consensus_forecast_ui,
+    "Poll consensus forecast job",
+    "consensus",
+)

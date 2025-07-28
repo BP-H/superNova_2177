@@ -39,4 +39,9 @@ async def _explain_audit_route(payload: Dict[str, Any]) -> str:
 
 
 # Register route with the central frontend bridge
-register_route("explain_audit", _explain_audit_route)
+register_route(
+    "explain_audit",
+    _explain_audit_route,
+    "Create a textual explanation for an audit trace",
+    "audit",
+)

@@ -141,8 +141,28 @@ async def causal_audit_ui(payload: Dict[str, Any], db: Session, **_: Any) -> Dic
 
 
 # Register routes with the frontend bridge
-register_route("causal_audit", causal_audit_ui)
-register_route("log_hypothesis", log_hypothesis_ui)
-register_route("attach_trace", attach_trace_ui)
-register_route("export_causal_path", export_causal_path_ui)
+register_route(
+    "causal_audit",
+    causal_audit_ui,
+    "Run a causal audit",
+    "audit",
+)
+register_route(
+    "log_hypothesis",
+    log_hypothesis_ui,
+    "Log hypothesis text with trace",
+    "audit",
+)
+register_route(
+    "attach_trace",
+    attach_trace_ui,
+    "Attach trace metadata to a log entry",
+    "audit",
+)
+register_route(
+    "export_causal_path",
+    export_causal_path_ui,
+    "Export causal path from graph",
+    "audit",
+)
 

@@ -23,6 +23,11 @@ async def run_integrity_analysis_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     return minimal
 
 
-register_route("run_integrity_analysis", run_integrity_analysis_ui)
+register_route(
+    "run_integrity_analysis",
+    run_integrity_analysis_ui,
+    "Run validation integrity analysis",
+    "validation",
+)
 
 

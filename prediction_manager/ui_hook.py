@@ -53,6 +53,21 @@ async def update_prediction_status_ui(payload: Dict[str, Any]) -> Dict[str, Any]
     return {"prediction_id": prediction_id, "status": new_status}
 
 
-register_route("store_prediction", store_prediction_ui)
-register_route("get_prediction", get_prediction_ui)
-register_route("update_prediction_status", update_prediction_status_ui)
+register_route(
+    "store_prediction",
+    store_prediction_ui,
+    "Persist prediction data from the UI",
+    "prediction",
+)
+register_route(
+    "get_prediction",
+    get_prediction_ui,
+    "Return minimal prediction info",
+    "prediction",
+)
+register_route(
+    "update_prediction_status",
+    update_prediction_status_ui,
+    "Update prediction status and emit result",
+    "prediction",
+)
