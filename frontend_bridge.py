@@ -185,6 +185,7 @@ import network.ui_hook  # noqa: F401,E402 - registers network analysis routes
 import consensus.ui_hook  # noqa: F401,E402 - registers consensus forecast routes
 import validators.ui_hook  # noqa: F401,E402 - registers validator reputation routes
 import audit.ui_hook  # noqa: F401,E402 - exposes audit utilities
+import audit.explainer_ui_hook  # noqa: F401,E402 - audit explanation utilities
 import introspection.ui_hook  # noqa: F401,E402 - registers introspection routes
 import protocols.ui_hook  # noqa: F401,E402 - registers cross-universe bridge routes
 import protocols.agents.guardian_ui_hook  # noqa: F401,E402 - guardian agent routes
