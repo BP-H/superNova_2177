@@ -31,6 +31,9 @@ python setup_env.py
 # optional: build the Transcendental Resonance frontend
 # python setup_env.py --build-ui
 
+# optional: launch the Streamlit UI
+# python setup_env.py --launch-ui
+
 # Try demo mode
 supernova-validate --demo
 
@@ -56,12 +59,14 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
    dependencies locally. Install any missing system libraries first (see
    [System Packages](#system-packages)). You can also pass `--locked` to install packages from
    `requirements.lock` for deterministic builds. Additional flags `--run-app`
-   and `--build-ui` can automatically start the API or compile the frontend:
+   and `--build-ui` can automatically start the API or compile the frontend. Use
+   `--launch-ui` to open the Streamlit dashboard after install:
    ```bash
    python setup_env.py
    # python setup_env.py --run-app    # launch API after install
    # python setup_env.py --locked     # install from requirements.lock
     # python setup_env.py --build-ui   # build Transcendental Resonance frontend assets
+    # python setup_env.py --launch-ui  # run the Streamlit UI on port 8888
    ```
   You can also let `install.py` choose the appropriate installer for your
   platform:
