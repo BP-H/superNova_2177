@@ -40,6 +40,7 @@ jobs:
       - run: pytest
       - name: Streamlit smoke test
         run: |
+          trap "pkill streamlit" EXIT
           streamlit run ui.py --server.headless true &
           for i in {1..30}; do
             if curl -f http://localhost:8501 >/dev/null 2>&1; then
@@ -50,8 +51,6 @@ jobs:
           done
           if ! curl -f http://localhost:8501 >/dev/null 2>&1; then
             echo "Streamlit failed to start within timeout"
-            pkill streamlit
             exit 1
           fi
           curl -f http://localhost:8501
-          pkill streamlit
