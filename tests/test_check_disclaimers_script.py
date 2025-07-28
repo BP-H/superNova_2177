@@ -9,7 +9,19 @@ def test_main_git_missing(monkeypatch, capsys):
     monkeypatch.setattr(check_disclaimers, "which", lambda cmd: None)
     assert check_disclaimers.main() == 1
     out = capsys.readouterr().out.strip()
-    assert "git executable not found" in out
+    assert out == check_disclaimers.MISSING_GIT_MSG
+
+
+def test_main_git_missing_from_check_output(monkeypatch, capsys):
+    monkeypatch.setattr(check_disclaimers, "which", lambda cmd: "/git")
+
+    def fake_get_diff(base, git_cmd):
+        raise FileNotFoundError()
+
+    monkeypatch.setattr(check_disclaimers, "get_diff", fake_get_diff)
+    assert check_disclaimers.main() == 1
+    out = capsys.readouterr().out.strip()
+    assert out == check_disclaimers.MISSING_GIT_MSG
 
 
 def test_main_git_error(monkeypatch, capsys):
