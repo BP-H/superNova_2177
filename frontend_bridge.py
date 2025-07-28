@@ -163,6 +163,13 @@ register_route_once("temporal_consistency", analyze_temporal_ui)
 # Optimization route
 register_route("tune_parameters", tune_parameters_ui)
 
+# Advanced operations
+register_route("trigger_meta_evaluation", trigger_meta_evaluation_ui)
+register_route("auto_flag_stale", auto_flag_stale_ui)
+register_route("run_integrity_analysis", run_integrity_analysis_ui)
+register_route("update_reputations", update_reputations_ui)
+register_route("forecast_consensus_agent", forecast_consensus_ui)
+
 # Causal graph routes
 register_route("build_causal_graph", build_graph_ui)
 register_route("simulate_entanglement_causal", simulate_entanglement_causal_ui)
@@ -182,3 +189,4 @@ import introspection.ui_hook  # noqa: F401,E402 - registers introspection routes
 import protocols.ui_hook  # noqa: F401,E402 - registers cross-universe bridge routes
 import protocols.agents.guardian_ui_hook  # noqa: F401,E402 - guardian agent routes
 import protocols.agents.harmony_ui_hook  # noqa: F401,E402 - harmony synth route
+
