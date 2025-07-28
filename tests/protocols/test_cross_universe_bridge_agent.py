@@ -35,3 +35,17 @@ def test_llm_backend_called():
 
     assert calls == ["verify proof42"]
 
+
+def test_process_event_register_and_fetch():
+    agent = CrossUniverseBridgeAgent()
+    payload = {
+        "coin_id": "c1",
+        "source_universe": "U",
+        "source_coin": "s1",
+        "proof": "p1",
+    }
+    result = agent.process_event({"event": "REGISTER_BRIDGE", "payload": payload})
+    assert result == {"valid": True}
+    prov = agent.process_event({"event": "GET_PROVENANCE", "payload": {"coin_id": "c1"}})
+    assert prov == [payload]
+
