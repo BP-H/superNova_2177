@@ -36,6 +36,8 @@ register_route("list_routes", _list_routes)
 from hypothesis.ui_hook import (
     rank_hypotheses_by_confidence_ui,
     detect_conflicting_hypotheses_ui,
+    rank_hypotheses_ui,
+    synthesize_consensus_ui,
 )
 from hypothesis_meta_evaluator_ui_hook import trigger_meta_evaluation_ui
 from hypothesis_reasoner_ui_hook import auto_flag_stale_ui
@@ -45,4 +47,3 @@ from consensus_forecaster_agent_ui_hook import forecast_consensus_ui
 
 register_route("rank_hypotheses_by_confidence", rank_hypotheses_by_confidence_ui)
 register_route("detect_conflicting_hypotheses", detect_conflicting_hypotheses_ui)
-
