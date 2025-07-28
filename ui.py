@@ -1,9 +1,24 @@
 import json
 import logging
 
-import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
+
+try:  # optional visualization libs
+    from pyvis.network import Network
+
+    HAS_PYVIS = True
+except Exception:  # pragma: no cover - pyvis optional
+    Network = None  # type: ignore
+    HAS_PYVIS = False
+
+try:
+    import plotly.graph_objects as go
+except Exception:  # pragma: no cover - plotly optional
+    go = None  # type: ignore
+
+from network.network_coordination_detector import build_validation_graph
+from validation_integrity_pipeline import analyze_validation_integrity
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -15,9 +30,6 @@ except Exception:  # pragma: no cover - optional in dev/CI
         "SECRET_KEY": "dev",
         "DATABASE_URL": "sqlite:///:memory:",
     }
-
-from network.network_coordination_detector import build_validation_graph
-from validation_integrity_pipeline import analyze_validation_integrity
 
 try:
     from validation_certifier import Config as VCConfig
@@ -32,16 +44,21 @@ except Exception:  # pragma: no cover - optional debug dependencies
     Config = None  # type: ignore
 
 if Config is None:
-    class Config:
+
+    class Config:  # type: ignore[no-redef]
         METRICS_PORT = 1234
 
+
 if VCConfig is None:
-    class VCConfig:
+
+    class VCConfig:  # type: ignore[no-redef]
         HIGH_RISK_THRESHOLD = 0.7
         MEDIUM_RISK_THRESHOLD = 0.4
 
+
 if HarmonyScanner is None:
-    class HarmonyScanner:
+
+    class HarmonyScanner:  # type: ignore[no-redef]
         def __init__(self, *_a, **_k):
             pass
 
@@ -94,23 +111,81 @@ def run_analysis(validations):
 
     graph_data = build_validation_graph(validations)
     edges = graph_data.get("edges", [])
+    nodes = graph_data.get("nodes", [])
     if edges:
-        G = nx.Graph()
-        for v1, v2, w in edges:
-            G.add_edge(v1, v2, weight=w)
-        pos = nx.spring_layout(G, seed=42)
-        weights = [G[u][v]["weight"] * 3 for u, v in G.edges()]
-        fig, ax = plt.subplots()
-        nx.draw(
-            G,
-            pos,
-            with_labels=True,
-            width=weights,
-            node_color="#4da6ff",
-            ax=ax,
-        )
-        st.subheader("Validator Coordination Graph")
-        st.pyplot(fig)
+        metadata = {}
+        for val in validations:
+            vid = val.get("validator_id")
+            if vid and vid not in metadata:
+                meta = {}
+                for key in ("reputation", "score"):
+                    if key in val:
+                        meta[key] = val[key]
+                if meta:
+                    metadata[vid] = meta
+
+        if HAS_PYVIS and Network is not None:
+            net = Network(height="400px", width="100%", heading="")
+            for n in nodes:
+                meta = metadata.get(n, {})
+                title = "<br>".join(f"{k}: {v}" for k, v in meta.items())
+                net.add_node(n, label=n, title=title or n)
+            for v1, v2, w in edges:
+                net.add_edge(v1, v2, value=w)
+            html = net.generate_html()
+            st.subheader("Validator Coordination Graph")
+            st.components.v1.html(html, height=500, scrolling=True)
+        elif go is not None:
+            G = nx.Graph()
+            for v1, v2, w in edges:
+                G.add_edge(v1, v2, weight=w)
+            pos = nx.spring_layout(G, seed=42)
+
+            edge_x = []
+            edge_y = []
+            for e0, e1 in G.edges():
+                x0, y0 = pos[e0]
+                x1, y1 = pos[e1]
+                edge_x += [x0, x1, None]
+                edge_y += [y0, y1, None]
+
+            edge_trace = go.Scatter(
+                x=edge_x,
+                y=edge_y,
+                line=dict(width=1, color="#888"),
+                hoverinfo="none",
+                mode="lines",
+            )
+
+            node_x = []
+            node_y = []
+            hover = []
+            for n in G.nodes():
+                x, y = pos[n]
+                node_x.append(x)
+                node_y.append(y)
+                meta = metadata.get(n, {})
+                hover.append("<br>".join(f"{k}: {v}" for k, v in meta.items()) or n)
+
+            node_trace = go.Scatter(
+                x=node_x,
+                y=node_y,
+                text=list(G.nodes()),
+                hovertext=hover,
+                mode="markers+text",
+                hoverinfo="text",
+                marker=dict(size=10, color="#4da6ff"),
+                textposition="bottom center",
+            )
+
+            fig = go.Figure(data=[edge_trace, node_trace])
+            fig.update_layout(
+                showlegend=False,
+                margin=dict(t=20, l=5, r=5, b=20),
+                hovermode="closest",
+            )
+            st.subheader("Validator Coordination Graph")
+            st.plotly_chart(fig, use_container_width=True)
 
 
 def boot_diagnostic_ui():
@@ -199,9 +274,7 @@ def main() -> None:
             except FileNotFoundError:
                 st.warning("Demo file not found, using default dataset.")
                 data = {
-                    "validations": [
-                        {"validator": "A", "target": "B", "score": 0.9}
-                    ]
+                    "validations": [{"validator": "A", "target": "B", "score": 0.9}]
                 }
             st.session_state["validations_json"] = json.dumps(data, indent=2)
         elif uploaded_file is not None:
