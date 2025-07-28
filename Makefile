@@ -8,7 +8,7 @@ test:
 	pytest -q
 
 lint:
-        mypy
+	mypy
 
 ui:
-        streamlit run ui.py
+	streamlit run ui.py
