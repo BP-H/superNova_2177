@@ -27,6 +27,8 @@ except Exception:  # pragma: no cover - handle optional dependency
 # not require optional scientific dependencies.
 if "superNova_2177" not in sys.modules:
     import types
+    import importlib
+    import importlib.machinery
     from decimal import Decimal
 
     stub_sn = types.ModuleType("superNova_2177")
@@ -217,6 +219,7 @@ if "superNova_2177" not in sys.modules:
         import types
 
         fastapi_stub = types.ModuleType("fastapi")
+        fastapi_stub.__spec__ = importlib.machinery.ModuleSpec("fastapi", loader=None)
 
         class FastAPI:
             def __init__(self, *a, **kw):
@@ -473,11 +476,17 @@ for mod_name in [
             stub.evaluate_governance_risks = _noop
             stub.apply_governance_actions = _noop
         if mod_name == "structlog":
-            stub.get_logger = lambda *_a, **_kw: types.SimpleNamespace(
-                info=lambda *a, **k: None,
-                warning=lambda *a, **k: None,
-                error=lambda *a, **k: None,
-            )
+            def _logger(*_a, **_kw):
+                ns = types.SimpleNamespace()
+                def _noop(*a, **k):
+                    return None
+                ns.info = _noop
+                ns.warning = _noop
+                ns.error = _noop
+                ns.bind = lambda *a, **k: ns
+                return ns
+
+            stub.get_logger = _logger
             stub.configure = lambda *a, **k: None
             stub.stdlib = types.SimpleNamespace(
                 filter_by_level=None,

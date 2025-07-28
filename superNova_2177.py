@@ -3540,16 +3540,6 @@ class TranscendentalCLI(cmd.Cmd):
 # and ALLOWED_ORIGINS before running the containers. Ensure these values match
 # your production infrastructure.
 
-if __name__ == "__main__":
-    if '_is_streamlit_context' in globals() and _is_streamlit_context():
-        _run_boot_debug()
-        sys.exit(0)
-
-    import uvicorn
-
-    create_app()
-    run_validation_cycle()
-    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
 # --- MODULE: storage.py ---
@@ -3924,8 +3914,7 @@ if __name__ == "__main__":
     import os
 
     debug_boot = os.getenv("DEBUG_BOOT_UI")
-    running_with_streamlit = _is_streamlit_context()
-    if debug_boot or running_with_streamlit:
+    if debug_boot:
         _run_boot_debug()
         sys.exit(0)
 
