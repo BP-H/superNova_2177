@@ -372,8 +372,6 @@ class RemixAgent:
             return
         self.storage.set_user(user, user_data)
         user_obj = User.from_dict(user_data, self.config)
-        if not user_obj.check_rate_limit("mint"):
-            return
         root_coin_id = event["root_coin_id"]
         root_coin_data = self.storage.get_coin(root_coin_id)
         if not root_coin_data or root_coin_data["owner"] != user:
