@@ -90,3 +90,14 @@ register_route("temporal_consistency", analyze_temporal_ui)
 
 # Optimization-related route
 register_route("tune_parameters", tune_parameters_ui)
+
+# Universe UI routes
+from ui_hooks.universe_ui import (
+    get_universe_overview,
+    list_available_proposals,
+    submit_universe_proposal,
+)
+
+register_route("get_universe_overview", get_universe_overview)
+register_route("list_available_proposals", list_available_proposals)
+register_route("submit_universe_proposal", submit_universe_proposal)
