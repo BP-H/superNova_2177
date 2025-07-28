@@ -74,3 +74,27 @@ async def test_hypothesis_ui_routes(patched_db):
     conflicts = await dispatch_route("detect_conflicting_hypotheses", {})
     assert events[1] == ("conflict", conflicts["conflicts"])
     assert any(set(pair) == {h1, h2} for pair in conflicts["conflicts"])
+
+
+@pytest.mark.asyncio
+async def test_rank_and_synthesize_routes(patched_db, monkeypatch):
+    h1 = register_hypothesis("alpha", patched_db)
+    h2 = register_hypothesis("beta", patched_db)
+
+    update_hypothesis_score(patched_db, h1, 0.8)
+    update_hypothesis_score(patched_db, h2, 0.4)
+
+    _sync_state(patched_db, h1)
+    _sync_state(patched_db, h2)
+
+    ranking = await dispatch_route("rank_hypotheses", {"top_k": 1})
+    assert ranking["ranking"] and ranking["ranking"][0]["hypothesis_id"] in {h1, h2}
+
+    monkeypatch.setattr(
+        "hypothesis.ui_hook._synthesize_consensus_hypothesis", lambda ids, db: "NEW_HYP"
+    )
+    synth = await dispatch_route(
+        "synthesize_consensus",
+        {"hypothesis_ids": [h1, h2]},
+    )
+    assert synth == {"hypothesis_id": "NEW_HYP"}
