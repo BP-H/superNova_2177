@@ -875,7 +875,7 @@ if __name__ == "__main__":
         "run_count": 0,
         "last_result": None,
         "last_run": None,
-        "agent_output": None,
+        "agent_output": {},
         "validations_json": "",
         "theme": "light",
     }
@@ -892,7 +892,7 @@ if __name__ == "__main__":
         traceback.print_exc(file=sys.stderr)
         st.error(f"UI startup failed: {exc}")
     else:
-        st.success("✅ UI Booted")
         print("UI Booted", file=sys.stderr)
+        st.success("✅ UI Booted")
 
 

@@ -1,5 +1,4 @@
 import json
-import asyncio
 from pathlib import Path
 from datetime import datetime
 from typing import Any, cast
@@ -11,7 +10,7 @@ from voting_ui import (
     render_agent_ops_tab,
     render_logs_tab,
 )
-from ui_utils import summarize_text, parse_summary, load_rfc_entries
+from ui_utils import summarize_text, load_rfc_entries
 
 
 def render_agent_insights_tab() -> None:
@@ -29,15 +28,12 @@ def render_agent_insights_tab() -> None:
             if rfc_ids:
                 entry["rfc_ids"] = rfc_ids
             st.session_state.setdefault("diary", []).append(entry)
-        for i, entry in enumerate(st.session_state.get("diary", [])):
-            anchor = f"diary-{i}"
+        for entry in st.session_state.get("diary", []):
             note = entry.get("note", "")
             rfc_list = entry.get("rfc_ids")
             extra = f" (RFCs: {', '.join(rfc_list)})" if rfc_list else ""
-            st.markdown(
-                f"<p id='{anchor}'><strong>{entry['timestamp']}</strong>: {note}{extra}</p>",
-                unsafe_allow_html=True,
-            )
+            with st.container():
+                st.markdown(f"**{entry['timestamp']}**: {note}{extra}")
         if st.download_button(
             "Export Diary as Markdown",
             "\n".join(
