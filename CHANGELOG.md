@@ -9,3 +9,5 @@
 - Created moderation helpers for profanity and consent.
 - Added resonance music stub and summary route.
 - Standardized Streamlit default port to **8888**.
+- Added `?healthz=1` query parameter for UI health checks.
+- Removed legacy monkey patch for `/healthz`.
