@@ -66,6 +66,18 @@ supernova-federate create --creator Alice --config HARMONY_WEIGHT=0.9
 # Cast a vote on a fork
 supernova-federate vote <fork_id> --voter Bob --vote yes
 ````
+
+## 🔧 Local Development
+
+To launch the Streamlit UI:
+
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+This script will find and launch `ui.py` automatically from any directory in the repo.
+
 ## ☁️ Launch Online
 
 [![Run in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/BP-H/superNova_2177)
