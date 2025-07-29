@@ -889,15 +889,9 @@ def main() -> None:
         render_landing_page()
         return
 
-    page_files = sorted(
-        p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
-    )
-
-    if not page_files:
-        print("[debug] no page files found", file=sys.stderr)
-        st.warning("No pages available — showing fallback UI.")
-        render_landing_page()
-        return
+    # TODO: dynamic page loading will be added later
+    render_landing_page()
+    return
 
     render_main_ui()  # This shows sidebar etc.
 
@@ -926,6 +920,7 @@ def render_landing_page() -> None:
     """Display a minimal landing page with basic info."""
     st.set_page_config(page_title="superNova_2177", layout="centered")
     st.title("superNova_2177")
+    st.write("UI up")
     st.write("Welcome to the superNova_2177 project — a creative research platform.")
     st.write("For the full NiceGUI interface, run: `python -m transcendental_resonance_frontend`.")
     st.write("See the [GitHub repo](https://github.com/BP-H/superNova_2177) for more info.")
