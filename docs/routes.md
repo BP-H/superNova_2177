@@ -1,3 +1,7 @@
+STRICTLY A SOCIAL MEDIA PLATFORM
+Intellectual Property & Artistic Inspiration
+Legal & Ethical Safeguards
+
 # UI Routes
 
 This document lists the default routes registered with `frontend_bridge`.

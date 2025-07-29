@@ -1,3 +1,7 @@
+STRICTLY A SOCIAL MEDIA PLATFORM
+Intellectual Property & Artistic Inspiration
+Legal & Ethical Safeguards
+
 # Validation Certifier v5.0 Tasks
 
 This document tracks upcoming enhancements referenced in `validation_certifier.py`.

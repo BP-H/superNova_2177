@@ -1,3 +1,7 @@
+STRICTLY A SOCIAL MEDIA PLATFORM
+Intellectual Property & Artistic Inspiration
+Legal & Ethical Safeguards
+
 # Scientific Model Catalog
 
 ## time_weighted_weight

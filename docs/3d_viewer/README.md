@@ -1,3 +1,7 @@
+STRICTLY A SOCIAL MEDIA PLATFORM
+Intellectual Property & Artistic Inspiration
+Legal & Ethical Safeguards
+
 # 3D Viewer
 
 This folder provides a very small demo that renders a network graph using D3.js.

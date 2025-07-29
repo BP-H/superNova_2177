@@ -1,3 +1,7 @@
+STRICTLY A SOCIAL MEDIA PLATFORM
+Intellectual Property & Artistic Inspiration
+Legal & Ethical Safeguards
+
 # Extending the Streamlit UI
 
 `streamlit_helpers.py` exposes small utilities used by `ui.py` for common tasks.

@@ -1,3 +1,7 @@
+STRICTLY A SOCIAL MEDIA PLATFORM
+Intellectual Property & Artistic Inspiration
+Legal & Ethical Safeguards
+
 # Hook Events
 
 `hook_manager.py` enables loosely coupled extensions via hooks. Modules trigger

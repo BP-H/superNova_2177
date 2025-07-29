@@ -1,3 +1,7 @@
+STRICTLY A SOCIAL MEDIA PLATFORM
+Intellectual Property & Artistic Inspiration
+Legal & Ethical Safeguards
+
 # Tank Merge Protocol
 
 This project uses **tanks** to encapsulate optional modules that expose UI routes.

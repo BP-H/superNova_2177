@@ -1,3 +1,7 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 import json
 import asyncio
 import streamlit as st
