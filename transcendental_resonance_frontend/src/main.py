@@ -14,12 +14,31 @@ from .pages.system_insights_page import system_insights_page  # noqa: F401
 from .pages.feed_page import feed_page  # noqa: F401
 from .utils.api import api_call, clear_token
 from .utils.loading_overlay import LoadingOverlay
-from .utils.styles import (THEMES, apply_global_styles, get_theme_name,
-                           set_theme)
+from .utils.styles import (
+    THEMES,
+    apply_global_styles,
+    get_theme_name,
+    set_theme,
+    toggle_high_contrast,
+)
+from .utils.features import (
+    notification_drawer,
+    high_contrast_switch,
+    shortcut_help_dialog,
+    theme_personalization_panel,
+    onboarding_overlay,
+)
 
 ui.context.client.on_disconnect(clear_token)
 apply_global_styles()
 LoadingOverlay()
+
+drawer = notification_drawer()
+help_dialog = shortcut_help_dialog(["N = new post", "/ = search"])
+onboarding = onboarding_overlay()
+contrast_toggle = high_contrast_switch()
+contrast_toggle.on("change", lambda e: toggle_high_contrast(e.value))
+theme_personalization_panel()
 
 
 def toggle_theme() -> None:

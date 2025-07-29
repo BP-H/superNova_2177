@@ -32,3 +32,20 @@ def test_set_accent_overrides_default(monkeypatch):
     styles.set_theme("dark")
     styles.set_accent("#123456")
     assert styles.get_theme()["accent"] == "#123456"
+
+def test_toggle_high_contrast(monkeypatch):
+    dummy = dummy_ui({})
+    monkeypatch.setattr(styles, "ui", dummy)
+    styles.set_theme("dark")
+    styles.toggle_high_contrast(True)
+    assert styles.get_theme_name() == "high_contrast"
+    styles.toggle_high_contrast(False)
+    assert styles.get_theme_name() == "dark"
+
+
+def test_glow_card_css(monkeypatch):
+    captured = {}
+    dummy = dummy_ui(captured)
+    monkeypatch.setattr(styles, "ui", dummy)
+    styles.apply_global_styles()
+    assert ".glow-card" in captured["html"]
