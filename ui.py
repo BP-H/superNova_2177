@@ -45,7 +45,8 @@ HEALTH_CHECK_PARAM = "healthz"
 # Directory containing Streamlit page modules
 PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
 
-print("\u23F3 Booting superNova_2177 UI...", file=sys.stderr)
+if os.getenv("UI_DEBUG_PRINTS", "1") != "0":
+    print("\u23F3 Booting superNova_2177 UI...", file=sys.stderr)
 from streamlit_helpers import (
     alert,
     apply_theme,
@@ -249,7 +250,8 @@ def run_analysis(validations, *, layout: str = "force"):
         except Exception:
             validations = [{"validator": "A", "target": "B", "score": 0.5}]
         alert("No validations provided – using fallback data.", "warning")
-        print("✅ UI diagnostic agent active")
+        if os.getenv("UI_DEBUG_PRINTS", "1") != "0":
+            print("✅ UI diagnostic agent active")
 
     with st.spinner("Running analysis..."):
         result = analyze_validation_integrity(validations)
@@ -869,20 +871,26 @@ def render_validation_ui() -> None:
 
 def main() -> None:
     import streamlit as st
-    print("[debug] main() invoked", file=sys.stderr)
-    st.title("🤗//⚡//Launching main()")
-    import streamlit as st
     import os
     from importlib import import_module
+
+    debug_enabled = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
+
+    def log(msg: str) -> None:
+        if debug_enabled:
+            print(msg, file=sys.stderr)
+
+    log("Entered main()")
+    st.title("🤗//⚡//Launching main()")
 
     st.set_page_config(page_title="superNova_2177", layout="wide")
 
     if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
-        print("[debug] healthz check", file=sys.stderr)
+        log("healthz check")
         st.write("ok")
         return
 
-    print(f"[debug] loading pages from {PAGES_DIR}", file=sys.stderr)
+    log(f"loading pages from {PAGES_DIR}")
     if not PAGES_DIR.is_dir():
         st.error("Pages directory not found")
         st.text("debug: PAGES_DIR missing")
@@ -894,23 +902,26 @@ def main() -> None:
     )
 
     if not page_files:
-        print("[debug] no page files found", file=sys.stderr)
+        log("no page files found")
         st.warning("No pages available — showing fallback UI.")
         render_landing_page()
         return
 
     render_main_ui()  # This shows sidebar etc.
+    log("UI rendered")
+    st.text("UI up")
 
     choice = st.sidebar.selectbox("Page", page_files)
-    print(f"[debug] selected page: {choice}", file=sys.stderr)
+    log(f"selected page: {choice}")
     try:
         module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
+        log(f"loaded module {module.__name__}")
         page_main = getattr(module, "main", None)
         if callable(page_main):
-            print(f"[debug] executing {choice}.main()", file=sys.stderr)
+            log(f"executing {choice}.main()")
             st.text(f"checkpoint: running {choice}")
             page_main()
-            print(f"[debug] finished {choice}.main()", file=sys.stderr)
+            log(f"finished {choice}.main()")
         else:
             st.error(f"Page '{choice}' is missing a main() function.")
             st.text("debug: missing main")
@@ -918,7 +929,7 @@ def main() -> None:
         import traceback
         st.error(f"Error loading page '{choice}':")
         st.text("".join(traceback.format_exception(type(e), e, e.__traceback__)))
-        print(f"[debug] exception loading {choice}: {e}", file=sys.stderr)
+        log(f"exception loading {choice}: {e}")
 
 
 
@@ -931,12 +942,14 @@ def render_landing_page() -> None:
     st.write("See the [GitHub repo](https://github.com/BP-H/superNova_2177) for more info.")
 
 if __name__ == "__main__":
-    print("[debug] __main__ entry", file=sys.stderr)
+    if os.getenv("UI_DEBUG_PRINTS", "1") != "0":
+        print("[debug] __main__ entry", file=sys.stderr)
     try:
         main()
     except Exception as e:
         import traceback
         st.write("App failed with exception:")
         st.text("".join(traceback.format_exception(type(e), e, e.__traceback__)))
-        print(f"[debug] fatal error: {e}", file=sys.stderr)
+        if os.getenv("UI_DEBUG_PRINTS", "1") != "0":
+            print(f"[debug] fatal error: {e}", file=sys.stderr)
         raise

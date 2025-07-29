@@ -372,6 +372,8 @@ Missing packages such as `tqdm` are installed automatically when you run `one_cl
   `STREAMLIT_SERVER_PORT` environment variable to use a different port.
 - **Browser does not open**: Navigate manually to
   [http://localhost:8888](http://localhost:8888) or the port you selected.
+- **Disable debug prints**: Set `UI_DEBUG_PRINTS=0` in your environment to silence
+  startup logging from `ui.py`.
 
 ### CI Health Check
 
