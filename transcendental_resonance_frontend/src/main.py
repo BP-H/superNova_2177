@@ -36,7 +36,7 @@ from .utils.features import (
     theme_personalization_panel,
     onboarding_overlay,
 )
-from .utils import ErrorOverlay
+from .utils import ErrorOverlay, ApiStatusFooter
 
 ui.context.client.on_disconnect(clear_token)
 apply_global_styles()
@@ -49,6 +49,7 @@ contrast_toggle = high_contrast_switch()
 contrast_toggle.on("change", lambda e: toggle_high_contrast(e.value))
 theme_personalization_panel()
 error_overlay = ErrorOverlay()
+api_status = ApiStatusFooter()
 
 ws_status = (
     ui.icon("circle")
