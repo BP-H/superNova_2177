@@ -26,6 +26,9 @@ Network = None  # imported lazily in run_analysis
 # Import Streamlit and register fallback health check
 import streamlit as st
 
+# Bind to the default Streamlit port to satisfy platform health checks
+os.environ["STREAMLIT_SERVER_PORT"] = "8501"
+
 # Name of the query parameter used for the CI health check. Adjust here if the
 # health check endpoint ever changes.
 HEALTH_CHECK_PARAM = "healthz"
