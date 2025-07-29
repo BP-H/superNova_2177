@@ -2,7 +2,8 @@
 
 from nicegui import ui
 
-from utils.api import api_call, TOKEN
+from utils.api import api_call, TOKEN, BACKEND_URL
+import httpx
 from utils.styles import get_theme
 from utils.layout import page_container
 from .login_page import login_page
@@ -78,6 +79,23 @@ async def events_page():
                             await refresh_events()
                         ui.button('Attend/Leave', on_click=attend_fn).style(
                             f'background: {THEME["accent"]}; color: {THEME["background"]};'
+                        )
+                        async def download_ics_fn(e_id=e['id']):
+                            try:
+                                async with httpx.AsyncClient() as client:
+                                    headers = {"Authorization": f"Bearer {TOKEN}"} if TOKEN else None
+                                    resp = await client.get(f"{BACKEND_URL}/events/{e_id}/ics", headers=headers)
+                                    resp.raise_for_status()
+                                    ui.download(
+                                        resp.content,
+                                        filename=f"event_{e_id}.ics",
+                                        media_type="text/calendar",
+                                    )
+                            except Exception:
+                                ui.notify('Could not download calendar file', color='negative')
+
+                        ui.button('Add to Calendar', on_click=download_ics_fn).style(
+                            f'background: {THEME["primary"]}; color: {THEME["text"]};'
                         )
 
         await refresh_events()
