@@ -73,7 +73,7 @@ async def feed_page() -> None:
                         ui.label(vn.get('description', '')).classes('text-sm')
                         ui.link('View', f"/vibenodes/{vn['id']}")
                         if simulation_switch.value:
-                            futures = generate_speculative_futures(vn)
+                            futures = await generate_speculative_futures(vn)
                             with ui.expansion('Speculative futures', value=False).classes('w-full mt-2'):
                                 for fut in futures:
                                     ui.markdown(fut['text']).classes('text-sm italic')
@@ -85,7 +85,7 @@ async def feed_page() -> None:
                         ui.label(ev.get('description', '')).classes('text-sm')
                         ui.link('View', f"/events/{ev['id']}")
                         if simulation_switch.value:
-                            futures = generate_speculative_futures(ev)
+                            futures = await generate_speculative_futures(ev)
                             with ui.expansion('Speculative futures', value=False).classes('w-full mt-2'):
                                 for fut in futures:
                                     ui.markdown(fut['text']).classes('text-sm italic')
@@ -97,7 +97,7 @@ async def feed_page() -> None:
                         ui.label(n.get('message', '')).classes('text-sm')
                         ui.link('View', f"/notifications/{n['id']}")
                         if simulation_switch.value:
-                            futures = generate_speculative_futures(n)
+                            futures = await generate_speculative_futures(n)
                             with ui.expansion('Speculative futures', value=False).classes('w-full mt-2'):
                                 for fut in futures:
                                     ui.markdown(fut['text']).classes('text-sm italic')

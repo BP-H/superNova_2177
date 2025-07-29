@@ -1,9 +1,11 @@
 import inspect
+import pytest
 from quantum_futures import generate_speculative_futures, DISCLAIMER
 
 
-def test_generate_speculative_futures_length():
-    futures = generate_speculative_futures({'description': 'test'}, num_variants=2)
+@pytest.mark.asyncio
+async def test_generate_speculative_futures_length():
+    futures = await generate_speculative_futures({'description': 'test'}, num_variants=2)
     assert isinstance(futures, list)
     assert len(futures) == 2
 
