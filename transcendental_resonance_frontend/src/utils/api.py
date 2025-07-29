@@ -200,37 +200,41 @@ async def connect_ws(path: str = "/ws", timeout: float = 5.0):
         return None
 
 
-async def listen_ws(
+def listen_ws(
     handler: Callable[[dict], Awaitable[None]], *, reconnect: bool = True
-) -> None:
-    """Listen for events on the WebSocket and pass them to ``handler``."""
-    global WS_CONNECTION
-    retry_delay = 3
-    while True:
-        ws = await connect_ws()
-        if ws is None:
+) -> asyncio.Task:
+    """Start listening for WebSocket events and return the ``asyncio`` task."""
+
+    async def _listen() -> None:
+        global WS_CONNECTION
+        retry_delay = 3
+        while True:
+            ws = await connect_ws()
+            if ws is None:
+                if not reconnect:
+                    return
+                await asyncio.sleep(retry_delay)
+                continue
+            try:
+                async for message in ws:
+                    try:
+                        data = json.loads(message)
+                    except Exception:
+                        data = {"event": "raw", "data": message}
+                    await handler(data)
+            except Exception as exc:  # pragma: no cover - network errors
+                logger.error("WebSocket listen error: %s", exc, exc_info=True)
+            finally:
+                if not ws.closed:
+                    await ws.close()
+                if WS_CONNECTION is ws:
+                    WS_CONNECTION = None
+                _fire_ws_status("disconnected")
             if not reconnect:
-                return
+                break
             await asyncio.sleep(retry_delay)
-            continue
-        try:
-            async for message in ws:
-                try:
-                    data = json.loads(message)
-                except Exception:
-                    data = {"event": "raw", "data": message}
-                await handler(data)
-        except Exception as exc:  # pragma: no cover - network errors
-            logger.error("WebSocket listen error: %s", exc, exc_info=True)
-        finally:
-            if not ws.closed:
-                await ws.close()
-            if WS_CONNECTION is ws:
-                WS_CONNECTION = None
-            _fire_ws_status("disconnected")
-        if not reconnect:
-            break
-        await asyncio.sleep(retry_delay)
+
+    return asyncio.create_task(_listen())
 
 
 async def combined_search(query: str) -> list[Dict[str, Any]]:

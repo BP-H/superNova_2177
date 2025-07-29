@@ -238,4 +238,5 @@ async def vibenodes_page():
             if event.get("type") == "vibenode_updated":
                 await refresh_vibenodes()
 
-        ui.run_async(listen_ws(handle_event))
+        ws_task = listen_ws(handle_event)
+        ui.context.client.on_disconnect(lambda: ws_task.cancel())

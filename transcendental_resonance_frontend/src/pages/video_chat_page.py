@@ -37,7 +37,8 @@ async def video_chat_page() -> None:
                 remote_view.source = event.get("data")
 
         async def join_call() -> None:
-            await listen_ws(handle_event)
+            ws_task = listen_ws(handle_event)
+            await ws_task
 
         async def send_frame() -> None:
             if WS_CONNECTION and local_cam.value:

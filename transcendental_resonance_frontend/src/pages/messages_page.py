@@ -124,4 +124,5 @@ async def messages_page():
             if event.get("type") == "message":
                 await refresh_messages()
 
-        ui.run_async(listen_ws(handle_event))
+        ws_task = listen_ws(handle_event)
+        ui.context.client.on_disconnect(lambda: ws_task.cancel())
