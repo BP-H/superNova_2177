@@ -88,6 +88,8 @@ def apply_global_styles() -> None:
         {font_link}
         <style id="global-theme">
             body {{ font-family: {font_family}; background: {theme['background']}; color: {theme['text']}; }}
+            .container {{ margin: auto; max-width: 900px; padding: 0 1rem; }}
+            @media (min-width: 768px) {{ .container {{ padding: 0 2rem; }} }}
             .q-btn:hover {{ border: 1px solid {theme['accent']}; }}
             .futuristic-gradient {{ background: {theme['gradient']}; }}
             .glow-card {{ border: 1px solid {theme["accent"]}; box-shadow: 0 0 6px {theme["accent"]}; }}

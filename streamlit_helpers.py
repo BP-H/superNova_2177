@@ -35,7 +35,20 @@ def alert(message: str, level: Literal["warning", "error", "info"] = "info") -> 
 def header(title: str, *, layout: str = "centered") -> None:
     """Render a standard page header and apply base styling."""
     st.markdown(
-        "<style>.app-container{padding:1rem 2rem;}" "</style>",
+        """
+        <style>
+            .app-container {
+                padding: 1rem;
+            }
+            @media (min-width: 768px) {
+                .app-container {
+                    margin: auto;
+                    max-width: 900px;
+                    padding: 2rem;
+                }
+            }
+        </style>
+        """,
         unsafe_allow_html=True,
     )
     st.header(title)
@@ -46,13 +59,37 @@ def apply_theme(theme: str) -> None:
     if theme == "dark":
         css = """
             <style>
-            body, .stApp { background-color: #1e1e1e; color: #f0f0f0; }
+            body, .stApp {
+                background-color: #1e1e1e;
+                color: #f0f0f0;
+                margin: 0;
+                padding: 1rem;
+            }
+            @media (min-width: 768px) {
+                body, .stApp {
+                    max-width: 900px;
+                    margin: auto;
+                    padding: 2rem;
+                }
+            }
             </style>
         """
     else:
         css = """
             <style>
-            body, .stApp { background-color: #ffffff; color: #000000; }
+            body, .stApp {
+                background-color: #ffffff;
+                color: #000000;
+                margin: 0;
+                padding: 1rem;
+            }
+            @media (min-width: 768px) {
+                body, .stApp {
+                    max-width: 900px;
+                    margin: auto;
+                    padding: 2rem;
+                }
+            }
             </style>
         """
     st.markdown(css, unsafe_allow_html=True)

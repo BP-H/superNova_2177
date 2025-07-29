@@ -23,6 +23,8 @@ def test_apply_global_styles_injects_css(monkeypatch):
     monkeypatch.setattr(styles, "ui", dummy)
     styles.apply_global_styles()
     assert "global-theme" in captured["html"]
+    assert ".container" in captured["html"]
+    assert "@media (min-width: 768px)" in captured["html"]
 
 
 def test_set_accent_overrides_default(monkeypatch):
