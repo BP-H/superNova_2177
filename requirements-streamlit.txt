@@ -18,7 +18,8 @@ asyncpg
 streamlit-ace
 kaleido
 websockets
-nicegui
+plotly
+pyvis
 
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
