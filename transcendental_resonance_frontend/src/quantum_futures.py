@@ -13,6 +13,13 @@ from __future__ import annotations
 from typing import Any, Dict, List
 import random
 
+from external_services.llm_client import LLMClient
+from external_services.video_client import VideoClient
+try:  # vision client is optional
+    from external_services.vision_client import VisionClient
+except Exception:  # pragma: no cover - optional dependency may not exist
+    VisionClient = None  # type: ignore
+
 # Satirical disclaimer appended to all speculative output
 DISCLAIMER = "This is a satirical simulation, not advice or prediction."
 
@@ -53,6 +60,29 @@ def generate_speculative_futures(
     return futures
 
 
+_llm_client = LLMClient()
+_video_client = VideoClient()
+_vision_client = VisionClient() if VisionClient else None
+
+
+def generate_speculative_payload(
+    prompt: str,
+    video_url: str | None = None,
+    image: bytes | None = None,
+) -> Dict[str, Any]:
+    """Compose a speculative payload using optional external clients."""
+
+    payload = {"text": _llm_client.generate(prompt)}
+
+    if video_url:
+        payload["video"] = _video_client.summarize(video_url)
+
+    if image and _vision_client is not None:
+        payload["vision"] = _vision_client.analyze(image)
+
+    return payload
+
+
 def quantum_video_stub(*_args, **_kwargs) -> None:
     """Placeholder for future WebGL/AI-video integration."""
     return None
@@ -67,6 +97,7 @@ __all__ = [
     "DISCLAIMER",
     "EMOJI_GLOSSARY",
     "generate_speculative_futures",
+    "generate_speculative_payload",
     "quantum_video_stub",
     "analyze_video_timeline",
 ]
