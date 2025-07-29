@@ -869,6 +869,7 @@ def render_validation_ui() -> None:
 
 def main() -> None:
     import streamlit as st
+    print("[debug] main() invoked", file=sys.stderr)
     st.title("🤗//⚡//Launching main()")
     import streamlit as st
     import os
@@ -877,11 +878,15 @@ def main() -> None:
     st.set_page_config(page_title="superNova_2177", layout="wide")
 
     if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
+        print("[debug] healthz check", file=sys.stderr)
         st.write("ok")
         return
 
+    print(f"[debug] loading pages from {PAGES_DIR}", file=sys.stderr)
     if not PAGES_DIR.is_dir():
         st.error("Pages directory not found")
+        st.text("debug: PAGES_DIR missing")
+        render_landing_page()
         return
 
     page_files = sorted(
@@ -889,38 +894,33 @@ def main() -> None:
     )
 
     if not page_files:
+        print("[debug] no page files found", file=sys.stderr)
         st.warning("No pages available — showing fallback UI.")
-        st.title("superNova_2177")
-        st.write("This is a placeholder UI while pages are being loaded.")
+        render_landing_page()
         return
 
     render_main_ui()  # This shows sidebar etc.
 
     choice = st.sidebar.selectbox("Page", page_files)
+    print(f"[debug] selected page: {choice}", file=sys.stderr)
     try:
         module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
         page_main = getattr(module, "main", None)
         if callable(page_main):
+            print(f"[debug] executing {choice}.main()", file=sys.stderr)
+            st.text(f"checkpoint: running {choice}")
             page_main()
+            print(f"[debug] finished {choice}.main()", file=sys.stderr)
         else:
             st.error(f"Page '{choice}' is missing a main() function.")
+            st.text("debug: missing main")
     except Exception as e:
         import traceback
         st.error(f"Error loading page '{choice}':")
         st.text("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+        print(f"[debug] exception loading {choice}: {e}", file=sys.stderr)
 
 
-
-def render_landing_page() -> None:
-    """Display a minimal landing page with basic info."""
-    st.title("superNova_2177")
-    st.write(
-        "Welcome to the superNova_2177 project — a creative research platform."
-    )
-    st.write(
-        "For the full NiceGUI interface, run: `python -m transcendental_resonance_frontend`."
-    )
-    st.write("See the [GitHub repo](https://github.com/BP-H/superNova_2177) for more info.")
 
 def render_landing_page() -> None:
     """Display a minimal landing page with basic info."""
@@ -931,10 +931,12 @@ def render_landing_page() -> None:
     st.write("See the [GitHub repo](https://github.com/BP-H/superNova_2177) for more info.")
 
 if __name__ == "__main__":
+    print("[debug] __main__ entry", file=sys.stderr)
     try:
         main()
     except Exception as e:
         import traceback
         st.write("App failed with exception:")
         st.text("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+        print(f"[debug] fatal error: {e}", file=sys.stderr)
         raise
