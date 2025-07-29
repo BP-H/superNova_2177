@@ -27,6 +27,13 @@ THEMES: Dict[str, Dict[str, str]] = {
         "text": "#333333",
         "gradient": "linear-gradient(135deg, #6200EE 0%, #03DAC5 100%)",
     },
+    "cyberpunk": {
+        "primary": "#FF0080",
+        "accent": "#00F0FF",
+        "background": "#050014",
+        "text": "#F8F8F2",
+        "gradient": "linear-gradient(135deg, #FF0080 0%, #00F0FF 100%)",
+    },
 }
 
 # Currently active theme name and accent color. They can be changed at runtime
@@ -59,13 +66,21 @@ def apply_global_styles() -> None:
     theme = THEMES[ACTIVE_THEME_NAME].copy()
     theme["accent"] = ACTIVE_ACCENT
 
+    font_family = "'Inter', sans-serif"
+    font_link = "<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap\" rel=\"stylesheet\">"
+    if ACTIVE_THEME_NAME == "cyberpunk":
+        font_family = "'Orbitron', sans-serif"
+        font_link = (
+            "<link href=\"https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap\" rel=\"stylesheet\">"
+        )
+
     ui.add_head_html(
         f"""
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+        {font_link}
         <style id="global-theme">
-            body {{ font-family: 'Inter', sans-serif; background: {theme['background']}; color: {theme['text']}; }}
+            body {{ font-family: {font_family}; background: {theme['background']}; color: {theme['text']}; }}
             .q-btn:hover {{ border: 1px solid {theme['accent']}; }}
             .futuristic-gradient {{ background: {theme['gradient']}; }}
         </style>
