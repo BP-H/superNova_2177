@@ -36,7 +36,9 @@ async def notifications_page():
                     with (
                         ui.card()
                         .classes("w-full mb-2")
-                        .style("border: 1px solid #333; background: #1e1e1e;")
+                        .style(
+                            f"border: 1px solid #333; background: {THEME['background']};"
+                        )
                     ):
                         ui.label(n["message"]).classes("text-sm")
                         if not n["is_read"]:

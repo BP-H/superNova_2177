@@ -62,7 +62,9 @@ async def feed_page() -> None:
 
             for vn in vibenodes:
                 with feed_column:
-                    with swipeable_glow_card().classes('w-full mb-2').style('background: #1e1e1e;'):
+                    with swipeable_glow_card().classes('w-full mb-2').style(
+                        f"background: {theme['background']};"
+                    ):
                         ui.label('VibeNode').classes('text-sm font-bold')
                         ui.label(vn.get('description', '')).classes('text-sm')
                         ui.link('View', f"/vibenodes/{vn['id']}")
@@ -74,7 +76,9 @@ async def feed_page() -> None:
                                     ui.markdown(DISCLAIMER).classes('text-xs text-orange-5')
             for ev in events:
                 with feed_column:
-                    with swipeable_glow_card().classes('w-full mb-2').style('background: #1e1e1e;'):
+                    with swipeable_glow_card().classes('w-full mb-2').style(
+                        f"background: {theme['background']};"
+                    ):
                         ui.label('Event').classes('text-sm font-bold')
                         ui.label(ev.get('description', '')).classes('text-sm')
                         ui.link('View', f"/events/{ev['id']}")
@@ -86,7 +90,9 @@ async def feed_page() -> None:
                                     ui.markdown(DISCLAIMER).classes('text-xs text-orange-5')
             for n in notifs:
                 with feed_column:
-                    with swipeable_glow_card().classes('w-full mb-2').style('background: #1e1e1e;'):
+                    with swipeable_glow_card().classes('w-full mb-2').style(
+                        f"background: {theme['background']};"
+                    ):
                         ui.label('Notification').classes('text-sm font-bold')
                         ui.label(n.get('message', '')).classes('text-sm')
                         ui.link('View', f"/notifications/{n['id']}")

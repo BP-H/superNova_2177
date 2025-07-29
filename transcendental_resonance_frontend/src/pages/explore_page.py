@@ -58,7 +58,9 @@ async def explore_page() -> None:
                     with (
                         ui.card()
                         .classes("w-full mb-2")
-                        .style("border: 1px solid #333; background: #1e1e1e;")
+                        .style(
+                            f"border: 1px solid #333; background: {THEME['background']};"
+                        )
                     ):
                         ui.label(p.get("name", "")).classes("text-lg")
                         ui.label(p.get("description", "")).classes("text-sm")

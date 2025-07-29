@@ -197,7 +197,7 @@ async def profile_page(username: str | None = None):
             for u in recs:
                 with suggestions:
                     with ui.card().classes('w-full mb-2').style(
-                        'border: 1px solid #333; background: #1e1e1e;'
+                        f"border: 1px solid #333; background: {THEME['background']};"
                     ):
                         ui.label(u.get('username', 'Unknown')).classes('text-lg')
                         bio = u.get('bio')
