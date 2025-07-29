@@ -866,16 +866,18 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    logger.info("\u2705 Streamlit UI started. Launching main()...")
+    print("Starting Streamlit UI...", file=sys.stderr)
+    st.session_state.setdefault("diary", [])
+    st.session_state.setdefault("agent_output", {})
     try:
         main()
     except Exception as exc:  # pragma: no cover - startup diagnostics
         logger.exception("UI startup failed")
-        print(f"Startup failed: {exc}", file=sys.stderr)
-        traceback.print_exc(file=sys.stderr)
-        st.warning(f"UI startup failed — check logs for details: {exc}")
+        print(exc, file=sys.stderr)
+        traceback.print_exc()
+        st.error(f"UI startup failed: {exc}")
     else:
-        st.success("✅ UI Booted")
         print("UI Booted", file=sys.stderr)
+        st.success("✅ UI Booted")
 
 
