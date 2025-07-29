@@ -1,6 +1,7 @@
 """Styling utilities for the Transcendental Resonance frontend."""
 
 from typing import Dict, Optional
+import json
 
 from nicegui import ui
 
@@ -52,11 +53,26 @@ def apply_global_styles() -> None:
         )
         if isinstance(stored_accent, str) and stored_accent:
             ACTIVE_ACCENT = stored_accent
+        stored_custom = ui.run_javascript(
+            "localStorage.getItem('custom_palette')",
+            respond=True,
+        )
+        if isinstance(stored_custom, str) and stored_custom:
+            custom_palette = json.loads(stored_custom)
+        else:
+            custom_palette = None
     except Exception:
         # Accessing localStorage may fail during testing
-        pass
+        custom_palette = None
 
     theme = THEMES[ACTIVE_THEME_NAME].copy()
+    if isinstance(custom_palette, dict):
+        for key in ("primary", "background", "text"):
+            if key in custom_palette:
+                theme[key] = custom_palette[key]
+        theme["gradient"] = (
+            f"linear-gradient(135deg, {theme['primary']} 0%, {theme['background']} 100%)"
+        )
     theme["accent"] = ACTIVE_ACCENT
 
     ui.add_head_html(
@@ -101,5 +117,12 @@ def set_accent(color: str) -> None:
     global ACTIVE_ACCENT
     ACTIVE_ACCENT = color
     ui.run_javascript(f"localStorage.setItem('accent', '{color}')")
+    apply_global_styles()
+
+
+def save_theme(palette: Dict[str, str]) -> None:
+    """Persist a custom palette in ``localStorage`` and apply it."""
+    js = json.dumps(palette)
+    ui.run_javascript(f"localStorage.setItem('custom_palette', '{js}')")
     apply_global_styles()
 
