@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import Any, Dict
 from importlib import import_module
+import asyncio
 import logging
+
 
 from frontend_bridge import register_route_once
 from hook_manager import HookManager
@@ -17,12 +19,18 @@ ui_hook_manager = HookManager()
 async def quantum_prediction_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     """Run quantum_prediction_engine on user_ids from payload."""
     user_ids = payload.get("user_ids", [])
-    result = quantum_prediction_engine(user_ids)
-    if not isinstance(result, dict):
-        logging.warning(
-            "quantum_prediction_engine returned non-dict", extra={"type": type(result).__name__}
-        )
+    try:
+        result = await asyncio.to_thread(quantum_prediction_engine, user_ids)
+        if not isinstance(result, dict):
+            logging.warning(
+                "quantum_prediction_engine returned non-dict",
+                extra={"type": type(result).__name__},
+            )
+            result = {}
+    except Exception as e:
+        logging.exception("quantum_prediction_engine failed: %s", e)
         result = {}
+
     minimal = {
         "predicted_interactions": result.get("predicted_interactions", {}),
         "overall_quantum_coherence": result.get("overall_quantum_coherence", 0.0),

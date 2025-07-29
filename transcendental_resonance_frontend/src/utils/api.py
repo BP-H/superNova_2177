@@ -118,6 +118,25 @@ async def api_call(
                 raise ValueError(f"Unsupported method: {method}")
             response.raise_for_status()
             return response.json() if response.text else None
+    except httpx.HTTPStatusError as exc:
+        status = exc.response.status_code if exc.response else None
+        logger.error(
+            "API returned HTTP %s for %s %s - %s",
+            status,
+            method,
+            url,
+            exc,
+            exc_info=True,
+        )
+        ui.notify(f"API error {status}", color="negative")
+        if return_error:
+            body = None
+            try:
+                body = exc.response.json()
+            except Exception:
+                body = exc.response.text if exc.response else None
+            return {"error": str(exc), "status_code": status, "body": body}
+        return None
     except httpx.RequestError as exc:
         logger.error(
             "API request failed: %s %s - %s", method, url, exc, exc_info=True

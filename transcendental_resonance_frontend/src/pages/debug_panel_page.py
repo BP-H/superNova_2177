@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from nicegui import ui
 
+from utils.api import TOKEN
 from utils.styles import get_theme
 from utils.layout import page_container, navigation_bar
 from frontend_bridge import ROUTES, dispatch_route
