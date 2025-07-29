@@ -223,7 +223,6 @@ import prediction_manager.ui_hook  # noqa: F401 - route registration
 import vote_registry.ui_hook  # noqa: F401 - route registration
 import optimization.ui_hook  # noqa: F401 - route registration
 import causal_graph.ui_hook  # noqa: F401 - route registration
-import predictions.ui_hook  # noqa: F401 - route registration
 import social.ui_hook  # noqa: F401 - route registration
 import social.follow_ui_hook  # noqa: F401 - route registration
 import quantum_sim.ui_hook  # noqa: F401 - route registration
