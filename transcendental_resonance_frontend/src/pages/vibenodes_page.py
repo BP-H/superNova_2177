@@ -132,13 +132,44 @@ async def vibenodes_page():
                             for c in comments:
                                 ui.label(c.get('content', '')).classes('text-sm')
                             comment_input = ui.textarea('Add a comment').classes('w-full mb-2')
+                            suggestions_box = ui.column().classes('w-full shadow rounded hidden').style('background:#1e1e1e; position: absolute; z-index: 50;')
+
+                            async def update_suggestions() -> None:
+                                import re
+                                text = comment_input.value
+                                match = re.search(r'@(\w+)$', text)
+                                if match:
+                                    query = match.group(1)
+                                    users = await api_call('GET', '/users/search', {'q': query}) or []
+                                    suggestions_box.clear()
+                                    for u in users:
+                                        def insert(username=u['username']):
+                                            comment_input.value = re.sub(r'@\w+$', f'@{username} ', comment_input.value)
+                                            suggestions_box.classes('hidden')
+                                        ui.button(u['username'], on_click=insert).props('flat').classes('w-full text-left')
+                                    suggestions_box.classes(remove='hidden')
+                                else:
+                                    suggestions_box.classes('hidden')
+
+                            comment_input.on('keyup', lambda e: ui.run_async(update_suggestions()))
 
                             async def post_comment(vn_id=vn['id'], ci=comment_input):
+                                import re
                                 content = ci.value.strip()
                                 if not content:
                                     ui.notify('Comment cannot be empty', color='warning')
                                     return
-                                await api_call('POST', f'/vibenodes/{vn_id}/comments', {'content': content})
+                                names = re.findall(r'@(\w+)', content)
+                                mentioned_ids: list[int] = []
+                                for name in names:
+                                    user = await api_call('GET', f'/users/{name}')
+                                    if user and 'id' in user:
+                                        mentioned_ids.append(user['id'])
+                                await api_call(
+                                    'POST',
+                                    f'/vibenodes/{vn_id}/comments',
+                                    {'content': content, 'mentions': mentioned_ids},
+                                )
                                 ci.value = ''
                                 await refresh_vibenodes()
 

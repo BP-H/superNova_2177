@@ -2610,6 +2610,17 @@ def get_user_following(username: str, db: Session = Depends(get_db)):
     return {"count": len(following), "following": following}
 
 
+@app.get("/users/search", tags=["Harmonizers"])
+def search_users(q: str, db: Session = Depends(get_db)):
+    users = (
+        db.query(Harmonizer)
+        .filter(Harmonizer.username.ilike(f"%{q}%"))
+        .limit(5)
+        .all()
+    )
+    return [{"id": u.id, "username": u.username} for u in users]
+
+
 @app.post(
     "/vibenodes/{vibenode_id}/remix",
     response_model=VibeNodeOut,
