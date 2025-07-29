@@ -868,7 +868,8 @@ def render_validation_ui() -> None:
         st.json(st.session_state["agent_output"])
 
 def main() -> None:
-    print("🚀 Launching main()")
+    import streamlit as st
+    st.title("🤗//⚡//Launching main()")
     import streamlit as st
     import os
     from importlib import import_module
