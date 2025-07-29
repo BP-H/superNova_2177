@@ -16,5 +16,5 @@ for path in (ROOT, PKG_DIR, SRC_DIR):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-# Importing the package starts the NiceGUI app via src.main
-import_module("transcendental_resonance_frontend")
+# Import the package's ``__main__`` module which launches the NiceGUI app
+import_module("transcendental_resonance_frontend.__main__")
