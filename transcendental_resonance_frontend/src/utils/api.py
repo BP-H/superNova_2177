@@ -14,6 +14,7 @@ from nicegui import ui
 
 # Backend API base URL
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+# When running in offline mode, network calls should be skipped
 OFFLINE_MODE: bool = os.getenv("OFFLINE_MODE", "0") == "1"
 
 logger = logging.getLogger(__name__)
@@ -97,6 +98,15 @@ async def api_call(
         default_headers["Authorization"] = f"Bearer {TOKEN}"
 
     _fire_listeners(_start_listeners)
+
+    if OFFLINE_MODE:
+        logger.info("Offline mode: %s %s skipped", method, endpoint)
+        try:
+            ui.notify("Offline mode: request skipped", color="warning")
+        except Exception:
+            pass
+        _fire_listeners(_end_listeners)
+        return None
 
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
@@ -208,6 +218,10 @@ async def connect_ws(path: str = "/ws", timeout: float = 5.0):
     global WS_CONNECTION
     url = BACKEND_URL.replace("http", "ws") + path
     headers = {"Authorization": f"Bearer {TOKEN}"} if TOKEN else None
+    if OFFLINE_MODE:
+        logger.info("Offline mode: skipping WebSocket connection to %s", url)
+        _fire_ws_status("disconnected")
+        return None
     try:
         WS_CONNECTION = await asyncio.wait_for(
             websockets.connect(url, extra_headers=headers), timeout
@@ -226,6 +240,9 @@ async def listen_ws(
     """Listen for events on the WebSocket and pass them to ``handler``."""
     global WS_CONNECTION
     retry_delay = 3
+    if OFFLINE_MODE:
+        _fire_ws_status("disconnected")
+        return
     while True:
         ws = await connect_ws()
         if ws is None:

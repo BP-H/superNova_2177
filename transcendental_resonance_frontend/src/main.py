@@ -58,11 +58,11 @@ ws_status = (
 )
 
 offline_notice = (
-    ui.label("Offline Mode – using mock services.")
-    .classes("fixed bottom-0 right-0 m-2 text-sm")
-    .style("color: orange")
+    ui.label("OFFLINE MODE – using mock services.")
+    .classes("fixed bottom-0 w-full text-center bg-red-600 text-white text-sm")
 )
 offline_notice.visible = OFFLINE_MODE
+
 
 def _update_ws_status(status: str) -> None:
     color = "green" if status == "connected" else "red"
