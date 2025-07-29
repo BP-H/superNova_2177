@@ -13,9 +13,9 @@ from __future__ import annotations
 import random
 from typing import Any, Dict, List
 
-from external_services.llm_client import get_speculative_futures
-from external_services.video_client import generate_video_preview
-from external_services.vision_client import analyze_timeline
+from external_services.llm_client import LLMClient
+from external_services.video_client import VideoClient
+from external_services.vision_client import VisionClient
 
 # Satirical disclaimer appended to all speculative output
 DISCLAIMER = "This is a satirical simulation, not advice or prediction."
@@ -39,7 +39,8 @@ async def generate_speculative_futures(
     """Generate playful speculative futures for a VibeNode using ``llm_client``."""
 
     description = node.get("description", "")
-    texts = await get_speculative_futures(description)
+    llm = LLMClient()
+    texts = (await llm.get_speculative_futures(description)).get("futures", [])
     futures: List[Dict[str, str]] = []
     for text in texts[: max(1, num_variants)]:
         emoji = random.choice(list(EMOJI_GLOSSARY.keys()))  # nosec B311
@@ -50,11 +51,16 @@ async def generate_speculative_futures(
 async def generate_speculative_payload(description: str) -> List[Dict[str, str]]:
     """Return text, video, and vision analysis pairs with a disclaimer."""
 
-    texts = await get_speculative_futures(description)
+    llm = LLMClient()
+    texts = (await llm.get_speculative_futures(description)).get("futures", [])
     results: List[Dict[str, str]] = []
     for text in texts:
-        video_url = await generate_video_preview(prompt=text)
-        vision_notes = await analyze_timeline(video_url)
+        video = VideoClient()
+        vision = VisionClient()
+        video_url = (await video.generate_video_preview(prompt=text)).get(
+            "video_url", ""
+        )
+        vision_notes = (await vision.analyze_timeline(video_url)).get("events", [])
         results.append(
             {
                 "text": text,
@@ -72,8 +78,9 @@ def quantum_video_stub(*_args, **_kwargs) -> None:
 
 
 async def analyze_video_timeline(video_url: str) -> List[str]:
-    """Delegate to :func:`external_services.vision_client.analyze_timeline`."""
-    return await analyze_timeline(video_url)
+    """Delegate to :class:`VisionClient` for timeline analysis."""
+    vision = VisionClient()
+    return (await vision.analyze_timeline(video_url)).get("events", [])
 
 
 __all__ = [
