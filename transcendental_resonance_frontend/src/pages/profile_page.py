@@ -52,13 +52,14 @@ async def profile_page(username: str | None = None):
 
     THEME = get_theme()
     with page_container(THEME):
-        ui.label(f'Welcome, {user_data["username"]}').classes(
-            "text-2xl font-bold mb-4"
-        ).style(f'color: {THEME["accent"]};')
+        with ui.row().classes("items-center mb-4"):
+            avatar_img = ui.image(
+                avatar_url or "https://via.placeholder.com/150"
+            ).classes("w-32 h-32 rounded-full mr-4")
 
-        avatar_img = ui.image(
-            avatar_url or "https://via.placeholder.com/150"
-        ).classes("w-32 h-32 rounded-full mb-4")
+            ui.label(f'Welcome, {user_data["username"]}').classes(
+                "text-2xl font-bold"
+            ).style(f'color: {THEME["accent"]};')
 
         ui.label(f'Harmony Score: {user_data["harmony_score"]}').classes("mb-2")
         ui.label(f'Creative Spark: {user_data["creative_spark"]}').classes("mb-2")
@@ -86,11 +87,11 @@ async def profile_page(username: str | None = None):
             async def handle_avatar_upload(content, name):
                 nonlocal avatar_url
                 files = {"file": (name, content.read(), "multipart/form-data")}
-                resp = await api_call("POST", "/upload/avatar", files=files)
-                if resp and resp.get("avatar_url"):
-                    avatar_img.source = resp["avatar_url"]
-                    avatar_url = resp["avatar_url"]
-                    await api_call("PUT", "/users/me", {"avatar_url": resp["avatar_url"]})
+                resp = await api_call("POST", "/upload/", files=files)
+                if resp and resp.get("media_url"):
+                    avatar_img.source = resp["media_url"]
+                    avatar_url = resp["media_url"]
+                    await api_call("PUT", "/users/me", {"avatar_url": resp["media_url"]})
                     ui.notify("Avatar updated", color="positive")
 
             ui.upload(
