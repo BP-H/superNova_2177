@@ -1,5 +1,6 @@
 """Utility functions for streamlit UIs."""
 from pathlib import Path
+import streamlit as st
 
 
 def summarize_text(text: str, max_len: int = 150) -> str:
@@ -23,6 +24,7 @@ def parse_summary(text: str) -> str:
     return " ".join(lines)
 
 
+@st.cache_data
 def load_rfc_entries(rfc_dir: Path):
     """Return list and index of RFC entries from a directory."""
     rfc_paths = sorted(rfc_dir.rglob("rfc-*.md"))
