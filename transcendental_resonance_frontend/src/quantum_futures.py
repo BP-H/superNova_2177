@@ -14,7 +14,6 @@ import random
 from typing import Any, Dict, List
 
 from external_services.llm_client import LLMClient
-from external_services.video_client import VideoClient
 from external_services.vision_client import VisionClient
 
 # Satirical disclaimer appended to all speculative output
@@ -48,30 +47,6 @@ async def generate_speculative_futures(
     return futures
 
 
-async def generate_speculative_payload(description: str) -> List[Dict[str, str]]:
-    """Return text, video, and vision analysis pairs with a disclaimer."""
-
-    llm = LLMClient()
-    texts = (await llm.get_speculative_futures(description)).get("futures", [])
-    results: List[Dict[str, str]] = []
-    for text in texts:
-        video = VideoClient()
-        vision = VisionClient()
-        video_url = (await video.generate_video_preview(prompt=text)).get(
-            "video_url", ""
-        )
-        vision_notes = (await vision.analyze_timeline(video_url)).get("events", [])
-        results.append(
-            {
-                "text": text,
-                "video_url": video_url,
-                "vision_notes": vision_notes,
-                "disclaimer": DISCLAIMER,
-            }
-        )
-    return results
-
-
 def quantum_video_stub(*_args, **_kwargs) -> None:
     """Placeholder for future WebGL/AI-video integration."""
     return None
@@ -87,7 +62,6 @@ __all__ = [
     "DISCLAIMER",
     "EMOJI_GLOSSARY",
     "generate_speculative_futures",
-    "generate_speculative_payload",
     "quantum_video_stub",
     "analyze_video_timeline",
 ]
