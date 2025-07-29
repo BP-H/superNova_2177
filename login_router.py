@@ -45,9 +45,12 @@ def login_for_access_token(
     if not user.consent_given:
         raise InvalidConsentError("User has revoked consent.")
     streaks = user.engagement_streaks or {}
-    last_login = datetime.datetime.fromisoformat(
-        streaks.get("last_login", "1970-01-01T00:00:00")
-    )
+    try:
+        last_login = datetime.datetime.fromisoformat(
+            streaks.get("last_login", "1970-01-01T00:00:00")
+        )
+    except ValueError:
+        last_login = datetime.datetime(1970, 1, 1)
     now = datetime.datetime.utcnow()
     if (now.date() - last_login.date()).days == 1:
         streaks["daily"] = streaks.get("daily", 0) + 1

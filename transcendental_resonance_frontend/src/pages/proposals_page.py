@@ -38,6 +38,8 @@ async def proposals_page():
             if resp:
                 ui.notify('Proposal created!', color='positive')
                 await refresh_proposals()
+            else:
+                ui.notify('Action failed', color='negative')
 
         ui.button('Create Proposal', on_click=create_proposal).classes('w-full mb-4').style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
