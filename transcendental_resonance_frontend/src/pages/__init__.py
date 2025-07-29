@@ -23,7 +23,13 @@ __all__ = [
 
 
 def __getattr__(name):
+    """Dynamically load page functions from their modules."""
     if name in __all__:
-        module = __import__(f"pages.{name}", fromlist=[name])
+        module_map = {
+            "register_page": "login_page",
+            "network_page": "network_analysis_page",
+        }
+        module_name = module_map.get(name, name)
+        module = __import__(f"pages.{module_name}", fromlist=[name])
         return getattr(module, name)
     raise AttributeError(name)
