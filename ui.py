@@ -1,7 +1,10 @@
 import os
+import sys+
+import traceback
 import streamlit as st  # ensure Streamlit is imported early
 from streamlit.runtime.scriptrunner import get_script_run_ctx
 from importlib import import_module
+os.environ["STREAMLIT_SERVER_PORT"] = "8501"  # <-- 👈 THIS FIXES THE PORT ISSUE
 
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
@@ -13,8 +16,6 @@ import io
 import json
 import logging
 import math
-import sys
-import traceback
 
 # Default port controlled by start.sh via STREAMLIT_PORT; old setting kept
 # for reference but disabled.
