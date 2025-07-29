@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import sys
-from importlib import import_module
 from pathlib import Path
 
 import streamlit as st
@@ -26,5 +25,7 @@ if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO",
     st.write("ok")
     st.stop()
 
-# Import the package's ``__main__`` module which launches the NiceGUI app
-import_module("transcendental_resonance_frontend.__main__")
+# Import and run the package's launcher
+from transcendental_resonance_frontend.__main__ import run
+
+run()

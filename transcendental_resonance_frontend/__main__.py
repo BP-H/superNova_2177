@@ -1,4 +1,14 @@
 """Entry point for ``python -m transcendental_resonance_frontend``."""
 
-# Importing ``main`` starts the NiceGUI application.
-from .src import main  # noqa: F401
+from nicegui import ui
+
+
+def run() -> None:
+    """Launch the NiceGUI interface."""
+    ui.label("Loading UI...")
+    from .src.main import run_app
+    run_app()
+
+
+if __name__ == "__main__":
+    run()
