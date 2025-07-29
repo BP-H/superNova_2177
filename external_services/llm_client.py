@@ -1,33 +1,58 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-"""Client for speculative text generation via LLM."""
-
 from __future__ import annotations
 
+"""Client for speculative text generation via a language model."""
+
 import os
+from typing import Any, Dict, List
+
 import httpx
 
-LLM_API_URL = os.getenv("LLM_API_URL", "https://your-llm-endpoint.com/generate")
-LLM_API_KEY = os.getenv("LLM_API_KEY", "")  # <-- user inserts key here
+from .base_client import BaseClient
 
-async def get_speculative_futures(description: str, style: str = "humorous/chaotic good") -> list[str]:
-    """Return speculative future strings from a remote LLM service."""
-    if not LLM_API_KEY:
-        return [
-            f"Offline Mode // Simulated future 1: {description} becomes a meme.",
-            f"Offline Mode // Simulated future 2: {description} triggers a time loop.",
-        ]
-    try:
+
+class LLMClient(BaseClient):
+    """Speculative future generation client."""
+
+    def __init__(self) -> None:
+        placeholder = {
+            "texts": [
+                "Offline future 1",  # deterministic placeholder
+                "Offline future 2",
+            ]
+        }
+        super().__init__("LLM_API_KEY", "LLM_API_URL", placeholder)
+
+    async def _api_call(self, description: str, style: str, num: int) -> Dict[str, Any]:
         payload = {
-            "prompt": f"Give 3 short speculative futures for: '{description}' in style: {style}",
+            "prompt": f"Give {num} short speculative futures for: '{description}' in style: {style}",
             "max_tokens": 300,
         }
-        headers = {"Authorization": f"Bearer {LLM_API_KEY}"}
+        headers = {"Authorization": f"Bearer {self.api_key}"}
         async with httpx.AsyncClient() as client:
-            resp = await client.post(LLM_API_URL, json=payload, headers=headers, timeout=10)
-            return resp.json().get("futures", [])
-    except Exception as e:  # pragma: no cover - network errors
-        return [f"[LLM ERROR] {e}"]
+            resp = await client.post(self.api_url, json=payload, headers=headers, timeout=10)
+            resp.raise_for_status()
+            futures = resp.json().get("futures", [])
+        return {"texts": list(futures)[:num]}
 
-__all__ = ["get_speculative_futures"]
+    async def _offline_result(self, description: str, style: str, num: int) -> Dict[str, Any]:
+        texts = [
+            f"Offline Mode // Simulated future 1: {description} becomes a meme.",
+            f"Offline Mode // Simulated future 2: {description} triggers a timeloop.",
+        ]
+        return {"texts": texts[:num]}
+
+    async def fetch_futures(self, description: str, style: str = "humorous/chaotic good", num: int = 3) -> Dict[str, Any]:
+        """Return speculative futures with metadata."""
+        return await self.request(description, style, num)
+
+
+async def get_speculative_futures(description: str, style: str = "humorous/chaotic good", num: int = 3) -> Dict[str, Any]:
+    """Public helper for speculative future strings."""
+    client = LLMClient()
+    return await client.fetch_futures(description, style, num)
+
+
+__all__ = ["get_speculative_futures", "LLMClient"]

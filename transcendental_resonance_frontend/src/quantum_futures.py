@@ -38,7 +38,8 @@ async def generate_speculative_futures(
     """Generate playful speculative futures for a VibeNode using ``llm_client``."""
 
     description = node.get("description", "")
-    texts = await get_speculative_futures(description)
+    llm_payload = await get_speculative_futures(description)
+    texts = llm_payload.get("texts", [])
     futures: List[Dict[str, str]] = []
     for text in texts[: max(1, num_variants)]:
         emoji = random.choice(list(EMOJI_GLOSSARY.keys()))
@@ -49,13 +50,14 @@ async def generate_speculative_futures(
 async def generate_speculative_payload(description: str) -> List[Dict[str, str]]:
     """Return text and video pairs with a disclaimer."""
 
-    texts = await get_speculative_futures(description)
+    llm_payload = await get_speculative_futures(description)
+    texts = llm_payload.get("texts", [])
     results: List[Dict[str, str]] = []
     for text in texts:
-        video_url = await generate_video_preview(prompt=text)
+        video_payload = await generate_video_preview(prompt=text)
         results.append({
             "text": text,
-            "video_url": video_url,
+            "video_url": video_payload.get("video_url", ""),
             "disclaimer": DISCLAIMER,
         })
     return results
