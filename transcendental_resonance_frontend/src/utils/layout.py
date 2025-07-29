@@ -34,6 +34,38 @@ except Exception:  # pragma: no cover - fallback stub for testing
 from .styles import get_theme
 
 
+def navigation_bar() -> Element:
+    """Render a simple navigation bar linking major pages."""
+    theme = get_theme()
+    try:
+        from pages.profile_page import profile_page
+        from pages.messages_page import messages_page
+        from pages.groups_page import groups_page
+        from pages.events_page import events_page
+        from pages.status_page import status_page
+    except Exception:
+        # During testing, NiceGUI or page modules may not be available
+        return Element()
+
+    with ui.row().classes('w-full justify-around mb-4') as nav:
+        ui.button('Profile', on_click=lambda: ui.open(profile_page)).style(
+            f'background: {theme["primary"]}; color: {theme["text"]};'
+        )
+        ui.button('Messages', on_click=lambda: ui.open(messages_page)).style(
+            f'background: {theme["accent"]}; color: {theme["background"]};'
+        )
+        ui.button('Groups', on_click=lambda: ui.open(groups_page)).style(
+            f'background: {theme["accent"]}; color: {theme["background"]};'
+        )
+        ui.button('Events', on_click=lambda: ui.open(events_page)).style(
+            f'background: {theme["accent"]}; color: {theme["background"]};'
+        )
+        ui.button('Status', on_click=lambda: ui.open(status_page)).style(
+            f'background: {theme["accent"]}; color: {theme["background"]};'
+        )
+    return nav
+
+
 @contextmanager
 def page_container(theme: Optional[dict] = None) -> Generator[Element, None, None]:
     """Context manager for a themed page container.
@@ -45,5 +77,6 @@ def page_container(theme: Optional[dict] = None) -> Generator[Element, None, Non
     with ui.column().classes('w-full p-4').style(
         f"background: {theme['gradient']}; color: {theme['text']};"
     ) as container:
+        navigation_bar()
         yield container
 
