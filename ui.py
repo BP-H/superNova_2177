@@ -88,8 +88,13 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     Network = None
 
-from network.network_coordination_detector import build_validation_graph
-from validation_integrity_pipeline import analyze_validation_integrity
+try:
+    from network.network_coordination_detector import build_validation_graph
+    from validation_integrity_pipeline import analyze_validation_integrity
+except ImportError as exc:  # pragma: no cover - optional dependency
+    logger.warning("Analysis modules unavailable: %s", exc)
+    build_validation_graph = None  # type: ignore
+    analyze_validation_integrity = None  # type: ignore
 
 try:
     from validator_reputation_tracker import update_validator_reputations
@@ -205,6 +210,11 @@ def generate_explanation(result: dict) -> str:
 
 def run_analysis(validations, *, layout: str = "force"):
     """Execute the validation integrity pipeline and display results."""
+    if analyze_validation_integrity is None or build_validation_graph is None:
+        st.error(
+            "Required analysis modules are missing. Please install optional dependencies."
+        )
+        return {}
     if not validations:
         try:
             with open(sample_path) as f:
