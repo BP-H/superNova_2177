@@ -258,8 +258,14 @@ from collections import Counter, defaultdict, deque
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import timedelta
-from decimal import (ROUND_FLOOR, ROUND_HALF_UP, Decimal, InvalidOperation,
-                     getcontext, localcontext)
+from decimal import (
+    ROUND_FLOOR,
+    ROUND_HALF_UP,
+    Decimal,
+    InvalidOperation,
+    getcontext,
+    localcontext,
+)
 from typing import (
     Any,
     Awaitable,
@@ -282,30 +288,73 @@ from self_improvement import self_improvement_task
 # Web and DB Imports from FastAPI files
 USING_STUBS = False
 try:
-    from fastapi import (BackgroundTasks, Body, Depends, FastAPI, File,
-                         HTTPException, Query, UploadFile, status)
+    from fastapi import (
+        BackgroundTasks,
+        Body,
+        Depends,
+        FastAPI,
+        File,
+        HTTPException,
+        Query,
+        UploadFile,
+        status,
+    )
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import HTMLResponse, JSONResponse
-    from fastapi.security import (OAuth2PasswordBearer,
-                                  OAuth2PasswordRequestForm)
-    from sqlalchemy import (JSON, Boolean, Column, DateTime, Float, ForeignKey,
-                            Integer, String, Table, Text, create_engine, func)
+    from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+    from sqlalchemy import (
+        JSON,
+        Boolean,
+        Column,
+        DateTime,
+        Float,
+        ForeignKey,
+        Integer,
+        String,
+        Table,
+        Text,
+        create_engine,
+        func,
+    )
     from sqlalchemy.exc import IntegrityError
-    from sqlalchemy.orm import (Session, declarative_base, relationship,
-                                sessionmaker)
+    from sqlalchemy.orm import Session, declarative_base, relationship, sessionmaker
 except ImportError:  # pragma: no cover - fallback when deps are missing
     USING_STUBS = True
-    from stubs.fastapi_stub import (BackgroundTasks, Body, CORSMiddleware,
-                                    Depends, FastAPI, File, HTMLResponse,
-                                    HTTPException, JSONResponse,
-                                    OAuth2PasswordBearer,
-                                    OAuth2PasswordRequestForm, Query,
-                                    UploadFile, status)
-    from stubs.sqlalchemy_stub import (JSON, Boolean, Column, DateTime, Float,
-                                       ForeignKey, Integer, IntegrityError,
-                                       Session, String, Table, Text,
-                                       create_engine, declarative_base, func,
-                                       relationship, sessionmaker)
+    from stubs.fastapi_stub import (
+        BackgroundTasks,
+        Body,
+        CORSMiddleware,
+        Depends,
+        FastAPI,
+        File,
+        HTMLResponse,
+        HTTPException,
+        JSONResponse,
+        OAuth2PasswordBearer,
+        OAuth2PasswordRequestForm,
+        Query,
+        UploadFile,
+        status,
+    )
+    from stubs.sqlalchemy_stub import (
+        JSON,
+        Boolean,
+        Column,
+        DateTime,
+        Float,
+        ForeignKey,
+        Integer,
+        IntegrityError,
+        Session,
+        String,
+        Table,
+        Text,
+        create_engine,
+        declarative_base,
+        func,
+        relationship,
+        sessionmaker,
+    )
 try:
     from pydantic import BaseModel, EmailStr, Field, ValidationError
 except Exception:  # pragma: no cover - lightweight fallback
@@ -489,27 +538,60 @@ from prometheus_client import REGISTRY
 import db_models
 from causal_graph import InfluenceGraph
 from config import Config
-from db_models import (AIPersona, Base, BranchVote, Coin, Comment,
-                       CreativeGuild, Event, Group, GuinnessClaim, Harmonizer,
-                       LogEntry, MarketplaceListing, Message, Notification,
-                       Proposal, ProposalVote, SessionLocal, SimulationLog,
-                       SymbolicToken, SystemState, TokenListing,
-                       UniverseBranch, VibeNode, engine, event_attendees,
-                       group_members, harmonizer_follows, proposal_votes,
-                       vibenode_entanglements, vibenode_likes)
+from db_models import (
+    AIPersona,
+    Base,
+    BranchVote,
+    Coin,
+    Comment,
+    CreativeGuild,
+    Event,
+    Group,
+    GuinnessClaim,
+    Harmonizer,
+    LogEntry,
+    MarketplaceListing,
+    Message,
+    Notification,
+    Proposal,
+    ProposalVote,
+    SessionLocal,
+    SimulationLog,
+    SymbolicToken,
+    SystemState,
+    TokenListing,
+    UniverseBranch,
+    VibeNode,
+    engine,
+    event_attendees,
+    group_members,
+    harmonizer_follows,
+    proposal_votes,
+    vibenode_entanglements,
+    vibenode_likes,
+)
 from governance_config import calculate_entropy_divergence, quantum_consensus
 from quantum_sim import QuantumContext
-from scientific_metrics import (analyze_prediction_accuracy,
-                                build_causal_graph, calculate_influence_score,
-                                calculate_interaction_entropy,
-                                design_validation_experiments,
-                                generate_system_predictions,
-                                predict_user_interactions, query_influence)
-from scientific_utils import (SCIENTIFIC_REGISTRY, ScientificModel,
-                              VerifiedScientificModel,
-                              calculate_genesis_bonus_decay,
-                              estimate_uncertainty, generate_hypotheses,
-                              refine_hypotheses_from_evidence, safe_decimal)
+from scientific_metrics import (
+    analyze_prediction_accuracy,
+    build_causal_graph,
+    calculate_influence_score,
+    calculate_interaction_entropy,
+    design_validation_experiments,
+    generate_system_predictions,
+    predict_user_interactions,
+    query_influence,
+)
+from scientific_utils import (
+    SCIENTIFIC_REGISTRY,
+    ScientificModel,
+    VerifiedScientificModel,
+    calculate_genesis_bonus_decay,
+    estimate_uncertainty,
+    generate_hypotheses,
+    refine_hypotheses_from_evidence,
+    safe_decimal,
+)
 
 # Database engine URL resolved at runtime
 DB_ENGINE_URL = None
@@ -665,6 +747,8 @@ class VibeNodeOut(VibeNodeBase):
     comments_count: int = 0
     fractal_depth: int = 0
     entangled_count: int = 0
+    reactions: list[Dict[str, Any]] = []
+    reactions_count: int = 0
 
     class Config:
         from_attributes = True
@@ -780,6 +864,13 @@ class MessageOut(MessageCreate):
     sender_id: int
     receiver_id: int
     created_at: datetime.datetime
+    reactions: list[Dict[str, Any]] = []
+    reactions_count: int = 0
+
+
+class Reaction(BaseModel):
+    emoji: str
+    message: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -2107,6 +2198,7 @@ class CosmicNexus:
                 logging.warning("Ignoring invalid config key %s", key)
         self.sub_universes[fork_id] = fork_agent
         from hooks import events
+
         self.hooks.register_hook(
             events.CROSS_REMIX, lambda data: self.handle_cross_remix(data, fork_id)
         )
@@ -2283,6 +2375,7 @@ class EntropyTracker(RemixAgent):
             self.current_entropy = float(info.get("value", 0.0))
             if self.current_entropy > self.entropy_threshold:
                 from hooks import events
+
                 self.cosmic_nexus.hooks.fire_hooks(
                     events.ENTROPY_DIVERGENCE,
                     {"universe": id(self), "entropy": self.current_entropy},
@@ -2468,7 +2561,9 @@ def get_music_generator(
 ):
     return MusicGeneratorService(db, user)
 
+
 from login_router import router as login_router
+
 app.include_router(login_router)
 
 
@@ -2506,7 +2601,6 @@ def register_harmonizer(user: HarmonizerCreate, db: Session = Depends(get_db)):
     return new_user
 
 
-
 from login_router import router as login_router
 
 app.include_router(login_router)
@@ -2515,8 +2609,10 @@ app.include_router(login_router)
 try:
     import importlib
     import protocols._registry as _reg
+
     importlib.reload(_reg)
     from protocols import AGENT_REGISTRY as _ar
+
     _ar.clear()
     _ar.update(_reg.AGENT_REGISTRY)
 except Exception:
@@ -2611,6 +2707,79 @@ def get_user_following(username: str, db: Session = Depends(get_db)):
 
 
 @app.post(
+    "/messages/{recipient}",
+    response_model=MessageOut,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Messaging"],
+)
+def send_message(
+    recipient: str,
+    message: MessageCreate,
+    db: Session = Depends(get_db),
+    current_user: Harmonizer = Depends(get_current_active_user),
+):
+    user = db.query(Harmonizer).filter(Harmonizer.username == recipient).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Recipient not found")
+    m = Message(
+        sender_id=current_user.id,
+        receiver_id=user.id,
+        content=message.content,
+        reactions=[],
+    )
+    db.add(m)
+    db.commit()
+    db.refresh(m)
+    out = MessageOut.model_validate(m)
+    data = out.model_dump()
+    data["reactions_count"] = len(m.reactions or [])
+    return MessageOut(**data)
+
+
+@app.get("/messages/", response_model=list[MessageOut], tags=["Messaging"])
+def list_messages(
+    db: Session = Depends(get_db),
+    current_user: Harmonizer = Depends(get_current_active_user),
+):
+    msgs = (
+        db.query(Message)
+        .filter(Message.receiver_id == current_user.id)
+        .order_by(Message.created_at.desc())
+        .all()
+    )
+    result = []
+    for m in msgs:
+        out = MessageOut.model_validate(m)
+        data = out.model_dump()
+        data["reactions_count"] = len(m.reactions or [])
+        result.append(MessageOut(**data))
+    return result
+
+
+@app.post("/messages/{message_id}/react", tags=["Messaging"])
+def react_to_message(
+    message_id: int,
+    reaction: Reaction,
+    db: Session = Depends(get_db),
+    current_user: Harmonizer = Depends(get_current_active_user),
+):
+    msg = db.query(Message).filter(Message.id == message_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    msg.reactions = list(msg.reactions or [])
+    msg.reactions.append(
+        {
+            "user_id": current_user.id,
+            "emoji": reaction.emoji,
+            "message": reaction.message,
+            "timestamp": datetime.datetime.utcnow().isoformat(),
+        }
+    )
+    db.commit()
+    return {"reactions_count": len(msg.reactions)}
+
+
+@app.post(
     "/vibenodes/{vibenode_id}/remix",
     response_model=VibeNodeOut,
     status_code=status.HTTP_201_CREATED,
@@ -2663,7 +2832,7 @@ def remix_vibenode(
     db.commit()
     out = VibeNodeOut.model_validate(clone)
     data = out.model_dump()
-    data.update(likes_count=0, comments_count=0, entangled_count=0)
+    data.update(likes_count=0, comments_count=0, entangled_count=0, reactions_count=0)
     return VibeNodeOut(**data)
 
 
@@ -3137,8 +3306,39 @@ def create_vibenode(
     state_service.set_state("system_entropy", str(new_entropy))
     out = VibeNodeOut.model_validate(db_vibenode)
     data = out.model_dump()
-    data.update(likes_count=0, comments_count=0, entangled_count=0)
+    data.update(likes_count=0, comments_count=0, entangled_count=0, reactions_count=0)
     return VibeNodeOut(**data)
+
+
+@app.get("/vibenodes/", response_model=list[VibeNodeOut], tags=["Content & Engagement"])
+def list_vibenodes(
+    search: Optional[str] = None,
+    sort: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: Harmonizer = Depends(get_current_active_user),
+):
+    query = db.query(VibeNode)
+    if search:
+        pattern = f"%{search}%"
+        query = query.filter(VibeNode.name.ilike(pattern))
+    nodes = query.all()
+    if sort == "date":
+        nodes.sort(key=lambda x: x.created_at or datetime.datetime.utcnow())
+    elif sort == "name":
+        nodes.sort(key=lambda x: x.name)
+    results = []
+    for vn in nodes:
+        out = VibeNodeOut.model_validate(vn)
+        data = out.model_dump()
+        data.update(
+            likes_count=len(vn.likes),
+            comments_count=len(vn.comments),
+            entangled_count=len(vn.entangled_with),
+            reactions_count=len(vn.reactions or []),
+            author_username=vn.author.username if vn.author else "",
+        )
+        results.append(VibeNodeOut(**data))
+    return results
 
 
 @app.post(
@@ -3194,6 +3394,29 @@ def like_vibenode(
         agent.quantum_ctx.step()
     db.commit()
     return {"message": message}
+
+
+@app.post("/vibenodes/{vibenode_id}/react", tags=["Content & Engagement"])
+def react_vibenode(
+    vibenode_id: int,
+    reaction: Reaction,
+    db: Session = Depends(get_db),
+    current_user: Harmonizer = Depends(get_current_active_user),
+):
+    vibenode = db.query(VibeNode).filter(VibeNode.id == vibenode_id).first()
+    if not vibenode:
+        raise HTTPException(status_code=404, detail="VibeNode not found")
+    vibenode.reactions = list(vibenode.reactions or [])
+    vibenode.reactions.append(
+        {
+            "user_id": current_user.id,
+            "emoji": reaction.emoji,
+            "message": reaction.message,
+            "timestamp": datetime.datetime.utcnow().isoformat(),
+        }
+    )
+    db.commit()
+    return {"reactions_count": len(vibenode.reactions)}
 
 
 class AIPersonaBase(BaseModel):

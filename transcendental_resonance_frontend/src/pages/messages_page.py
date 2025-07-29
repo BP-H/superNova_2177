@@ -49,6 +49,24 @@ async def messages_page():
                     ):
                         ui.label(f"From: {m['sender_id']}").classes("text-sm")
                         ui.label(m["content"]).classes("text-sm")
+                        counts = {}
+                        for r in m.get("reactions", []):
+                            counts[r.get("emoji")] = counts.get(r.get("emoji"), 0) + 1
+
+                        async def react(emoji, mid=m["id"]):
+                            await api_call(
+                                "POST",
+                                f"/messages/{mid}/react",
+                                {"emoji": emoji},
+                            )
+                            await refresh_messages()
+
+                        with ui.row().classes("items-center"):
+                            for emo in ["👍", "❤️", "😂", "😮", "😢"]:
+                                ui.button(
+                                    f"{emo} {counts.get(emo,0)}",
+                                    on_click=lambda e, em=emo: ui.run_async(react(em)),
+                                ).props("flat")
 
         await refresh_messages()
         ui.timer(30, lambda: ui.run_async(refresh_messages()))

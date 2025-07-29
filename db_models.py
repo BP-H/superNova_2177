@@ -4,6 +4,7 @@ import os  # Added for DATABASE_URL environment variable
 import uuid
 import hashlib
 import logging
+
 try:
     from sqlalchemy import (
         create_engine,
@@ -72,8 +73,10 @@ except Exception:  # pragma: no cover - optional dependency
             (),
             {"create_all": lambda *a, **k: None, "drop_all": lambda *a, **k: None},
         )()
+
+
 from typing import TYPE_CHECKING
-import datetime # Ensure datetime is imported for default values
+import datetime  # Ensure datetime is imported for default values
 
 # NOTE: In a real project, DATABASE_URL and SessionLocal would typically be imported from a central config/db module.
 # For this extraction, we'll keep it self-contained for clarity, assuming it would be integrated.
@@ -86,9 +89,7 @@ if DB_MODE == "central":
     if not DATABASE_URL:
         raise RuntimeError("DATABASE_URL must be set in central mode")
 else:
-    DATABASE_URL = os.getenv(
-        "DATABASE_URL", f"sqlite:///universe_{UNIVERSE_ID}.db"
-    )
+    DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///universe_{UNIVERSE_ID}.db")
 
 engine = create_engine(
     DATABASE_URL,
@@ -185,7 +186,9 @@ class Harmonizer(Base):
         cascade="all, delete-orphan",
     )
     groups = relationship("Group", secondary=group_members, back_populates="members")
-    events = relationship("Event", secondary=event_attendees, back_populates="attendees")
+    events = relationship(
+        "Event", secondary=event_attendees, back_populates="attendees"
+    )
     following = relationship(
         "Harmonizer",
         secondary=harmonizer_follows,
@@ -229,6 +232,7 @@ class VibeNode(Base):
     likes = relationship(
         "Harmonizer", secondary=vibenode_likes, backref="liked_vibenodes"
     )
+    reactions = Column(JSON, default=list)
     entangled_with = relationship(
         "VibeNode",
         secondary=vibenode_entanglements,
@@ -381,6 +385,7 @@ class Message(Base):
     )
     content = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    reactions = Column(JSON, default=list)
     sender = relationship(
         "Harmonizer", foreign_keys=[sender_id], back_populates="messages_sent"
     )
@@ -442,8 +447,9 @@ class ValidatorReputation(Base):
 
     validator_id = Column(String, primary_key=True)
     reputation = Column(Float, nullable=False, default=0.0)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow,
-                        onupdate=datetime.datetime.utcnow)
+    updated_at = Column(
+        DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow
+    )
 
 
 class ValidatorProfile(Base):
@@ -462,16 +468,19 @@ class HypothesisRecord(Base):
     Represents a scientific hypothesis tracked by the system.
     Includes metadata, audit history, and evaluation stats.
     """
+
     __tablename__ = "hypotheses"
 
     id = Column(String, primary_key=True)  # e.g., HYP_1721495734_a1b2c3d4
     title = Column(String, nullable=True)
     description = Column(Text, nullable=True)
 
-    status = Column(String, default="open", index=True)  # open / validated / falsified / merged / inconclusive / etc.
+    status = Column(
+        String, default="open", index=True
+    )  # open / validated / falsified / merged / inconclusive / etc.
     score = Column(Float, default=0.0)
-    entropy_change = Column(Float, default=0.0) # From associated audit metadata
-    confidence_interval = Column(String, default="") # From hypothesis_reasoner
+    entropy_change = Column(Float, default=0.0)  # From associated audit metadata
+    confidence_interval = Column(String, default="")  # From hypothesis_reasoner
     metadata_json = Column(JSON, default=lambda: {})
 
     validation_log_ids = Column(JSON, default=lambda: [])  # LogEntry.id references
@@ -479,13 +488,17 @@ class HypothesisRecord(Base):
     # causal_trigger.py, audit_bridge.py etc. refs (SystemState keys)
 
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    updated_at = Column(
+        DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow
+    )
 
-    tags = Column(JSON, default=lambda: []) #
-    notes = Column(Text, default="") # Summary of events/updates
+    tags = Column(JSON, default=lambda: [])  #
+    notes = Column(Text, default="")  # Summary of events/updates
 
     # Full history of evaluations / edits
-    history = Column(JSON, default=lambda: []) # Detailed timestamped history of score/status changes
+    history = Column(
+        JSON, default=lambda: []
+    )  # Detailed timestamped history of score/status changes
 
     # Relationships (Optional, for future direct linking)
     # E.g., validation_logs = relationship("LogEntry", secondary=hypothesis_validation_logs_table)
@@ -539,6 +552,7 @@ class SymbolicToken(Base):
     @reactor_escrow.setter
     def reactor_escrow(self, v: str) -> None:  # pragma: no cover - legacy support
         self.reaction_reserve = v
+
 
 # Backwards compatibility for existing code references
 Coin = SymbolicToken
@@ -609,6 +623,7 @@ class TokenListing(Base):
     def price(self, v: str) -> None:  # pragma: no cover - legacy support
         self.listing_value = v
 
+
 # Backwards compatibility alias
 MarketplaceListing = TokenListing
 
@@ -616,4 +631,3 @@ MarketplaceListing = TokenListing
 def init_db() -> None:
     """Create all tables defined in this module."""
     Base.metadata.create_all(bind=engine)
-
