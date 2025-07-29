@@ -1,10 +1,10 @@
+import asyncio
 import difflib
 import io
 import json
 import logging
 import math
 import os
-import asyncio
 import sys
 import traceback
 from datetime import datetime
@@ -32,12 +32,12 @@ else:
     st.success("\u2705 Streamlit loaded!")
 from streamlit_helpers import (
     alert,
+    apply_theme,
+    centered_container,
     header,
     theme_selector,
-    centered_container,
-    apply_theme,
 )
-from ui_utils import summarize_text, parse_summary, load_rfc_entries
+from ui_utils import load_rfc_entries, parse_summary, summarize_text
 
 try:
     from streamlit_app import _run_async
@@ -60,7 +60,7 @@ except Exception:  # pragma: no cover - optional dependency
     dispatch_route = None
 
 try:
-    from db_models import SessionLocal, Harmonizer, UniverseBranch
+    from db_models import Harmonizer, SessionLocal, UniverseBranch
 except Exception:  # pragma: no cover - missing ORM
     SessionLocal = None  # type: ignore
     Harmonizer = None  # type: ignore
@@ -72,7 +72,7 @@ except Exception:  # pragma: no cover - optional module
     run_full_audit = None  # type: ignore
 
 try:
-    from superNova_2177 import cosmic_nexus, agent, InMemoryStorage
+    from superNova_2177 import InMemoryStorage, agent, cosmic_nexus
 except Exception:  # pragma: no cover - optional runtime globals
     cosmic_nexus = None  # type: ignore
     agent = None  # type: ignore
@@ -103,13 +103,12 @@ except Exception:  # pragma: no cover - optional dependency
 
 from typing import Any, cast
 
-
+from agent_ui import render_agent_insights_tab
 from llm_backends import get_backend
 from protocols import AGENT_REGISTRY
-
 from social_tabs import render_social_tab
 from voting_ui import render_voting_tab
-from agent_ui import render_agent_insights_tab
+
 try:
     st_secrets = st.secrets
 except Exception:  # pragma: no cover - optional in dev/CI
@@ -153,6 +152,8 @@ if HarmonyScanner is None:
 
         def scan(self, _data):
             return {"dummy": True}
+
+
 def clear_memory(state: dict) -> None:
     """Reset analysis tracking state."""
     state["analysis_diary"] = []
@@ -180,8 +181,6 @@ def diff_results(old: dict | None, new: dict) -> str:
         lineterm="",
     )
     return "\n".join(diff)
-
-
 
 
 def render_pyvis_to_html(net: Any) -> str:
@@ -460,6 +459,7 @@ def boot_diagnostic_ui():
 
     st.subheader("Validation Analysis")
     run_analysis([], layout="force")
+
 
 def render_validation_ui() -> None:
     """Main entry point for the validation analysis UI."""
@@ -866,16 +866,19 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    logger.info("\u2705 Streamlit UI started. Launching main()...")
+    logger.info("\u2705 Streamlit UI starting in __main__")
+    print(f"Python {sys.version}", file=sys.stderr)
+    print(f"CWD: {os.getcwd()}", file=sys.stderr)
     try:
+        if "session_start_ts" not in st.session_state:
+            st.session_state["session_start_ts"] = datetime.utcnow().isoformat(
+                timespec="seconds"
+            )
         main()
     except Exception as exc:  # pragma: no cover - startup diagnostics
         logger.exception("UI startup failed")
         print(f"Startup failed: {exc}", file=sys.stderr)
         traceback.print_exc(file=sys.stderr)
-        st.warning(f"UI startup failed — check logs for details: {exc}")
+        st.error(f"UI startup failed: {exc}")
     else:
-        st.success("✅ UI Booted")
         print("UI Booted", file=sys.stderr)
-
-
