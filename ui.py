@@ -878,7 +878,8 @@ def main() -> None:
     st.set_page_config(page_title="superNova_2177", layout="wide")
 
     if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
-        print("[debug] healthz check", file=sys.stderr)
+        # Explicit console log for monitoring the health check endpoint
+        print("[DEBUG] healthz request served")
         st.write("ok")
         return
 
