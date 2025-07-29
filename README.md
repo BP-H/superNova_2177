@@ -350,6 +350,19 @@ Missing packages such as `tqdm` are installed automatically when you run `one_cl
 - **Browser does not open**: Navigate manually to
   [http://localhost:8888](http://localhost:8888) or the port you selected.
 
+### CI Health Check
+
+The continuous integration workflow starts the Streamlit UI using the
+`STREAMLIT_PORT` environment variable (default `8888`). A fallback handler in
+`ui.py` responds with `ok` when `/?healthz=1` is requested. Verify that your
+local server is running with:
+
+```bash
+curl http://localhost:${STREAMLIT_PORT:-8888}/?healthz=1
+```
+
+You should see the plain text `ok` if the app started correctly.
+
 ### Job Queue & Polling
 
 Long-running tasks started via the UI now run asynchronously. Use the
