@@ -1,5 +1,6 @@
 import os
 import streamlit as st  # ensure Streamlit is imported early
+from streamlit.runtime.scriptrunner import get_script_run_ctx
 
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
@@ -19,7 +20,6 @@ import traceback
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 from datetime import datetime
 from pathlib import Path
-from importlib import import_module
 import time
 
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
@@ -42,18 +42,21 @@ os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 HEALTH_CHECK_PARAM = "healthz"
 
 # Directory containing Streamlit page modules
-PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+PAGES_DIR = (
+    Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+)
 
-# Toggle verbose output via env var
-DEBUG_MODE = os.getenv("DEBUG_UI", "").lower() in {"1", "true", "yes"}
+# Toggle verbose output via ``UI_DEBUG_PRINTS``
+UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
 
-def dprint(msg: str) -> None:
-    """Print debug message if ``DEBUG_UI`` is enabled."""
-    if DEBUG_MODE:
+
+def log(msg: str) -> None:
+    if UI_DEBUG:
         print(msg, file=sys.stderr)
 
-if os.getenv("UI_DEBUG_PRINTS", "1") != "0":
-    print("\u23F3 Booting superNova_2177 UI...", file=sys.stderr)
+
+if UI_DEBUG:
+    print("\u23f3 Booting superNova_2177 UI...", file=sys.stderr)
 from streamlit_helpers import (
     alert,
     apply_theme,
@@ -123,6 +126,7 @@ from protocols import AGENT_REGISTRY
 from social_tabs import render_social_tab
 from voting_ui import render_voting_tab
 
+
 def get_st_secrets() -> dict:
     """Return Streamlit secrets with a fallback for development."""
     try:
@@ -132,6 +136,7 @@ def get_st_secrets() -> dict:
             "SECRET_KEY": "dev",
             "DATABASE_URL": "sqlite:///:memory:",
         }
+
 
 sample_path = Path(__file__).resolve().parent / "sample_validations.json"
 
@@ -878,23 +883,26 @@ def render_validation_ui() -> None:
         st.subheader("Agent Output")
         st.json(st.session_state["agent_output"])
 
-def main() -> None:
+
 def main() -> None:
     """Entry point for the Streamlit UI."""
-    dprint("main() invoked")
+    log("main() invoked")
     st.set_page_config(page_title="superNova_2177", layout="wide")
-
-    # CI health check (via query or platform env)
-    if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
+    ctx = get_script_run_ctx()
+    if ctx and ctx._get_request() and ctx._get_request().path == "/healthz":
         st.write("ok")
-        return
+        st.stop()
+
+    st.title("superNova_2177")
 
     # Check Streamlit page directory
     if not PAGES_DIR.is_dir():
         render_landing_page()
         return
 
-    page_files = sorted(p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py")
+    page_files = sorted(
+        p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
+    )
     if not page_files:
         render_landing_page()
         return
@@ -903,16 +911,19 @@ def main() -> None:
     choice = st.sidebar.selectbox("Page", page_files)
 
     try:
+        from importlib import import_module
+
         module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
         page_main = getattr(module, "main", None)
         if callable(page_main):
             page_main()
         else:
             st.error(f"Page '{choice}' is missing a main() function.")
-    except Exception:
+    except Exception as exc:
         tb = traceback.format_exc()
         st.error(f"Error loading page '{choice}':")
         st.text(tb)
+        log(exc)
         print(tb, file=sys.stderr)
 
 
