@@ -5,6 +5,7 @@ from nicegui import ui
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
 from utils.layout import page_container
+from utils.features import skeleton_loader
 from .login_page import login_page
 
 
@@ -45,6 +46,10 @@ async def proposals_page():
         proposals_list = ui.column().classes('w-full')
 
         async def refresh_proposals():
+            proposals_list.clear()
+            with proposals_list:
+                for _ in range(3):
+                    skeleton_loader().classes('w-full h-20 mb-2')
             proposals = await api_call('GET', '/proposals/') or []
             proposals_list.clear()
             for p in proposals:
