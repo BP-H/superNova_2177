@@ -1,4 +1,7 @@
 # superNova_2177/ ⚡️🌌🎶🚀🌸🔬
+STRICTLY A SOCIAL MEDIA PLATFORM  
+Intellectual Property & Artistic Inspiration  
+Legal & Ethical Safeguards
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/BP-H/community_guidelines/blob/main/LICENSE)
 [![Python 3.11](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
 [![Open Source](https://img.shields.io/badge/Open%20Source-%E2%9D%A4-red.svg)](https://opensource.org/)
