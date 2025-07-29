@@ -1,0 +1,17 @@
+sentence-transformers
+scipy
+statsmodels
+pulp
+matplotlib
+python-snappy
+qutip
+pandas
+pygame
+mido
+midiutil
+torch
+scikit-learn
+kaleido
+openai
+anthropic
+google-generativeai

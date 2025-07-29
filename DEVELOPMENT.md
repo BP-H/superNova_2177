@@ -14,6 +14,7 @@ This repository targets **Python 3.11** and uses standard tooling for managing d
    ```bash
    pip install .
    pip install -r requirements.txt
+   # pip install -r requirements-optional.txt
    ```
 
 ## Running Tests

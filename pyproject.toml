@@ -27,9 +27,17 @@ dependencies = [
     "python-dotenv",
     "numpy",
     "sympy",
+    "tqdm",
+    "streamlit",
+    "asyncpg",
+    "email-validator",
+    "streamlit-ace",
+]
+
+[project.optional-dependencies]
+optional = [
     "sentence-transformers",
     "scipy",
-    "tqdm",
     "statsmodels",
     "pulp",
     "matplotlib",
@@ -41,13 +49,10 @@ dependencies = [
     "midiutil",
     "torch",
     "scikit-learn",
-    "streamlit",
-    "asyncpg",
-    "email-validator",
-    "streamlit-ace",
+    "kaleido",
     "openai",
     "anthropic",
-    "google-generativeai"
+    "google-generativeai",
 ]
 
 [project.scripts]

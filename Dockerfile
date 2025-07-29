@@ -11,15 +11,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /install
 COPY requirements.txt ./
-# Install build tools and Python dependencies, including Streamlit
+# Install build tools and Python dependencies
+# SDL libraries are omitted unless requirements-optional.txt is used
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         build-essential \
         libsnappy-dev \
-        libsdl2-dev \
-        libsdl2-image-dev \
-        libsdl2-mixer-dev \
-        libsdl2-ttf-dev \
     && rm -rf /var/lib/apt/lists/* \
     && pip install --no-cache-dir --prefix=/install -r requirements.txt
 

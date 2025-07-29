@@ -32,6 +32,8 @@ A modular intelligence pipeline that evaluates hypotheses through evidence-based
 python setup_env.py
 # or install dependencies manually
 pip install -r requirements.txt
+# install optional features if desired
+# pip install -r requirements-optional.txt
 
 # optional: launch the API immediately
 # python setup_env.py --run-app
@@ -96,6 +98,8 @@ This project depends on libraries such as `fastapi`, `pydantic-settings`, `struc
   packages yourself using `requirements.txt`:
   ```bash
   pip install -r requirements.txt  # installs numpy, python-dateutil, email-validator, streamlit-ace, etc.
+  # install optional packages as needed
+  # pip install -r requirements-optional.txt
   ```
    A PyPI wheel is currently unavailable. Run `python setup_env.py` or use the online installer scripts:
    ```bash
@@ -121,7 +125,9 @@ build the project using Docker, these packages are installed automatically:
 **Ubuntu**
 
 ```bash
-sudo apt-get install build-essential libsnappy-dev libsdl2-dev …
+sudo apt-get install build-essential libsnappy-dev
+# optional: SDL headers for the music simulator
+# sudo apt-get install libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
 ```
 
 The Docker image installs these dependencies automatically, so you only
@@ -130,7 +136,9 @@ need them locally when running without Docker.
 **macOS**
 
 ```bash
-brew install snappy sdl2 …
+brew install snappy
+# optional: SDL libraries
+# brew install sdl2 sdl2_image sdl2_mixer sdl2_ttf
 ```
 
 ### Makefile Quick Commands
@@ -210,8 +218,10 @@ Set up a Python environment and install the package and its dependencies:
 
 ```bash
 pip install .
+# install core libraries
+pip install -r requirements.txt
 # install optional libraries used by the tests
-pip install -r requirements.txt  # includes streamlit-ace
+# pip install -r requirements-optional.txt
 # To install the exact versions used during development,
 # use the generated `requirements.lock` file instead:
 # pip install -r requirements.lock
@@ -262,8 +272,9 @@ docker build -t supernova-ui .
 docker run -p 8501:8501 supernova-ui
 ```
 
-The build process installs required system libraries such as `libsnappy-dev`
-and SDL dependencies, so no manual setup is needed when using Docker.
+The build process installs required system libraries such as `libsnappy-dev`.
+Optional SDL dependencies are included only when `requirements-optional.txt`
+is used, so no manual setup is needed when enabling those features in Docker.
 
 Or bring up the full stack:
 ```bash
@@ -307,7 +318,7 @@ Run these commands from the repository root. **Do not** execute `python ui.py`
 directly as that bypasses Streamlit's runtime.
 
 Exporting plots as static images requires the `kaleido` package. Install it
-using `pip install -r requirements.txt` if it isn't already available.
+using `pip install -r requirements-optional.txt` if it isn't already available.
 
 Open [http://localhost:8888](http://localhost:8888) in your browser to interact with the demo. Use the **Reset to Demo** button below the editor to reload `sample_validations.json` at any time.
 
@@ -333,7 +344,8 @@ Missing packages such as `tqdm` are installed automatically when you run `one_cl
 ### Troubleshooting the UI
 
 - **Missing dependencies**: If the interface fails with `ModuleNotFoundError`, run
-  `pip install -r requirements.txt` to ensure all packages are available.
+- **Missing dependencies**: If the interface fails with `ModuleNotFoundError`, run
+  `pip install -r requirements.txt -r requirements-optional.txt` to ensure all packages are available.
 - **Port already in use**: Pass `--server.port` to Streamlit or set the
   `STREAMLIT_SERVER_PORT` environment variable to use a different port.
 - **Browser does not open**: Navigate manually to
@@ -366,8 +378,9 @@ Deploy the demo UI online with Streamlit Cloud:
 3. Choose the repo and set `streamlit_app.py` as the entry point.
 4. Add your `SECRET_KEY` and set a `DATABASE_URL` secret with your connection string under **Secrets** in the app settings.
 5. Streamlit will install dependencies from `requirements.txt` and launch the app.
+   Include `requirements-optional.txt` if you need advanced features.
 
-`kaleido` is bundled in `requirements.txt` so image export features work on Streamlit Cloud.
+`kaleido` is listed in `requirements-optional.txt` so image export features work on Streamlit Cloud when installed.
 
 After the build completes, you'll get a shareable URL to interact with the validation demo in your browser.
 
@@ -458,7 +471,8 @@ Before running the tests, install the packages from `requirements.txt` (or the e
 
 ```bash
 python setup_env.py --locked  # install from requirements.lock
-pip install -r requirements.txt  # installs streamlit-ace
+pip install -r requirements.txt
+# pip install -r requirements-optional.txt
 ```
 
 ### Test Requirements
