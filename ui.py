@@ -24,6 +24,11 @@ os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
+)
 
 plt = None  # imported lazily in run_analysis
 nx = None  # imported lazily in run_analysis
@@ -46,6 +51,7 @@ HEALTH_CHECK_PARAM = "healthz"
 PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
 
 print("\u23F3 Booting superNova_2177 UI...", file=sys.stderr)
+logger.debug("Module import complete, starting UI")
 from streamlit_helpers import (
     alert,
     apply_theme,
@@ -869,7 +875,9 @@ def render_validation_ui() -> None:
 
 def main() -> None:
     import streamlit as st
+    logger.debug("main() starting")
     st.title("🤗//⚡//Launching main()")
+    st.text("Checkpoint: entered main()")
     import streamlit as st
     import os
     from importlib import import_module
@@ -877,23 +885,29 @@ def main() -> None:
     st.set_page_config(page_title="superNova_2177", layout="wide")
 
     if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
+        logger.debug("Health check triggered")
         st.write("ok")
         return
 
+    logger.debug(f"Pages directory: {PAGES_DIR}")
     if not PAGES_DIR.is_dir():
         st.error("Pages directory not found")
+        logger.error("Pages directory not found")
+        render_landing_page()
         return
 
     page_files = sorted(
         p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
     )
 
+    logger.debug(f"Available pages: {page_files}")
     if not page_files:
         st.warning("No pages available — showing fallback UI.")
-        st.title("superNova_2177")
-        st.write("This is a placeholder UI while pages are being loaded.")
+        logger.warning("No pages found")
+        render_landing_page()
         return
 
+    logger.debug("Rendering main UI components")
     render_main_ui()  # This shows sidebar etc.
 
     choice = st.sidebar.selectbox("Page", page_files)
@@ -901,6 +915,8 @@ def main() -> None:
         module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
         page_main = getattr(module, "main", None)
         if callable(page_main):
+            logger.debug(f"Running page: {choice}")
+            st.text(f"Checkpoint: loading page {choice}")
             page_main()
         else:
             st.error(f"Page '{choice}' is missing a main() function.")
@@ -913,17 +929,6 @@ def main() -> None:
 
 def render_landing_page() -> None:
     """Display a minimal landing page with basic info."""
-    st.title("superNova_2177")
-    st.write(
-        "Welcome to the superNova_2177 project — a creative research platform."
-    )
-    st.write(
-        "For the full NiceGUI interface, run: `python -m transcendental_resonance_frontend`."
-    )
-    st.write("See the [GitHub repo](https://github.com/BP-H/superNova_2177) for more info.")
-
-def render_landing_page() -> None:
-    """Display a minimal landing page with basic info."""
     st.set_page_config(page_title="superNova_2177", layout="centered")
     st.title("superNova_2177")
     st.write("Welcome to the superNova_2177 project — a creative research platform.")
@@ -931,10 +936,11 @@ def render_landing_page() -> None:
     st.write("See the [GitHub repo](https://github.com/BP-H/superNova_2177) for more info.")
 
 if __name__ == "__main__":
-    try:
+    if os.environ.get("STREAMLIT_IS_RUNNING") != "1":
+        logger.debug("__main__ invoked, bootstrapping Streamlit server")
+        os.environ["STREAMLIT_IS_RUNNING"] = "1"
+        import streamlit.web.cli as stcli
+        sys.argv = ["streamlit", "run", __file__]
+        stcli.main()
+    else:
         main()
-    except Exception as e:
-        import traceback
-        st.write("App failed with exception:")
-        st.text("".join(traceback.format_exception(type(e), e, e.__traceback__)))
-        raise
