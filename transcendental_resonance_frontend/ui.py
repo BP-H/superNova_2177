@@ -1,5 +1,9 @@
 """Streamlit entry point to launch the NiceGUI-based Transcendental Resonance UI."""
 
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 from __future__ import annotations
 
 import os
@@ -8,7 +12,6 @@ from importlib import import_module
 from pathlib import Path
 
 import streamlit as st
-
 
 HEALTH_CHECK_PARAM = "healthz"
 
@@ -22,7 +25,10 @@ for path in (ROOT, PKG_DIR, SRC_DIR):
         sys.path.insert(0, str(path))
 
 # Respond quickly to Cloud health probes before importing heavy modules
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
+if (
+    st.query_params.get(HEALTH_CHECK_PARAM) == "1"
+    or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz"
+):
     st.write("ok")
     st.stop()
 
