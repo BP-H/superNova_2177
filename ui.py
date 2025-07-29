@@ -1,8 +1,8 @@
-import streamlit as st  # make sure this is FIRST(🥺 😂 i know not here but why not 🤷🥳⚡🥺🫶👏☺️🌸)
+# isort: off
+import os
+import streamlit as st  # keep Streamlit import near the top for CLI bootstrapping
 
-# STRICTLY A SOCIAL MEDIA PLATFORM
-# Intellectual Property & Artistic Inspiration
-# Legal & Ethical Safeguards
+# isort: on
 
 import asyncio
 import difflib
@@ -10,17 +10,25 @@ import io
 import json
 import logging
 import math
-import os
 import sys
 import traceback
-
+import typing
 # Default port controlled by start.sh via STREAMLIT_PORT; old setting kept
 # for reference but disabled.
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 from datetime import datetime
-from pathlib import Path
 from importlib import import_module
-import time
+from pathlib import Path
+
+from api_key_input import render_api_key_ui, render_simulation_stubs
+from streamlit_helpers import (alert, apply_theme, centered_container, header,
+                               theme_selector)
+from ui_utils import render_main_ui
+
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 
@@ -31,11 +39,9 @@ plt = None  # imported lazily in run_analysis
 nx = None  # imported lazily in run_analysis
 go = None  # imported lazily in run_analysis
 Network = None  # imported lazily in run_analysis
-# Import Streamlit and register fallback health check
-import os
+
+# Register fallback polling mode for Streamlit reloads
 os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
-# ... your other imports here ...
-import streamlit as st
 
 # Bind to the default Streamlit port to satisfy platform health checks
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
@@ -45,26 +51,21 @@ import streamlit as st
 HEALTH_CHECK_PARAM = "healthz"
 
 # Directory containing Streamlit page modules
-PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+PAGES_DIR = (
+    Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+)
 
 # Toggle verbose output via env var
 DEBUG_MODE = os.getenv("DEBUG_UI", "").lower() in {"1", "true", "yes"}
+
 
 def dprint(msg: str) -> None:
     """Print debug message if ``DEBUG_UI`` is enabled."""
     if DEBUG_MODE:
         print(msg, file=sys.stderr)
 
+
 dprint("\u23F3 Booting superNova_2177 UI...")
-from streamlit_helpers import (
-    alert,
-    apply_theme,
-    centered_container,
-    header,
-    theme_selector,
-)
-from api_key_input import render_api_key_ui, render_simulation_stubs
-from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_main_ui
 
 
 def _run_async(coro):
@@ -100,7 +101,7 @@ try:
     from superNova_2177 import InMemoryStorage, agent, cosmic_nexus
 except Exception:  # pragma: no cover - optional runtime globals
     cosmic_nexus = None  # type: ignore
-    agent = None  # type: ignore
+    agent: typing.Any | None = None  # type: ignore
     InMemoryStorage = None  # type: ignore
 
 
@@ -117,13 +118,10 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     update_validator_reputations = None
 
-from typing import Any
+from typing import Any  # noqa: E402
 
-from agent_ui import render_agent_insights_tab
-from llm_backends import get_backend
-from protocols import AGENT_REGISTRY
-from social_tabs import render_social_tab
-from voting_ui import render_voting_tab
+from llm_backends import get_backend  # noqa: E402
+from protocols import AGENT_REGISTRY  # noqa: E402
 
 try:
     st_secrets = st.secrets
@@ -510,7 +508,11 @@ def render_validation_ui() -> None:
             timespec="seconds"
         )
     ts_placeholder.markdown(
-        f"<div style='position:fixed;top:0;right:0;background:rgba(0,0,0,0.6);color:white;padding:0.25em 0.5em;border-radius:0 0 0 4px;'>Session start: {st.session_state['session_start_ts']} UTC</div>",
+        (
+            "<div style='position:fixed;top:0;right:0;background:rgba(0,0,0,0.6);"
+            "color:white;padding:0.25em 0.5em;border-radius:0 0 0 4px;'>"
+            f"Session start: {st.session_state['session_start_ts']} UTC</div>"
+        ),
         unsafe_allow_html=True,
     )
     if "diary" not in st.session_state:
@@ -728,10 +730,10 @@ def render_validation_ui() -> None:
                     "Event JSON", value="{}", height=150, key="inject_event"
                 )
                 if st.button("Process Event"):
-                    if agent:
+                    if agent:  # type: ignore[used-before-def]
                         try:
                             event = json.loads(event_json or "{}")
-                            agent.process_event(event)
+                            agent.process_event(event)  # type: ignore[attr-defined]
                             st.success("Event processed")
                         except Exception as exc:
                             st.error(f"Event failed: {exc}")
@@ -746,16 +748,21 @@ def render_validation_ui() -> None:
                         list(getattr(cosmic_nexus, "sub_universes", {}).keys()),
                     )
                 if (
-                    agent
+                    agent  # type: ignore[used-before-def]
                     and InMemoryStorage
                     and isinstance(agent.storage, InMemoryStorage)
                 ):
                     st.write(
-                        f"Users: {len(agent.storage.users)} / Coins: {len(agent.storage.coins)}"
-                    )
-                elif agent:
+                        (
+                            f"Users: {len(agent.storage.users)} / "
+                            f"Coins: {len(agent.storage.coins)}"
+                        )
+                    )  # type: ignore[attr-defined]
+                elif agent:  # type: ignore[used-before-def]
                     try:
-                        user_count = len(agent.storage.get_all_users())
+                        user_count = len(
+                            agent.storage.get_all_users()
+                        )  # noqa: F823  # type: ignore[attr-defined,used-before-def]
                     except Exception:
                         user_count = "?"
                     st.write(f"User count: {user_count}")
@@ -877,18 +884,16 @@ def render_validation_ui() -> None:
         st.subheader("Agent Output")
         st.json(st.session_state["agent_output"])
 
-def main() -> None:
-    import streamlit as st
-    dprint("main() invoked")
-    st.title("🤗//⚡//Launching main()")
-    import streamlit as st
-    import os
-    from importlib import import_module
 
+def main() -> None:
+    """Entry point for the Streamlit dashboard."""
     st.set_page_config(page_title="superNova_2177", layout="wide")
     dprint("main() entered")
 
-    if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
+    if (
+        st.query_params.get(HEALTH_CHECK_PARAM) == "1"
+        or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz"
+    ):
         dprint("health-check branch")
         st.write("ok")
         return
@@ -896,11 +901,8 @@ def main() -> None:
     dprint(f"loading pages from {PAGES_DIR}")
     if not PAGES_DIR.is_dir():
         dprint("pages directory missing")
-        st.error("Pages directory not found")
         render_landing_page()
         return
-    else:
-        dprint("pages directory found")
 
     page_files = sorted(
         p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
@@ -908,30 +910,25 @@ def main() -> None:
 
     if not page_files:
         dprint("pages directory empty")
-        st.warning("No pages available — showing fallback UI.")
         render_landing_page()
         return
 
-    render_main_ui()  # This shows sidebar etc.
-
+    render_main_ui()
     choice = st.sidebar.selectbox("Page", page_files)
     dprint(f"loading page {choice}")
     try:
-        module = import_module(
-            f"transcendental_resonance_frontend.pages.{choice}"
-        )
+        module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
         page_main = getattr(module, "main", None)
         if callable(page_main):
             page_main()
             dprint(f"page {choice} loaded")
         else:
             st.error(f"Page '{choice}' is missing a main() function.")
-    except Exception as e:
-        import traceback
+    except Exception as exc:
+        tb = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
         st.error(f"Error loading page '{choice}':")
-        st.text("".join(traceback.format_exception(type(e), e, e.__traceback__)))
-        dprint(f"exception loading {choice}: {e}")
-
+        st.text(tb)
+        print(tb, file=sys.stderr)
 
 
 def render_landing_page() -> None:
@@ -939,25 +936,17 @@ def render_landing_page() -> None:
     st.set_page_config(page_title="superNova_2177", layout="centered")
     st.title("superNova_2177")
     st.write("Welcome to the superNova_2177 project — a creative research platform.")
-    st.write("For the full NiceGUI interface, run: `python -m transcendental_resonance_frontend`.")
-    st.write("See the [GitHub repo](https://github.com/BP-H/superNova_2177) for more info.")
+    st.write(
+        "For the full NiceGUI interface, run: `python -m transcendental_resonance_frontend`."
+    )
+    st.write(
+        "See the [GitHub repo](https://github.com/BP-H/superNova_2177) for more info."
+    )
+    st.info("No Streamlit pages were found. Showing fallback landing page.")
+
 
 if __name__ == "__main__":
-    import argparse
+    from streamlit.web import cli as stcli
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--debug", action="store_true", help="Enable verbose logs")
-    args = parser.parse_args()
-    if args.debug:
-        DEBUG_MODE = True
-
-    dprint("__main__ entry")
-
-    try:
-        main()
-    except Exception as e:
-        import traceback
-        st.write("App failed with exception:")
-        st.text("".join(traceback.format_exception(type(e), e, e.__traceback__)))
-        dprint(f"fatal error: {e}")
-        raise
+    sys.argv = ["streamlit", "run", __file__]
+    sys.exit(stcli.main())

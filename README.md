@@ -56,8 +56,8 @@ pip install -r requirements.txt
 # python setup_env.py --launch-ui
 # or run manually with
 ./start.sh       # launches ui.py on port 8888
-streamlit run ui.py
-# running `python ui.py` directly will *not* start the Streamlit server
+python ui.py    # now automatically invokes Streamlit
+streamlit run ui.py  # alternative invocation
 
 # Try demo mode
 supernova-validate --demo
@@ -77,6 +77,11 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
 
 The UI listens on [http://localhost:8888](http://localhost:8888) by default.
 Append `?healthz=1` to the URL and you should see `ok` when the server is running.
+You can verify from the command line with:
+
+```bash
+curl http://localhost:8888/?healthz=1
+```
 
 ## 🔧 Local Development
 
@@ -86,10 +91,12 @@ To launch the Streamlit UI:
 chmod +x start.sh
 ./start.sh  # launches ui.py
 # or run directly
-streamlit run ui.py
+python ui.py    # automatically invokes Streamlit
+streamlit run ui.py  # alternative invocation
 ```
 
 This script launches `ui.py` automatically from any directory in the repo.
+Running `python ui.py` from anywhere works the same as `start.sh`.
 
 ## ☁️ Launch Online
 
@@ -339,8 +346,9 @@ from streamlit_helpers import header, alert, theme_selector, centered_container
 
 Import these helpers at the top of your Streamlit files to keep the UI code
 clean and consistent.
-Run these commands from the repository root. **Do not** execute `python ui.py`
-directly as that bypasses Streamlit's runtime.
+Run these commands from anywhere in the repository. `python ui.py` now
+launches the Streamlit server automatically and is equivalent to running
+`streamlit run ui.py`.
 
 Exporting plots as static images requires the `kaleido` package. Install it
 using `pip install -r requirements-streamlit.txt` if it isn't already available.
