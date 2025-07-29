@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Styling utilities for the Transcendental Resonance frontend."""
 
 from typing import Dict, Optional
@@ -41,6 +44,13 @@ THEMES: Dict[str, Dict[str, str]] = {
         "text": "#FFFFFF",
         "gradient": "linear-gradient(135deg, #000000 0%, #222222 100%)",
     },
+    "minimalist_dark": {
+        "primary": "#282c34",
+        "accent": "#6d8cff",
+        "background": "#1a1a1a",
+        "text": "#e0e0e0",
+        "gradient": "linear-gradient(135deg, #1f1f1f 0%, #282c34 100%)",
+    },
 }
 
 # Currently active theme name and accent color. They can be changed at runtime
@@ -66,7 +76,7 @@ def apply_global_styles() -> None:
         )
         if isinstance(stored_accent, str) and stored_accent:
             ACTIVE_ACCENT = stored_accent
-    except Exception:
+    except Exception:  # nosec B110
         # Accessing localStorage may fail during testing
         pass
 
@@ -74,11 +84,21 @@ def apply_global_styles() -> None:
     theme["accent"] = ACTIVE_ACCENT
 
     font_family = "'Inter', sans-serif"
-    font_link = "<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap\" rel=\"stylesheet\">"
+    font_link = (
+        '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" '
+        'rel="stylesheet">'
+    )
     if ACTIVE_THEME_NAME == "cyberpunk":
         font_family = "'Orbitron', sans-serif"
         font_link = (
-            "<link href=\"https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap\" rel=\"stylesheet\">"
+            '<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" '
+            'rel="stylesheet">'
+        )
+    elif ACTIVE_THEME_NAME == "minimalist_dark":
+        font_family = "'Iosevka', monospace"
+        font_link = (
+            '<link href="https://fonts.googleapis.com/css2?family=Iosevka:wght@400;700&display=swap" '
+            'rel="stylesheet">'
         )
 
     ui.add_head_html(
@@ -128,6 +148,7 @@ def set_accent(color: str) -> None:
 
 
 _previous_theme = ACTIVE_THEME_NAME
+
 
 def toggle_high_contrast(enabled: bool) -> None:
     """Enable or disable high contrast mode."""
