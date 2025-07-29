@@ -11,6 +11,8 @@ import math
 import os
 import sys
 import traceback
+
+os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 from datetime import datetime
 from pathlib import Path
 from importlib import import_module
@@ -898,42 +900,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    logger.info("\u2705 Streamlit UI starting...")
-
-    defaults = {
-        "session_start_ts": datetime.utcnow().isoformat(timespec="seconds"),
-        "diary": [],
-        "analysis_diary": [],
-        "run_count": 0,
-        "last_result": None,
-        "last_run": None,
-        "agent_output": {},
-        "validations_json": "",
-        "theme": "light",
-    }
-    for key, value in defaults.items():
-        st.session_state.setdefault(key, value)
-
-    apply_theme(st.session_state["theme"])
-
-    boot_status = st.status("Initializing...", expanded=False)
-    max_attempts = 2
-    for attempt in range(1, max_attempts + 1):
-        try:
-            main()
-        except Exception as exc:  # pragma: no cover - startup diagnostics
-            logger.exception("UI startup failed")
-            print(f"Startup failed (attempt {attempt}): {exc}", file=sys.stderr)
-            traceback.print_exc(file=sys.stderr)
-            if attempt >= max_attempts:
-                boot_status.update(f"Startup failed: {exc}", state="error")
-                st.error(f"UI startup failed: {exc}")
-                break
-            boot_status.update(f"Retrying... ({attempt}/{max_attempts})", state="running")
-            time.sleep(1)
-        else:
-            boot_status.update("Ready", state="complete")
-            print("UI Booted", file=sys.stderr)
-            st.success("✅ UI Booted")
-            break
+    main()
 
