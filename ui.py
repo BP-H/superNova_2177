@@ -866,15 +866,30 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    print("Starting Streamlit UI...", file=sys.stderr)
-    st.session_state.setdefault("diary", [])
-    st.session_state.setdefault("agent_output", {})
+    logger.info("\u2705 Streamlit UI starting...")
+
+    defaults = {
+        "session_start_ts": datetime.utcnow().isoformat(timespec="seconds"),
+        "diary": [],
+        "analysis_diary": [],
+        "run_count": 0,
+        "last_result": None,
+        "last_run": None,
+        "agent_output": {},
+        "validations_json": "",
+        "theme": "light",
+    }
+    for key, value in defaults.items():
+        st.session_state.setdefault(key, value)
+
+    apply_theme(st.session_state["theme"])
+
     try:
         main()
     except Exception as exc:  # pragma: no cover - startup diagnostics
         logger.exception("UI startup failed")
-        print(exc, file=sys.stderr)
-        traceback.print_exc()
+        print(f"Startup failed: {exc}", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
         st.error(f"UI startup failed: {exc}")
     else:
         print("UI Booted", file=sys.stderr)
