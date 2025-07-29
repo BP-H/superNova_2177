@@ -37,6 +37,36 @@ async def messages_page():
 
         messages_list = ui.column().classes("w-full")
 
+        edit_dialog = ui.dialog()
+        with edit_dialog:
+            with ui.card().classes("w-full p-4"):
+                edit_input = ui.textarea().classes("w-full mb-2")
+
+                async def save_edit() -> None:
+                    if edit_message_id is None:
+                        return
+                    resp = await api_call(
+                        "PUT",
+                        f"/messages/{edit_message_id}",
+                        {"content": edit_input.value},
+                    )
+                    if resp:
+                        ui.notify("Message updated", color="positive")
+                        edit_dialog.close()
+                        await refresh_messages()
+
+                ui.button("Save", on_click=save_edit).style(
+                    f"background: {THEME['primary']}; color: {THEME['text']};"
+                )
+
+        edit_message_id: int | None = None
+
+        async def open_edit(m: dict) -> None:
+            nonlocal edit_message_id
+            edit_message_id = m["id"]
+            edit_input.value = m["content"]
+            edit_dialog.open()
+
         async def refresh_messages():
             messages = await api_call("GET", "/messages/") or []
             messages_list.clear()
@@ -47,8 +77,14 @@ async def messages_page():
                         .classes("w-full mb-2")
                         .style("border: 1px solid #333; background: #1e1e1e;")
                     ):
-                        ui.label(f"From: {m['sender_id']}").classes("text-sm")
-                        ui.label(m["content"]).classes("text-sm")
+                        with ui.row().classes("items-center justify-between"):
+                            with ui.column().classes("grow"):
+                                ui.label(f"From: {m['sender_id']}").classes("text-sm")
+                                ui.label(m["content"]).classes("text-sm")
+                            ui.button(
+                                on_click=lambda msg=m: ui.run_async(open_edit(msg)),
+                                icon="edit",
+                            ).props("flat")
 
         await refresh_messages()
         ui.timer(30, lambda: ui.run_async(refresh_messages()))
