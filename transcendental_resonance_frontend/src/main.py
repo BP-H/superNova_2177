@@ -5,6 +5,8 @@
 # Legal & Ethical Safeguards
 
 import asyncio
+import logging
+import time
 
 from nicegui import background_tasks, ui
 
@@ -12,7 +14,12 @@ from .pages import *  # register all pages  # noqa: F401,F403
 from .pages.explore_page import explore_page  # noqa: F401
 from .pages.system_insights_page import system_insights_page  # noqa: F401
 from .pages.feed_page import feed_page  # noqa: F401
-from .utils.api import api_call, clear_token, listen_ws
+from .utils.api import (
+    api_call,
+    clear_token,
+    listen_ws,
+    on_ws_status_change,
+)
 from .utils.loading_overlay import LoadingOverlay
 from .utils.styles import (
     THEMES,
@@ -28,6 +35,7 @@ from .utils.features import (
     theme_personalization_panel,
     onboarding_overlay,
 )
+from .utils import ErrorOverlay
 
 ui.context.client.on_disconnect(clear_token)
 apply_global_styles()
@@ -39,6 +47,27 @@ onboarding = onboarding_overlay()
 contrast_toggle = high_contrast_switch()
 contrast_toggle.on("change", lambda e: toggle_high_contrast(e.value))
 theme_personalization_panel()
+error_overlay = ErrorOverlay()
+
+ws_status = (
+    ui.icon("circle")
+    .classes("fixed bottom-0 left-0 m-2")
+    .style("color: red")
+)
+
+def _update_ws_status(status: str) -> None:
+    color = "green" if status == "connected" else "red"
+    ws_status.style(f"color: {color}")
+    if status == "connected":
+        ui.notify("WebSocket connected", color="positive")
+        error_overlay.hide()
+    else:
+        ui.notify("WebSocket disconnected", color="warning")
+        error_overlay.show("Connection lost. Trying to reconnect...")
+
+on_ws_status_change(_update_ws_status)
+
+logger = logging.getLogger(__name__)
 
 
 def toggle_theme() -> None:
@@ -56,7 +85,8 @@ def toggle_theme() -> None:
 async def keep_backend_awake() -> None:
     """Periodically ping the backend to keep data fresh."""
     while True:
-        await api_call("GET", "/status")
+        if not await api_call("GET", "/status"):
+            logger.warning("Backend ping failed")
         await asyncio.sleep(300)
 
 
@@ -69,6 +99,12 @@ async def notification_listener() -> None:
             ui.notify(message, type="info", position="bottom-right")
 
     await listen_ws(handle_event)
+
+
+@ui.page("*")
+async def not_found() -> None:
+    """Redirect unknown routes to the main feed."""
+    ui.open("/feed")
 
 
 ui.button(
@@ -91,4 +127,20 @@ ui.on_startup(
 # - Internationalization support
 # - Theming options
 
-ui.run(title="Transcendental Resonance", dark=True, favicon="🌌", reload=False)
+def run_app() -> None:
+    """Run the NiceGUI app and retry once on failure."""
+    while True:
+        try:
+            ui.run(
+                title="Transcendental Resonance",
+                dark=True,
+                favicon="🌌",
+                reload=False,
+            )
+            break
+        except Exception as exc:  # pragma: no cover - startup failures
+            logger.exception("UI failed to start: %s", exc)
+            time.sleep(2)
+
+
+run_app()

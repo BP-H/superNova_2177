@@ -21,6 +21,9 @@ logger.propagate = False
 TOKEN: Optional[str] = None
 WS_CONNECTION = None
 
+# WebSocket status listeners
+_ws_status_listeners: List[Callable[[str], Any]] = []
+
 # Callbacks triggered when API requests start or finish
 _start_listeners: List[Callable[[], Any]] = []
 _end_listeners: List[Callable[[], Any]] = []
@@ -47,6 +50,21 @@ def _fire_listeners(listeners: List[Callable[[], Any]]) -> None:
             logger.exception("API event listener error")
 
 
+def on_ws_status_change(func: Callable[[str], Any]) -> None:
+    """Register a callback fired when WebSocket connection state changes."""
+    _ws_status_listeners.append(func)
+
+
+def _fire_ws_status(status: str) -> None:
+    for func in list(_ws_status_listeners):
+        try:
+            result = func(status)
+            if inspect.isawaitable(result):
+                asyncio.create_task(result)
+        except Exception:
+            logger.exception("WS status listener error")
+
+
 async def api_call(
     method: str,
     endpoint: str,
@@ -54,6 +72,7 @@ async def api_call(
     headers: Optional[Dict] = None,
     files: Optional[Dict] = None,
     *,
+    timeout: float = 10.0,
     return_error: bool = False,
 ) -> Optional[Dict[str, Any]]:
     """Wrapper around ``httpx.AsyncClient`` to interact with the backend API.
@@ -79,7 +98,7 @@ async def api_call(
     _fire_listeners(_start_listeners)
 
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=timeout) as client:
             if method == "GET":
                 response = await client.get(url, headers=default_headers, params=data)
             elif method == "POST":
@@ -100,15 +119,21 @@ async def api_call(
             response.raise_for_status()
             return response.json() if response.text else None
     except httpx.RequestError as exc:
-        logger.error("API request failed: %s %s - %s", method, url, exc, exc_info=True)
+        logger.error(
+            "API request failed: %s %s - %s", method, url, exc, exc_info=True
+        )
         ui.notify("API request failed", color="negative")
         if return_error:
             return {
                 "error": str(exc),
-                "status_code": getattr(
-                    getattr(exc, "response", None), "status_code", None
-                ),
+                "status_code": getattr(getattr(exc, "response", None), "status_code", None),
             }
+        return None
+    except asyncio.TimeoutError:
+        logger.error("API request timed out: %s %s", method, url)
+        ui.notify("Request timeout", color="negative")
+        if return_error:
+            return {"error": "timeout", "status_code": None}
         return None
     finally:
         _fire_listeners(_end_listeners)
@@ -158,39 +183,54 @@ async def get_group_recommendations() -> list[Dict[str, Any]]:
     return await api_call("GET", "/recommendations/groups") or []
 
 
-async def connect_ws(path: str = "/ws"):
+async def connect_ws(path: str = "/ws", timeout: float = 5.0):
     """Establish and return a WebSocket connection to the backend."""
     global WS_CONNECTION
     url = BACKEND_URL.replace("http", "ws") + path
     headers = {"Authorization": f"Bearer {TOKEN}"} if TOKEN else None
     try:
-        WS_CONNECTION = await websockets.connect(url, extra_headers=headers)
+        WS_CONNECTION = await asyncio.wait_for(
+            websockets.connect(url, extra_headers=headers), timeout
+        )
+        _fire_ws_status("connected")
         return WS_CONNECTION
     except Exception as exc:  # pragma: no cover - network errors
         logger.error("WebSocket connection failed: %s", exc, exc_info=True)
+        _fire_ws_status("disconnected")
         return None
 
 
-async def listen_ws(handler: Callable[[dict], Awaitable[None]]) -> None:
+async def listen_ws(
+    handler: Callable[[dict], Awaitable[None]], *, reconnect: bool = True
+) -> None:
     """Listen for events on the WebSocket and pass them to ``handler``."""
     global WS_CONNECTION
-    ws = await connect_ws()
-    if ws is None:
-        return
-    try:
-        async for message in ws:
-            try:
-                data = json.loads(message)
-            except Exception:
-                data = {"event": "raw", "data": message}
-            await handler(data)
-    except Exception as exc:  # pragma: no cover - network errors
-        logger.error("WebSocket listen error: %s", exc, exc_info=True)
-    finally:
-        if not ws.closed:
-            await ws.close()
-        if WS_CONNECTION is ws:
-            WS_CONNECTION = None
+    retry_delay = 3
+    while True:
+        ws = await connect_ws()
+        if ws is None:
+            if not reconnect:
+                return
+            await asyncio.sleep(retry_delay)
+            continue
+        try:
+            async for message in ws:
+                try:
+                    data = json.loads(message)
+                except Exception:
+                    data = {"event": "raw", "data": message}
+                await handler(data)
+        except Exception as exc:  # pragma: no cover - network errors
+            logger.error("WebSocket listen error: %s", exc, exc_info=True)
+        finally:
+            if not ws.closed:
+                await ws.close()
+            if WS_CONNECTION is ws:
+                WS_CONNECTION = None
+            _fire_ws_status("disconnected")
+        if not reconnect:
+            break
+        await asyncio.sleep(retry_delay)
 
 
 async def combined_search(query: str) -> list[Dict[str, Any]]:

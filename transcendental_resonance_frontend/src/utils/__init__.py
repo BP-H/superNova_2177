@@ -10,6 +10,7 @@ from .features import (
     mobile_bottom_sheet,
     skeleton_loader,
 )
+from .error_overlay import ErrorOverlay
 
 __all__ = [
     "quick_post_button",
@@ -22,4 +23,5 @@ __all__ = [
     "profile_popover",
     "mobile_bottom_sheet",
     "skeleton_loader",
+    "ErrorOverlay",
 ]
