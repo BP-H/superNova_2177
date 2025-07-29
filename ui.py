@@ -126,13 +126,15 @@ from protocols import AGENT_REGISTRY
 from social_tabs import render_social_tab
 from voting_ui import render_voting_tab
 
-try:
-    st_secrets = st.secrets
-except Exception:  # pragma: no cover - optional in dev/CI
-    st_secrets = {
-        "SECRET_KEY": "dev",
-        "DATABASE_URL": "sqlite:///:memory:",
-    }
+def get_st_secrets() -> dict:
+    """Return Streamlit secrets with a fallback for development."""
+    try:
+        return st.secrets  # type: ignore[attr-defined]
+    except Exception:  # pragma: no cover - optional in dev/CI
+        return {
+            "SECRET_KEY": "dev",
+            "DATABASE_URL": "sqlite:///:memory:",
+        }
 
 sample_path = Path(__file__).resolve().parent / "sample_validations.json"
 
@@ -565,8 +567,9 @@ def render_validation_ui() -> None:
             alert("Demo file not found", "warning")
         st.experimental_rerun()
 
-    secret_key = st_secrets.get("SECRET_KEY")
-    database_url = st_secrets.get("DATABASE_URL")
+    secrets = get_st_secrets()
+    secret_key = secrets.get("SECRET_KEY")
+    database_url = secrets.get("DATABASE_URL")
 
     with st.sidebar:
         st.header("Environment")
