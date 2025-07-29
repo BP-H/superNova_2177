@@ -1,14 +1,18 @@
+import asyncio
 import difflib
 import io
 import json
 import logging
 import math
 import os
-import asyncio
 import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
+
+# Ensure Streamlit server configuration is available before launch
+os.environ.setdefault("STREAMLIT_SERVER_ADDRESS", "0.0.0.0")
+os.environ.setdefault("STREAMLIT_SERVER_PORT", "8501")
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -30,37 +34,31 @@ except Exception:
 else:
     st.title("superNova_2177")
     st.success("\u2705 Streamlit loaded!")
-from streamlit_helpers import (
-    alert,
-    header,
-    theme_selector,
-    centered_container,
-    apply_theme,
-)
-from ui_utils import summarize_text, parse_summary, load_rfc_entries
+from streamlit_helpers import (alert, apply_theme, centered_container, header,
+                               theme_selector)
+from ui_utils import load_rfc_entries, parse_summary, summarize_text
 
-try:
-    from streamlit_app import _run_async
-except Exception:
 
-    def _run_async(coro):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(coro)
-        else:
-            if loop.is_running():
-                return asyncio.run_coroutine_threadsafe(coro, loop).result()
-            return loop.run_until_complete(coro)
+def _run_async(coro):
+    """Execute ``coro`` or schedule it if a loop is already running."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coro)
+    else:
+        if loop.is_running():
+            return asyncio.run_coroutine_threadsafe(coro, loop).result()
+        return loop.run_until_complete(coro)
 
 
 try:
-    from frontend_bridge import dispatch_route
+    from frontend_bridge import ROUTES, dispatch_route
 except Exception:  # pragma: no cover - optional dependency
     dispatch_route = None
+    ROUTES = {}
 
 try:
-    from db_models import SessionLocal, Harmonizer, UniverseBranch
+    from db_models import Harmonizer, SessionLocal, UniverseBranch
 except Exception:  # pragma: no cover - missing ORM
     SessionLocal = None  # type: ignore
     Harmonizer = None  # type: ignore
@@ -72,7 +70,7 @@ except Exception:  # pragma: no cover - optional module
     run_full_audit = None  # type: ignore
 
 try:
-    from superNova_2177 import cosmic_nexus, agent, InMemoryStorage
+    from superNova_2177 import InMemoryStorage, agent, cosmic_nexus
 except Exception:  # pragma: no cover - optional runtime globals
     cosmic_nexus = None  # type: ignore
     agent = None  # type: ignore
@@ -103,13 +101,12 @@ except Exception:  # pragma: no cover - optional dependency
 
 from typing import Any, cast
 
-
+from agent_ui import render_agent_insights_tab
 from llm_backends import get_backend
 from protocols import AGENT_REGISTRY
-
 from social_tabs import render_social_tab
 from voting_ui import render_voting_tab
-from agent_ui import render_agent_insights_tab
+
 try:
     st_secrets = st.secrets
 except Exception:  # pragma: no cover - optional in dev/CI
@@ -153,6 +150,8 @@ if HarmonyScanner is None:
 
         def scan(self, _data):
             return {"dummy": True}
+
+
 def clear_memory(state: dict) -> None:
     """Reset analysis tracking state."""
     state["analysis_diary"] = []
@@ -180,8 +179,6 @@ def diff_results(old: dict | None, new: dict) -> str:
         lineterm="",
     )
     return "\n".join(diff)
-
-
 
 
 def render_pyvis_to_html(net: Any) -> str:
@@ -461,6 +458,39 @@ def boot_diagnostic_ui():
     st.subheader("Validation Analysis")
     run_analysis([], layout="force")
 
+
+def dispatch_route_ui() -> None:
+    """Minimal interface to invoke backend routes via ``dispatch_route``."""
+    apply_theme("dark")
+    header("superNova_2177 Interface")
+
+    routes = sorted(ROUTES.keys())
+    if routes:
+        route_name = st.selectbox("Route", routes)
+    else:
+        route_name = st.text_input("Route Name")
+
+    payload_text = st.text_area("JSON Payload (optional)", "{}", height=200)
+
+    if st.button("Dispatch"):
+        try:
+            payload = json.loads(payload_text) if payload_text.strip() else {}
+        except json.JSONDecodeError as exc:
+            st.error(f"Invalid JSON payload: {exc}")
+            return
+
+        with st.spinner("Calling route..."):
+            try:
+                result = _run_async(dispatch_route(route_name, payload))
+            except Exception as exc:
+                st.error(f"Route failed: {exc}")
+            else:
+                if isinstance(result, asyncio.Task):
+                    st.info("Background task started")
+                else:
+                    st.json(result)
+
+
 def render_validation_ui() -> None:
     """Main entry point for the validation analysis UI."""
     header("superNova_2177 Validation Analyzer", layout="wide")
@@ -729,7 +759,8 @@ def render_validation_ui() -> None:
                     )
                 elif agent:
                     try:
-                        user_count = len(agent.storage.get_all_users())
+                        count = len(agent.storage.get_all_users())
+                        user_count = str(count)
                     except Exception:
                         user_count = "?"
                     st.write(f"User count: {user_count}")
@@ -831,14 +862,14 @@ def render_validation_ui() -> None:
                 try:
                     if agent_choice == "CI_PRProtectorAgent":
                         talker = backend_fn or (lambda p: p)
-                        agent = agent_cls(talker, llm_backend=backend_fn)
+                        agent_instance = agent_cls(talker, llm_backend=backend_fn)
                     elif agent_choice == "MetaValidatorAgent":
-                        agent = agent_cls({}, llm_backend=backend_fn)
+                        agent_instance = agent_cls({}, llm_backend=backend_fn)
                     elif agent_choice == "GuardianInterceptorAgent":
-                        agent = agent_cls(llm_backend=backend_fn)
+                        agent_instance = agent_cls(llm_backend=backend_fn)
                     else:
-                        agent = agent_cls(llm_backend=backend_fn)
-                    result = agent.process_event(
+                        agent_instance = agent_cls(llm_backend=backend_fn)
+                    result = agent_instance.process_event(
                         {"event": event_type, "payload": payload}
                     )
                     st.session_state["agent_output"] = result
@@ -877,5 +908,3 @@ if __name__ == "__main__":
     else:
         st.success("✅ UI Booted")
         print("UI Booted", file=sys.stderr)
-
-

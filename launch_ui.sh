@@ -1,3 +1,5 @@
 #!/bin/bash
-streamlit run streamlit_app.py
+export STREAMLIT_SERVER_ADDRESS="${STREAMLIT_SERVER_ADDRESS:-0.0.0.0}"
+export STREAMLIT_SERVER_PORT="${STREAMLIT_SERVER_PORT:-8501}"
+streamlit run ui.py
 

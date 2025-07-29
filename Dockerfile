@@ -45,5 +45,9 @@ USER appuser
 # Expose Streamlit port
 EXPOSE 8501
 
+# Set default Streamlit server configuration
+ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
+ENV STREAMLIT_SERVER_PORT=8501
+
 # Launch Streamlit UI explicitly
-CMD ["streamlit", "run", "streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "ui.py"]

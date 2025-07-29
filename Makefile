@@ -10,4 +10,4 @@ lint:
 	mypy
 
 ui:
-	streamlit run streamlit_app.py
+        streamlit run ui.py
