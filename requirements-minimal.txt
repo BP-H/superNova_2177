@@ -16,6 +16,7 @@ passlib[bcrypt]
 python-jose[cryptography]
 prometheus-client
 streamlit
+websockets
 types-requests
 
 # appended for compatibility with test suites

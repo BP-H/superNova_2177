@@ -13,6 +13,7 @@ bandit
 httpx==0.27.0
 streamlit-ace
 kaleido
+websockets
 
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
