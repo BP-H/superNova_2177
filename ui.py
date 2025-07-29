@@ -868,7 +868,10 @@ def render_validation_ui() -> None:
         st.json(st.session_state["agent_output"])
 
 def main() -> None:
+    print("🚀 Launching main()")
     st.set_page_config(page_title="superNova_2177", layout="wide")
+    st.write("Launching...")
+
     if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
         st.write("ok")
         return
