@@ -19,6 +19,7 @@ from .utils.api import (
     clear_token,
     listen_ws,
     on_ws_status_change,
+    OFFLINE_MODE,
 )
 from .utils.loading_overlay import LoadingOverlay
 from .utils.styles import (
@@ -53,6 +54,13 @@ ws_status = (
     ui.icon("circle")
     .classes("fixed bottom-0 left-0 m-2")
     .style("color: red")
+)
+
+# Show whether the frontend is running in offline mode
+offline_status = (
+    ui.icon("cloud_off" if OFFLINE_MODE else "cloud_done")
+    .classes("fixed bottom-0 right-0 m-2")
+    .style("color: red" if OFFLINE_MODE else "color: green")
 )
 
 def _update_ws_status(status: str) -> None:
