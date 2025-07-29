@@ -55,6 +55,8 @@ async def events_page():
             if resp:
                 ui.notify('Event created!', color='positive')
                 await refresh_events()
+            else:
+                ui.notify('Action failed', color='negative')
 
         ui.button('Create Event', on_click=create_event).classes('w-full mb-4').style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
