@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """AI assistance for VibeNodes."""
 
 from nicegui import ui
@@ -31,6 +34,8 @@ async def ai_assist_page(vibenode_id: int):
             if resp:
                 ui.label('AI Response:').classes('mb-2')
                 ui.label(resp['response']).classes('text-sm break-words')
+            else:
+                ui.notify('Action failed', color='negative')
 
         ui.button('Get AI Help', on_click=get_ai_response).classes('w-full').style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
