@@ -125,6 +125,15 @@ async def vibenodes_page():
                         ui.button('Remix', on_click=remix_fn).style(
                             f'background: {THEME["primary"]}; color: {THEME["text"]};'
                         )
+                        async def share_fn(vn_id=vn['id']):
+                            link = f"/vibenodes/{vn_id}"
+                            ui.run_javascript(
+                                f"navigator.clipboard.writeText(window.location.origin + '{link}')"
+                            )
+                            ui.notify('Link copied')
+                        ui.button('Share', on_click=share_fn).style(
+                            f'background: {THEME["primary"]}; color: {THEME["text"]};'
+                        )
 
                         # --- Comments Section ---
                         comments = await api_call('GET', f'/vibenodes/{vn["id"]}/comments') or []
