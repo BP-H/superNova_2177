@@ -28,7 +28,21 @@ async def messages_page():
             recipient = ui.input("Recipient Username").classes("w-full")
             group_id = ui.input("Group ID (optional)").classes("w-full")
             group_id.on("blur", lambda _: ui.run_async(refresh_messages()))
-        content = ui.textarea("Message").classes("w-full mb-2")
+        with ui.row().classes("w-full mb-2 items-center"):
+            content = ui.textarea("Message").classes("grow")
+            emoji_btn = ui.icon('emoji_emotions').classes('cursor-pointer')
+
+        emoji_dialog = ui.dialog()
+        with emoji_dialog:
+            with ui.card().classes("p-2"):
+                def insert_emoji(e: str) -> None:
+                    content.value = (content.value or '') + e
+                    emoji_dialog.close()
+
+                for em in ['😊', '😂', '👍', '❤️', '🚀']:
+                    ui.button(em, on_click=lambda s=em: insert_emoji(s)).props('flat')
+
+        emoji_btn.on('click', emoji_dialog.open)
 
         async def send_message():
             data = {"content": content.value}

@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Unified feed combining VibeNodes, Events, and Notifications."""
 
 from nicegui import ui
@@ -24,7 +27,28 @@ async def feed_page() -> None:
 
         feed_column = ui.column().classes('w-full')
 
+        dialog = ui.dialog()
+        with dialog:
+            with ui.card().classes('w-full p-4'):
+                post_input = ui.textarea('Post text').classes('w-full mb-2')
+
+                async def submit_post() -> None:
+                    data = {'description': post_input.value}
+                    await api_call('POST', '/vibenodes/', data)
+                    dialog.close()
+                    await refresh_feed()
+
+                ui.button('Post', on_click=lambda: ui.run_async(submit_post())).classes('w-full')
+
+        ui.button(icon='add', on_click=dialog.open).props('fab fixed bottom-0 right-0')
+
         async def refresh_feed() -> None:
+            feed_column.clear()
+            # show temporary skeletons while loading data
+            placeholders = [
+                ui.skeleton().props('type=rect animated').style('height: 80px').classes('w-full mb-2')
+                for _ in range(3)
+            ]
             vibenodes = await api_call('GET', '/vibenodes/') or []
             events = await api_call('GET', '/events/') or []
             notifs = await api_call('GET', '/notifications/') or []
