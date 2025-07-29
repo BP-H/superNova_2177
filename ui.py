@@ -937,4 +937,6 @@ def main() -> None:
         log(f"exception loading {choice}: {exc}")
         print(tb, file=sys.stderr)
 
-main()
+if __name__ == "__main__":
+    main()
+
