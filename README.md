@@ -66,6 +66,17 @@ supernova-federate create --creator Alice --config HARMONY_WEIGHT=0.9
 # Cast a vote on a fork
 supernova-federate vote <fork_id> --voter Bob --vote yes
 ````
+## ☁️ Launch Online
+
+[![Run in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/BP-H/superNova_2177)
+[![Open in Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/BP-H/superNova_2177/HEAD) *(Binder support coming soon)*
+
+
+After the workspace loads, run:
+```bash
+python one_click_install.py --launch-ui
+```
+
 ## 📦 Installation
 
 ### Step-by-Step
