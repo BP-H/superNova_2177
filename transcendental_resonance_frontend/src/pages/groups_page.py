@@ -2,7 +2,7 @@
 
 from nicegui import ui
 
-from utils.api import api_call, TOKEN
+from utils.api import api_call, TOKEN, get_group_recommendations
 from utils.styles import get_theme
 from utils.layout import page_container
 from .login_page import login_page
@@ -68,3 +68,22 @@ async def groups_page():
                         )
 
         await refresh_groups()
+
+        ui.label('You may like').classes('text-xl font-bold mt-4').style(
+            f'color: {THEME["accent"]};'
+        )
+        suggestions = ui.column().classes('w-full')
+
+        async def load_suggestions() -> None:
+            recs = await get_group_recommendations()
+            for g in recs:
+                with suggestions:
+                    with ui.card().classes('w-full mb-2').style(
+                        'border: 1px solid #333; background: #1e1e1e;'
+                    ):
+                        ui.label(g.get('name', 'Unknown')).classes('text-lg')
+                        desc = g.get('description')
+                        if desc:
+                            ui.label(desc).classes('text-sm')
+
+        await load_suggestions()

@@ -116,6 +116,16 @@ async def toggle_follow(username: str) -> Optional[Dict[str, Any]]:
     return await api_call("POST", f"/users/{username}/follow")
 
 
+async def get_user_recommendations() -> list[Dict[str, Any]]:
+    """Return a list of recommended users."""
+    return await api_call("GET", "/recommendations/users") or []
+
+
+async def get_group_recommendations() -> list[Dict[str, Any]]:
+    """Return a list of recommended groups."""
+    return await api_call("GET", "/recommendations/groups") or []
+
+
 async def connect_ws(path: str = "/ws"):
     """Establish and return a WebSocket connection to the backend."""
     global WS_CONNECTION
