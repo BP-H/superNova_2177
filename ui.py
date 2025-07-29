@@ -28,6 +28,9 @@ nx = None  # imported lazily in run_analysis
 go = None  # imported lazily in run_analysis
 Network = None  # imported lazily in run_analysis
 # Import Streamlit and register fallback health check
+import os
+os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
+# ... your other imports here ...
 import streamlit as st
 
 # Bind to the default Streamlit port to satisfy platform health checks
