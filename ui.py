@@ -885,12 +885,13 @@ def main() -> None:
             print(msg, file=sys.stderr)
 
     log("main() invoked")
-    st.title("🤗//⚡//Launching main()")
     import streamlit as st
     import os
     from importlib import import_module
 
+    # st.set_page_config must be the first Streamlit command
     st.set_page_config(page_title="superNova_2177", layout="wide")
+    st.title("🤗//⚡//Launching main()")
     log("main() entered")
 
     if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
