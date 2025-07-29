@@ -914,10 +914,7 @@ def render_landing_page() -> None:
 
 if __name__ == "__main__":
     try:
-        if not PAGES_DIR.is_dir() or not list(PAGES_DIR.glob("*.py")):
-            render_landing_page()
-        else:
-            main()
+        main()
     except Exception as e:
         import traceback
         st.write("App failed with exception:")
