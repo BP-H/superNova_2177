@@ -20,10 +20,17 @@ from pathlib import Path
 from importlib import import_module
 import time
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s %(levelname)s %(message)s",
+)
+
 os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 logger.propagate = False
+logger.debug("UI module imported")
 
 plt = None  # imported lazily in run_analysis
 nx = None  # imported lazily in run_analysis
@@ -869,39 +876,51 @@ def render_validation_ui() -> None:
 
 def main() -> None:
     import streamlit as st
+    logger.debug("main() invoked")
     st.title("🤗//⚡//Launching main()")
     import streamlit as st
     import os
     from importlib import import_module
 
     st.set_page_config(page_title="superNova_2177", layout="wide")
+    logger.debug("Page config set; checking for health check")
 
     if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
         st.write("ok")
+        logger.debug("Health check endpoint hit")
         return
 
     if not PAGES_DIR.is_dir():
+        logger.debug("Pages directory %s missing", PAGES_DIR)
         st.error("Pages directory not found")
         return
 
     page_files = sorted(
         p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
     )
+    logger.debug("Found pages: %s", page_files)
 
     if not page_files:
+        logger.debug("No page modules discovered")
         st.warning("No pages available — showing fallback UI.")
         st.title("superNova_2177")
         st.write("This is a placeholder UI while pages are being loaded.")
+        st.text(":-( no pages found")
         return
 
+    logger.debug("Rendering main UI components")
     render_main_ui()  # This shows sidebar etc.
 
     choice = st.sidebar.selectbox("Page", page_files)
+    logger.debug("Selected page: %s", choice)
     try:
         module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
         page_main = getattr(module, "main", None)
         if callable(page_main):
+            logger.debug("Calling %s.main()", choice)
             page_main()
+            logger.debug("%s.main() completed", choice)
+            st.text("UI up :)")
         else:
             st.error(f"Page '{choice}' is missing a main() function.")
     except Exception as e:
@@ -932,7 +951,12 @@ def render_landing_page() -> None:
 
 if __name__ == "__main__":
     try:
-        main()
+        if not hasattr(st, "runtime") or not st.runtime.exists():
+            from streamlit.web import bootstrap
+            logger.debug("Starting Streamlit runtime via bootstrap")
+            bootstrap.run(__file__, False, [], {})
+        else:
+            main()
     except Exception as e:
         import traceback
         st.write("App failed with exception:")
