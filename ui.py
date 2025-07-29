@@ -33,18 +33,26 @@ if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
     st.stop()
 
 # Basic page setup so Streamlit responds immediately on load
-try:
-    st.set_page_config(page_title="superNova_2177", layout="wide")
-except Exception:
-    logger.exception("Failed to configure Streamlit page")
-    print("Failed to configure Streamlit page", file=sys.stderr)
-
-else:
-    st.title("superNova_2177")
-    st.success("\u2705 Streamlit loaded!")
-from streamlit_helpers import (alert, apply_theme, centered_container, header,
-                               theme_selector)
-from ui_utils import load_rfc_entries, parse_summary, summarize_text
+from ui_utils import (
+    load_rfc_entries,
+    parse_summary,
+    summarize_text,
+    render_main_ui,
+)
+render_main_ui()
+st.success("\u2705 Streamlit loaded!")
+from streamlit_helpers import (
+    alert,
+    apply_theme,
+    centered_container,
+    header,
+    theme_selector,
+)
+from api_key_input import (
+    render_api_key_inputs,
+    get_api_key,
+    render_future_simulation_stub,
+)
 
 try:
     from streamlit_app import _run_async
@@ -566,8 +574,14 @@ def render_validation_ui() -> None:
         demo_mode = demo_mode_choice == "Demo"
         theme_selector("Theme")
 
+        render_api_key_inputs()
+
         VCConfig.HIGH_RISK_THRESHOLD = st.slider(
-            "High Risk Threshold", 0.1, 1.0, float(VCConfig.HIGH_RISK_THRESHOLD), 0.05
+            "High Risk Threshold",
+            0.1,
+            1.0,
+            float(VCConfig.HIGH_RISK_THRESHOLD),
+            0.05,
         )
 
         uploaded_file = st.file_uploader(
@@ -608,16 +622,12 @@ def render_validation_ui() -> None:
             "Claude-3": "ANTHROPIC_API_KEY",
             "Gemini": "GOOGLE_API_KEY",
         }
-        api_key = ""
-        if backend_choice in key_map:
-            api_key = st.text_input(
-                f"{backend_choice} API Key",
-                value=st_secrets.get(key_map[backend_choice], ""),
-                type="password",
-            )
+        api_key = get_api_key(key_map.get(backend_choice, ""))
         event_type = st.text_input("Event", value="LLM_INCOMING")
         payload_txt = st.text_area("Payload JSON", value="{}", height=100)
         run_agent_clicked = st.button("Run Agent")
+
+        render_future_simulation_stub()
 
         st.divider()
         governance_view = st.checkbox(

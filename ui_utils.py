@@ -4,7 +4,19 @@
 """Utility functions for streamlit UIs."""
 
 from pathlib import Path
+import logging
 import streamlit as st
+
+logger = logging.getLogger(__name__)
+
+
+def render_main_ui(title: str = "superNova_2177") -> None:
+    """Ensure page config and basic title are set early."""
+    try:
+        st.set_page_config(page_title=title, layout="wide")
+    except Exception:
+        logger.exception("Failed to configure Streamlit page")
+    st.title(title)
 
 
 def summarize_text(text: str, max_len: int = 150) -> str:
