@@ -4,6 +4,7 @@
 """Utility functions for streamlit UIs."""
 
 from pathlib import Path
+
 import streamlit as st
 
 
@@ -54,9 +55,23 @@ def render_main_ui() -> None:
     st.write("UI initialization complete.")
 
 
+def render_landing_page() -> None:
+    """Display a minimal landing page with basic info."""
+    st.set_page_config(page_title="superNova_2177", layout="centered")
+    st.title("superNova_2177")
+    st.write("Welcome to the superNova_2177 project — a creative research platform.")
+    st.write(
+        "For the full NiceGUI interface, run: `python -m transcendental_resonance_frontend`."
+    )
+    st.write(
+        "See the [GitHub repo](https://github.com/BP-H/superNova_2177) for more info."
+    )
+
+
 __all__ = [
     "summarize_text",
     "parse_summary",
     "load_rfc_entries",
     "render_main_ui",
+    "render_landing_page",
 ]
