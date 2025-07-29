@@ -27,22 +27,25 @@ class Universe:
 class UniverseManager:
     """Create and lookup universes for different entities."""
 
+    _universes: Dict[str, Universe] = {}
+    _entity_index: Dict[Tuple[str, str], str] = {}
+
     def __init__(self) -> None:
-        self._universes: Dict[str, Universe] = {}
-        self._entity_index: Dict[Tuple[str, str], str] = {}
+        pass
 
     # ------------------------------------------------------------------
-    def initialize_for_entity(self, entity_id: str, entity_type: str) -> str:
+    @classmethod
+    def initialize_for_entity(cls, entity_id: str, entity_type: str) -> str:
         """Return a universe ID for ``entity_id`` creating one if needed."""
 
         key = (entity_id, entity_type)
-        if key in self._entity_index:
-            return self._entity_index[key]
+        if key in cls._entity_index:
+            return cls._entity_index[key]
 
         universe_id = uuid.uuid4().hex
         uni = Universe(id=universe_id, owner_id=entity_id, owner_type=entity_type)
-        self._universes[universe_id] = uni
-        self._entity_index[key] = universe_id
+        cls._universes[universe_id] = uni
+        cls._entity_index[key] = universe_id
         return universe_id
 
     # ------------------------------------------------------------------
