@@ -191,3 +191,29 @@ async def listen_ws(handler: Callable[[dict], Awaitable[None]]) -> None:
             await ws.close()
         if WS_CONNECTION is ws:
             WS_CONNECTION = None
+
+
+async def combined_search(query: str) -> list[Dict[str, Any]]:
+    """Search across users, VibeNodes, and events."""
+    params = {"search": query}
+    results: list[Dict[str, Any]] = []
+
+    users = await api_call("GET", "/users/", params) or []
+    for u in users:
+        label = u.get("username") or u.get("name")
+        if label:
+            results.append({"type": "user", "label": label, "id": u.get("username")})
+
+    vns = await api_call("GET", "/vibenodes/", params) or []
+    for vn in vns:
+        label = vn.get("name")
+        if label:
+            results.append({"type": "vibenode", "label": label, "id": vn.get("id")})
+
+    events = await api_call("GET", "/events/", params) or []
+    for ev in events:
+        label = ev.get("name") or ev.get("title")
+        if label:
+            results.append({"type": "event", "label": label, "id": ev.get("id")})
+
+    return results
