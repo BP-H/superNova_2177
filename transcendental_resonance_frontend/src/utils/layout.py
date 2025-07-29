@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from typing import Optional, Generator
+from typing import Optional, Generator, Dict, Any
 
 try:  # pragma: no cover - allow import without NiceGUI installed
     from nicegui import ui
@@ -32,6 +32,7 @@ except Exception:  # pragma: no cover - fallback stub for testing
     ui = types.SimpleNamespace(column=_dummy_column)
 
 from .styles import get_theme
+from .api import combined_search
 
 
 def navigation_bar() -> Element:
@@ -66,6 +67,42 @@ def navigation_bar() -> Element:
     return nav
 
 
+def search_widget() -> Element:
+    """Render a global search input with dropdown results."""
+    search_input = ui.input('Search').classes('w-full mb-2')
+    dropdown = ui.select([]).classes('w-full mb-2').style('display: none;')
+    results: Dict[str, Any] = {}
+
+    async def update_results() -> None:
+        query = search_input.value or ''
+        if not query.strip():
+            dropdown.options = []
+            dropdown.visible = False
+            return
+        data = await combined_search(query.strip())
+        dropdown.options = [d['label'] for d in data]
+        results.clear()
+        for d in data:
+            results[d['label']] = d
+        dropdown.visible = True
+
+    search_input.on_change(lambda e: ui.run_async(update_results()))
+
+    def navigate(e) -> None:
+        item = results.get(e.value)
+        if not item:
+            return
+        if item['type'] == 'user':
+            ui.open(f"/profile/{item['id']}")
+        elif item['type'] == 'vibenode':
+            ui.open('/vibenodes')
+        elif item['type'] == 'event':
+            ui.open('/events')
+
+    dropdown.on_change(navigate)
+    return dropdown
+
+
 @contextmanager
 def page_container(theme: Optional[dict] = None) -> Generator[Element, None, None]:
     """Context manager for a themed page container.
@@ -78,5 +115,6 @@ def page_container(theme: Optional[dict] = None) -> Generator[Element, None, Non
         f"background: {theme['gradient']}; color: {theme['text']};"
     ) as container:
         navigation_bar()
+        search_widget()
         yield container
 
