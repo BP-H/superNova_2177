@@ -16,6 +16,8 @@ from pathlib import Path
 from importlib import import_module
 import time
 
+os.environ["STREAMLIT_SERVER_PORT"] = "8501"
+
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
