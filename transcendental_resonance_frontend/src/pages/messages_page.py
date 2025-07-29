@@ -24,12 +24,19 @@ async def messages_page():
             f'color: {THEME["accent"]};'
         )
 
-        recipient = ui.input("Recipient Username").classes("w-full mb-2")
+        with ui.row().classes("w-full mb-2"):
+            recipient = ui.input("Recipient Username").classes("w-full")
+            group_id = ui.input("Group ID (optional)").classes("w-full")
+            group_id.on("blur", lambda _: ui.run_async(refresh_messages()))
         content = ui.textarea("Message").classes("w-full mb-2")
 
         async def send_message():
             data = {"content": content.value}
-            resp = await api_call("POST", f"/messages/{recipient.value}", data)
+            if group_id.value:
+                endpoint = f"/groups/{group_id.value}/messages"
+            else:
+                endpoint = f"/messages/{recipient.value}"
+            resp = await api_call("POST", endpoint, data)
             if resp:
                 ui.notify("Message sent!", color="positive")
                 await refresh_messages()
@@ -38,7 +45,12 @@ async def messages_page():
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
         )
 
-        messages_list = ui.column().classes("w-full")
+        group_label = ui.label().classes("text-lg mb-2")
+        messages_list = (
+            ui.column()
+            .classes("w-full")
+            .style("max-height: 400px; overflow-y: auto")
+        )
 
         edit_dialog = ui.dialog()
         with edit_dialog:
@@ -71,7 +83,15 @@ async def messages_page():
             edit_dialog.open()
 
         async def refresh_messages():
-            messages = await api_call("GET", "/messages/") or []
+            if group_id.value:
+                messages = await api_call(
+                    "GET", f"/groups/{group_id.value}/messages"
+                ) or []
+                group = await api_call("GET", f"/groups/{group_id.value}") or {}
+                group_label.text = group.get("name", f"Group {group_id.value}")
+            else:
+                messages = await api_call("GET", "/messages/") or []
+                group_label.text = "Direct Messages"
             messages_list.clear()
             for m in messages:
                 with messages_list:
