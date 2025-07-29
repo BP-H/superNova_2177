@@ -6,7 +6,7 @@ string mismatches.
 
 # Events emitted from network analysis modules
 NETWORK_ANALYSIS = "network_analysis"
-VALIDATOR_REPUTATIONS = "validator_reputations"
+VALIDATOR_REPUTATIONS = "reputations_updated"
 CONSENSUS_FORECAST_RUN = "consensus_forecast_run"
 REPUTATION_ANALYSIS_RUN = "reputation_analysis_run"
 COORDINATION_ANALYSIS_RUN = "coordination_analysis_run"
