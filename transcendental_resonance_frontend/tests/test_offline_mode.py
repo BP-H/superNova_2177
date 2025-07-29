@@ -1,8 +1,12 @@
 import pytest
+import inspect
 
 from utils.api import api_call, connect_ws, listen_ws
 from quantum_futures import generate_speculative_payload
 from nicegui import ui
+from utils import api
+from pages.debug_panel_page import debug_panel_page
+
 
 @pytest.mark.asyncio
 async def test_api_call_offline(monkeypatch):
@@ -33,3 +37,12 @@ async def test_generate_speculative_payload_offline(monkeypatch):
     assert "Offline Mode" in first["text"]
     assert "placeholder" in first["video_url"]
     assert first["vision_notes"] and "Offline" in first["vision_notes"][0]
+
+
+def test_offline_mode_constant_exists():
+    assert isinstance(api.OFFLINE_MODE, bool)
+
+
+def test_debug_panel_mentions_offline():
+    source = inspect.getsource(debug_panel_page)
+    assert "Offline Mode" in source
