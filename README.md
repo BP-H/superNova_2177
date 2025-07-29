@@ -322,6 +322,12 @@ using `pip install -r requirements-streamlit.txt` if it isn't already available.
 
 Open [http://localhost:8888](http://localhost:8888) in your browser to interact with the demo. Use the **Reset to Demo** button below the editor to reload `sample_validations.json` at any time.
 
+The CI pipeline performs a lightweight health check against the Streamlit server. It simply requests `/?healthz=1` to ensure the app boots correctly:
+
+```bash
+curl -f "http://localhost:8888/?healthz=1"
+```
+
 `ui.py` reads configuration from `st.secrets` when running under Streamlit. If
 the secrets dictionary is unavailable (such as during local development), the
 module falls back to a development setup equivalent to:
