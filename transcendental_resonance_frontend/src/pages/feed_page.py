@@ -36,13 +36,7 @@ async def feed_page() -> None:
 
         feed_column = ui.column().classes('w-full')
 
-        post_dialog = ui.dialog()
-        with post_dialog:
-            with ui.card():
-                ui.label('Compose new Vibe').classes('text-lg font-bold')
-                ui.textarea('What\'s on your mind?').classes('w-full mb-2')
-                ui.button('Post').on('click', post_dialog.close)
-
+        # Floating action button for composing posts
         quick_post_button(lambda: post_dialog.open())
 
         async def refresh_feed() -> None:
