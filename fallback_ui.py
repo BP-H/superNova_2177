@@ -1,15 +1,15 @@
 import streamlit as st
 
-st.set_page_config(page_title="debug / fallback", layout="centered")
-st.title("🧪 superNova_2177 fallback UI")
+st.set_page_config(page_title="superNova_2177 fallback", layout="centered")
+st.title("🧪 Fallback UI")
 
-st.success("✅ Streamlit is running! This means the crash is in your main UI code.")
-st.info("Try commenting out `main()` in your real `ui.py` or disable auto-loading pages.")
+st.success("✅ Streamlit works — your environment is fine.")
+st.info("The crash is happening inside your main UI script.")
 
-with st.expander("Next Steps"):
+with st.expander("Troubleshooting tips"):
     st.markdown("""
-    - Check which `render_*` function crashes
-    - Try importing each page module manually
-    - Run `ui.py` line-by-line until you isolate the crash
-    - Then gradually re-enable modules one-by-one
+    - Try running only `render_main_ui()` in isolation
+    - Import your pages one by one and watch for errors
+    - Check for large/broken imports (`torch`, `qutip`, etc.)
+    - If using Streamlit Cloud: double-check files and subdirs exist
     """)
