@@ -31,8 +31,11 @@ async def system_insights_page():
         hypotheses_label = ui.label().classes("mb-2")
 
         async def refresh_metrics() -> None:
-            state = await api_call("GET", "/api/global-epistemic-state") or {}
-            details = await api_call("GET", "/system/entropy-details") or {}
+            state = await api_call("GET", "/api/global-epistemic-state")
+            details = await api_call("GET", "/system/entropy-details")
+            if state is None or details is None:
+                ui.notify("Failed to load data", color="negative")
+                return
 
             entropy_label.text = f"Entropy: {details.get('current_entropy', 'N/A')}"
             uncertainty_label.text = f"Uncertainty: {state.get('uncertainty', 'N/A')}"

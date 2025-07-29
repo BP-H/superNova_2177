@@ -72,11 +72,10 @@ async def events_page():
                 params['search'] = search_query.value
             if sort_select.value:
                 params['sort'] = sort_select.value
-            events_list.clear()
-            with events_list:
-                for _ in range(3):
-                    skeleton_loader().classes('w-full h-20 mb-2')
-            events = await api_call('GET', '/events/', params) or []
+            events = await api_call('GET', '/events/', params)
+            if events is None:
+                ui.notify('Failed to load data', color='negative')
+                return
             if search_query.value:
                 events = [e for e in events if search_query.value.lower() in e['name'].lower()]
             if date_filter.value:
