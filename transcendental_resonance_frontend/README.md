@@ -20,7 +20,7 @@ python -m transcendental_resonance_frontend.demo
 
 This command starts the app using data from `src/utils/sample_data/`.
 
-Replace the backend URL with the `BACKEND_URL` environment variable if your API is not running on `http://localhost:8501`.
+Replace the backend URL with the `BACKEND_URL` environment variable if your API is not running on `http://localhost:8888`.
 
 ## Structure
 
