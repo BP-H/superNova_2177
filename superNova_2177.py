@@ -2469,7 +2469,10 @@ def get_music_generator(
     return MusicGeneratorService(db, user)
 
 from login_router import router as login_router
+from video_chat_router import router as video_chat_router
+
 app.include_router(login_router)
+app.include_router(video_chat_router)
 
 
 # Endpoints (Full implementation from FastAPI files, enhanced)
