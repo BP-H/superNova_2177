@@ -45,7 +45,15 @@ HEALTH_CHECK_PARAM = "healthz"
 # Directory containing Streamlit page modules
 PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
 
-print("\u23F3 Booting superNova_2177 UI...", file=sys.stderr)
+# Toggle verbose output via env var
+DEBUG_MODE = os.getenv("DEBUG_UI", "").lower() in {"1", "true", "yes"}
+
+def dprint(msg: str) -> None:
+    """Print debug message if ``DEBUG_UI`` is enabled."""
+    if DEBUG_MODE:
+        print(msg, file=sys.stderr)
+
+dprint("\u23F3 Booting superNova_2177 UI...")
 from streamlit_helpers import (
     alert,
     apply_theme,
@@ -869,32 +877,35 @@ def render_validation_ui() -> None:
 
 def main() -> None:
     import streamlit as st
-    print("[debug] main() invoked", file=sys.stderr)
+    dprint("main() invoked")
     st.title("🤗//⚡//Launching main()")
     import streamlit as st
     import os
     from importlib import import_module
 
     st.set_page_config(page_title="superNova_2177", layout="wide")
+    dprint("main() entered")
 
     if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
-        print("[debug] healthz check", file=sys.stderr)
+        dprint("health-check branch")
         st.write("ok")
         return
 
-    print(f"[debug] loading pages from {PAGES_DIR}", file=sys.stderr)
+    dprint(f"loading pages from {PAGES_DIR}")
     if not PAGES_DIR.is_dir():
+        dprint("pages directory missing")
         st.error("Pages directory not found")
-        st.text("debug: PAGES_DIR missing")
         render_landing_page()
         return
+    else:
+        dprint("pages directory found")
 
     page_files = sorted(
         p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
     )
 
     if not page_files:
-        print("[debug] no page files found", file=sys.stderr)
+        dprint("pages directory empty")
         st.warning("No pages available — showing fallback UI.")
         render_landing_page()
         return
@@ -902,23 +913,22 @@ def main() -> None:
     render_main_ui()  # This shows sidebar etc.
 
     choice = st.sidebar.selectbox("Page", page_files)
-    print(f"[debug] selected page: {choice}", file=sys.stderr)
+    dprint(f"loading page {choice}")
     try:
-        module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
+        module = import_module(
+            f"transcendental_resonance_frontend.pages.{choice}"
+        )
         page_main = getattr(module, "main", None)
         if callable(page_main):
-            print(f"[debug] executing {choice}.main()", file=sys.stderr)
-            st.text(f"checkpoint: running {choice}")
             page_main()
-            print(f"[debug] finished {choice}.main()", file=sys.stderr)
+            dprint(f"page {choice} loaded")
         else:
             st.error(f"Page '{choice}' is missing a main() function.")
-            st.text("debug: missing main")
     except Exception as e:
         import traceback
         st.error(f"Error loading page '{choice}':")
         st.text("".join(traceback.format_exception(type(e), e, e.__traceback__)))
-        print(f"[debug] exception loading {choice}: {e}", file=sys.stderr)
+        dprint(f"exception loading {choice}: {e}")
 
 
 
@@ -931,12 +941,21 @@ def render_landing_page() -> None:
     st.write("See the [GitHub repo](https://github.com/BP-H/superNova_2177) for more info.")
 
 if __name__ == "__main__":
-    print("[debug] __main__ entry", file=sys.stderr)
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--debug", action="store_true", help="Enable verbose logs")
+    args = parser.parse_args()
+    if args.debug:
+        DEBUG_MODE = True
+
+    dprint("__main__ entry")
+
     try:
         main()
     except Exception as e:
         import traceback
         st.write("App failed with exception:")
         st.text("".join(traceback.format_exception(type(e), e, e.__traceback__)))
-        print(f"[debug] fatal error: {e}", file=sys.stderr)
+        dprint(f"fatal error: {e}")
         raise
