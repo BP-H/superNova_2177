@@ -11,6 +11,8 @@ if [[ ! -f "$UI_FILE" ]]; then
   exit 1
 fi
 
+# Listen on port 8888 by default. Set STREAMLIT_PORT or pass --server.port
+# to override this value.
 PORT="${STREAMLIT_PORT:-${PORT:-8888}}"
 
 echo "🚀 Launching Streamlit UI: $UI_FILE on port $PORT"
