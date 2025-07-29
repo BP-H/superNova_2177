@@ -1,4 +1,5 @@
 import streamlit as st  # make sure this is FIRST(🥺 😂 i know not here but why not 🤷🥳⚡🥺🫶👏☺️🌸)
+
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
