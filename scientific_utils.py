@@ -379,7 +379,7 @@ async def async_add_event(logchain: "LogChain", event: Dict[str, Any]) -> None:
     validation_notes: manual tests confirm event logged
     approximation: exact
     """
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, logchain.add, event)
 
 

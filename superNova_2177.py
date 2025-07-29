@@ -1168,7 +1168,7 @@ class LogChain:
 
 
 async def async_add_event(logchain: "LogChain", event: Dict[str, Any]) -> None:
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     await loop.run_in_executor(None, logchain.add, event)
 
 
@@ -3550,7 +3550,7 @@ async def adaptive_optimization_task(db_session_factory):
 
 
 async def startup_event():
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     loop.create_task(passive_aura_resonance_task(SessionLocal))
     loop.create_task(ai_persona_evolution_task(SessionLocal))
     loop.create_task(ai_guinness_pursuit_task(SessionLocal))
