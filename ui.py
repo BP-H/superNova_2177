@@ -869,34 +869,47 @@ def render_validation_ui() -> None:
 
 def main() -> None:
     print("🚀 Launching main()")
+    import streamlit as st
+    import os
+    from importlib import import_module
+
     st.set_page_config(page_title="superNova_2177", layout="wide")
-    st.write("Launching...")
 
     if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
         st.write("ok")
         return
 
-    # show UI even if no pages
-    if not PAGES_DIR.is_dir() or not any(PAGES_DIR.glob("*.py")):
-        render_landing_page()
+    if not PAGES_DIR.is_dir():
+        st.error("Pages directory not found")
         return
 
-    render_main_ui()  # ← shows sidebar etc.
+    page_files = sorted(
+        p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
+    )
 
-    page_files = sorted(p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py")
     if not page_files:
-        st.info("No dynamic pages found. You're seeing the core dashboard.")
-        render_landing_page()  # fallback content
+        st.warning("No pages available — showing fallback UI.")
+        st.title("superNova_2177")
+        st.write("This is a placeholder UI while pages are being loaded.")
         return
+
+    render_main_ui()  # This shows sidebar etc.
 
     choice = st.sidebar.selectbox("Page", page_files)
-    module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
-    page_main = getattr(module, "main", None)
-    if callable(page_main):
-        page_main()
-    else:
-        st.error(f"Page '{choice}' is missing a main() function")
-        
+    try:
+        module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
+        page_main = getattr(module, "main", None)
+        if callable(page_main):
+            page_main()
+        else:
+            st.error(f"Page '{choice}' is missing a main() function.")
+    except Exception as e:
+        import traceback
+        st.error(f"Error loading page '{choice}':")
+        st.text("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+
+
+
 def render_landing_page() -> None:
     """Display a minimal landing page with basic info."""
     st.title("superNova_2177")
