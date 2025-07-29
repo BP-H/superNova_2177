@@ -30,6 +30,14 @@ Network = None  # imported lazily in run_analysis
 # Import Streamlit and register fallback health check
 import streamlit as st
 
+# Respond immediately to ?healthz=1 before heavy imports
+if (
+    st.query_params.get("healthz") == "1"
+    or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz"
+):
+    st.write("ok")
+    st.stop()
+
 # Bind to the default Streamlit port to satisfy platform health checks
 os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 
@@ -869,27 +877,53 @@ def main() -> None:
         st.write("ok")
         return
 
-    if not PAGES_DIR.is_dir() or not any(PAGES_DIR.glob("*.py")):
-        render_landing_page()
+    try:
+        page_paths = (
+            list(p for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py")
+            if PAGES_DIR.is_dir()
+            else []
+        )
+    except Exception as exc:  # pragma: no cover - unexpected path issues
+        print(f"Page discovery failed: {exc}", file=sys.stderr)
+        render_landing_page(f"Page discovery error: {exc}")
+        return
+
+    if not page_paths:
+        render_landing_page("No Streamlit pages found.")
         return
 
     render_main_ui()
-    page_files = sorted(
-        p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
-    )
+    page_files = sorted(p.stem for p in page_paths)
     choice = st.sidebar.selectbox("Page", page_files)
-    module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
-    page_main = getattr(module, "main", None)
+    try:
+        module = import_module(
+            f"transcendental_resonance_frontend.pages.{choice}"
+        )
+        page_main = getattr(module, "main", None)
+    except (ImportError, AttributeError) as exc:
+        print(f"Failed to load page '{choice}': {exc}", file=sys.stderr)
+        st.error(f"Failed to load page '{choice}': {exc}")
+        render_landing_page()
+        return
+
     if callable(page_main):
-        page_main()
+        try:
+            page_main()
+        except Exception as exc:  # pragma: no cover - runtime error display
+            print(f"Error in page '{choice}': {exc}", file=sys.stderr)
+            st.error(f"Error running page '{choice}': {exc}")
     else:
-        st.error(f"Page '{choice}' is missing a main() function")
+        err = f"Page '{choice}' is missing a main() function"
+        print(err, file=sys.stderr)
+        st.error(err)
 
 
-def render_landing_page() -> None:
+def render_landing_page(message: str | None = None) -> None:
     """Display a minimal landing page with basic info."""
     st.set_page_config(page_title="superNova_2177", layout="centered")
     st.title("superNova_2177")
+    if message:
+        st.warning(message)
     st.write(
         "Welcome to the superNova_2177 project — a creative research platform."
     )
