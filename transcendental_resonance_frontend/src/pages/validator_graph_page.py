@@ -87,6 +87,6 @@ async def validator_graph_page():
         ui.button('Update', on_click=refresh_graph).classes('mb-4').style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
         )
-        layout_select.on('change', lambda _: refresh_graph())
-        filter_input.on('change', lambda _: refresh_graph())
+        layout_select.on('change', lambda _: ui.run_async(refresh_graph()))
+        filter_input.on('change', lambda _: ui.run_async(refresh_graph()))
         await refresh_graph()
