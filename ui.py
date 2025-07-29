@@ -10,6 +10,11 @@ os.environ["STREAMLIT_SERVER_PORT"] = "8501"  # <-- 👈 THIS FIXES THE PORT ISS
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 
+log("\u23f3 Booting superNova_2177 UI...")
+
+HEALTH_CHECK_PARAM = "healthz"
+PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+
 import asyncio
 import difflib
 import io
@@ -25,6 +30,14 @@ from pathlib import Path
 import time
 
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
+
+# Optional helper
+UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
+
+def log(msg: str) -> None:
+    if UI_DEBUG:
+        print(msg, file=sys.stderr)
+
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
