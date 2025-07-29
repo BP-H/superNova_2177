@@ -10,7 +10,7 @@ from voting_ui import (
     render_agent_ops_tab,
     render_logs_tab,
 )
-from ui_utils import summarize_text, parse_summary, load_rfc_entries
+from ui_utils import summarize_text, load_rfc_entries
 
 
 def render_agent_insights_tab() -> None:
