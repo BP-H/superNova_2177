@@ -52,19 +52,17 @@ from streamlit_helpers import (
 from api_key_input import render_api_key_ui, render_simulation_stubs
 from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_main_ui
 
-try:
-    from streamlit_app import _run_async
-except Exception:
 
-    def _run_async(coro):
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            return asyncio.run(coro)
-        else:
-            if loop.is_running():
-                return asyncio.run_coroutine_threadsafe(coro, loop).result()
-            return loop.run_until_complete(coro)
+def _run_async(coro):
+    """Execute ``coro`` regardless of event loop state."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coro)
+    else:
+        if loop.is_running():
+            return asyncio.run_coroutine_threadsafe(coro, loop).result()
+        return loop.run_until_complete(coro)
 
 
 try:
