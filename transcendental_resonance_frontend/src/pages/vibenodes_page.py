@@ -112,4 +112,25 @@ async def vibenodes_page():
                             f'background: {THEME["primary"]}; color: {THEME["text"]};'
                         )
 
+                        # --- Comments Section ---
+                        comments = await api_call('GET', f'/vibenodes/{vn["id"]}/comments') or []
+                        with ui.expansion('Comments', value=False).classes('w-full mt-2'):
+                            for c in comments:
+                                ui.label(c.get('content', '')).classes('text-sm')
+                            comment_input = ui.textarea('Add a comment').classes('w-full mb-2')
+
+                            async def post_comment(vn_id=vn['id'], ci=comment_input):
+                                content = ci.value.strip()
+                                if not content:
+                                    ui.notify('Comment cannot be empty', color='warning')
+                                    return
+                                await api_call('POST', f'/vibenodes/{vn_id}/comments', {'content': content})
+                                ci.value = ''
+                                await refresh_vibenodes()
+
+                            ui.button('Post', on_click=post_comment).classes('w-full').style(
+                                f'background: {THEME["accent"]}; color: {THEME["background"]};'
+                            )
+
+
         await refresh_vibenodes()
