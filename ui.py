@@ -900,5 +900,10 @@ def render_landing_page() -> None:
 
 
 if __name__ == "__main__":
-    main()
-
+    try:
+        main()
+    except Exception as e:
+        import traceback
+        st.write("App failed with exception:")
+        st.text("".join(traceback.format_exception(type(e), e, e.__traceback__)))
+        raise
