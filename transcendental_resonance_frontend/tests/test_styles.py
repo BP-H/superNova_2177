@@ -17,6 +17,14 @@ def test_set_theme_switches(monkeypatch):
     assert styles.get_theme_name() == "dark"
 
 
+def test_minimalist_dark_theme(monkeypatch):
+    dummy = dummy_ui({})
+    monkeypatch.setattr(styles, "ui", dummy)
+    styles.set_theme("minimalist_dark")
+    assert styles.get_theme_name() == "minimalist_dark"
+    assert styles.get_theme()["text"] == "#F0F0F0"
+
+
 def test_apply_global_styles_injects_css(monkeypatch):
     captured = {}
     dummy = dummy_ui(captured)
