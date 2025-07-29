@@ -504,11 +504,17 @@ from scientific_metrics import (analyze_prediction_accuracy,
                                 design_validation_experiments,
                                 generate_system_predictions,
                                 predict_user_interactions, query_influence)
-from scientific_utils import (SCIENTIFIC_REGISTRY, ScientificModel,
-                              VerifiedScientificModel,
-                              calculate_genesis_bonus_decay,
-                              estimate_uncertainty, generate_hypotheses,
-                              refine_hypotheses_from_evidence, safe_decimal)
+from scientific_utils import (
+    SCIENTIFIC_REGISTRY,
+    ScientificModel,
+    VerifiedScientificModel,
+    calculate_genesis_bonus_decay,
+    estimate_uncertainty,
+    generate_hypotheses,
+    refine_hypotheses_from_evidence,
+    safe_decimal,
+    acquire_multiple_locks,
+)
 
 # Database engine URL resolved at runtime
 DB_ENGINE_URL = None
@@ -1235,18 +1241,6 @@ def levenshtein_distance(s1: str, s2: str) -> int:
             current_row.append(min(insertions, deletions, substitutions))
         previous_row = current_row
     return previous_row[-1]
-
-
-@contextmanager
-def acquire_multiple_locks(locks: List[threading.RLock]):
-    locks = sorted(locks, key=id)  # Sort by ID to prevent deadlocks
-    for lock in locks:
-        lock.acquire()
-    try:
-        yield
-    finally:
-        for lock in reversed(locks):
-            lock.release()
 
 
 @VerifiedScientificModel(
