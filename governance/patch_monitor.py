@@ -14,10 +14,16 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Iterable, List
 
+from disclaimers import (
+    STRICTLY_SOCIAL_MEDIA,
+    INTELLECTUAL_PROPERTY_ARTISTIC_INSPIRATION,
+    LEGAL_ETHICAL_SAFEGUARDS,
+)
+
 DEFAULT_DISCLAIMER_PHRASES = [
-    "STRICTLY A SOCIAL MEDIA PLATFORM",
-    "Intellectual Property & Artistic Inspiration",
-    "Legal & Ethical Safeguards",
+    STRICTLY_SOCIAL_MEDIA,
+    INTELLECTUAL_PROPERTY_ARTISTIC_INSPIRATION,
+    LEGAL_ETHICAL_SAFEGUARDS,
 ]
 
 

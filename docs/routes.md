@@ -44,9 +44,9 @@ backend handler.
 |`explain_audit`|Create a textual explanation for an audit trace.|
 |`follow_user`|Follow or unfollow a user. Payload: `{"username": "<target>"}`|
 
-These routes are provided for research purposes only. STRICTLY A SOCIAL MEDIA PLATFORM.
-They incorporate Intellectual Property & Artistic Inspiration protections
-and follow Legal & Ethical Safeguards for community use.
+These routes are provided for research purposes only. `disclaimers.STRICTLY_SOCIAL_MEDIA`.
+They incorporate `disclaimers.INTELLECTUAL_PROPERTY_ARTISTIC_INSPIRATION` protections
+and follow `disclaimers.LEGAL_ETHICAL_SAFEGUARDS` for community use.
 
 ## proposals
 

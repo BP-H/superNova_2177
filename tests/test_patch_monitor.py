@@ -1,16 +1,23 @@
 import textwrap
 
-from governance.patch_monitor import (check_file_compliance,
-                                      check_patch_compliance)
+from governance.patch_monitor import (
+    check_file_compliance,
+    check_patch_compliance,
+)
+from disclaimers import (
+    STRICTLY_SOCIAL_MEDIA,
+    INTELLECTUAL_PROPERTY_ARTISTIC_INSPIRATION,
+    LEGAL_ETHICAL_SAFEGUARDS,
+)
 
 
 def test_check_file_compliance(tmp_path):
     f = tmp_path / "module.py"
     f.write_text(
         (
-            "# STRICTLY A SOCIAL MEDIA PLATFORM\n"
-            "# Intellectual Property & Artistic Inspiration\n"
-            "# Legal & Ethical Safeguards\n"
+            f"# {STRICTLY_SOCIAL_MEDIA}\n"
+            f"# {INTELLECTUAL_PROPERTY_ARTISTIC_INSPIRATION}\n"
+            f"# {LEGAL_ETHICAL_SAFEGUARDS}\n"
             "print('hello')\n"
         )
     )
@@ -27,9 +34,9 @@ def test_check_file_compliance_missing(tmp_path):
 def test_check_patch_compliance():
     patch = textwrap.dedent(
         """@@\n"
-        "+ # STRICTLY A SOCIAL MEDIA PLATFORM\n"
-        "+ # Intellectual Property & Artistic Inspiration\n"
-        "+ # Legal & Ethical Safeguards\n"
+        f"+ # {STRICTLY_SOCIAL_MEDIA}\n"
+        f"+ # {INTELLECTUAL_PROPERTY_ARTISTIC_INSPIRATION}\n"
+        f"+ # {LEGAL_ETHICAL_SAFEGUARDS}\n"
         "+ pass\n"""
     )
     assert check_patch_compliance(patch) == []  # nosec B101
@@ -45,9 +52,9 @@ def test_check_patch_compliance_existing_file(tmp_path, monkeypatch):
     f = tmp_path / "module.py"
     f.write_text(
         (
-            "# STRICTLY A SOCIAL MEDIA PLATFORM\n"
-            "# Intellectual Property & Artistic Inspiration\n"
-            "# Legal & Ethical Safeguards\n"
+            f"# {STRICTLY_SOCIAL_MEDIA}\n"
+            f"# {INTELLECTUAL_PROPERTY_ARTISTIC_INSPIRATION}\n"
+            f"# {LEGAL_ETHICAL_SAFEGUARDS}\n"
             "print('hello')\n"
         )
     )
