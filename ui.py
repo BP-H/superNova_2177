@@ -23,6 +23,15 @@ go = None  # imported lazily in run_analysis
 Network = None  # imported lazily in run_analysis
 # Import Streamlit and register fallback health check
 import streamlit as st
+from api_key_input import get_api_key_for_model, render_api_key_ui
+from ui_utils import (
+    load_rfc_entries,
+    parse_summary,
+    summarize_text,
+    render_main_ui,
+)
+
+render_main_ui()
 
 # Name of the query parameter used for the CI health check. Adjust here if the
 # health check endpoint ever changes.
@@ -32,19 +41,13 @@ if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
     st.write("ok")
     st.stop()
 
-# Basic page setup so Streamlit responds immediately on load
-try:
-    st.set_page_config(page_title="superNova_2177", layout="wide")
-except Exception:
-    logger.exception("Failed to configure Streamlit page")
-    print("Failed to configure Streamlit page", file=sys.stderr)
-
-else:
-    st.title("superNova_2177")
-    st.success("\u2705 Streamlit loaded!")
-from streamlit_helpers import (alert, apply_theme, centered_container, header,
-                               theme_selector)
-from ui_utils import load_rfc_entries, parse_summary, summarize_text
+from streamlit_helpers import (
+    alert,
+    apply_theme,
+    centered_container,
+    header,
+    theme_selector,
+)
 
 try:
     from streamlit_app import _run_async
@@ -598,23 +601,21 @@ def render_validation_ui() -> None:
         agent_desc = AGENT_REGISTRY.get(agent_choice, {}).get("description")
         if agent_desc:
             st.caption(agent_desc)
-        backend_choice = st.selectbox(
-            "LLM Backend",
-            ["dummy", "GPT-4o", "Claude-3", "Gemini"],
-            index=0,
+        try:
+            model_choice = render_api_key_ui()
+        except Exception:
+            model_choice = "dummy"
+        api_key = st.session_state.get("api_keys", {}).get(
+            get_api_key_for_model(model_choice), ""
         )
-        key_map = {
-            "GPT-4o": "OPENAI_API_KEY",
-            "Claude-3": "ANTHROPIC_API_KEY",
-            "Gemini": "GOOGLE_API_KEY",
+        backend_map = {
+            "GPT-4o": "gpt-4o",
+            "Claude-3": "claude-3",
+            "Gemini": "gemini",
+            "Groq": "groq",
+            "dummy": "dummy",
         }
-        api_key = ""
-        if backend_choice in key_map:
-            api_key = st.text_input(
-                f"{backend_choice} API Key",
-                value=st_secrets.get(key_map[backend_choice], ""),
-                type="password",
-            )
+        backend_choice = backend_map.get(model_choice or "dummy", "dummy")
         event_type = st.text_input("Event", value="LLM_INCOMING")
         payload_txt = st.text_area("Payload JSON", value="{}", height=100)
         run_agent_clicked = st.button("Run Agent")

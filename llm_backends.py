@@ -138,11 +138,26 @@ def gemini_backend(api_key: str | None = None) -> Callable[[str], str]:
     return call
 
 
+def groq_backend(prompt: str, api_key: str | None = None) -> str:
+    """Call Groq API and return the response text."""
+    if api_key is None:
+        api_key = os.getenv("GROQ_API_KEY", "")
+    if not api_key:
+        raise ValueError("GROQ_API_KEY required for Groq backend")
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {"Authorization": f"Bearer {api_key}"}
+    data = {"model": "llama3-70b-8192", "messages": [{"role": "user", "content": prompt}]}
+    r = requests.post(url, headers=headers, json=data, timeout=30)
+    r.raise_for_status()
+    return r.json()["choices"][0]["message"]["content"]
+
+
 BACKENDS: Dict[str, Callable[[str, str | None], str]] = {
     "dummy": dummy_backend,
     "gpt-4o": gpt4o_backend,
     "claude-3": claude3_backend,
     "gemini": _gemini_backend,
+    "groq": groq_backend,
 }
 
 

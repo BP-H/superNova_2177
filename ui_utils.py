@@ -46,3 +46,12 @@ def load_rfc_entries(rfc_dir: Path):
         rfc_entries.append(entry)
         rfc_index[path.stem.lower()] = entry
     return rfc_entries, rfc_index
+
+
+def render_main_ui() -> None:
+    """Configure and title the Streamlit page."""
+    try:
+        st.set_page_config(page_title="superNova_2177", layout="wide")
+    except Exception:
+        pass
+    st.title("superNova_2177")
