@@ -1,11 +1,21 @@
 """User profile view and editing."""
 
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 from nicegui import ui
-from utils.api import (TOKEN, api_call, clear_token, get_followers,
-                       get_following, get_user, toggle_follow)
+from utils.api import (
+    TOKEN,
+    api_call,
+    clear_token,
+    get_followers,
+    get_following,
+    get_user,
+    toggle_follow,
+)
 from utils.layout import page_container
-from utils.styles import (THEMES, get_theme, get_theme_name, set_accent,
-                          set_theme)
+from utils.styles import THEMES, get_theme, get_theme_name, set_accent, set_theme
 
 from .events_page import events_page
 from .groups_page import groups_page
@@ -14,6 +24,7 @@ from .messages_page import messages_page
 from .notifications_page import notifications_page
 from .proposals_page import proposals_page
 from .vibenodes_page import vibenodes_page
+from .trending_page import trending_page
 
 
 @ui.page("/profile")
@@ -98,6 +109,9 @@ async def profile_page(username: str | None = None):
             )
 
         ui.button("VibeNodes", on_click=lambda: ui.open(vibenodes_page)).classes(
+            "w-full mb-2"
+        ).style(f'background: {THEME["accent"]}; color: {THEME["background"]};')
+        ui.button("Trending", on_click=lambda: ui.open(trending_page)).classes(
             "w-full mb-2"
         ).style(f'background: {THEME["accent"]}; color: {THEME["background"]};')
         ui.button("Groups", on_click=lambda: ui.open(groups_page)).classes(

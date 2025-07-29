@@ -13,6 +13,7 @@ __all__ = [
     "ai_assist_page",
     "upload_page",
     "music_page",
+    "trending_page",
     "status_page",
     "network_page",
     "system_insights_page",
