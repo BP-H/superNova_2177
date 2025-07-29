@@ -24,6 +24,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Ensure no stray streamlit.py
+        run: python scripts/check_no_streamlit_py.py
       # Continue even if the disclaimer check fails (e.g., missing git)
       - name: Check patch compliance
         if: github.event_name == 'pull_request'
