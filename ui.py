@@ -1,7 +1,5 @@
 import os
 import streamlit as st  # ensure Streamlit is imported early
-from streamlit.runtime.scriptrunner import get_script_run_ctx
-from importlib import import_module
 
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
@@ -21,7 +19,6 @@ import traceback
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 from datetime import datetime
 from pathlib import Path
-import time
 
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 
@@ -48,9 +45,6 @@ PAGES_DIR = (
 )
 
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
-UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
-
-# Toggle verbose output via env var
 UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
 
 def log(msg: str) -> None:
@@ -889,24 +883,17 @@ def render_validation_ui() -> None:
 def main() -> None:
     """Entry point for the Streamlit UI."""
     import streamlit as st
-    from streamlit.runtime.scriptrunner import get_script_run_ctx
-
-    UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
-    def log(msg: str) -> None:
-        if UI_DEBUG:
-            print(msg, file=sys.stderr)
+    from importlib import import_module
 
     log("⚡ main() invoked")
     st.set_page_config(page_title="superNova_2177", layout="wide")
     log("App started")
 
-    # Unified health check: Path priority for Cloud; query/env fallback for CI/local
+    # Unified health check using query params or PATH_INFO
     if (
-        (ctx := get_script_run_ctx())
-        and (req := ctx._get_request())
-        and req.path == "/healthz"
-    ) or st.query_params.get(HEALTH_CHECK_PARAM) == "1" \
-      or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
+        "1" in st.query_params.get(HEALTH_CHECK_PARAM, [])
+        or os.environ.get("PATH_INFO", "").rstrip("/") == f"/{HEALTH_CHECK_PARAM}"
+    ):
         log("💊 health-check branch")
         st.write("ok")
         st.stop()  # Halt after response
@@ -949,8 +936,5 @@ def main() -> None:
         st.text(tb)
         log(f"exception loading {choice}: {exc}")
         print(tb, file=sys.stderr)
-
-if __name__ == "__main__":
-    main()
 
 main()
