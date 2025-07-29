@@ -1,6 +1,7 @@
 """VibeNodes creation and listing."""
 
 import asyncio
+import contextlib
 
 from components.emoji_toolbar import emoji_toolbar
 from components.media_renderer import render_media_block
@@ -57,7 +58,8 @@ async def vibenodes_page():
 
         async def handle_upload(event):
             with progress_container:
-                progress = ui.linear_progress(value=0).classes("w-full mb-2")
+                progress = ui.linear_progress(value=0).classes('w-full mb-2')
+
 
             async def spin():
                 while progress.value < 0.95:
@@ -65,18 +67,23 @@ async def vibenodes_page():
                     progress.value += 0.05
 
             spinner = asyncio.create_task(spin())
-            files = {"file": (event.name, event.content.read(), "multipart/form-data")}
-            resp = await api_call("POST", "/upload/", files=files)
-            spinner.cancel()
-            progress.value = 1.0
-            if resp:
-                uploaded_media["url"] = resp.get("media_url")
-                uploaded_media["type"] = resp.get("media_type")
-                ui.notify("Media uploaded", color="positive")
-                if uploaded_media["type"] and uploaded_media["type"].startswith(
-                    "image"
-                ):
-                    ui.image(uploaded_media["url"]).classes("w-full mb-2")
+            try:
+                files = {
+                    'file': (event.name, event.content.read(), 'multipart/form-data')
+                }
+                resp = await api_call('POST', '/upload/', files=files)
+                progress.value = 1.0
+                if resp:
+                    uploaded_media['url'] = resp.get('media_url')
+                    uploaded_media['type'] = resp.get('media_type')
+                    ui.notify('Media uploaded', color='positive')
+                    if uploaded_media['type'] and uploaded_media['type'].startswith('image'):
+                        ui.image(uploaded_media['url']).classes('w-full mb-2')
+            finally:
+                spinner.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await spinner
+
 
         ui.upload(
             multiple=True,
