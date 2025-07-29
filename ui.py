@@ -38,6 +38,13 @@ if st.query_params.get("healthz") == "1":
     st.write("ok")
     st.stop()
 
+# Fallback health check for CI environments
+if st.query_params.get("healthz") == "1":
+    st.write(
+        "ok"
+    )  # Fallback health check endpoint for CI (avoids internal monkey-patching)
+    st.stop()
+
 # Basic page setup so Streamlit responds immediately on load
 try:
     st.set_page_config(page_title="superNova_2177", layout="wide")
@@ -105,7 +112,7 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     update_validator_reputations = None
 
-from typing import Any, cast
+from typing import Any
 
 from agent_ui import render_agent_insights_tab
 from llm_backends import get_backend
