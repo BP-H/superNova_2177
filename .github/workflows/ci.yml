@@ -51,7 +51,7 @@ jobs:
       - name: Streamlit smoke test
         run: |
           PORT=${STREAMLIT_PORT:-8501}
-          streamlit run ui.py --server.headless true --server.port "$PORT" &
+          streamlit run ui.py --server.headless true --server.port "$PORT" >streamlit.log 2>&1 &
           for i in {1..30}; do
             if curl -f http://localhost:"$PORT" >/dev/null 2>&1; then
               echo "Streamlit started after $i seconds"
@@ -66,3 +66,15 @@ jobs:
           fi
           curl -f http://localhost:"$PORT"
           pkill streamlit
+      - name: Print Streamlit logs on failure
+        if: failure()
+        run: |
+          echo "::group::Streamlit logs"
+          cat streamlit.log || true
+          echo "::endgroup::"
+      - name: Upload Streamlit log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: streamlit-log-python-${{ matrix.python-version }}
+          path: streamlit.log
