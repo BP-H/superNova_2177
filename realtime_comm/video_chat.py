@@ -11,8 +11,8 @@ translation, transcription, and AR capabilities.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Iterable, Optional
+from dataclasses import dataclass, field
+from typing import Dict, Iterable, Optional
 
 
 @dataclass
@@ -21,6 +21,17 @@ class VideoStream:
 
     user_id: str
     track_id: str
+    translation_overlay: str = ""
+    face_box: Optional[tuple[int, int, int, int]] = None
+
+
+@dataclass
+class FrameMetadata:
+    """Lightweight metadata extracted from a video frame."""
+
+    emotion: str = ""
+    lang: str = ""
+    extra: Dict[str, str] = field(default_factory=dict)
 
 
 class VideoChatManager:
@@ -59,3 +70,24 @@ class VideoChatManager:
         """Enable live translation for ``user_id`` to ``target_lang``."""
         # TODO: integrate a translation API and TTS voice cloning
         pass
+
+    def update_translation_overlay(self, user_id: str, text: str, lang: str) -> None:
+        """Overlay ``text`` in ``lang`` on ``user_id``'s stream."""
+        stream = next((s for s in self.active_streams if s.user_id == user_id), None)
+        if stream:
+            stream.translation_overlay = text
+        # TODO: render text on video frame in real time
+
+    def track_face(self, user_id: str, frame: bytes) -> None:
+        """Stub facial landmark tracking for ``user_id``."""
+        stream = next((s for s in self.active_streams if s.user_id == user_id), None)
+        if stream:
+            # Placeholder bounding box; actual detection should update this
+            stream.face_box = (0, 0, 0, 0)
+        # TODO: integrate a face tracking library
+
+    def analyze_frame(self, user_id: str, frame: bytes) -> FrameMetadata:
+        """Return live metadata derived from ``frame``."""
+        self.track_face(user_id, frame)
+        # TODO: run emotion recognition and language detection
+        return FrameMetadata(emotion="neutral", lang="en")
