@@ -12,8 +12,13 @@ import httpx
 import websockets
 from nicegui import ui
 
+# Honor offline mode for development/testing
+OFFLINE_MODE = os.getenv("OFFLINE_MODE", "0") == "1"
+
 # Backend API base URL
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+# When running in offline mode, network calls should be skipped
+OFFLINE_MODE: bool = os.getenv("OFFLINE_MODE", "0") == "1"
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -97,6 +102,13 @@ async def api_call(
 
     _fire_listeners(_start_listeners)
 
+    if OFFLINE_MODE:
+        logger.info("Offline mode: skipping API call %s %s", method, endpoint)
+        _fire_listeners(_end_listeners)
+        return [] if method == "GET" else {}
+        logger.info("Offline mode: %s %s skipped", method, endpoint)
+
+
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
             if method == "GET":
@@ -118,6 +130,25 @@ async def api_call(
                 raise ValueError(f"Unsupported method: {method}")
             response.raise_for_status()
             return response.json() if response.text else None
+    except httpx.HTTPStatusError as exc:
+        status = exc.response.status_code if exc.response else None
+        logger.error(
+            "API returned HTTP %s for %s %s - %s",
+            status,
+            method,
+            url,
+            exc,
+            exc_info=True,
+        )
+        ui.notify(f"API error {status}", color="negative")
+        if return_error:
+            body = None
+            try:
+                body = exc.response.json()
+            except Exception:
+                body = exc.response.text if exc.response else None
+            return {"error": str(exc), "status_code": status, "body": body}
+        return None
     except httpx.RequestError as exc:
         logger.error(
             "API request failed: %s %s - %s", method, url, exc, exc_info=True
@@ -188,6 +219,10 @@ async def connect_ws(path: str = "/ws", timeout: float = 5.0):
     global WS_CONNECTION
     url = BACKEND_URL.replace("http", "ws") + path
     headers = {"Authorization": f"Bearer {TOKEN}"} if TOKEN else None
+    if OFFLINE_MODE:
+        logger.info("Offline mode: skipping WebSocket connection to %s", url)
+        _fire_ws_status("disconnected")
+        return None
     try:
         WS_CONNECTION = await asyncio.wait_for(
             websockets.connect(url, extra_headers=headers), timeout
@@ -200,37 +235,52 @@ async def connect_ws(path: str = "/ws", timeout: float = 5.0):
         return None
 
 
+def listen_ws(
+    handler: Callable[[dict], Awaitable[None]], *, reconnect: bool = True
 async def listen_ws(
     handler: Callable[[dict], Awaitable[None]], *, reconnect: bool = True
-) -> None:
-    """Listen for events on the WebSocket and pass them to ``handler``."""
-    global WS_CONNECTION
-    retry_delay = 3
-    while True:
-        ws = await connect_ws()
-        if ws is None:
-            if not reconnect:
-                return
-            await asyncio.sleep(retry_delay)
-            continue
-        try:
-            async for message in ws:
-                try:
-                    data = json.loads(message)
-                except Exception:
-                    data = {"event": "raw", "data": message}
-                await handler(data)
-        except Exception as exc:  # pragma: no cover - network errors
-            logger.error("WebSocket listen error: %s", exc, exc_info=True)
-        finally:
-            if not ws.closed:
-                await ws.close()
-            if WS_CONNECTION is ws:
-                WS_CONNECTION = None
+) -> asyncio.Task:
+    """Start listening for WebSocket events and return the ``asyncio`` task."""
+
+    async def _listen() -> None:
+        global WS_CONNECTION
+        retry_delay = 3
+        if OFFLINE_MODE:
             _fire_ws_status("disconnected")
-        if not reconnect:
-            break
-        await asyncio.sleep(retry_delay)
+            return
+        while True:
+            ws = await connect_ws()
+            if ws is None:
+                if not reconnect:
+                    return
+                await asyncio.sleep(retry_delay)
+                continue
+            try:
+                async for message in ws:
+                    try:
+                        data = json.loads(message)
+                    except Exception:
+                        data = {"event": "raw", "data": message}
+                    await handler(data)
+            except Exception as exc:  # pragma: no cover - network errors
+                logger.error("WebSocket listen error: %s", exc, exc_info=True)
+            finally:
+                if not ws.closed:
+                    await ws.close()
+                if WS_CONNECTION is ws:
+                    WS_CONNECTION = None
+                _fire_ws_status("disconnected")
+            if not reconnect:
+                break
+            await asyncio.sleep(retry_delay)
+
+    return asyncio.create_task(_listen())
+
+            if not reconnect:
+                break
+            await asyncio.sleep(retry_delay)
+
+    return asyncio.create_task(_listen())
 
 
 async def combined_search(query: str) -> list[Dict[str, Any]]:

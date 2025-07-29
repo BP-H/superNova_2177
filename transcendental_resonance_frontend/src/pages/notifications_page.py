@@ -56,4 +56,5 @@ async def notifications_page():
             if event.get("type") == "notification":
                 await refresh_notifs()
 
-        ui.run_async(listen_ws(handle_event))
+        ws_task = listen_ws(handle_event)
+        ui.context.client.on_disconnect(lambda: ws_task.cancel())

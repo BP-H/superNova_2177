@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Media upload page."""
 
 from nicegui import ui, background_tasks
@@ -38,15 +41,27 @@ async def upload_page():
 
             spinner = background_tasks.create(spin(), name='upload-progress')
             try:
-                files = {'file': (event.name, event.content.read(), 'multipart/form-data')}
+                files = {
+                    'file': (event.name, event.content.read(), 'multipart/form-data')
+                }
                 resp = await api_call('POST', '/upload/', files=files)
             finally:
                 spinner.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
                     await spinner
                 progress.value = 1.0
+
             if resp:
                 ui.notify(f"Uploaded: {resp['media_url']}", color='positive')
+
+            finally:
+                spinner.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await spinner
+                progress.value = 1.0
+                if resp:
+                    ui.notify(f"Uploaded: {resp['media_url']}", color='positive')
+
 
         ui.upload(multiple=True, auto_upload=True,
                   on_upload=lambda e: ui.run_async(handle_upload(e))) \

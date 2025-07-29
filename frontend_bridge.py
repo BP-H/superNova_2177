@@ -257,7 +257,6 @@ register_route_once(
 
 # Import additional UI hooks for side effects (route registration)
 import network.ui_hook  # noqa: F401,E402 - registers network analysis routes
-import consensus.ui_hook  # noqa: F401,E402 - registers consensus forecast routes
 import validators.ui_hook  # noqa: F401,E402 - registers validator reputation routes
 import audit.ui_hook  # noqa: F401,E402 - exposes audit utilities
 import audit.explainer_ui_hook  # noqa: F401,E402 - audit explanation utilities

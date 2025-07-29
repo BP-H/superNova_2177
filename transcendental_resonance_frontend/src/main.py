@@ -19,6 +19,7 @@ from .utils.api import (
     clear_token,
     listen_ws,
     on_ws_status_change,
+    OFFLINE_MODE,
 )
 from .utils.loading_overlay import LoadingOverlay
 from .utils.styles import (
@@ -35,7 +36,7 @@ from .utils.features import (
     theme_personalization_panel,
     onboarding_overlay,
 )
-from .utils import ErrorOverlay
+from .utils import ErrorOverlay, ApiStatusFooter
 
 ui.context.client.on_disconnect(clear_token)
 apply_global_styles()
@@ -48,12 +49,30 @@ contrast_toggle = high_contrast_switch()
 contrast_toggle.on("change", lambda e: toggle_high_contrast(e.value))
 theme_personalization_panel()
 error_overlay = ErrorOverlay()
+api_status = ApiStatusFooter()
 
 ws_status = (
     ui.icon("circle")
     .classes("fixed bottom-0 left-0 m-2")
     .style("color: red")
 )
+
+# Show whether the frontend is running in offline mode
+if OFFLINE_MODE:
+    # Label bar across the bottom
+    ui.label("OFFLINE MODE – using mock services.")
+        .classes("fixed bottom-0 w-full text-center bg-red-600 text-white text-sm")
+
+    # Icon indicator (cloud_off)
+    ui.icon("cloud_off")
+        .classes("fixed bottom-0 right-0 m-2")
+        .style("color: red")
+else:
+    # Icon indicator (cloud_done)
+    ui.icon("cloud_done")
+        .classes("fixed bottom-0 right-0 m-2")
+        .style("color: green")
+
 
 def _update_ws_status(status: str) -> None:
     color = "green" if status == "connected" else "red"
@@ -98,7 +117,8 @@ async def notification_listener() -> None:
             message = event.get("message", "You have a new notification!")
             ui.notify(message, type="info", position="bottom-right")
 
-    await listen_ws(handle_event)
+    ws_task = listen_ws(handle_event)
+    await ws_task
 
 
 @ui.page("*")
