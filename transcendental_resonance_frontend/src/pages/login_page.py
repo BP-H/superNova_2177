@@ -4,13 +4,17 @@
 """Login and registration pages for Transcendental Resonance."""
 
 from nicegui import ui
+from fastapi import Request
+from fastapi.responses import PlainTextResponse
 
 from utils.api import api_call, set_token
 from utils.styles import get_theme
 
 
 @ui.page('/')
-async def login_page():
+async def login_page(request: Request):
+    if request.query_params.get('healthz') == '1':
+        return PlainTextResponse('ok')
     """Render the login form and handle authentication."""
     THEME = get_theme()
     with ui.column().classes('w-full max-w-md mx-auto p-4').style(
