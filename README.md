@@ -78,6 +78,8 @@ To launch the Streamlit UI:
 chmod +x start.sh
 ./start.sh  # launches ui.py
 # or run directly
+python ui.py         # automatically invokes Streamlit
+# or
 streamlit run ui.py
 ```
 
@@ -330,9 +332,9 @@ from streamlit_helpers import header, alert, theme_selector, centered_container
 ```
 
 Import these helpers at the top of your Streamlit files to keep the UI code
-clean and consistent.
-Run these commands from the repository root. **Do not** execute `python ui.py`
-directly as that bypasses Streamlit's runtime.
+clean and consistent. Run the interface from the repository root using either
+`python ui.py` or `streamlit run ui.py`. The `python` invocation now calls
+Streamlit's CLI automatically.
 
 Exporting plots as static images requires the `kaleido` package. Install it
 using `pip install -r requirements-streamlit.txt` if it isn't already available.
@@ -358,6 +360,8 @@ module falls back to a development setup equivalent to:
 The dashboard provides real-time integrity metrics and network graphs built with `streamlit`, `networkx`, and `matplotlib`. Upload your validations JSON or enable demo mode to populate the table. You can edit rows inline before re-running the analysis to see how scores change.
 
 ```bash
+python ui.py
+# or
 streamlit run ui.py
 ```
 

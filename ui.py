@@ -1,9 +1,3 @@
-import streamlit as st  # make sure this is FIRST(🥺 😂 i know not here but why not 🤷🥳⚡🥺🫶👏☺️🌸)
-
-# STRICTLY A SOCIAL MEDIA PLATFORM
-# Intellectual Property & Artistic Inspiration
-# Legal & Ethical Safeguards
-
 import asyncio
 import difflib
 import io
@@ -14,11 +8,18 @@ import os
 import sys
 import traceback
 
+import streamlit as st  # make sure this is FIRST(🥺 😂 i know not here but why not 🤷🥳⚡🥺🫶👏☺️🌸)
+
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
+
 os.environ["STREAMLIT_SERVER_PORT"] = "8501"
-from datetime import datetime
-from pathlib import Path
-from importlib import import_module
 import time
+from datetime import datetime
+from importlib import import_module
+from pathlib import Path
 
 os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 
@@ -31,6 +32,7 @@ go = None  # imported lazily in run_analysis
 Network = None  # imported lazily in run_analysis
 # Import Streamlit and register fallback health check
 import os
+
 os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 # ... your other imports here ...
 import streamlit as st
@@ -43,18 +45,16 @@ os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 HEALTH_CHECK_PARAM = "healthz"
 
 # Directory containing Streamlit page modules
-PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+PAGES_DIR = (
+    Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+)
 
 print("\u23F3 Booting superNova_2177 UI...", file=sys.stderr)
-from streamlit_helpers import (
-    alert,
-    apply_theme,
-    centered_container,
-    header,
-    theme_selector,
-)
 from api_key_input import render_api_key_ui, render_simulation_stubs
-from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_main_ui
+from streamlit_helpers import (alert, apply_theme, centered_container, header,
+                               theme_selector)
+from ui_utils import (load_rfc_entries, parse_summary, render_main_ui,
+                      summarize_text)
 
 
 def _run_async(coro):
@@ -867,17 +867,23 @@ def render_validation_ui() -> None:
         st.subheader("Agent Output")
         st.json(st.session_state["agent_output"])
 
+
 def main() -> None:
     import streamlit as st
+
     print("[debug] main() invoked", file=sys.stderr)
     st.title("🤗//⚡//Launching main()")
-    import streamlit as st
     import os
     from importlib import import_module
 
+    import streamlit as st
+
     st.set_page_config(page_title="superNova_2177", layout="wide")
 
-    if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
+    if (
+        st.query_params.get(HEALTH_CHECK_PARAM) == "1"
+        or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz"
+    ):
         print("[debug] healthz check", file=sys.stderr)
         st.write("ok")
         return
@@ -916,10 +922,10 @@ def main() -> None:
             st.text("debug: missing main")
     except Exception as e:
         import traceback
+
         st.error(f"Error loading page '{choice}':")
         st.text("".join(traceback.format_exception(type(e), e, e.__traceback__)))
         print(f"[debug] exception loading {choice}: {e}", file=sys.stderr)
-
 
 
 def render_landing_page() -> None:
@@ -927,16 +933,18 @@ def render_landing_page() -> None:
     st.set_page_config(page_title="superNova_2177", layout="centered")
     st.title("superNova_2177")
     st.write("Welcome to the superNova_2177 project — a creative research platform.")
-    st.write("For the full NiceGUI interface, run: `python -m transcendental_resonance_frontend`.")
-    st.write("See the [GitHub repo](https://github.com/BP-H/superNova_2177) for more info.")
+    st.write(
+        "For the full NiceGUI interface, run: `python -m transcendental_resonance_frontend`."
+    )
+    st.write(
+        "See the [GitHub repo](https://github.com/BP-H/superNova_2177) for more info."
+    )
+
 
 if __name__ == "__main__":
-    print("[debug] __main__ entry", file=sys.stderr)
-    try:
-        main()
-    except Exception as e:
-        import traceback
-        st.write("App failed with exception:")
-        st.text("".join(traceback.format_exception(type(e), e, e.__traceback__)))
-        print(f"[debug] fatal error: {e}", file=sys.stderr)
-        raise
+    import sys
+
+    from streamlit.web import cli as stcli
+
+    sys.argv = ["streamlit", "run", __file__]
+    sys.exit(stcli.main())
