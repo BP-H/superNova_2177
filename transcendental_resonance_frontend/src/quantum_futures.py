@@ -53,6 +53,17 @@ def generate_speculative_futures(
     return futures
 
 
+def generate_speculative_payload(
+    node: Dict[str, Any], num_variants: int = 3
+) -> List[Dict[str, str]]:
+    """Return futures with the disclaimer included in each entry."""
+
+    futures = generate_speculative_futures(node, num_variants=num_variants)
+    for f in futures:
+        f["disclaimer"] = DISCLAIMER
+    return futures
+
+
 def quantum_video_stub(*_args, **_kwargs) -> None:
     """Placeholder for future WebGL/AI-video integration."""
     return None
@@ -67,6 +78,7 @@ __all__ = [
     "DISCLAIMER",
     "EMOJI_GLOSSARY",
     "generate_speculative_futures",
+    "generate_speculative_payload",
     "quantum_video_stub",
     "analyze_video_timeline",
 ]
