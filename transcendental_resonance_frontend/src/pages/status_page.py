@@ -1,7 +1,10 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """System status metrics page."""
 
 from nicegui import ui
-from utils.api import api_call
+from utils.api import TOKEN, api_call
 from utils.layout import page_container, navigation_bar
 from utils.styles import get_theme
 
@@ -24,6 +27,9 @@ async def status_page():
 
         async def refresh_status() -> None:
             status = await api_call("GET", "/status")
+            if status is None:
+                ui.notify("Failed to load data", color="negative")
+                return
             if status:
                 status_label.text = f"Status: {status['status']}"
                 harmonizers_label.text = (

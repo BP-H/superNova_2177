@@ -5,9 +5,7 @@
 
 import pytest
 
-from external_services.llm_client import LLMClient
-from external_services.video_client import VideoClient
-from external_services.vision_client import VisionClient
+from external_services import LLMClient, VideoClient, VisionClient
 
 
 @pytest.mark.asyncio

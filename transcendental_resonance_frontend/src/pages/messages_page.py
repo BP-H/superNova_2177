@@ -3,10 +3,12 @@
 # Legal & Ethical Safeguards
 """Messaging system page."""
 
-from nicegui import ui
-from utils.api import TOKEN, api_call, listen_ws
-from utils.layout import page_container, navigation_bar
 from components.emoji_toolbar import emoji_toolbar
+from nicegui import ui
+
+from utils import ErrorOverlay
+from utils.api import TOKEN, api_call, listen_ws
+from utils.layout import navigation_bar, page_container
 from utils.safe_markdown import safe_markdown
 from utils.styles import get_theme
 
@@ -27,6 +29,8 @@ async def messages_page():
         ui.label("Messages").classes("text-2xl font-bold mb-4").style(
             f'color: {THEME["accent"]};'
         )
+
+        error_overlay = ErrorOverlay()
 
         with ui.row().classes("w-full mb-2"):
             recipient = ui.input("Recipient Username").classes("w-full")
@@ -52,9 +56,7 @@ async def messages_page():
 
         group_label = ui.label().classes("text-lg mb-2")
         messages_list = (
-            ui.column()
-            .classes("w-full")
-            .style("max-height: 400px; overflow-y: auto")
+            ui.column().classes("w-full").style("max-height: 400px; overflow-y: auto")
         )
 
         edit_dialog = ui.dialog()
@@ -89,9 +91,9 @@ async def messages_page():
 
         async def refresh_messages():
             if group_id.value:
-                messages = await api_call(
-                    "GET", f"/groups/{group_id.value}/messages"
-                ) or []
+                messages = (
+                    await api_call("GET", f"/groups/{group_id.value}/messages") or []
+                )
                 group = await api_call("GET", f"/groups/{group_id.value}") or {}
                 group_label.text = group.get("name", f"Group {group_id.value}")
             else:
@@ -111,7 +113,9 @@ async def messages_page():
                         with ui.row().classes("items-center justify-between"):
                             with ui.column().classes("grow"):
                                 ui.label(f"From: {m['sender_id']}").classes("text-sm")
-                                ui.markdown(safe_markdown(m["content"])).classes("text-sm")
+                                ui.markdown(safe_markdown(m["content"])).classes(
+                                    "text-sm"
+                                )
                             ui.button(
                                 on_click=lambda msg=m: ui.run_async(open_edit(msg)),
                                 icon="edit",
@@ -124,4 +128,14 @@ async def messages_page():
             if event.get("type") == "message":
                 await refresh_messages()
 
-        ui.run_async(listen_ws(handle_event))
+        async def start_ws() -> None:
+            try:
+                ws_task = listen_ws(handle_event)
+                ui.context.client.on_disconnect(lambda: ws_task.cancel())
+                await ws_task
+            except Exception:
+                ui.notify("Realtime updates unavailable", color="warning")
+                error_overlay.show("Realtime updates unavailable")
+
+        ui.run_async(start_ws())
+

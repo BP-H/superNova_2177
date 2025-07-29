@@ -219,7 +219,6 @@ CosmicNexus orchestrates the multiverse, coordinating forks, entropy reduction, 
 # Core Imports from all files
 try:
     from config import Config as SystemConfig
-    from config import get_emoji_weights
 
     CONFIG = SystemConfig
 except ImportError:
@@ -517,6 +516,11 @@ from hook_manager import HookManager
 from prediction_manager import PredictionManager
 from resonance_music import generate_midi_from_metrics
 
+try:  # pragma: no cover - optional dependency may not be available
+    from hooks import events
+except Exception:  # pragma: no cover - graceful fallback
+    events = None  # type: ignore[assignment]
+
 # Import system configuration early so metrics can be started with the proper
 # port value. Other modules follow the same pattern by exposing a ``CONFIG``
 # variable pointing at ``config.Config``.  Without this, ``CONFIG`` is undefined
@@ -524,7 +528,6 @@ from resonance_music import generate_midi_from_metrics
 # runtime on Streamlit Cloud.
 try:  # pragma: no cover - fallback only used if optional import fails
     from config import Config as SystemConfig
-    from config import get_emoji_weights
 
     CONFIG = SystemConfig
 except Exception:  # pragma: no cover - extremely defensive
@@ -1129,7 +1132,11 @@ def is_valid_username(name: str) -> bool:
 def is_valid_emoji(emoji: str, config: "Config") -> bool:
     if emoji is None or config is None:
         return False
-    return emoji in get_emoji_weights()
+    try:
+        weights = config.get_emoji_weights()
+    except AttributeError:
+        weights = getattr(config, "EMOJI_WEIGHTS", {})
+    return emoji in weights
 
 
 def sanitize_text(text: str, config: "Config") -> str:
@@ -2106,10 +2113,10 @@ class CosmicNexus:
             else:
                 logging.warning("Ignoring invalid config key %s", key)
         self.sub_universes[fork_id] = fork_agent
-        from hooks import events
-        self.hooks.register_hook(
-            events.CROSS_REMIX, lambda data: self.handle_cross_remix(data, fork_id)
-        )
+        if events is not None:
+            self.hooks.register_hook(
+                events.CROSS_REMIX, lambda data: self.handle_cross_remix(data, fork_id)
+            )
 
         # persist fork info for DAO governance
         db = self._get_session()
@@ -2281,8 +2288,7 @@ class EntropyTracker(RemixAgent):
             user = User.from_dict(user_data, self.config)
             info = calculate_interaction_entropy(user, db)
             self.current_entropy = float(info.get("value", 0.0))
-            if self.current_entropy > self.entropy_threshold:
-                from hooks import events
+            if self.current_entropy > self.entropy_threshold and events is not None:
                 self.cosmic_nexus.hooks.fire_hooks(
                     events.ENTROPY_DIVERGENCE,
                     {"universe": id(self), "entropy": self.current_entropy},
