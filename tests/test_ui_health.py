@@ -24,7 +24,7 @@ def _start_server(port):
         "--server.port",
         str(port),
     ]
-    return subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    return subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
 
 
 def test_healthz_endpoint():
@@ -34,7 +34,7 @@ def test_healthz_endpoint():
         # Wait for server to come up
         for _ in range(30):
             try:
-                res = requests.get(f"http://localhost:{port}/healthz", timeout=1)
+                res = requests.get(f"http://localhost:{port}/?healthz=1", timeout=1)
                 if res.status_code == 200:
                     break
             except Exception:
@@ -46,7 +46,7 @@ def test_healthz_endpoint():
             raise RuntimeError("Streamlit did not start in time")
 
         start = time.time()
-        resp = requests.get(f"http://localhost:{port}/healthz", timeout=5)
+        resp = requests.get(f"http://localhost:{port}/?healthz=1", timeout=5)
         elapsed = time.time() - start
         assert resp.status_code == 200
         assert "ok" in resp.text.lower()
