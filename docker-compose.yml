@@ -6,7 +6,7 @@ services:
   app:
     build: .
     ports:
-      - "8501:8501"
+      - "8888:8888"
     depends_on:
       - db
       - redis

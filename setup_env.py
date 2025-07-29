@@ -66,7 +66,7 @@ def run_ui() -> None:
             'run',
             'ui.py',
             '--server.port',
-            '8501',
+            '8888',
         ])
     except subprocess.CalledProcessError as exc:
         logging.error('Failed to launch the Streamlit UI: %s', exc)
@@ -101,7 +101,11 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     parser = argparse.ArgumentParser(description='Set up the environment')
     parser.add_argument('--run-app', action='store_true', help='start the API after installation')
-    parser.add_argument('--build-ui', action='store_true', help='build the Transcendental Resonance frontend after installation')
+    parser.add_argument(
+        '--build-ui',
+        action='store_true',
+        help='build the Transcendental Resonance frontend after installation',
+    )
     parser.add_argument('--launch-ui', action='store_true', help='start the Streamlit UI after installation')
     parser.add_argument('--locked', action='store_true',
                         help='install dependencies from requirements.lock')

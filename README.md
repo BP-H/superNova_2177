@@ -84,7 +84,7 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
    # python setup_env.py --run-app    # launch API after install
    # python setup_env.py --locked     # install from requirements.lock
     # python setup_env.py --build-ui   # build Transcendental Resonance frontend assets
-    # python setup_env.py --launch-ui  # run the Streamlit UI on port 8501
+   # python setup_env.py --launch-ui  # run the Streamlit UI on port 8888
    ```
   You can also let `install.py` choose the appropriate installer for your
   platform:
@@ -259,7 +259,7 @@ docker build -t supernova-2177 .
 To build and run the Streamlit UI inside Docker:
 ```bash
 docker build -t supernova-ui .
-docker run -p 8501:8501 supernova-ui
+docker run -p 8888:8888 supernova-ui
 ```
 
 The build process installs required system libraries such as `libsnappy-dev`
@@ -273,7 +273,7 @@ docker-compose up
 
 
 The application will be available at [http://localhost:8000](http://localhost:8000),
-and the Streamlit UI at [http://localhost:8501](http://localhost:8501).
+and the Streamlit UI at [http://localhost:8888](http://localhost:8888).
 
 
 ## Authentication
@@ -307,7 +307,7 @@ Run these commands from the repository root. **Do not** execute `python ui.py`
 directly as that bypasses Streamlit's runtime.
 
 Exporting plots as static images requires the `kaleido` package. Install it
-using `pip install -r requirements.txt` if it isn't already available.
+using `pip install -r requirements-streamlit.txt` if it isn't already available.
 
 Open [http://localhost:8888](http://localhost:8888) in your browser to interact with the demo. Use the **Reset to Demo** button below the editor to reload `sample_validations.json` at any time.
 
@@ -333,7 +333,7 @@ Missing packages such as `tqdm` are installed automatically when you run `one_cl
 ### Troubleshooting the UI
 
 - **Missing dependencies**: If the interface fails with `ModuleNotFoundError`, run
-  `pip install -r requirements.txt` to ensure all packages are available.
+  `pip install -r requirements-streamlit.txt` to ensure all packages are available.
 - **Port already in use**: Pass `--server.port` to Streamlit or set the
   `STREAMLIT_SERVER_PORT` environment variable to use a different port.
 - **Browser does not open**: Navigate manually to
@@ -365,9 +365,25 @@ Deploy the demo UI online with Streamlit Cloud:
 2. Sign in to [Streamlit Cloud](https://streamlit.io/cloud) and select **New app**.
 3. Choose the repo and set `streamlit_app.py` as the entry point.
 4. Add your `SECRET_KEY` and set a `DATABASE_URL` secret with your connection string under **Secrets** in the app settings.
-5. Streamlit will install dependencies from `requirements.txt` and launch the app.
+5. Streamlit will install dependencies from `requirements-streamlit.txt` and launch the app.
+
+### Secrets Configuration
+
+Streamlit Cloud stores sensitive values in a private secrets editor. Open the
+app dashboard, choose **Settings → Secrets**, and paste key/value pairs such as:
+
+```toml
+SECRET_KEY = "dev"
+DATABASE_URL = "sqlite:///:memory:"
+```
+
+These defaults match the local development fallback shown above, but you should
+replace them with a strong secret key and a persistent database URL for real
+deployments. See Streamlit's [secrets documentation](https://docs.streamlit.io/streamlit-community-cloud/get-started/deploy-an-app/app-secrets)
+for more detail.
 
 `kaleido` is bundled in `requirements.txt` so image export features work on Streamlit Cloud.
+
 
 After the build completes, you'll get a shareable URL to interact with the validation demo in your browser.
 
@@ -563,7 +579,7 @@ is optional because a secure one will be generated if omitted:
 # optional
 export SECRET_KEY="your-secret"
 export DATABASE_URL="postgresql+asyncpg://<username>:<password>@<hostname>/<database>"
-export BACKEND_URL="http://localhost:8501"
+export BACKEND_URL="http://localhost:8888"
 ```
 
 To connect to a central database instead of the local file, pass

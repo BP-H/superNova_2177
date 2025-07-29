@@ -16,7 +16,7 @@ jobs:
         python-version: ['3.11', '3.12']
     env:
       PYTHONPATH: ${{ github.workspace }}/transcendental_resonance_frontend/src
-      STREAMLIT_PORT: ${{ env.STREAMLIT_PORT || '8501' }}
+      STREAMLIT_PORT: ${{ env.STREAMLIT_PORT || '8888' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -50,7 +50,7 @@ jobs:
       - run: pytest
       - name: Streamlit smoke test
         run: |
-          PORT=${STREAMLIT_PORT:-8501}
+          PORT=${STREAMLIT_PORT:-8888}
           streamlit run ui.py --server.headless true --server.port "$PORT" >streamlit.log 2>&1 &
           for i in {1..30}; do
             if curl -f http://localhost:"$PORT" >/dev/null 2>&1; then
