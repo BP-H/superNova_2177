@@ -10,4 +10,4 @@ lint:
 	mypy
 
 ui:
-        streamlit run transcendental_resonance_frontend/ui.py
+        streamlit run ui.py
