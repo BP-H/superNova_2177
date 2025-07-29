@@ -17,6 +17,7 @@ qrcode
 asyncpg
 streamlit-ace
 kaleido
+websockets
 
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
