@@ -2,5 +2,5 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
-streamlit run streamlit_app.py
+streamlit run transcendental_resonance_frontend/ui.py
 

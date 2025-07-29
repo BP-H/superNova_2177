@@ -46,4 +46,4 @@ USER appuser
 EXPOSE 8888
 
 # Launch Streamlit UI explicitly
-CMD ["streamlit", "run", "streamlit_app.py", "--server.port=8888", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "transcendental_resonance_frontend/ui.py", "--server.port=8888", "--server.address=0.0.0.0"]
