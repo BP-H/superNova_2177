@@ -307,6 +307,15 @@ class RemixAgent:
             if not user_data:
                 return
 
+            karma = Decimal(str(user_data.get("karma", "0")))
+            bypass = event.get("genesis_creator") or event.get("genesis_bonus_applied")
+            if (
+                not user_data.get("is_genesis")
+                and not bypass
+                and karma < self.config.KARMA_MINT_THRESHOLD
+            ):
+                return
+
             root_coin_id = event.get("root_coin_id")
             root_coin = self.storage.get_coin(root_coin_id)
             if not root_coin or root_coin.get("owner") != user:

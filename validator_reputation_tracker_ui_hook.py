@@ -13,8 +13,9 @@ async def update_reputations_ui(payload: Dict[str, Any]) -> Dict[str, Any]:
     """Update validator reputations from a UI payload."""
     validations = payload.get("validations", [])
     result = update_validator_reputations(validations)
+    from hooks import events
     minimal = {"reputations": result.get("reputations", {})}
-    await ui_hook_manager.trigger("reputation_update", minimal)
+    await ui_hook_manager.trigger(events.VALIDATOR_REPUTATIONS, minimal)
     return minimal
 
 

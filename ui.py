@@ -1,3 +1,7 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 import difflib
 import io
 import json
@@ -13,11 +17,10 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
-try:
-    import matplotlib.pyplot as plt
-except Exception:  # pragma: no cover - optional dependency
-    plt = None
-import networkx as nx
+plt = None  # imported lazily in run_analysis
+nx = None  # imported lazily in run_analysis
+go = None  # imported lazily in run_analysis
+Network = None  # imported lazily in run_analysis
 import streamlit as st
 
 # Basic page setup so Streamlit responds immediately on load
@@ -78,15 +81,6 @@ except Exception:  # pragma: no cover - optional runtime globals
     agent = None  # type: ignore
     InMemoryStorage = None  # type: ignore
 
-try:
-    import plotly.graph_objects as go
-except Exception:  # pragma: no cover - optional dependency
-    go = None
-
-try:
-    from pyvis.network import Network
-except Exception:  # pragma: no cover - optional dependency
-    Network = None
 
 try:
     from network.network_coordination_detector import build_validation_graph
@@ -210,6 +204,27 @@ def generate_explanation(result: dict) -> str:
 
 def run_analysis(validations, *, layout: str = "force"):
     """Execute the validation integrity pipeline and display results."""
+    global nx, plt, go, Network
+    if nx is None:
+        try:
+            import networkx as nx  # type: ignore
+        except ImportError:
+            nx = None
+    if plt is None:
+        try:
+            import matplotlib.pyplot as plt  # type: ignore
+        except ImportError:
+            plt = None
+    if go is None:
+        try:
+            import plotly.graph_objects as go  # type: ignore
+        except ImportError:
+            go = None
+    if Network is None:
+        try:
+            from pyvis.network import Network  # type: ignore
+        except ImportError:
+            Network = None
     if analyze_validation_integrity is None or build_validation_graph is None:
         st.error(
             "Required analysis modules are missing. Please install optional dependencies."
@@ -258,7 +273,7 @@ def run_analysis(validations, *, layout: str = "force"):
 
     graph_data = build_validation_graph(validations)
     edges = graph_data.get("edges", [])
-    if edges:
+    if edges and nx is not None:
         G = nx.Graph()
 
         # Collect voter metadata from the validations
@@ -424,6 +439,8 @@ def run_analysis(validations, *, layout: str = "force"):
             st.pyplot(fig)
         else:
             st.info("Install matplotlib or pyvis for graph visualization")
+    elif edges:
+        st.info("Install networkx for graph visualization")
 
     if st.button("Explain This Score"):
         explanation = generate_explanation(result)
@@ -866,16 +883,33 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    logger.info("\u2705 Streamlit UI started. Launching main()...")
+    logger.info("\u2705 Streamlit UI starting...")
+
+    defaults = {
+        "session_start_ts": datetime.utcnow().isoformat(timespec="seconds"),
+        "diary": [],
+        "analysis_diary": [],
+        "run_count": 0,
+        "last_result": None,
+        "last_run": None,
+        "agent_output": {},
+        "validations_json": "",
+        "theme": "light",
+    }
+    for key, value in defaults.items():
+        st.session_state.setdefault(key, value)
+
+    apply_theme(st.session_state["theme"])
+
     try:
         main()
     except Exception as exc:  # pragma: no cover - startup diagnostics
         logger.exception("UI startup failed")
         print(f"Startup failed: {exc}", file=sys.stderr)
         traceback.print_exc(file=sys.stderr)
-        st.warning(f"UI startup failed — check logs for details: {exc}")
+        st.error(f"UI startup failed: {exc}")
     else:
-        st.success("✅ UI Booted")
         print("UI Booted", file=sys.stderr)
+        st.success("✅ UI Booted")
 
 

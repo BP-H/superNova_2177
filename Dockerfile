@@ -10,7 +10,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 WORKDIR /install
-COPY requirements.txt ./
+COPY requirements-streamlit.txt requirements-minimal.txt ./
 # Install build tools and Python dependencies, including Streamlit
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -21,7 +21,7 @@ RUN apt-get update \
         libsdl2-mixer-dev \
         libsdl2-ttf-dev \
     && rm -rf /var/lib/apt/lists/* \
-    && pip install --no-cache-dir --prefix=/install -r requirements.txt
+    && pip install --no-cache-dir --prefix=/install -r requirements-streamlit.txt
 
 # Final stage
 FROM python:3.12-slim
@@ -43,7 +43,7 @@ RUN chown -R appuser:appuser /app
 USER appuser
 
 # Expose Streamlit port
-EXPOSE 8501
+EXPOSE 8888
 
 # Launch Streamlit UI explicitly
-CMD ["streamlit", "run", "streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "streamlit_app.py", "--server.port=8888", "--server.address=0.0.0.0"]

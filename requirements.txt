@@ -20,7 +20,6 @@ types-requests
 types-networkx
 numpy
 sympy
-sentence-transformers
 scipy
 tqdm
 statsmodels
@@ -32,8 +31,6 @@ pandas
 pygame
 mido
 midiutil
-torch
-scikit-learn
 streamlit>=1.28
 qrcode
 asyncpg
@@ -41,6 +38,5 @@ email-validator
 httpx==0.27.0
 streamlit-ace
 kaleido
-openai
-anthropic
-google-generativeai
+plotly
+pyvis

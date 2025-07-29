@@ -939,6 +939,7 @@ ApplyDailyDecayPayload = TypedDict(
 class Token(BaseModel):
     access_token: str
     token_type: str
+    universe_id: Optional[str] | None = None
 
 
 class TokenData(BaseModel):
@@ -2509,6 +2510,17 @@ def register_harmonizer(user: HarmonizerCreate, db: Session = Depends(get_db)):
 from login_router import router as login_router
 
 app.include_router(login_router)
+
+# Ensure protocol agent registry reflects any reloaded classes
+try:
+    import importlib
+    import protocols._registry as _reg
+    importlib.reload(_reg)
+    from protocols import AGENT_REGISTRY as _ar
+    _ar.clear()
+    _ar.update(_reg.AGENT_REGISTRY)
+except Exception:
+    pass
 
 
 @app.get("/users/me", response_model=HarmonizerOut, tags=["Harmonizers"])
