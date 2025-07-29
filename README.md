@@ -54,6 +54,11 @@ pip install -r requirements.txt
 
 # optional: launch the Streamlit UI
 # python setup_env.py --launch-ui
+# or run manually with
+./start.sh       # launches ui.py on port 8888
+python ui.py     # auto-runs the Streamlit server
+# or use the CLI directly
+streamlit run ui.py
 
 # Try demo mode
 supernova-validate --demo
@@ -67,8 +72,12 @@ supernova-federate list
 supernova-federate create --creator Alice --config HARMONY_WEIGHT=0.9
 
 # Cast a vote on a fork
+
 supernova-federate vote <fork_id> --voter Bob --vote yes
 ````
+
+The UI listens on [http://localhost:8888](http://localhost:8888) by default.
+Append `?healthz=1` to the URL and you should see `ok` when the server is running.
 
 ## 🔧 Local Development
 
@@ -77,11 +86,12 @@ To launch the Streamlit UI:
 ```bash
 chmod +x start.sh
 ./start.sh  # launches ui.py
-# or run directly
-streamlit run ui.py
+python ui.py  # same as above
+streamlit run ui.py  # alternative
 ```
 
-This script launches `ui.py` automatically from any directory in the repo.
+Either `start.sh` or `python ui.py` will launch the dashboard from anywhere in the repo.
+Run `curl http://localhost:8888/?healthz=1` to verify the server is up.
 
 ## ☁️ Launch Online
 
@@ -331,8 +341,8 @@ from streamlit_helpers import header, alert, theme_selector, centered_container
 
 Import these helpers at the top of your Streamlit files to keep the UI code
 clean and consistent.
-Run these commands from the repository root. **Do not** execute `python ui.py`
-directly as that bypasses Streamlit's runtime.
+Run these commands from the repository root. `ui.py` is the official launcher
+and running `python ui.py` will start Streamlit automatically.
 
 Exporting plots as static images requires the `kaleido` package. Install it
 using `pip install -r requirements-streamlit.txt` if it isn't already available.
