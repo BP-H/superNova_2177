@@ -18,7 +18,7 @@ def _start_server(port):
     cmd = [
         "streamlit",
         "run",
-        "streamlit_app.py",
+        "ui.py",
         "--server.headless",
         "true",
         "--server.port",
