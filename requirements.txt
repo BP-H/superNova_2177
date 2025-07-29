@@ -44,3 +44,4 @@ kaleido
 openai
 anthropic
 google-generativeai
+plotly
