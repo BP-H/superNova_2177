@@ -880,62 +880,14 @@ def render_validation_ui() -> None:
         st.subheader("Agent Output")
         st.json(st.session_state["agent_output"])
 
-def main() -> None:
-    """Entry point for the Streamlit UI."""
-    import streamlit as st
-    from importlib import import_module
+import streamlit as st
 
-    log("⚡ main() invoked")
+def main():
     st.set_page_config(page_title="superNova_2177", layout="wide")
-    log("App started")
+    st.title("🔭 superNova_2177 UI")
+    st.markdown("Welcome to the experimental interface.")
 
-    # Unified health check using query params or PATH_INFO
-    if (
-        "1" in st.query_params.get(HEALTH_CHECK_PARAM, [])
-        or os.environ.get("PATH_INFO", "").rstrip("/") == f"/{HEALTH_CHECK_PARAM}"
-    ):
-        log("💊 health-check branch")
-        st.write("ok")
-        st.stop()  # Halt after response
-        return
-
-    st.title("🤗//⚡//Launching main()")
-    log("main() entered")
-
-    log(f"📁 loading pages from {PAGES_DIR}")
-    if not PAGES_DIR.is_dir():
-        log("🚫 pages directory missing")
-        st.error("Pages directory not found")
-        render_landing_page()
-        return
-
-    page_files = sorted(
-        p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
-    )
-    if not page_files:
-        log("⚠️ pages directory empty")
-        st.warning("No pages available — showing fallback UI.")
-        render_landing_page()
-        return
-
-    render_main_ui()
-    choice = st.sidebar.selectbox("Page", page_files)
-    log(f"📄 loading page: {choice}")
-
-    try:
-        module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
-        page_main = getattr(module, "main", None)
-        if callable(page_main):
-            page_main()
-            log(f"✅ page {choice} loaded successfully")
-        else:
-            st.error(f"Page '{choice}' is missing a main() function.")
-    except Exception as exc:
-        tb = traceback.format_exc()
-        st.error(f"❌ Error loading page '{choice}':")
-        st.text(tb)
-        log(f"exception loading {choice}: {exc}")
-        print(tb, file=sys.stderr)
+    # Later: plug in your real UI here, like render_main_ui() or anything else
 
 if __name__ == "__main__":
     main()
