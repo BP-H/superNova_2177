@@ -341,6 +341,9 @@ from streamlit_helpers import header, alert, theme_selector, centered_container
 
 Import these helpers at the top of your Streamlit files to keep the UI code
 clean and consistent.
+The demo now includes **Ideas** and **Video** pages showcasing proposal
+generation and upcoming video chat features. These serve as placeholders until
+the realtime backend is connected.
 Run these commands from the repository root. `ui.py` is the official launcher
 and running `python ui.py` will start Streamlit automatically.
 

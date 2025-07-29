@@ -122,6 +122,17 @@ from protocols import AGENT_REGISTRY
 from social_tabs import render_social_tab
 from voting_ui import render_voting_tab
 
+try:
+    from proposals.engine import generate_proposals, DEFAULT_PROPOSALS
+except Exception:  # pragma: no cover - optional dependency
+    generate_proposals = None  # type: ignore
+    DEFAULT_PROPOSALS = []  # type: ignore
+
+try:
+    from realtime_comm.video_chat import VideoChatManager
+except Exception:  # pragma: no cover - optional dependency
+    VideoChatManager = None  # type: ignore
+
 
 def get_st_secrets() -> dict:
     """Return Streamlit secrets with a fallback for development."""
@@ -879,6 +890,61 @@ def render_validation_ui() -> None:
     if st.session_state.get("agent_output") is not None:
         st.subheader("Agent Output")
         st.json(st.session_state["agent_output"])
+
+
+def render_ideas_ui() -> None:
+    """Display governance proposal ideas."""
+    header("Proposal Ideas", layout="centered")
+    if generate_proposals is None:
+        st.info("Proposal engine unavailable")
+        return
+    karma = st.slider("User Karma", 0, 200, 50)
+    entropy = st.slider("Entropy", 0.0, 2.0, 0.5, 0.1)
+    popularity = st.slider("Popularity", 0.0, 1.0, 0.5, 0.1)
+    proposals = generate_proposals(
+        {"karma": karma, "is_certified": True},
+        {"entropy": entropy, "popularity": popularity},
+    )
+    if not proposals:
+        st.write("No proposals generated.")
+        return
+    for p in proposals:
+        st.markdown(f"### {p.get('title')}")
+        st.write(p.get("description", ""))
+        extra = {
+            k: v
+            for k, v in p.items()
+            if k not in {"title", "description"}
+        }
+        if extra:
+            st.json(extra)
+
+
+VIDEO_FEATURES = [
+    "Integrated Video Chat",
+    "Live Translation",
+    "Lip-Sync Overlay",
+    "AI Voice Cloning",
+    "AR Filters",
+    "Transcription & Recording",
+    "Gestural Commands",
+    "Emotion Detection",
+    "AI Noise Suppression",
+    "Real-Time Co-Working",
+]
+
+
+def render_video_demo_ui() -> None:
+    """Show planned video chat capabilities."""
+    header("Video Chat Preview", layout="centered")
+    st.markdown("Planned features:")
+    for feat in VIDEO_FEATURES:
+        st.markdown(f"- {feat}")
+    st.button("Start Demo Call", disabled=True)
+    if VideoChatManager is None:
+        st.info("Video backend unavailable")
+    else:
+        st.write("Backend scaffolding loaded.")
 
 import streamlit as st
 
