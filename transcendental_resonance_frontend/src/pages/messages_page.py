@@ -25,7 +25,17 @@ async def messages_page():
         )
 
         recipient = ui.input("Recipient Username").classes("w-full mb-2")
-        content = ui.textarea("Message").classes("w-full mb-2")
+        content = ui.textarea(
+            "Message",
+            placeholder="Supports Markdown and emoji 😊",
+        ).classes("w-full mb-2")
+
+        def add_emoji(e: str) -> None:
+            content.value = (content.value or "") + e
+
+        with ui.row().classes("w-full mb-2"):
+            for e in ["😀", "😂", "😍", "👍", "🔥", "🎉"]:
+                ui.button(e, on_click=lambda emo=e: add_emoji(emo)).props("flat")
 
         async def send_message():
             data = {"content": content.value}
@@ -83,7 +93,7 @@ async def messages_page():
                         with ui.row().classes("items-center justify-between"):
                             with ui.column().classes("grow"):
                                 ui.label(f"From: {m['sender_id']}").classes("text-sm")
-                                ui.label(m["content"]).classes("text-sm")
+                                ui.markdown(m["content"]).classes("text-sm")
                             ui.button(
                                 on_click=lambda msg=m: ui.run_async(open_edit(msg)),
                                 icon="edit",
