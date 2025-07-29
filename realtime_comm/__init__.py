@@ -3,4 +3,4 @@
 # Legal & Ethical Safeguards
 """Utilities for experimental real-time communication modules."""
 
-from .video_chat import VideoChatManager  # noqa: F401
+from .video_chat import FrameMetadata, VideoChatManager  # noqa: F401
