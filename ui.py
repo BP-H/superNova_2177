@@ -41,18 +41,6 @@ HEALTH_CHECK_PARAM = "healthz"
 PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
 
 print("\u23F3 Booting superNova_2177 UI...", file=sys.stderr)
-
-try:
-    st.set_page_config(page_title="superNova_2177", layout="wide")
-except Exception:  # pragma: no cover - defensive
-    logger.exception("Failed to configure Streamlit page")
-    print("Failed to configure Streamlit page", file=sys.stderr)
-
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
-    st.write("ok")
-    st.stop()
-
-st.write("Booting...")
 from streamlit_helpers import (
     alert,
     apply_theme,
@@ -61,7 +49,7 @@ from streamlit_helpers import (
     theme_selector,
 )
 from api_key_input import render_api_key_ui, render_simulation_stubs
-from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_main_ui
+from ui_utils import load_rfc_entries, parse_summary, summarize_text
 
 
 def _run_async(coro):
@@ -497,6 +485,17 @@ def boot_diagnostic_ui():
     run_analysis([], layout="force")
 
 
+def render_main_ui() -> None:
+    """Configure the main Streamlit dashboard."""
+    try:
+        st.set_page_config(layout="wide")
+    except Exception:  # pragma: no cover - defensive
+        logger.exception("Failed to configure Streamlit page")
+        print("Failed to configure Streamlit page", file=sys.stderr)
+    st.write("Booting...")
+    st.sidebar.title("Navigation")
+
+
 def render_validation_ui() -> None:
     """Main entry point for the validation analysis UI."""
     header("superNova_2177 Validation Analyzer", layout="wide")
@@ -876,19 +875,26 @@ def render_validation_ui() -> None:
 
 
 def main() -> None:
-    """Render the selected page from the ``pages`` directory."""
-    render_main_ui()
+    """Entry point for the Streamlit UI."""
+    if (
+        st.query_params.get(HEALTH_CHECK_PARAM) == "1"
+        or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz"
+    ):
+        st.write("ok")
+        return
 
     if not PAGES_DIR.is_dir():
-        st.error("Pages directory not found")
+        render_landing_page()
         return
 
     page_files = sorted(
         p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
     )
     if not page_files:
-        st.error("No pages available")
+        render_landing_page()
         return
+
+    render_main_ui()
 
     choice = st.sidebar.selectbox("Page", page_files)
     module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
@@ -899,24 +905,16 @@ def main() -> None:
         st.error(f"Page '{choice}' is missing a main() function")
 
 
-def landing_page() -> None:
-    """Display a minimal Streamlit landing page for health checks."""
+def render_landing_page() -> None:
+    """Display a minimal landing page."""
     st.set_page_config(page_title="superNova_2177", layout="centered")
-    if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
-        st.write("ok")
-        return
-
     st.title("superNova_2177")
     st.write(
         "Welcome to the superNova_2177 project. This lightweight Streamlit page "
         "confirms that the application is running."
     )
-    st.markdown(
-        "[Launch the full NiceGUI interface](https://github.com/BP-H/superNova_2177)",
-        unsafe_allow_html=True,
-    )
 
 
 if __name__ == "__main__":
-    landing_page()
+    main()
 
