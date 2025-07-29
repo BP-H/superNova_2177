@@ -3,31 +3,22 @@ from __future__ import annotations
 """Quantum-inspired simulator predicting VibeNode futures."""
 
 import asyncio
+import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-try:  # pragma: no cover - allow import without NiceGUI
-    from nicegui import ui
-    from nicegui.element import Element
-except Exception:  # pragma: no cover - fallback stubs for testing
-
-    class Element:  # type: ignore
-        pass
-
-    class _DummyUI:
-        def notify(self, *args: Any, **kwargs: Any) -> Element:  # noqa: D401
-            return Element()
-
-    ui = _DummyUI()  # type: ignore
+try:
+    import streamlit as st
+except Exception:  # pragma: no cover - fallback when Streamlit unavailable
+    st = None  # type: ignore[misc]
 
 from quantum_sim import QuantumContext
 
 try:
     from transcendental_resonance_frontend.src.utils.api import (
-        listen_ws,
-        on_ws_status_change,
-    )
-    from transcendental_resonance_frontend.src.utils.error_overlay import ErrorOverlay
+        listen_ws, on_ws_status_change)
+    from transcendental_resonance_frontend.src.utils.error_overlay import \
+        ErrorOverlay
 except Exception:  # pragma: no cover - fallback when frontend not available
 
     def listen_ws(*_args: Any, **_kwargs: Any) -> asyncio.Task:
@@ -81,6 +72,7 @@ class VibeSimulatorEngine:
         self.root = NarrativeNode("root")
         self.ws_connected = False
         self.include_emoji = include_emoji
+        self.logger = logging.getLogger(__name__)
         on_ws_status_change(self._on_ws_status_change)
         self._listen_task: Optional[asyncio.Task] = None
         self.last_meta: Dict[str, Any] = {}
@@ -100,8 +92,13 @@ class VibeSimulatorEngine:
 
     # ------------------------------------------------------------------
     def _show_feedback(self, text: str, *, warn: bool = False) -> None:
-        color = "warning" if warn else "positive"
-        ui.notify(text, color=color)
+        level = logging.WARNING if warn else logging.INFO
+        self.logger.log(level, text)
+        if st is not None:
+            if warn:
+                st.warning(text)
+            else:
+                st.success(text)
 
     def _display_risk(self, risk: float) -> None:
         if risk > 0.7:
