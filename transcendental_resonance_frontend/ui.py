@@ -10,5 +10,5 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-# Importing the package starts the NiceGUI app via src.main
-import_module("transcendental_resonance_frontend")
+# Import the package's ``__main__`` module which launches the NiceGUI app
+import_module("transcendental_resonance_frontend.__main__")
