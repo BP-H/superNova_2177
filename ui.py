@@ -24,31 +24,13 @@ Network = None  # imported lazily in run_analysis
 # Import Streamlit and register fallback health check
 import streamlit as st
 
-# Name of the query parameter used for the CI health check. Adjust here if the
-# health check endpoint ever changes.
-HEALTH_CHECK_PARAM = "healthz"
+try:
+    if st.query_params.get("healthz") == "1":
+        st.write("ok")
+        st.stop()
+except Exception:
+    pass
 
-# Fallback health check endpoint for CI (avoids internal monkey-patching)
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
-    st.write("ok")
-    st.stop()
-
-# Fallback health check endpoint for CI (avoids internal monkey-patching)
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
-    st.write("ok")
-    st.stop()
-
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
-    # Fallback health check endpoint for CI (avoids internal monkey-patching)
-    st.write("ok")
-    st.stop()
-
-# Fallback health check for CI environments
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
-    st.write(
-        "ok"
-    )  # Fallback health check endpoint for CI (avoids internal monkey-patching)
-    st.stop()
 
 # Basic page setup so Streamlit responds immediately on load
 try:
