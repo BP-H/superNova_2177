@@ -125,6 +125,12 @@ event_attendees = Table(
     Column("harmonizer_id", Integer, ForeignKey("harmonizers.id"), primary_key=True),
     Column("event_id", Integer, ForeignKey("events.id"), primary_key=True),
 )
+comment_mentions = Table(
+    "comment_mentions",
+    Base.metadata,
+    Column("comment_id", Integer, ForeignKey("comments.id"), primary_key=True),
+    Column("harmonizer_id", Integer, ForeignKey("harmonizers.id"), primary_key=True),
+)
 vibenode_entanglements = Table(
     "vibenode_entanglements",
     Base.metadata,
@@ -171,6 +177,11 @@ class Harmonizer(Base):
     )
     notifications = relationship(
         "Notification", back_populates="harmonizer", cascade="all, delete-orphan"
+    )
+    mentioned_in_comments = relationship(
+        "Comment",
+        secondary=comment_mentions,
+        back_populates="mentions",
     )
     messages_sent = relationship(
         "Message",
@@ -311,6 +322,11 @@ class Comment(Base):
         remote_side=[id],
         cascade="all, delete-orphan",
         single_parent=True,
+    )
+    mentions = relationship(
+        "Harmonizer",
+        secondary=comment_mentions,
+        back_populates="mentioned_in_comments",
     )
 
 
