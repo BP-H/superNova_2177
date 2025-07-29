@@ -1,4 +1,8 @@
+from __future__ import annotations
+
 from nicegui import ui
+
+from .common import video_preview
 
 
 def render_media_block(url: str | None, mtype: str | None) -> None:
@@ -11,7 +15,7 @@ def render_media_block(url: str | None, mtype: str | None) -> None:
         ui.image(url).classes("w-full")
     elif mtype.startswith("video"):
         ui.label("\U0001F3A5").classes("text-lg")
-        ui.video(url).classes("w-full")
+        video_preview(url)
     elif mtype.startswith("audio") or mtype.startswith("music"):
         ui.label("\U0001F3A4").classes("text-lg")
         ui.audio(url).classes("w-full")

@@ -6,7 +6,8 @@
 from nicegui import ui
 from utils.api import TOKEN, api_call, listen_ws
 from utils.layout import page_container, navigation_bar
-from components.emoji_toolbar import emoji_toolbar
+from components import emoji_toolbar
+from components.common import standard_card
 from utils.safe_markdown import safe_markdown
 from utils.styles import get_theme
 
@@ -24,6 +25,11 @@ async def messages_page():
     with page_container(THEME):
         if TOKEN:
             navigation_bar()
+        video_drawer = ui.right_drawer().classes('w-64 p-4 bg-black')
+        with video_drawer:
+            ui.label('Live Video Chat').classes('text-lg mb-2')
+            ui.label('Coming soon...').classes('text-sm')
+        ui.button(icon='videocam', on_click=video_drawer.toggle).props('flat').classes('absolute-top-right')
         ui.label("Messages").classes("text-2xl font-bold mb-4").style(
             f'color: {THEME["accent"]};'
         )
@@ -34,6 +40,9 @@ async def messages_page():
             group_id.on("blur", lambda _: ui.run_async(refresh_messages()))
         content = ui.textarea("Message").classes("w-full mb-2")
         emoji_toolbar(content)
+        ui.button('Attach Clip', on_click=lambda: ui.notify(
+            'Recording feature coming soon', color='info'
+        )).props('flat').classes('mb-2')
 
         async def send_message():
             data = {"content": content.value}
@@ -41,10 +50,16 @@ async def messages_page():
                 endpoint = f"/groups/{group_id.value}/messages"
             else:
                 endpoint = f"/messages/{recipient.value}"
-            resp = await api_call("POST", endpoint, data)
-            if resp:
-                ui.notify("Message sent!", color="positive")
-                await refresh_messages()
+            try:
+                resp = await api_call("POST", endpoint, data, return_error=True)
+                if resp and not resp.get("error"):
+                    ui.notify("Message sent!", color="positive")
+                    content.value = ""
+                    await refresh_messages()
+                else:
+                    ui.notify("Failed to send", color="negative")
+            except Exception:
+                ui.notify("Failed to send", color="negative")
 
         ui.button("Send", on_click=send_message).classes("w-full mb-4").style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
@@ -103,11 +118,7 @@ async def messages_page():
                 return
             for m in messages:
                 with messages_list:
-                    with (
-                        ui.card()
-                        .classes("w-full mb-2")
-                        .style("border: 1px solid #333; background: #1e1e1e;")
-                    ):
+                    with standard_card():
                         with ui.row().classes("items-center justify-between"):
                             with ui.column().classes("grow"):
                                 ui.label(f"From: {m['sender_id']}").classes("text-sm")

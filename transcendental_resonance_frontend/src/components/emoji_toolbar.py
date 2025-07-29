@@ -1,12 +1,31 @@
+from __future__ import annotations
+
+from typing import Any, Dict, List
+
 from nicegui import ui
-from typing import Any
 
 
 def emoji_toolbar(input_ref: Any) -> None:
-    """Add simple emoji buttons that append to the given textarea."""
-    with ui.row().classes("mb-2"):
-        for emoji in ["😀", "🔥", "🎉"]:
+    """Display emoji buttons with category selection."""
+    categories: Dict[str, List[str]] = {
+        "emotion": ["😀", "😂", "😢", "😎"],
+        "gesture": ["👍", "👎", "🙏", "👏"],
+        "hearts": ["❤️", "💜", "💖", "💙"],
+    }
+    selector = ui.select(list(categories.keys()), value="emotion").props(
+        "dense outlined"
+    ).classes("w-28 mb-1")
+    button_row = ui.row().classes("mb-2")
+
+    def populate(_: Any = None) -> None:
+        button_row.clear()
+        for emoji in categories[selector.value]:
             ui.button(
                 emoji,
-                on_click=lambda _=None, e=emoji: input_ref.set_value((input_ref.value or "") + e),
-            ).props("flat")
+                on_click=lambda _=None, e=emoji: input_ref.set_value(
+                    (input_ref.value or "") + e
+                ),
+            ).props("flat").classes("min-w-min")
+
+    selector.on("update:model-value", populate)
+    populate()
