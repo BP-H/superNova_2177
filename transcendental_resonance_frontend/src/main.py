@@ -10,10 +10,30 @@ import time
 
 from nicegui import background_tasks, ui
 
-from .pages import *  # register all pages  # noqa: F401,F403
-from .pages.explore_page import explore_page  # noqa: F401
-from .pages.system_insights_page import system_insights_page  # noqa: F401
-from .pages.feed_page import feed_page  # noqa: F401
+from .pages import (
+    login_page,
+    register_page,
+    profile_page,
+    vibenodes_page,
+    explore_page,
+    groups_page,
+    events_page,
+    recommendations_page,
+    proposals_page,
+    notifications_page,
+    messages_page,
+    feed_page,
+    ai_assist_page,
+    upload_page,
+    music_page,
+    status_page,
+    network_page,
+    system_insights_page,
+    forks_page,
+    validator_graph_page,
+    debug_panel_page,
+    video_chat_page,
+)  # register all pages
 from .utils.api import (
     api_call,
     clear_token,
