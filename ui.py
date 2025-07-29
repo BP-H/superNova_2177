@@ -13,6 +13,7 @@ import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
+from importlib import import_module
 import time
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,9 @@ import streamlit as st
 # Name of the query parameter used for the CI health check. Adjust here if the
 # health check endpoint ever changes.
 HEALTH_CHECK_PARAM = "healthz"
+
+# Directory containing Streamlit page modules
+PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
 
 print("\u23F3 Booting superNova_2177 UI...", file=sys.stderr)
 
@@ -865,17 +869,27 @@ def render_validation_ui() -> None:
 
 
 def main() -> None:
+    """Render the selected page from the ``pages`` directory."""
     render_main_ui()
-    header("superNova_2177 Validation Analyzer", layout="wide")
-    tab1, tab2, tab3, tab4 = st.tabs(["Validation", "Friends", "Votes", "Agents"])
-    with tab1:
-        render_validation_ui()
-    with tab2:
-        render_social_tab()
-    with tab3:
-        render_voting_tab()
-    with tab4:
-        render_agent_insights_tab()
+
+    if not PAGES_DIR.is_dir():
+        st.error("Pages directory not found")
+        return
+
+    page_files = sorted(
+        p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
+    )
+    if not page_files:
+        st.error("No pages available")
+        return
+
+    choice = st.sidebar.selectbox("Page", page_files)
+    module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
+    page_main = getattr(module, "main", None)
+    if callable(page_main):
+        page_main()
+    else:
+        st.error(f"Page '{choice}' is missing a main() function")
 
 
 if __name__ == "__main__":
