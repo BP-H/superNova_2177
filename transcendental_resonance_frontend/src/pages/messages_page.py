@@ -1,7 +1,13 @@
 """Messaging system page."""
 
-from nicegui import ui
-from utils.api import TOKEN, api_call
+try:
+    from nicegui import ui, background_tasks
+except Exception:  # pragma: no cover - fallback when NiceGUI is missing
+    import types
+
+    ui = types.SimpleNamespace(page=lambda *_a, **_kw: (lambda f: f))
+    background_tasks = types.SimpleNamespace(create=lambda *_a, **_kw: None)
+from utils.api import TOKEN, api_call, messages_socket
 from utils.layout import page_container
 from utils.styles import get_theme
 
@@ -37,7 +43,7 @@ async def messages_page():
 
         messages_list = ui.column().classes("w-full")
 
-        async def refresh_messages():
+        async def refresh_messages() -> None:
             messages = await api_call("GET", "/messages/") or []
             messages_list.clear()
             for m in messages:
@@ -51,4 +57,16 @@ async def messages_page():
                         ui.label(m["content"]).classes("text-sm")
 
         await refresh_messages()
-        ui.timer(30, lambda: ui.run_async(refresh_messages()))
+
+        async def listen() -> None:
+            async for msg in messages_socket():
+                with messages_list:
+                    with (
+                        ui.card()
+                        .classes("w-full mb-2")
+                        .style("border: 1px solid #333; background: #1e1e1e;")
+                    ):
+                        ui.label(f"From: {msg['sender_id']}").classes("text-sm")
+                        ui.label(msg["content"]).classes("text-sm")
+
+        background_tasks.create(listen(), name="messages-ws")

@@ -2,9 +2,11 @@
 
 import logging
 import os
-from typing import Any, Dict, Optional
+import json
+from typing import Any, Dict, Optional, AsyncGenerator
 
 import httpx
+import websockets
 from nicegui import ui
 
 # Backend API base URL
@@ -111,3 +113,21 @@ async def get_following(username: str) -> Dict[str, Any]:
 
 async def toggle_follow(username: str) -> Optional[Dict[str, Any]]:
     return await api_call("POST", f"/users/{username}/follow")
+
+
+async def messages_socket() -> AsyncGenerator[Dict[str, Any], None]:
+    """Yield incoming messages from the backend websocket."""
+    url = BACKEND_URL.replace("http", "ws") + "/ws/messages"
+    headers: Dict[str, str] = {}
+    if TOKEN:
+        headers["Authorization"] = f"Bearer {TOKEN}"
+    try:
+        async with websockets.connect(url, extra_headers=headers) as ws:
+            async for message in ws:
+                try:
+                    yield json.loads(message)
+                except Exception:  # pragma: no cover - defensive
+                    logger.error("Invalid websocket payload: %s", message)
+    except Exception as exc:  # pragma: no cover - connection errors
+        logger.error("WebSocket connection failed: %s", exc, exc_info=True)
+        ui.notify("WebSocket connection failed", color="negative")
