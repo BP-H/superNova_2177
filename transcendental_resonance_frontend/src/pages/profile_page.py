@@ -3,7 +3,7 @@
 from nicegui import ui
 from utils.api import (TOKEN, api_call, clear_token, get_followers,
                        get_following, get_user, toggle_follow)
-from utils.layout import page_container
+from utils.layout import page_container, nav_bar
 from utils.styles import (THEMES, get_theme, get_theme_name, set_accent,
                           set_theme)
 
@@ -46,6 +46,8 @@ async def profile_page(username: str | None = None):
 
     THEME = get_theme()
     with page_container(THEME):
+        with nav_bar(THEME):
+            pass
         ui.label(f'Welcome, {user_data["username"]}').classes(
             "text-2xl font-bold mb-4"
         ).style(f'color: {THEME["accent"]};')

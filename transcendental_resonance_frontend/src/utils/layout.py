@@ -35,6 +35,30 @@ from .styles import get_theme
 
 
 @contextmanager
+def nav_bar(theme: Optional[dict] = None) -> Generator[Element, None, None]:
+    """Context manager for a simple navigation bar.
+
+    Yields a ``ui.row`` containing buttons that link to major pages. The
+    appearance of the buttons adapts to the provided ``theme``.
+    """
+    theme = theme or get_theme()
+    with ui.row().classes("w-full gap-2 mb-4") as bar:
+        style = f"background: {theme['primary']}; color: {theme['text']};"
+        links = [
+            ("Profile", "/profile"),
+            ("Groups", "/groups"),
+            ("Events", "/events"),
+            ("VibeNodes", "/vibenodes"),
+            ("Proposals", "/proposals"),
+            ("Messages", "/messages"),
+            ("Notifications", "/notifications"),
+        ]
+        for label, path in links:
+            ui.button(label, on_click=lambda p=path: ui.open(p)).style(style)
+        yield bar
+
+
+@contextmanager
 def page_container(theme: Optional[dict] = None) -> Generator[Element, None, None]:
     """Context manager for a themed page container.
 
