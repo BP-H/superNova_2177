@@ -360,6 +360,8 @@ The dashboard provides real-time integrity metrics and network graphs built with
 ```bash
 streamlit run ui.py
 ```
+By default the demo listens on port `8888`. Set `STREAMLIT_PORT` or pass
+`--server.port` to use a different port.
 
 Use the sidebar file uploader to select or update your dataset, then click **Run Analysis** to refresh the report.
 Missing packages such as `tqdm` are installed automatically when you run `one_click_install.py` so progress bars work without extra setup.
@@ -369,7 +371,7 @@ Missing packages such as `tqdm` are installed automatically when you run `one_cl
 - **Missing dependencies**: If the interface fails with `ModuleNotFoundError`, run
   `pip install -r requirements-streamlit.txt` to ensure all packages are available.
 - **Port already in use**: Pass `--server.port` to Streamlit or set the
-  `STREAMLIT_SERVER_PORT` environment variable to use a different port.
+  `STREAMLIT_PORT` environment variable to use a different port.
 - **Browser does not open**: Navigate manually to
   [http://localhost:8888](http://localhost:8888) or the port you selected.
 

@@ -14,13 +14,15 @@ import os
 import sys
 import traceback
 
-os.environ["STREAMLIT_SERVER_PORT"] = "8501"
+# Default port controlled by start.sh via STREAMLIT_PORT; old setting kept
+# for reference but disabled.
+# os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 from datetime import datetime
 from pathlib import Path
 from importlib import import_module
 import time
 
-os.environ["STREAMLIT_SERVER_PORT"] = "8501"
+# os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -36,7 +38,7 @@ os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 import streamlit as st
 
 # Bind to the default Streamlit port to satisfy platform health checks
-os.environ["STREAMLIT_SERVER_PORT"] = "8501"
+# os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 
 # Name of the query parameter used for the CI health check. Adjust here if the
 # health check endpoint ever changes.
