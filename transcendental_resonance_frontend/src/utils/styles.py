@@ -30,6 +30,13 @@ THEMES: Dict[str, Dict[str, str]] = {
         "text": "#333333",
         "gradient": "linear-gradient(135deg, #6200EE 0%, #03DAC5 100%)",
     },
+    "minimalist_dark": {
+        "primary": "#242424",
+        "accent": "#8ab4f8",
+        "background": "#1a1a1a",
+        "text": "#F0F0F0",
+        "gradient": "linear-gradient(135deg, #1c1c1c 0%, #0f0f0f 100%)",
+    },
     "cyberpunk": {
         "primary": "#FF0080",
         "accent": "#00F0FF",
@@ -45,11 +52,12 @@ THEMES: Dict[str, Dict[str, str]] = {
         "gradient": "linear-gradient(135deg, #000000 0%, #222222 100%)",
     },
     "minimalist_dark": {
-        "primary": "#282c34",
+        # Sleek monochrome palette for a distraction free view
+        "primary": "#2e3033",
         "accent": "#6d8cff",
-        "background": "#1a1a1a",
-        "text": "#e0e0e0",
-        "gradient": "linear-gradient(135deg, #1f1f1f 0%, #282c34 100%)",
+        "background": "#181818",
+        "text": "#f2f2f2",
+        "gradient": "linear-gradient(135deg, #1c1c1c 0%, #2e3033 100%)",
     },
 }
 
@@ -100,6 +108,13 @@ def apply_global_styles() -> None:
             '<link href="https://fonts.googleapis.com/css2?family=Iosevka:wght@400;700&display=swap" '
             'rel="stylesheet">'
         )
+    elif ACTIVE_THEME_NAME == "minimalist_dark":
+        font_family = "'Iosevka', monospace"
+        font_link = (
+            "<link href=\"https://fonts.googleapis.com/css2?family=Iosevka:wght@400;700&display=swap\" rel=\"stylesheet\">"
+        )
+
+    ui.run_javascript("document.getElementById('global-theme')?.remove()")
 
     # remove any previously injected global theme style to avoid duplicates
     ui.run_javascript("document.getElementById('global-theme')?.remove()")
