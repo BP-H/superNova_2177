@@ -1,5 +1,6 @@
 import os
 import streamlit as st  # ensure Streamlit is imported early
+from streamlit.runtime.scriptrunner import get_script_run_ctx
 
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
@@ -19,7 +20,6 @@ import traceback
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 from datetime import datetime
 from pathlib import Path
-from importlib import import_module
 import time
 
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
@@ -42,11 +42,22 @@ os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 HEALTH_CHECK_PARAM = "healthz"
 
 # Directory containing Streamlit page modules
-PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+PAGES_DIR = (
+    Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+)
+
+# Toggle verbose output via ``UI_DEBUG_PRINTS``
+UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
 
 # Toggle verbose output via env var
-if os.getenv("UI_DEBUG_PRINTS", "1") != "0":
-    print("\u23F3 Booting superNova_2177 UI...", file=sys.stderr)
+UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
+
+def log(msg: str) -> None:
+    if UI_DEBUG:
+        print(msg, file=sys.stderr)
+
+if UI_DEBUG:
+    log("\u23f3 Booting superNova_2177 UI...")
 from streamlit_helpers import (
     alert,
     apply_theme,
@@ -116,6 +127,7 @@ from protocols import AGENT_REGISTRY
 from social_tabs import render_social_tab
 from voting_ui import render_voting_tab
 
+
 def get_st_secrets() -> dict:
     """Return Streamlit secrets with a fallback for development."""
     try:
@@ -125,6 +137,7 @@ def get_st_secrets() -> dict:
             "SECRET_KEY": "dev",
             "DATABASE_URL": "sqlite:///:memory:",
         }
+
 
 sample_path = Path(__file__).resolve().parent / "sample_validations.json"
 
@@ -873,9 +886,13 @@ def render_validation_ui() -> None:
         st.json(st.session_state["agent_output"])
 
 def main() -> None:
+    """Entry point for the Streamlit UI."""
     import streamlit as st
+    from streamlit.runtime.scriptrunner import get_script_run_ctx
+
+    UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
     def log(msg: str) -> None:
-        if os.getenv("UI_DEBUG_PRINTS", "1") != "0":
+        if UI_DEBUG:
             print(msg, file=sys.stderr)
 
     log("main() invoked")
@@ -883,10 +900,21 @@ def main() -> None:
     st.title("🤗//⚡//Launching main()")
     log("main() entered")
 
-    if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
+    # unified health check logic
+    if (
+        (ctx := get_script_run_ctx())
+        and (req := ctx._get_request())
+        and req.path == "/healthz"
+    ) or st.query_params.get(HEALTH_CHECK_PARAM) == "1" \
+      or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
         log("health-check branch")
         st.write("ok")
-        return
+        st.stop()
+
+        st.write("ok")
+        st.stop()
+
+    st.title("superNova_2177")
 
     log(f"loading pages from {PAGES_DIR}")
     if not PAGES_DIR.is_dir():
@@ -918,11 +946,12 @@ def main() -> None:
             log(f"page {choice} loaded")
         else:
             st.error(f"Page '{choice}' is missing a main() function.")
-    except Exception as e:
+    except Exception as exc:
         tb = traceback.format_exc()
         st.error(f"Error loading page '{choice}':")
         st.text(tb)
-        log(f"exception loading {choice}: {e}")
+        log(f"exception loading {choice}: {exc}")
+        print(tb, file=sys.stderr)
 
 if __name__ == "__main__":
     import sys
