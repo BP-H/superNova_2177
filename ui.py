@@ -28,20 +28,25 @@ import streamlit as st
 # health check endpoint ever changes.
 HEALTH_CHECK_PARAM = "healthz"
 
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
-    st.write("ok")
-    st.stop()
-
-# Basic page setup so Streamlit responds immediately on load
+# ``set_page_config`` must be the first Streamlit call
 try:
     st.set_page_config(page_title="superNova_2177", layout="wide")
 except Exception:
     logger.exception("Failed to configure Streamlit page")
     print("Failed to configure Streamlit page", file=sys.stderr)
 
-else:
-    st.title("superNova_2177")
-    st.success("\u2705 Streamlit loaded!")
+# After configuring the page we can safely inspect query params
+query_params = {}
+try:
+    query_params = st.query_params  # type: ignore[attr-defined]
+    if callable(query_params):  # support stubbed ``streamlit`` in tests
+        query_params = {}
+except Exception:
+    query_params = {}
+
+if query_params.get(HEALTH_CHECK_PARAM) == "1":
+    st.markdown("ok")
+    st.stop()
 from streamlit_helpers import (
     alert,
     apply_theme,
