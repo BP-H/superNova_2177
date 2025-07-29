@@ -54,14 +54,6 @@ async def upload_page():
             if resp:
                 ui.notify(f"Uploaded: {resp['media_url']}", color='positive')
 
-            finally:
-                spinner.cancel()
-                with contextlib.suppress(asyncio.CancelledError):
-                    await spinner
-                progress.value = 1.0
-                if resp:
-                    ui.notify(f"Uploaded: {resp['media_url']}", color='positive')
-
 
         ui.upload(multiple=True, auto_upload=True,
                   on_upload=lambda e: ui.run_async(handle_upload(e))) \

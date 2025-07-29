@@ -90,18 +90,6 @@ async def vibenodes_page():
                 if uploaded_media['type'] and uploaded_media['type'].startswith('image'):
                     ui.image(uploaded_media['url']).classes('w-full mb-2')
 
-            finally:
-                spinner.cancel()
-                with contextlib.suppress(asyncio.CancelledError):
-                    await spinner
-                progress.value = 1.0
-            if resp:
-                uploaded_media['url'] = resp.get('media_url')
-                uploaded_media['type'] = resp.get('media_type')
-                ui.notify('Media uploaded', color='positive')
-                if uploaded_media['type'] and uploaded_media['type'].startswith('image'):
-                    ui.image(uploaded_media['url']).classes('w-full mb-2')
-
 
 
 
