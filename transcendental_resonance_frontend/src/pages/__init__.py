@@ -1,10 +1,15 @@
 """Lazy-loading access to page modules for the Transcendental Resonance frontend."""
 
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 __all__ = [
     "login_page",
     "register_page",
     "profile_page",
     "vibenodes_page",
+    "explore_page",
     "groups_page",
     "events_page",
     "proposals_page",

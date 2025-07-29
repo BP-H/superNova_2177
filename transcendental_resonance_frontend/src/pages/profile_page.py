@@ -1,5 +1,9 @@
 """User profile view and editing."""
 
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 from nicegui import ui
 from utils.api import (TOKEN, api_call, clear_token, get_followers,
                        get_following, get_user, toggle_follow)
@@ -59,9 +63,7 @@ async def profile_page(username: str | None = None):
         followers_label = ui.label(f'Followers: {followers.get("count", 0)}').classes(
             "mb-2"
         )
-        following_label = ui.label(f'Following: {following.get("count", 0)}').classes(
-            "mb-4"
-        )
+        ui.label(f'Following: {following.get("count", 0)}').classes("mb-4")
 
         if target_username == my_data["username"]:
             bio = ui.input("Bio", value=user_data.get("bio", "")).classes("w-full mb-2")
@@ -100,6 +102,11 @@ async def profile_page(username: str | None = None):
         ui.button("VibeNodes", on_click=lambda: ui.open(vibenodes_page)).classes(
             "w-full mb-2"
         ).style(f'background: {THEME["accent"]}; color: {THEME["background"]};')
+        from .explore_page import explore_page  # lazy import
+
+        ui.button("Explore", on_click=lambda: ui.open(explore_page)).classes(
+            "w-full mb-2"
+        ).style(f'background: {THEME["accent"]}; color: {THEME["background"]};')
         ui.button("Groups", on_click=lambda: ui.open(groups_page)).classes(
             "w-full mb-2"
         ).style(f'background: {THEME["accent"]}; color: {THEME["background"]};')
@@ -130,7 +137,7 @@ async def profile_page(username: str | None = None):
         ).classes("w-full").style(f'background: red; color: {THEME["text"]};')
 
         with ui.row().classes("w-full mt-4"):
-            theme_select = ui.select(
+            ui.select(
                 list(THEMES.keys()),
                 value=get_theme_name(),
                 on_change=lambda e: set_theme(e.value),
