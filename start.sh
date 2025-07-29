@@ -3,8 +3,9 @@
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 
-# Launch the NiceGUI wrapper for Streamlit Cloud
-UI_FILE="transcendental_resonance_frontend/ui.py"
+# Launch the Streamlit interface
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+UI_FILE="$SCRIPT_DIR/ui.py"
 
 if [[ ! -f "$UI_FILE" ]]; then
   echo "❌ $UI_FILE not found. Please ensure it exists." >&2
