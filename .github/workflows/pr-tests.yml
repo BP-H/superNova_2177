@@ -70,3 +70,9 @@ jobs:
           echo "::group::Streamlit logs"
           cat streamlit.log || true
           echo "::endgroup::"
+      - name: Upload Streamlit log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: streamlit-log-python-${{ matrix.python-version }}
+          path: streamlit.log

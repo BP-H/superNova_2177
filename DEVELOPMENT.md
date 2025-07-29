@@ -79,7 +79,12 @@ The `vote_registry.py` module is under active development. Planned tasks include
 
 If the Streamlit UI fails to start when running tests or the smoke test in the
 CI pipeline, inspect `streamlit.log` for errors and confirm that port `8501` is
-free. You can terminate any leftover processes with:
+free. Both the `ci.yml` and `pr-tests.yml` workflows print this file on failure
+and upload it as a build artifact named `streamlit-log-python-<version>`. After
+any GitHub Actions run, download the artifact from the "Artifacts" section of
+the run summary to review the full log. You can also expand the "Streamlit logs"
+group in the job output to see its contents inline. Terminate any leftover
+processes with:
 
 ```bash
 pkill streamlit || true
