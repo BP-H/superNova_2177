@@ -1,4 +1,9 @@
-"""Unified feed combining VibeNodes, Events, and Notifications."""
+"""Unified feed combining VibeNodes, Events, and Notifications.
+
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+"""
 
 from nicegui import ui
 
@@ -6,6 +11,7 @@ from utils.api import TOKEN, api_call
 from utils.layout import page_container, navigation_bar
 from utils.styles import get_theme
 from utils.features import quick_post_button, skeleton_loader, swipeable_glow_card
+from quantum_futures import generate_speculative_futures, DISCLAIMER
 
 from .login_page import login_page
 
@@ -21,9 +27,12 @@ async def feed_page() -> None:
     with page_container(theme):
         if TOKEN:
             navigation_bar()
-        ui.label('Feed').classes('text-2xl font-bold mb-4').style(
+        ui.label('Feed').classes('text-2xl font-bold mb-2').style(
             f'color: {theme["accent"]};'
         )
+
+        simulation_switch = ui.switch('Enable Simulation View', value=False).classes('mb-4')
+        simulation_switch.on('change', lambda _: ui.run_async(refresh_feed()))
 
         feed_column = ui.column().classes('w-full')
 
@@ -52,18 +61,36 @@ async def feed_page() -> None:
                         ui.label('VibeNode').classes('text-sm font-bold')
                         ui.label(vn.get('description', '')).classes('text-sm')
                         ui.link('View', f"/vibenodes/{vn['id']}")
+                        if simulation_switch.value:
+                            futures = generate_speculative_futures(vn)
+                            with ui.expansion('Speculative futures', value=False).classes('w-full mt-2'):
+                                for fut in futures:
+                                    ui.markdown(fut['text']).classes('text-sm italic')
+                                    ui.markdown(DISCLAIMER).classes('text-xs text-orange-5')
             for ev in events:
                 with feed_column:
                     with swipeable_glow_card().classes('w-full mb-2').style('background: #1e1e1e;'):
                         ui.label('Event').classes('text-sm font-bold')
                         ui.label(ev.get('description', '')).classes('text-sm')
                         ui.link('View', f"/events/{ev['id']}")
+                        if simulation_switch.value:
+                            futures = generate_speculative_futures(ev)
+                            with ui.expansion('Speculative futures', value=False).classes('w-full mt-2'):
+                                for fut in futures:
+                                    ui.markdown(fut['text']).classes('text-sm italic')
+                                    ui.markdown(DISCLAIMER).classes('text-xs text-orange-5')
             for n in notifs:
                 with feed_column:
                     with swipeable_glow_card().classes('w-full mb-2').style('background: #1e1e1e;'):
                         ui.label('Notification').classes('text-sm font-bold')
                         ui.label(n.get('message', '')).classes('text-sm')
                         ui.link('View', f"/notifications/{n['id']}")
+                        if simulation_switch.value:
+                            futures = generate_speculative_futures(n)
+                            with ui.expansion('Speculative futures', value=False).classes('w-full mt-2'):
+                                for fut in futures:
+                                    ui.markdown(fut['text']).classes('text-sm italic')
+                                    ui.markdown(DISCLAIMER).classes('text-xs text-orange-5')
 
         await refresh_feed()
 
