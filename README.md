@@ -76,10 +76,12 @@ To launch the Streamlit UI:
 
 ```bash
 chmod +x start.sh
-./start.sh
+./start.sh  # launches ui.py
+# or run directly
+streamlit run ui.py
 ```
 
-This script launches `transcendental_resonance_frontend/ui.py` automatically from any directory in the repo.
+This script launches `ui.py` automatically from any directory in the repo.
 
 ## ☁️ Launch Online
 
@@ -356,7 +358,7 @@ module falls back to a development setup equivalent to:
 The dashboard provides real-time integrity metrics and network graphs built with `streamlit`, `networkx`, and `matplotlib`. Upload your validations JSON or enable demo mode to populate the table. You can edit rows inline before re-running the analysis to see how scores change.
 
 ```bash
-streamlit run transcendental_resonance_frontend/ui.py
+streamlit run ui.py
 ```
 
 Use the sidebar file uploader to select or update your dataset, then click **Run Analysis** to refresh the report.
@@ -408,7 +410,7 @@ Deploy the demo UI online with Streamlit Cloud:
 
 1. Fork this repository on GitHub.
 2. Sign in to [Streamlit Cloud](https://streamlit.io/cloud) and select **New app**.
-3. Choose the repo and set `transcendental_resonance_frontend/ui.py` as the entry point.
+3. Choose the repo and set `ui.py` as the entry point.
 4. Add your `SECRET_KEY` and set a `DATABASE_URL` secret with your connection string under **Secrets** in the app settings.
 5. Streamlit will install dependencies from `requirements-streamlit.txt` and launch the app.
 
