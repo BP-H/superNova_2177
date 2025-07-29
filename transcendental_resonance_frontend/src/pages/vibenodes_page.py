@@ -3,6 +3,8 @@
 # Legal & Ethical Safeguards
 """VibeNodes creation and listing."""
 
+from nicegui import ui, background_tasks
+
 import asyncio
 import contextlib
 
@@ -69,23 +71,37 @@ async def vibenodes_page():
                     await asyncio.sleep(0.1)
                     progress.value += 0.05
 
-            spinner = asyncio.create_task(spin())
+            spinner = background_tasks.create(spin(), name='upload-progress')
             try:
                 files = {
                     'file': (event.name, event.content.read(), 'multipart/form-data')
                 }
                 resp = await api_call('POST', '/upload/', files=files)
-                progress.value = 1.0
-                if resp:
-                    uploaded_media['url'] = resp.get('media_url')
-                    uploaded_media['type'] = resp.get('media_type')
-                    ui.notify('Media uploaded', color='positive')
-                    if uploaded_media['type'] and uploaded_media['type'].startswith('image'):
-                        ui.image(uploaded_media['url']).classes('w-full mb-2')
             finally:
                 spinner.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
                     await spinner
+                progress.value = 1.0
+
+            if resp:
+                uploaded_media['url'] = resp.get('media_url')
+                uploaded_media['type'] = resp.get('media_type')
+                ui.notify('Media uploaded', color='positive')
+                if uploaded_media['type'] and uploaded_media['type'].startswith('image'):
+                    ui.image(uploaded_media['url']).classes('w-full mb-2')
+
+            finally:
+                spinner.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await spinner
+                progress.value = 1.0
+            if resp:
+                uploaded_media['url'] = resp.get('media_url')
+                uploaded_media['type'] = resp.get('media_type')
+                ui.notify('Media uploaded', color='positive')
+                if uploaded_media['type'] and uploaded_media['type'].startswith('image'):
+                    ui.image(uploaded_media['url']).classes('w-full mb-2')
+
 
 
 

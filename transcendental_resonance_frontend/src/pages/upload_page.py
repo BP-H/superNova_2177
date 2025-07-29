@@ -3,7 +3,7 @@
 # Legal & Ethical Safeguards
 """Media upload page."""
 
-from nicegui import ui
+from nicegui import ui, background_tasks
 import asyncio
 import contextlib
 
@@ -39,19 +39,28 @@ async def upload_page():
                     await asyncio.sleep(0.1)
                     progress.value += 0.05
 
-            spinner = asyncio.create_task(spin())
+            spinner = background_tasks.create(spin(), name='upload-progress')
             try:
                 files = {
                     'file': (event.name, event.content.read(), 'multipart/form-data')
                 }
                 resp = await api_call('POST', '/upload/', files=files)
-                progress.value = 1.0
-                if resp:
-                    ui.notify(f"Uploaded: {resp['media_url']}", color='positive')
             finally:
                 spinner.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
                     await spinner
+                progress.value = 1.0
+
+            if resp:
+                ui.notify(f"Uploaded: {resp['media_url']}", color='positive')
+
+            finally:
+                spinner.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await spinner
+                progress.value = 1.0
+                if resp:
+                    ui.notify(f"Uploaded: {resp['media_url']}", color='positive')
 
 
         ui.upload(multiple=True, auto_upload=True,
