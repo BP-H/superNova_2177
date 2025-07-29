@@ -79,3 +79,27 @@ async def test_long_running_job_enqueued(monkeypatch):
         assert status == {"status": "done", "result": {"value": 5}}
     finally:
         ROUTES.pop("slow_test", None)
+
+
+@pytest.mark.asyncio
+async def test_async_handler_returning_background_task(monkeypatch):
+    agent = DummyAgent()
+    monkeypatch.setattr(frontend_bridge, "queue_agent", agent)
+
+    async def async_handler(payload):
+        async def slow():
+            await asyncio.sleep(0)
+            return {"value": payload["x"]}
+
+        return long_running(slow())
+
+    register_route("async_slow_test", async_handler)
+    try:
+        job = await dispatch_route("async_slow_test", {"x": 7})
+        assert job == {"job_id": "job1"}
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        status = await dispatch_route("job_status", {"job_id": "job1"})
+        assert status == {"status": "done", "result": {"value": 7}}
+    finally:
+        ROUTES.pop("async_slow_test", None)
