@@ -38,3 +38,5 @@ email-validator
 httpx==0.27.0
 streamlit-ace
 kaleido
+plotly
+pyvis

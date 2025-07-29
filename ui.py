@@ -866,16 +866,33 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    logger.info("\u2705 Streamlit UI started. Launching main()...")
+    logger.info("\u2705 Streamlit UI starting...")
+
+    defaults = {
+        "session_start_ts": datetime.utcnow().isoformat(timespec="seconds"),
+        "diary": [],
+        "analysis_diary": [],
+        "run_count": 0,
+        "last_result": None,
+        "last_run": None,
+        "agent_output": {},
+        "validations_json": "",
+        "theme": "light",
+    }
+    for key, value in defaults.items():
+        st.session_state.setdefault(key, value)
+
+    apply_theme(st.session_state["theme"])
+
     try:
         main()
     except Exception as exc:  # pragma: no cover - startup diagnostics
         logger.exception("UI startup failed")
         print(f"Startup failed: {exc}", file=sys.stderr)
         traceback.print_exc(file=sys.stderr)
-        st.warning(f"UI startup failed — check logs for details: {exc}")
+        st.error(f"UI startup failed: {exc}")
     else:
-        st.success("✅ UI Booted")
         print("UI Booted", file=sys.stderr)
+        st.success("✅ UI Booted")
 
 
