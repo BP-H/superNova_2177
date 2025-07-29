@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import os
 import sys
-from importlib import import_module
 from pathlib import Path
 
 import streamlit as st
-
 
 HEALTH_CHECK_PARAM = "healthz"
 
@@ -22,9 +20,14 @@ for path in (ROOT, PKG_DIR, SRC_DIR):
         sys.path.insert(0, str(path))
 
 # Respond quickly to Cloud health probes before importing heavy modules
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
+if (
+    st.query_params.get(HEALTH_CHECK_PARAM) == "1"
+    or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz"
+):
     st.write("ok")
     st.stop()
 
-# Import the package's ``__main__`` module which launches the NiceGUI app
-import_module("transcendental_resonance_frontend.__main__")
+# Import and execute the NiceGUI launcher
+from transcendental_resonance_frontend.__main__ import run  # noqa: E402
+
+run()
