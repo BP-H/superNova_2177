@@ -11,6 +11,7 @@ from nicegui import background_tasks, ui
 from .pages import *  # register all pages  # noqa: F401,F403
 from .pages.explore_page import explore_page  # noqa: F401
 from .pages.system_insights_page import system_insights_page  # noqa: F401
+from .pages.feed_page import feed_page  # noqa: F401
 from .utils.api import api_call, clear_token
 from .utils.loading_overlay import LoadingOverlay
 from .utils.styles import (THEMES, apply_global_styles, get_theme_name,
