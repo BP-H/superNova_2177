@@ -12,11 +12,45 @@ from .pages import *  # register all pages  # noqa: F401,F403
 from .pages.explore_page import explore_page  # noqa: F401
 from .pages.system_insights_page import system_insights_page  # noqa: F401
 from .utils.api import api_call, clear_token
-from .utils.styles import (THEMES, apply_global_styles, get_theme_name,
-                           set_theme)
+from .utils.styles import (
+    THEMES,
+    apply_global_styles,
+    get_theme,
+    get_theme_name,
+    set_theme,
+)
 
 ui.context.client.on_disconnect(clear_token)
 apply_global_styles()
+
+
+def add_navbar() -> None:
+    """Create a horizontal navigation bar linking major pages."""
+    theme = get_theme()
+    with ui.row().classes("w-full justify-center gap-4 p-2").style(
+        f"background: {theme['background']}; color: {theme['text']};"
+    ):
+        ui.link("Profile", profile_page).classes("no-underline").style(
+            f"color: {theme['accent']};"
+        )
+        ui.link("Explore", explore_page).classes("no-underline").style(
+            f"color: {theme['accent']};"
+        )
+        ui.link("Groups", groups_page).classes("no-underline").style(
+            f"color: {theme['accent']};"
+        )
+        ui.link("Events", events_page).classes("no-underline").style(
+            f"color: {theme['accent']};"
+        )
+        ui.link("Messages", messages_page).classes("no-underline").style(
+            f"color: {theme['accent']};"
+        )
+        ui.link("Insights", system_insights_page).classes("no-underline").style(
+            f"color: {theme['accent']};"
+        )
+
+
+add_navbar()
 
 
 def toggle_theme() -> None:
