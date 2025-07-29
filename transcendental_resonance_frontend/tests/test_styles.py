@@ -57,3 +57,13 @@ def test_glow_card_css(monkeypatch):
     monkeypatch.setattr(styles, "ui", dummy)
     styles.apply_global_styles()
     assert ".glow-card" in captured["html"]
+
+
+def test_minimalist_dark_theme(monkeypatch):
+    captured = {}
+    dummy = dummy_ui(captured)
+    monkeypatch.setattr(styles, "ui", dummy)
+    styles.set_theme("minimalist_dark")
+    assert styles.get_theme_name() == "minimalist_dark"
+    assert "Iosevka" in captured["html"]
+    assert "#181818" in captured["html"]

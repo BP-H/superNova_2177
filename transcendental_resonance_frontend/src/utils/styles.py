@@ -52,11 +52,12 @@ THEMES: Dict[str, Dict[str, str]] = {
         "gradient": "linear-gradient(135deg, #000000 0%, #222222 100%)",
     },
     "minimalist_dark": {
-        "primary": "#282c34",
+        # Sleek monochrome palette for a distraction free view
+        "primary": "#2e3033",
         "accent": "#6d8cff",
-        "background": "#1a1a1a",
-        "text": "#e0e0e0",
-        "gradient": "linear-gradient(135deg, #1f1f1f 0%, #282c34 100%)",
+        "background": "#181818",
+        "text": "#f2f2f2",
+        "gradient": "linear-gradient(135deg, #1c1c1c 0%, #2e3033 100%)",
     },
 }
 
