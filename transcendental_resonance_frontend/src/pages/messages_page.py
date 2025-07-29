@@ -35,11 +35,14 @@ async def messages_page():
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
         )
 
+        loading = ui.spinner().classes("m-4")
+        loading.visible = False
         messages_list = ui.column().classes("w-full")
 
         async def refresh_messages():
-            messages = await api_call("GET", "/messages/") or []
+            loading.visible = True
             messages_list.clear()
+            messages = await api_call("GET", "/messages/") or []
             for m in messages:
                 with messages_list:
                     with (
@@ -49,6 +52,7 @@ async def messages_page():
                     ):
                         ui.label(f"From: {m['sender_id']}").classes("text-sm")
                         ui.label(m["content"]).classes("text-sm")
+            loading.visible = False
 
         await refresh_messages()
         ui.timer(30, lambda: ui.run_async(refresh_messages()))

@@ -66,9 +66,12 @@ async def vibenodes_page():
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
         )
 
+        loading = ui.spinner().classes('m-4')
+        loading.visible = False
         vibenodes_list = ui.column().classes('w-full')
 
         async def refresh_vibenodes():
+            loading.visible = True
             params = {}
             if search_query.value:
                 params['search'] = search_query.value
@@ -111,5 +114,6 @@ async def vibenodes_page():
                         ui.button('Remix', on_click=remix_fn).style(
                             f'background: {THEME["primary"]}; color: {THEME["text"]};'
                         )
+            loading.visible = False
 
         await refresh_vibenodes()

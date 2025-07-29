@@ -50,9 +50,12 @@ async def events_page():
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
         )
 
+        loading = ui.spinner().classes('m-4')
+        loading.visible = False
         events_list = ui.column().classes('w-full')
 
         async def refresh_events():
+            loading.visible = True
             params = {}
             if search_query.value:
                 params['search'] = search_query.value
@@ -79,5 +82,6 @@ async def events_page():
                         ui.button('Attend/Leave', on_click=attend_fn).style(
                             f'background: {THEME["accent"]}; color: {THEME["background"]};'
                         )
+            loading.visible = False
 
         await refresh_events()
