@@ -68,6 +68,8 @@ def apply_global_styles() -> None:
             body {{ font-family: 'Inter', sans-serif; background: {theme['background']}; color: {theme['text']}; }}
             .q-btn:hover {{ border: 1px solid {theme['accent']}; }}
             .futuristic-gradient {{ background: {theme['gradient']}; }}
+            .navigation-bar {{ background: {theme['primary']}; color: {theme['text']}; }}
+            .navigation-bar a {{ color: {theme['text']}; text-decoration: none; padding: 0 0.5rem; }}
         </style>
         """
     )

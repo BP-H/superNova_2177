@@ -6,6 +6,7 @@ from nicegui import ui
 from utils.api import TOKEN, api_call
 from utils.layout import page_container
 from utils.styles import get_theme
+from utils.navbar import navigation_bar
 
 from .login_page import login_page
 
@@ -19,6 +20,7 @@ async def network_page():
 
     THEME = get_theme()
     with page_container(THEME):
+        navigation_bar()
         ui.label("Network Analysis").classes("text-2xl font-bold mb-4").style(
             f'color: {THEME["accent"]};'
         )

@@ -7,6 +7,7 @@ from nicegui import ui
 
 from utils.styles import get_theme
 from utils.layout import page_container
+from utils.navbar import navigation_bar
 from frontend_bridge import ROUTES, dispatch_route
 
 # Minimal example payloads for some routes
@@ -30,6 +31,7 @@ async def debug_panel_page() -> None:
     """Render controls for invoking ``frontend_bridge`` routes."""
     theme = get_theme()
     with page_container(theme):
+        navigation_bar()
         ui.label("Debug Panel").classes("text-2xl font-bold mb-4").style(
             f"color: {theme['accent']};"
         )
