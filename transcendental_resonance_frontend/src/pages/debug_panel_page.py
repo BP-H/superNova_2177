@@ -1,13 +1,19 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 """Interactive debug panel for dispatching frontend routes."""
 
 from __future__ import annotations
 
 import json
+
 from nicegui import ui
 
-from utils.styles import get_theme
-from utils.layout import page_container, navigation_bar
 from frontend_bridge import ROUTES, dispatch_route
+from utils.api import TOKEN
+from utils.layout import navigation_bar, page_container
+from utils.styles import get_theme
 
 # Minimal example payloads for some routes
 SAMPLE_PAYLOADS = {
@@ -57,4 +63,3 @@ async def debug_panel_page() -> None:
                 ui.button("Invoke", on_click=send).style(
                     f"background: {theme['primary']}; color: {theme['text']};"
                 )
-

@@ -1,8 +1,13 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 """Detailed system insights metrics page."""
 
 from nicegui import ui
+
 from utils.api import TOKEN, api_call
-from utils.layout import page_container, navigation_bar
+from utils.layout import navigation_bar, page_container
 from utils.styles import get_theme
 
 from .login_page import login_page
