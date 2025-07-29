@@ -1,4 +1,9 @@
-"""Event management page."""
+"""Event management page.
+
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+"""
 
 from nicegui import ui
 
@@ -22,7 +27,8 @@ async def events_page():
         )
 
         search_query = ui.input('Search').classes('w-full mb-2')
-        sort_select = ui.select(['name', 'date'], value='name').classes('w-full mb-4')
+        sort_select = ui.select(['name', 'date'], value='name').classes('w-full mb-2')
+        date_filter = ui.date().classes('w-full mb-4')
 
         e_name = ui.input('Event Name').classes('w-full mb-2')
         e_desc = ui.textarea('Description').classes('w-full mb-2')
@@ -52,6 +58,8 @@ async def events_page():
 
         events_list = ui.column().classes('w-full')
 
+        date_filter.on('update:model-value', lambda _: ui.run_async(refresh_events()))
+
         async def refresh_events():
             params = {}
             if search_query.value:
@@ -61,6 +69,12 @@ async def events_page():
             events = await api_call('GET', '/events/', params) or []
             if search_query.value:
                 events = [e for e in events if search_query.value.lower() in e['name'].lower()]
+            if date_filter.value:
+                events = [
+                    e
+                    for e in events
+                    if e.get('start_time', '').startswith(str(date_filter.value))
+                ]
             if sort_select.value:
                 if sort_select.value == 'name':
                     events.sort(key=lambda x: x.get('name', ''))
