@@ -1,7 +1,7 @@
 """System status metrics page."""
 
 from nicegui import ui
-from utils.api import api_call
+from utils.api import TOKEN, api_call
 from utils.layout import page_container, navigation_bar
 from utils.styles import get_theme
 
