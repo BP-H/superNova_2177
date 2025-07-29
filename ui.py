@@ -868,9 +868,7 @@ def render_validation_ui() -> None:
         st.json(st.session_state["agent_output"])
 
 def main() -> None:
-    """Entry point for the Streamlit UI."""
-    st.set_page_config(page_title="superNova_2177", layout="centered")
-
+    st.set_page_config(page_title="superNova_2177", layout="wide")  # <- put this first inside main
     if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
         st.write("ok")
         return
