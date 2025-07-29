@@ -54,6 +54,10 @@ pip install -r requirements.txt
 
 # optional: launch the Streamlit UI
 # python setup_env.py --launch-ui
+# or run manually with
+./start.sh       # launches ui.py on port 8888
+streamlit run ui.py
+# running `python ui.py` directly will *not* start the Streamlit server
 
 # Try demo mode
 supernova-validate --demo
@@ -67,8 +71,12 @@ supernova-federate list
 supernova-federate create --creator Alice --config HARMONY_WEIGHT=0.9
 
 # Cast a vote on a fork
+
 supernova-federate vote <fork_id> --voter Bob --vote yes
 ````
+
+The UI listens on [http://localhost:8888](http://localhost:8888) by default.
+Append `?healthz=1` to the URL and you should see `ok` when the server is running.
 
 ## 🔧 Local Development
 
