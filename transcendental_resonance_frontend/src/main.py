@@ -1,4 +1,7 @@
 """Main entry point for the Transcendental Resonance frontend."""
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 
 from nicegui import ui, background_tasks
 import asyncio
@@ -27,7 +30,7 @@ def toggle_theme() -> None:
 async def keep_backend_awake() -> None:
     """Periodically ping the backend to keep data fresh."""
     while True:
-        api_call('GET', '/status')
+        await api_call('GET', '/status')
         await asyncio.sleep(300)
 
 
