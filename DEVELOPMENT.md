@@ -63,6 +63,10 @@ Run all hooks manually with:
 pre-commit run --all-files
 ```
 
+Most editors will also respect the formatting settings in `.editorconfig` at the
+repository root. It enforces UTF-8 encoding, LF newlines and four-space
+indentation.
+
 ## Optional Frontend
 
 The `transcendental_resonance_frontend/` directory contains a NiceGUI-based UI. Follow its README to install `pip install -r transcendental_resonance_frontend/requirements.txt` and run the frontend if desired.
