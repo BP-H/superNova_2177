@@ -1,4 +1,7 @@
 """Utility functions for communicating with the Transcendental Resonance backend."""
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 
 import logging
 import os
@@ -111,3 +114,8 @@ async def get_following(username: str) -> Dict[str, Any]:
 
 async def toggle_follow(username: str) -> Optional[Dict[str, Any]]:
     return await api_call("POST", f"/users/{username}/follow")
+
+
+async def get_follow_suggestions() -> list[Dict[str, Any]]:
+    """Return a list of users recommended to follow."""
+    return await api_call("GET", "/users/suggestions") or []

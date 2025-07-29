@@ -1,8 +1,19 @@
 """User profile view and editing."""
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 
 from nicegui import ui
-from utils.api import (TOKEN, api_call, clear_token, get_followers,
-                       get_following, get_user, toggle_follow)
+from utils.api import (
+    TOKEN,
+    api_call,
+    clear_token,
+    get_followers,
+    get_following,
+    get_follow_suggestions,
+    get_user,
+    toggle_follow,
+)
 from utils.layout import page_container
 from utils.styles import (THEMES, get_theme, get_theme_name, set_accent,
                           set_theme)
@@ -43,100 +54,121 @@ async def profile_page(username: str | None = None):
 
     followers = await get_followers(target_username)
     following = await get_following(target_username)
+    suggestions = await get_follow_suggestions()
 
     THEME = get_theme()
     with page_container(THEME):
-        ui.label(f'Welcome, {user_data["username"]}').classes(
-            "text-2xl font-bold mb-4"
-        ).style(f'color: {THEME["accent"]};')
+        with ui.row().classes("w-full"):
+            with ui.column().classes("w-3/4"):
+                ui.label(f'Welcome, {user_data["username"]}').classes(
+                    "text-2xl font-bold mb-4"
+                ).style(f'color: {THEME["accent"]};')
 
-        ui.label(f'Harmony Score: {user_data["harmony_score"]}').classes("mb-2")
-        ui.label(f'Creative Spark: {user_data["creative_spark"]}').classes("mb-2")
-        ui.label(
-            f'Influence Score: {score_data.get("influence_score", "N/A")}'
-        ).classes("mb-2")
-        ui.label(f'Species: {user_data["species"]}').classes("mb-2")
-        followers_label = ui.label(f'Followers: {followers.get("count", 0)}').classes(
-            "mb-2"
-        )
-        following_label = ui.label(f'Following: {following.get("count", 0)}').classes(
-            "mb-4"
-        )
-
-        if target_username == my_data["username"]:
-            bio = ui.input("Bio", value=user_data.get("bio", "")).classes("w-full mb-2")
-
-            async def update_bio():
-                resp = await api_call("PUT", "/users/me", {"bio": bio.value})
-                if resp:
-                    ui.notify("Bio updated", color="positive")
-
-            ui.button("Update Bio", on_click=update_bio).classes("mb-4").style(
-                f'background: {THEME["primary"]}; color: {THEME["text"]};'
-            )
-        else:
-            ui.label(user_data.get("bio", "")).classes("mb-4")
-            is_following = my_data["username"] in followers.get("followers", [])
-
-            async def toggle() -> None:
-                await toggle_follow(target_username)
-                new_data = await get_followers(target_username)
-                followers_label.text = f"Followers: {new_data.get('count', 0)}"
-                button.text = (
-                    "Unfollow"
-                    if my_data["username"] in new_data.get("followers", [])
-                    else "Follow"
+                ui.label(f'Harmony Score: {user_data["harmony_score"]}').classes("mb-2")
+                ui.label(f'Creative Spark: {user_data["creative_spark"]}').classes("mb-2")
+                ui.label(
+                    f'Influence Score: {score_data.get("influence_score", "N/A")}'
+                ).classes("mb-2")
+                ui.label(f'Species: {user_data["species"]}').classes("mb-2")
+                followers_label = ui.label(f'Followers: {followers.get("count", 0)}').classes(
+                    "mb-2"
+                )
+                following_label = ui.label(f'Following: {following.get("count", 0)}').classes(
+                    "mb-4"
                 )
 
-            button = (
+                if target_username == my_data["username"]:
+                    bio = ui.input("Bio", value=user_data.get("bio", "")).classes("w-full mb-2")
+
+                    async def update_bio():
+                        resp = await api_call("PUT", "/users/me", {"bio": bio.value})
+                        if resp:
+                            ui.notify("Bio updated", color="positive")
+
+                    ui.button("Update Bio", on_click=update_bio).classes("mb-4").style(
+                        f'background: {THEME["primary"]}; color: {THEME["text"]};'
+                    )
+                else:
+                    ui.label(user_data.get("bio", "")).classes("mb-4")
+                    is_following = my_data["username"] in followers.get("followers", [])
+
+                    async def toggle() -> None:
+                        await toggle_follow(target_username)
+                        new_data = await get_followers(target_username)
+                        followers_label.text = f"Followers: {new_data.get('count', 0)}"
+                        button.text = (
+                            "Unfollow"
+                            if my_data["username"] in new_data.get("followers", [])
+                            else "Follow"
+                        )
+
+                    button = (
+                        ui.button(
+                            "Unfollow" if is_following else "Follow",
+                            on_click=lambda: ui.run_async(toggle()),
+                        )
+                        .classes("mb-4")
+                        .style(f'background: {THEME["primary"]}; color: {THEME["text"]};')
+                    )
+
+                ui.button("VibeNodes", on_click=lambda: ui.open(vibenodes_page)).classes(
+                    "w-full mb-2"
+                ).style(f'background: {THEME["accent"]}; color: {THEME["background"]};')
+                ui.button("Groups", on_click=lambda: ui.open(groups_page)).classes(
+                    "w-full mb-2"
+                ).style(f'background: {THEME["accent"]}; color: {THEME["background"]};')
+                ui.button("Events", on_click=lambda: ui.open(events_page)).classes(
+                    "w-full mb-2"
+                ).style(f'background: {THEME["accent"]}; color: {THEME["background"]};')
+                ui.button("Proposals", on_click=lambda: ui.open(proposals_page)).classes(
+                    "w-full mb-2"
+                ).style(f'background: {THEME["accent"]}; color: {THEME["background"]};')
                 ui.button(
-                    "Unfollow" if is_following else "Follow",
-                    on_click=lambda: ui.run_async(toggle()),
+                    "Notifications", on_click=lambda: ui.open(notifications_page)
+                ).classes("w-full mb-2").style(
+                    f'background: {THEME["accent"]}; color: {THEME["background"]};'
                 )
-                .classes("mb-4")
-                .style(f'background: {THEME["primary"]}; color: {THEME["text"]};')
-            )
+                ui.button("Messages", on_click=lambda: ui.open(messages_page)).classes(
+                    "w-full mb-2"
+                ).style(f'background: {THEME["accent"]}; color: {THEME["background"]};')
+                from .system_insights_page import system_insights_page  # lazy import
 
-        ui.button("VibeNodes", on_click=lambda: ui.open(vibenodes_page)).classes(
-            "w-full mb-2"
-        ).style(f'background: {THEME["accent"]}; color: {THEME["background"]};')
-        ui.button("Groups", on_click=lambda: ui.open(groups_page)).classes(
-            "w-full mb-2"
-        ).style(f'background: {THEME["accent"]}; color: {THEME["background"]};')
-        ui.button("Events", on_click=lambda: ui.open(events_page)).classes(
-            "w-full mb-2"
-        ).style(f'background: {THEME["accent"]}; color: {THEME["background"]};')
-        ui.button("Proposals", on_click=lambda: ui.open(proposals_page)).classes(
-            "w-full mb-2"
-        ).style(f'background: {THEME["accent"]}; color: {THEME["background"]};')
-        ui.button(
-            "Notifications", on_click=lambda: ui.open(notifications_page)
-        ).classes("w-full mb-2").style(
-            f'background: {THEME["accent"]}; color: {THEME["background"]};'
-        )
-        ui.button("Messages", on_click=lambda: ui.open(messages_page)).classes(
-            "w-full mb-2"
-        ).style(f'background: {THEME["accent"]}; color: {THEME["background"]};')
-        from .system_insights_page import system_insights_page  # lazy import
+                ui.button(
+                    "System Insights", on_click=lambda: ui.open(system_insights_page)
+                ).classes("w-full mb-2").style(
+                    f'background: {THEME["accent"]}; color: {THEME["background"]};'
+                )
+                ui.button(
+                    "Logout",
+                    on_click=lambda: (clear_token(), ui.open(login_page)),
+                ).classes("w-full").style(f'background: red; color: {THEME["text"]};')
 
-        ui.button(
-            "System Insights", on_click=lambda: ui.open(system_insights_page)
-        ).classes("w-full mb-2").style(
-            f'background: {THEME["accent"]}; color: {THEME["background"]};'
-        )
-        ui.button(
-            "Logout",
-            on_click=lambda: (clear_token(), ui.open(login_page)),
-        ).classes("w-full").style(f'background: red; color: {THEME["text"]};')
+                with ui.row().classes("w-full mt-4"):
+                    theme_select = ui.select(
+                        list(THEMES.keys()),
+                        value=get_theme_name(),
+                        on_change=lambda e: set_theme(e.value),
+                    ).classes("mr-2")
+                    ui.color_input(
+                        "Accent",
+                        value=THEME["accent"],
+                        on_change=lambda e: set_accent(e.value),
+                    )
 
-        with ui.row().classes("w-full mt-4"):
-            theme_select = ui.select(
-                list(THEMES.keys()),
-                value=get_theme_name(),
-                on_change=lambda e: set_theme(e.value),
-            ).classes("mr-2")
-            ui.color_input(
-                "Accent",
-                value=THEME["accent"],
-                on_change=lambda e: set_accent(e.value),
-            )
+            with ui.column().classes("w-1/4 ml-4"):
+                ui.label("Who to Follow").classes("text-lg font-bold mb-2")
+                for sugg in suggestions:
+                    with ui.row().classes("items-center mb-2"):
+                        if sugg.get("avatar_url"):
+                            ui.image(sugg["avatar_url"]).classes("w-8 h-8 rounded-full")
+                        ui.label(sugg["username"]).classes("ml-2")
+
+                        async def follow_fn(user=sugg["username"]):
+                            await toggle_follow(user)
+
+                        ui.button(
+                            "Follow",
+                            on_click=lambda u=sugg["username"]: ui.run_async(follow_fn(u)),
+                        ).classes("ml-auto").style(
+                            f'background: {THEME["primary"]}; color: {THEME["text"]};'
+                        )
