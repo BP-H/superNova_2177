@@ -1,0 +1,6 @@
+streamlit>=1.28
+streamlit-ace
+
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
