@@ -27,11 +27,10 @@ async def recommendations_page():
         rec_list = ui.column().classes('w-full')
 
         async def refresh_recs() -> None:
-            rec_list.clear()
-            with rec_list:
-                for _ in range(3):
-                    skeleton_loader().classes('w-full h-20 mb-2')
-            recs = await api_call('GET', '/recommendations') or []
+            recs = await api_call('GET', '/recommendations')
+            if recs is None:
+                ui.notify('Failed to load data', color='negative')
+                return
             rec_list.clear()
             for rec in recs:
                 with rec_list:
