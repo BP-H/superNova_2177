@@ -49,14 +49,15 @@ PAGES_DIR = (
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
 UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
 
+# Toggle verbose output via env var
+UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
 
 def log(msg: str) -> None:
     if UI_DEBUG:
         print(msg, file=sys.stderr)
 
-
 if UI_DEBUG:
-    print("\u23f3 Booting superNova_2177 UI...", file=sys.stderr)
+    log("\u23f3 Booting superNova_2177 UI...")
 from streamlit_helpers import (
     alert,
     apply_theme,
@@ -264,7 +265,8 @@ def run_analysis(validations, *, layout: str = "force"):
         except Exception:
             validations = [{"validator": "A", "target": "B", "score": 0.5}]
         alert("No validations provided – using fallback data.", "warning")
-        print("✅ UI diagnostic agent active")
+        if os.getenv("UI_DEBUG_PRINTS", "1") != "0":
+            print("✅ UI diagnostic agent active")
 
     with st.spinner("Running analysis..."):
         result = analyze_validation_integrity(validations)
@@ -883,49 +885,73 @@ def render_validation_ui() -> None:
         st.subheader("Agent Output")
         st.json(st.session_state["agent_output"])
 
-
 def main() -> None:
     """Entry point for the Streamlit UI."""
+    import streamlit as st
+    from streamlit.runtime.scriptrunner import get_script_run_ctx
+
+    UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
+    def log(msg: str) -> None:
+        if UI_DEBUG:
+            print(msg, file=sys.stderr)
+
     log("main() invoked")
     st.set_page_config(page_title="superNova_2177", layout="wide")
-    ctx = get_script_run_ctx()
-    if ctx and ctx._get_request() and ctx._get_request().path == "/healthz":
+    st.title("🤗//⚡//Launching main()")
+    log("main() entered")
+
+    # unified health check logic
+    if (
+        (ctx := get_script_run_ctx())
+        and (req := ctx._get_request())
+        and req.path == "/healthz"
+    ) or st.query_params.get(HEALTH_CHECK_PARAM) == "1" \
+      or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
+        log("health-check branch")
+        st.write("ok")
+        st.stop()
+
         st.write("ok")
         st.stop()
 
     st.title("superNova_2177")
 
-    # Check Streamlit page directory
+    log(f"loading pages from {PAGES_DIR}")
     if not PAGES_DIR.is_dir():
+        log("pages directory missing")
+        st.error("Pages directory not found")
         render_landing_page()
         return
+    else:
+        log("pages directory found")
 
     page_files = sorted(
         p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
     )
     if not page_files:
+        log("pages directory empty")
+        st.warning("No pages available — showing fallback UI.")
         render_landing_page()
         return
 
     render_main_ui()
     choice = st.sidebar.selectbox("Page", page_files)
-
+    log(f"loading page {choice}")
     try:
         from importlib import import_module
-
         module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
         page_main = getattr(module, "main", None)
         if callable(page_main):
             page_main()
+            log(f"page {choice} loaded")
         else:
             st.error(f"Page '{choice}' is missing a main() function.")
     except Exception as exc:
         tb = traceback.format_exc()
         st.error(f"Error loading page '{choice}':")
         st.text(tb)
-        log(exc)
+        log(f"exception loading {choice}: {exc}")
         print(tb, file=sys.stderr)
-
 
 if __name__ == "__main__":
     import sys
