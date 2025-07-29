@@ -183,4 +183,5 @@ def run_app() -> None:
             time.sleep(2)
 
 
-run_app()
+if __name__ == "__main__":  # pragma: no cover - manual run
+    run_app()
