@@ -11,6 +11,7 @@ from .features import (
     skeleton_loader,
 )
 from .error_overlay import ErrorOverlay
+from .api_status_footer import ApiStatusFooter
 
 __all__ = [
     "quick_post_button",
@@ -24,4 +25,5 @@ __all__ = [
     "mobile_bottom_sheet",
     "skeleton_loader",
     "ErrorOverlay",
+    "ApiStatusFooter",
 ]

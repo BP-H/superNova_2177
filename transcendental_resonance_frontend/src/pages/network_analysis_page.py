@@ -78,6 +78,9 @@ async def network_page():
 
         async def refresh_network() -> None:
             analysis = await api_call("GET", "/network-analysis/")
+            if analysis is None:
+                ui.notify('Unable to load network data', color='negative')
+                return
             if analysis:
                 nodes_label.text = f"Nodes: {analysis['metrics']['node_count']}"
                 edges_label.text = f"Edges: {analysis['metrics']['edge_count']}"

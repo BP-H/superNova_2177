@@ -6,11 +6,14 @@
 from __future__ import annotations
 
 import json
+
 from nicegui import ui
 
-from utils.api import TOKEN, connect_ws, listen_ws, WS_CONNECTION
-from utils.layout import page_container, navigation_bar
+from utils import ErrorOverlay
+from utils.api import TOKEN, WS_CONNECTION, listen_ws
+from utils.layout import navigation_bar, page_container
 from utils.styles import get_theme
+
 from .login_page import login_page
 
 
@@ -29,6 +32,8 @@ async def video_chat_page() -> None:
             f'color: {THEME["accent"]};'
         )
 
+        error_overlay = ErrorOverlay()
+
         local_cam = ui.camera().classes("w-full mb-4")
         remote_view = ui.video().props("autoplay playsinline").classes("w-full mb-4")
 
@@ -36,9 +41,20 @@ async def video_chat_page() -> None:
             if event.get("type") == "frame":
                 remote_view.source = event.get("data")
 
+        join_button = ui.button("Join Call")
+
         async def join_call() -> None:
-            ws_task = listen_ws(handle_event)
-            await ws_task
+            try:
+                ws_task = listen_ws(handle_event)
+                await ws_task
+            except Exception:
+                ui.notify("Realtime updates unavailable", color="warning")
+                join_button.disable()
+                local_cam.disable()
+                error_overlay.show("Realtime updates unavailable")
+
+        join_button.on_click(lambda: ui.run_async(join_call()))
+
 
         async def send_frame() -> None:
             if WS_CONNECTION and local_cam.value:
@@ -47,4 +63,3 @@ async def video_chat_page() -> None:
                 )
 
         local_cam.on("capture", lambda _: ui.run_async(send_frame()))
-        ui.button("Join Call", on_click=lambda: ui.run_async(join_call()))
