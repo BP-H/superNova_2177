@@ -65,6 +65,7 @@ jobs:
             exit 1
           fi
           curl -f http://localhost:"$PORT"
+          curl -f http://localhost:"$PORT"/healthz
           pkill streamlit
       - name: Print Streamlit logs on failure
         if: failure()
