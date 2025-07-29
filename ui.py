@@ -21,7 +21,12 @@ plt = None  # imported lazily in run_analysis
 nx = None  # imported lazily in run_analysis
 go = None  # imported lazily in run_analysis
 Network = None  # imported lazily in run_analysis
+# Import Streamlit and register fallback health check
 import streamlit as st
+# Fallback health check endpoint for CI (avoids internal monkey-patching)
+if st.query_params.get("healthz") == "1":
+    st.write("ok")
+    st.stop()
 
 # Basic page setup so Streamlit responds immediately on load
 try:
