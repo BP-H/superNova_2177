@@ -28,6 +28,11 @@ if st.query_params.get("healthz") == "1":
     st.write("ok")
     st.stop()
 
+# Fallback health check endpoint for CI (avoids internal monkey-patching)
+if st.query_params.get("healthz") == "1":
+    st.write("ok")
+    st.stop()
+
 # Basic page setup so Streamlit responds immediately on load
 try:
     st.set_page_config(page_title="superNova_2177", layout="wide")
