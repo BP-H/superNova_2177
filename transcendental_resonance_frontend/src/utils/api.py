@@ -12,6 +12,9 @@ import httpx
 import websockets
 from nicegui import ui
 
+# Honor offline mode for development/testing
+OFFLINE_MODE = os.getenv("OFFLINE_MODE", "0") == "1"
+
 # Backend API base URL
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 # When running in offline mode, network calls should be skipped
@@ -100,13 +103,11 @@ async def api_call(
     _fire_listeners(_start_listeners)
 
     if OFFLINE_MODE:
-        logger.info("Offline mode: %s %s skipped", method, endpoint)
-        try:
-            ui.notify("Offline mode: request skipped", color="warning")
-        except Exception:
-            pass
+        logger.info("Offline mode: skipping API call %s %s", method, endpoint)
         _fire_listeners(_end_listeners)
-        return None
+        return [] if method == "GET" else {}
+        logger.info("Offline mode: %s %s skipped", method, endpoint)
+
 
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
