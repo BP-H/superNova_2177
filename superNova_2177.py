@@ -219,7 +219,6 @@ CosmicNexus orchestrates the multiverse, coordinating forks, entropy reduction, 
 # Core Imports from all files
 try:
     from config import Config as SystemConfig
-    from config import get_emoji_weights
 
     CONFIG = SystemConfig
 except ImportError:
@@ -524,7 +523,6 @@ from resonance_music import generate_midi_from_metrics
 # runtime on Streamlit Cloud.
 try:  # pragma: no cover - fallback only used if optional import fails
     from config import Config as SystemConfig
-    from config import get_emoji_weights
 
     CONFIG = SystemConfig
 except Exception:  # pragma: no cover - extremely defensive
@@ -1129,7 +1127,11 @@ def is_valid_username(name: str) -> bool:
 def is_valid_emoji(emoji: str, config: "Config") -> bool:
     if emoji is None or config is None:
         return False
-    return emoji in get_emoji_weights()
+    try:
+        weights = config.get_emoji_weights()
+    except AttributeError:
+        weights = getattr(config, "EMOJI_WEIGHTS", {})
+    return emoji in weights
 
 
 def sanitize_text(text: str, config: "Config") -> str:
