@@ -112,6 +112,20 @@ logger = logging.getLogger(__name__)
 def toggle_theme() -> None:
     """Cycle through available themes."""
     order = list(THEMES.keys())
+
+    # Insert the minimalist dark theme into the cycle if it's not already
+    # present. By default it should appear right after "dark". If "dark" is not
+    # defined (custom theme sets might omit it), fall back to inserting after
+    # "modern". If neither is present simply append the name.
+    if "minimalist_dark" not in order:
+        if "dark" in order:
+            insert_idx = order.index("dark") + 1
+        elif "modern" in order:
+            insert_idx = order.index("modern") + 1
+        else:
+            insert_idx = len(order)
+        order.insert(insert_idx, "minimalist_dark")
+
     current = get_theme_name()
     try:
         idx = order.index(current)
