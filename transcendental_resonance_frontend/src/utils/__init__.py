@@ -10,6 +10,12 @@ from .features import (
     mobile_bottom_sheet,
     skeleton_loader,
 )
+from .quantum_futures import (
+    generate_quantum_futures,
+    QuantumFuture,
+    EMOJI_GLOSSARY,
+    SATIRICAL_SIMULATION,
+)
 
 __all__ = [
     "quick_post_button",
@@ -22,4 +28,8 @@ __all__ = [
     "profile_popover",
     "mobile_bottom_sheet",
     "skeleton_loader",
+    "generate_quantum_futures",
+    "QuantumFuture",
+    "EMOJI_GLOSSARY",
+    "SATIRICAL_SIMULATION",
 ]

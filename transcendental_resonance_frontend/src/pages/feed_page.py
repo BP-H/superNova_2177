@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Unified feed combining VibeNodes, Events, and Notifications."""
 
 from nicegui import ui
@@ -6,6 +9,7 @@ from utils.api import TOKEN, api_call
 from utils.layout import page_container, navigation_bar
 from utils.styles import get_theme
 from utils.features import quick_post_button, skeleton_loader, swipeable_glow_card
+from utils.quantum_futures import generate_quantum_futures, SATIRICAL_SIMULATION
 
 from .login_page import login_page
 
@@ -24,6 +28,8 @@ async def feed_page() -> None:
         ui.label('Feed').classes('text-2xl font-bold mb-4').style(
             f'color: {theme["accent"]};'
         )
+
+        simulation_toggle = ui.switch('Show Speculative Futures', value=False).classes('mb-4')
 
         feed_column = ui.column().classes('w-full')
 
@@ -52,6 +58,16 @@ async def feed_page() -> None:
                         ui.label('VibeNode').classes('text-sm font-bold')
                         ui.label(vn.get('description', '')).classes('text-sm')
                         ui.link('View', f"/vibenodes/{vn['id']}")
+                        if simulation_toggle.value:
+                            futures = generate_quantum_futures(vn.get('description', ''), 3)
+                            with ui.expansion('Speculative Futures', value=False).classes('w-full mt-2'):
+                                for fut in futures:
+                                    with ui.row().classes('items-center mb-1'):
+                                        ui.label(fut.emoji).classes('mr-1')
+                                        ui.markdown(f"{fut.description} (entropy={fut.entropy})").classes('text-sm')
+                                        if fut.preview_url:
+                                            ui.image(fut.preview_url).classes('w-20 h-12 ml-2')
+                                ui.markdown(f"_{SATIRICAL_SIMULATION}_").classes('text-xs italic mt-2')
             for ev in events:
                 with feed_column:
                     with swipeable_glow_card().classes('w-full mb-2').style('background: #1e1e1e;'):
