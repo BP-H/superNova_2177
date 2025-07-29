@@ -3,7 +3,8 @@
 # Legal & Ethical Safeguards
 [server]
 headless = true
-port = 8501
+port = 8888
+address = "0.0.0.0"
 enableCORS = false
 
 [theme]
