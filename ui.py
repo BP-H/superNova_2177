@@ -45,13 +45,6 @@ HEALTH_CHECK_PARAM = "healthz"
 PAGES_DIR = Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
 
 # Toggle verbose output via env var
-DEBUG_MODE = os.getenv("DEBUG_UI", "").lower() in {"1", "true", "yes"}
-
-def dprint(msg: str) -> None:
-    """Print debug message if ``DEBUG_UI`` is enabled."""
-    if DEBUG_MODE:
-        print(msg, file=sys.stderr)
-
 if os.getenv("UI_DEBUG_PRINTS", "1") != "0":
     print("\u23F3 Booting superNova_2177 UI...", file=sys.stderr)
 from streamlit_helpers import (
@@ -259,7 +252,8 @@ def run_analysis(validations, *, layout: str = "force"):
         except Exception:
             validations = [{"validator": "A", "target": "B", "score": 0.5}]
         alert("No validations provided – using fallback data.", "warning")
-        print("✅ UI diagnostic agent active")
+        if os.getenv("UI_DEBUG_PRINTS", "1") != "0":
+            print("✅ UI diagnostic agent active")
 
     with st.spinner("Running analysis..."):
         result = analyze_validation_integrity(validations)
@@ -879,42 +873,56 @@ def render_validation_ui() -> None:
         st.json(st.session_state["agent_output"])
 
 def main() -> None:
-def main() -> None:
-    """Entry point for the Streamlit UI."""
-    dprint("main() invoked")
-    st.set_page_config(page_title="superNova_2177", layout="wide")
+    import streamlit as st
+    def log(msg: str) -> None:
+        if os.getenv("UI_DEBUG_PRINTS", "1") != "0":
+            print(msg, file=sys.stderr)
 
-    # CI health check (via query or platform env)
+    log("main() invoked")
+    st.set_page_config(page_title="superNova_2177", layout="wide")
+    st.title("🤗//⚡//Launching main()")
+    log("main() entered")
+
     if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
+        log("health-check branch")
         st.write("ok")
         return
 
-    # Check Streamlit page directory
+    log(f"loading pages from {PAGES_DIR}")
     if not PAGES_DIR.is_dir():
+        log("pages directory missing")
+        st.error("Pages directory not found")
         render_landing_page()
         return
+    else:
+        log("pages directory found")
 
-    page_files = sorted(p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py")
+    page_files = sorted(
+        p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
+    )
     if not page_files:
+        log("pages directory empty")
+        st.warning("No pages available — showing fallback UI.")
         render_landing_page()
         return
 
     render_main_ui()
     choice = st.sidebar.selectbox("Page", page_files)
-
+    log(f"loading page {choice}")
     try:
+        from importlib import import_module
         module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
         page_main = getattr(module, "main", None)
         if callable(page_main):
             page_main()
+            log(f"page {choice} loaded")
         else:
             st.error(f"Page '{choice}' is missing a main() function.")
-    except Exception:
+    except Exception as e:
         tb = traceback.format_exc()
         st.error(f"Error loading page '{choice}':")
         st.text(tb)
-        print(tb, file=sys.stderr)
-
+        log(f"exception loading {choice}: {e}")
 
 if __name__ == "__main__":
     import sys
