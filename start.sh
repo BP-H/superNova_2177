@@ -11,5 +11,10 @@ if [[ -z "$UI_FILE" ]]; then
   exit 1
 fi
 
-echo "🚀 Launching Streamlit UI: $UI_FILE"
-streamlit run "$UI_FILE" --server.headless true --server.port 8501
+PORT="${STREAMLIT_PORT:-${PORT:-8888}}"
+
+echo "🚀 Launching Streamlit UI: $UI_FILE on port $PORT"
+streamlit run "$UI_FILE" \
+  --server.headless true \
+  --server.address 0.0.0.0 \
+  --server.port "$PORT"
