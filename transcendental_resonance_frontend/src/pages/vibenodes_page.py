@@ -138,7 +138,9 @@ async def vibenodes_page():
                     with (
                         ui.card()
                         .classes("w-full mb-2")
-                        .style("border: 1px solid #333; background: #1e1e1e;")
+                        .style(
+                            f"border: 1px solid #333; background: {THEME['background']};"
+                        )
                     ):
                         ui.label(vn["name"]).classes("text-lg")
                         ui.label(vn["description"]).classes("text-sm")
@@ -203,7 +205,9 @@ async def vibenodes_page():
                     with (
                         ui.card()
                         .classes("w-full mb-2")
-                        .style("border: 1px solid #333; background: #1e1e1e;")
+                        .style(
+                            f"border: 1px solid #333; background: {THEME['background']};"
+                        )
                     ):
                         ui.label(vn["name"]).classes("text-lg")
                         ui.label(vn["description"]).classes("text-sm")
@@ -253,7 +257,7 @@ async def vibenodes_page():
                                 ui.column()
                                 .classes("w-full shadow rounded hidden")
                                 .style(
-                                    "background:#1e1e1e; position: absolute; z-index: 50;"
+                                    f"background: {THEME['background']}; position: absolute; z-index: 50;"
                                 )
                             )
 

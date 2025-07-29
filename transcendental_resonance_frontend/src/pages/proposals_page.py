@@ -59,7 +59,9 @@ async def proposals_page():
             proposals_list.clear()
             for p in proposals:
                 with proposals_list:
-                    with ui.card().classes('w-full mb-2').style('border: 1px solid #333; background: #1e1e1e;'):
+                    with ui.card().classes('w-full mb-2').style(
+                        f"border: 1px solid #333; background: {THEME['background']};"
+                    ):
                         ui.label(p['title']).classes('text-lg')
                         ui.label(p['description']).classes('text-sm')
                         ui.label(f"Status: {p['status']}").classes('text-sm')

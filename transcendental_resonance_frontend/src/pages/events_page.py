@@ -92,7 +92,9 @@ async def events_page():
             events_list.clear()
             for e in events:
                 with events_list:
-                    with ui.card().classes('w-full mb-2').style('border: 1px solid #333; background: #1e1e1e;'):
+                    with ui.card().classes('w-full mb-2').style(
+                        f"border: 1px solid #333; background: {THEME['background']};"
+                    ):
                         ui.label(e['name']).classes('text-lg')
                         ui.label(e['description']).classes('text-sm')
                         ui.label(f"Start: {e['start_time']}").classes('text-sm')

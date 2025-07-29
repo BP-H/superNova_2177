@@ -66,7 +66,9 @@ async def groups_page():
             groups_list.clear()
             for g in groups:
                 with groups_list:
-                    with ui.card().classes('w-full mb-2').style('border: 1px solid #333; background: #1e1e1e;'):
+                    with ui.card().classes('w-full mb-2').style(
+                        f"border: 1px solid #333; background: {THEME['background']};"
+                    ):
                         ui.label(g['name']).classes('text-lg')
                         ui.label(g['description']).classes('text-sm')
                         async def join_fn(g_id=g['id']):
@@ -88,7 +90,7 @@ async def groups_page():
             for g in recs:
                 with suggestions:
                     with ui.card().classes('w-full mb-2').style(
-                        'border: 1px solid #333; background: #1e1e1e;'
+                        f"border: 1px solid #333; background: {THEME['background']};"
                     ):
                         ui.label(g.get('name', 'Unknown')).classes('text-lg')
                         desc = g.get('description')

@@ -38,7 +38,7 @@ async def recommendations_page():
             for rec in recs:
                 with rec_list:
                     with ui.card().classes('w-full mb-2').style(
-                        'border: 1px solid #333; background: #1e1e1e;'
+                        f"border: 1px solid #333; background: {THEME['background']};"
                     ):
                         name = rec.get('name') or rec.get('username', 'Unknown')
                         ui.label(name).classes('text-lg')
