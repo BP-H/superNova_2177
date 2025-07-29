@@ -3,7 +3,7 @@
 from nicegui import ui
 
 from utils.api import TOKEN, api_call
-from utils.layout import page_container
+from utils.layout import page_container, navigation_bar
 from utils.styles import get_theme
 
 from .login_page import login_page
@@ -18,6 +18,8 @@ async def feed_page() -> None:
 
     theme = get_theme()
     with page_container(theme):
+        if TOKEN:
+            navigation_bar()
         ui.label('Feed').classes('text-2xl font-bold mb-4').style(
             f'color: {theme["accent"]};'
         )

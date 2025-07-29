@@ -114,7 +114,5 @@ def page_container(theme: Optional[dict] = None) -> Generator[Element, None, Non
     with ui.column().classes('w-full p-4').style(
         f"background: {theme['gradient']}; color: {theme['text']};"
     ) as container:
-        navigation_bar()
-        search_widget()
         yield container
 

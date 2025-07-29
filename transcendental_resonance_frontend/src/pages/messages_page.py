@@ -5,7 +5,9 @@
 
 from nicegui import ui
 from utils.api import TOKEN, api_call, listen_ws
-from utils.layout import page_container
+from utils.layout import page_container, navigation_bar
+from components.emoji_toolbar import emoji_toolbar
+from utils.safe_markdown import safe_markdown
 from utils.styles import get_theme
 
 from .login_page import login_page
@@ -20,6 +22,8 @@ async def messages_page():
 
     THEME = get_theme()
     with page_container(THEME):
+        if TOKEN:
+            navigation_bar()
         ui.label("Messages").classes("text-2xl font-bold mb-4").style(
             f'color: {THEME["accent"]};'
         )
@@ -29,6 +33,7 @@ async def messages_page():
             group_id = ui.input("Group ID (optional)").classes("w-full")
             group_id.on("blur", lambda _: ui.run_async(refresh_messages()))
         content = ui.textarea("Message").classes("w-full mb-2")
+        emoji_toolbar(content)
 
         async def send_message():
             data = {"content": content.value}
@@ -93,6 +98,9 @@ async def messages_page():
                 messages = await api_call("GET", "/messages/") or []
                 group_label.text = "Direct Messages"
             messages_list.clear()
+            if not messages:
+                ui.label("No messages yet. Start the conversation!").classes("text-sm")
+                return
             for m in messages:
                 with messages_list:
                     with (
@@ -103,7 +111,7 @@ async def messages_page():
                         with ui.row().classes("items-center justify-between"):
                             with ui.column().classes("grow"):
                                 ui.label(f"From: {m['sender_id']}").classes("text-sm")
-                                ui.label(m["content"]).classes("text-sm")
+                                ui.markdown(safe_markdown(m["content"])).classes("text-sm")
                             ui.button(
                                 on_click=lambda msg=m: ui.run_async(open_edit(msg)),
                                 icon="edit",

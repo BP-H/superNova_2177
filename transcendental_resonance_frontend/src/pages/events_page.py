@@ -5,7 +5,7 @@ from nicegui import ui
 from utils.api import api_call, TOKEN, BACKEND_URL
 import httpx
 from utils.styles import get_theme
-from utils.layout import page_container
+from utils.layout import page_container, navigation_bar
 from .login_page import login_page
 
 
@@ -18,6 +18,8 @@ async def events_page():
 
     THEME = get_theme()
     with page_container(THEME):
+        if TOKEN:
+            navigation_bar()
         ui.label('Events').classes('text-2xl font-bold mb-4').style(
             f'color: {THEME["accent"]};'
         )

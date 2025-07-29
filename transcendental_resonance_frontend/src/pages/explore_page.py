@@ -4,7 +4,8 @@
 
 from nicegui import ui
 from utils.api import TOKEN, api_call
-from utils.layout import page_container
+from utils.layout import page_container, navigation_bar
+from components.media_renderer import render_media_block
 from utils.styles import get_theme
 
 from .login_page import login_page
@@ -19,6 +20,8 @@ async def explore_page() -> None:
 
     THEME = get_theme()
     with page_container(THEME):
+        if TOKEN:
+            navigation_bar()
         ui.label("Explore").classes("text-2xl font-bold mb-4").style(
             f'color: {THEME["accent"]};'
         )
@@ -45,14 +48,7 @@ async def explore_page() -> None:
                     ):
                         ui.label(p.get("name", "")).classes("text-lg")
                         ui.label(p.get("description", "")).classes("text-sm")
-                        if p.get("media_url"):
-                            mtype = p.get("media_type", "")
-                            if mtype.startswith("image"):
-                                ui.image(p["media_url"]).classes("w-full")
-                            elif mtype.startswith("video"):
-                                ui.video(p["media_url"]).classes("w-full")
-                            elif mtype.startswith("audio") or mtype.startswith("music"):
-                                ui.audio(p["media_url"]).classes("w-full")
+                        render_media_block(p.get("media_url"), p.get("media_type", ""))
                         ui.label(f"Likes: {p.get('likes_count', 0)}").classes("text-sm")
 
         await load_more()

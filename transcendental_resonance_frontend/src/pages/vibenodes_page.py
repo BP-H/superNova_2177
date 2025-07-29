@@ -5,7 +5,10 @@ import asyncio
 
 from utils.api import api_call, TOKEN, listen_ws
 from utils.styles import get_theme
-from utils.layout import page_container
+from utils.layout import page_container, navigation_bar
+from components.media_renderer import render_media_block
+from components.emoji_toolbar import emoji_toolbar
+from utils.safe_markdown import safe_markdown
 from .login_page import login_page
 
 
@@ -18,6 +21,8 @@ async def vibenodes_page():
 
     THEME = get_theme()
     with page_container(THEME):
+        if TOKEN:
+            navigation_bar()
         ui.label('VibeNodes').classes('text-2xl font-bold mb-4').style(
             f'color: {THEME["accent"]};'
         )
@@ -103,13 +108,7 @@ async def vibenodes_page():
                         ui.label(vn['name']).classes('text-lg')
                         ui.label(vn['description']).classes('text-sm')
                         if vn.get('media_url'):
-                            mtype = vn.get('media_type', '')
-                            if mtype.startswith('image'):
-                                ui.image(vn['media_url']).classes('w-full')
-                            elif mtype.startswith('video'):
-                                ui.video(vn['media_url']).classes('w-full')
-                            elif mtype.startswith('audio') or mtype.startswith('music'):
-                                ui.audio(vn['media_url']).classes('w-full')
+                            render_media_block(vn['media_url'], vn.get('media_type', ''))
                         ui.label(f"Likes: {vn.get('likes_count', 0)}").classes('text-sm')
                         async def like_fn(vn_id=vn['id']):
                             await api_call('POST', f'/vibenodes/{vn_id}/like')
@@ -130,8 +129,9 @@ async def vibenodes_page():
                         comments = await api_call('GET', f'/vibenodes/{vn["id"]}/comments') or []
                         with ui.expansion('Comments', value=False).classes('w-full mt-2'):
                             for c in comments:
-                                ui.label(c.get('content', '')).classes('text-sm')
+                                ui.markdown(safe_markdown(c.get('content', ''))).classes('text-sm')
                             comment_input = ui.textarea('Add a comment').classes('w-full mb-2')
+                            emoji_toolbar(comment_input)
                             suggestions_box = ui.column().classes('w-full shadow rounded hidden').style('background:#1e1e1e; position: absolute; z-index: 50;')
 
                             async def update_suggestions() -> None:
