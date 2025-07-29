@@ -865,6 +865,7 @@ def render_validation_ui() -> None:
 
 def main() -> None:
     """Entry point for the Streamlit UI."""
+    st.set_page_config(page_title="superNova_2177", layout="centered")
     if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
         st.write("ok")
         return
@@ -888,7 +889,6 @@ def main() -> None:
 
 def render_landing_page() -> None:
     """Display a minimal landing page with basic info."""
-    st.set_page_config(page_title="superNova_2177", layout="centered")
     st.title("superNova_2177")
     st.write(
         "Welcome to the superNova_2177 project — a creative research platform."
@@ -896,6 +896,7 @@ def render_landing_page() -> None:
     st.write(
         "For the full NiceGUI interface, run: `python -m transcendental_resonance_frontend`."
     )
+    st.write("See the [GitHub repo](https://github.com/BP-H/superNova_2177) for more info.")
 
 
 if __name__ == "__main__":
