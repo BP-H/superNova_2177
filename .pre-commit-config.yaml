@@ -38,3 +38,8 @@ repos:
         language: python
         entry: python scripts/check_streamlit_shadow.py
         pass_filenames: false
+      - id: no-streamlit-py-check
+        name: no-streamlit-py-check
+        language: python
+        entry: python scripts/check_no_streamlit_py.py
+        pass_filenames: false

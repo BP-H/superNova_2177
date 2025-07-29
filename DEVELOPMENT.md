@@ -67,6 +67,11 @@ Most editors will also respect the formatting settings in `.editorconfig` at the
 repository root. It enforces UTF-8 encoding, LF newlines and four-space
 indentation.
 
+The pre-commit configuration runs `scripts/check_no_streamlit_py.py` to ensure
+no `streamlit.py` file exists anywhere in the repository. This prevents
+accidentally shadowing the real Streamlit package. The same check runs early in
+the CI workflows.
+
 ## Optional Frontend
 
 The `transcendental_resonance_frontend/` directory contains a NiceGUI-based UI. Follow its README to install `pip install -r transcendental_resonance_frontend/requirements.txt` and run the frontend if desired.
