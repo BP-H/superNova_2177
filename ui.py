@@ -887,32 +887,22 @@ def main() -> None:
     import streamlit as st
     from importlib import import_module
 
-    log("⚡ main() invoked")
     st.set_page_config(page_title="superNova_2177", layout="wide")
-    log("App started")
 
-    # --- Robust health check: query param + PATH_INFO fallback ---
-    try:
-        params = st.query_params  # Streamlit >=1.30
-    except Exception:
-        params = st.experimental_get_query_params()  # legacy fallback
-
+    # Unified health check using query params or PATH_INFO
+    params = st.query_params
+    path_info = os.environ.get("PATH_INFO", "").rstrip("/")
     if (
-        "1" in params.get(HEALTH_CHECK_PARAM, [])
-        or os.environ.get("PATH_INFO", "").rstrip("/") == f"/{HEALTH_CHECK_PARAM}"
+        "1" in params.get("healthz", [])
+        or path_info == "/healthz"
     ):
-        log("💊 health-check branch")
         st.write("ok")
         st.stop()
         return
 
-    # --- Begin Main UI Logic ---
     st.title("🤗//⚡//Launching main()")
-    log("main() entered")
 
-    log(f"📁 loading pages from {PAGES_DIR}")
     if not PAGES_DIR.is_dir():
-        log("🚫 pages directory missing")
         st.error("Pages directory not found")
         render_landing_page()
         return
@@ -921,34 +911,29 @@ def main() -> None:
         p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
     )
     if not page_files:
-        log("⚠️ pages directory empty")
         st.warning("No pages available — showing fallback UI.")
         render_landing_page()
         return
 
     render_main_ui()
     choice = st.sidebar.selectbox("Page", page_files)
-    log(f"📄 loading page: {choice}")
 
     try:
         module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
         page_main = getattr(module, "main", None)
         if callable(page_main):
             page_main()
-            log(f"✅ page {choice} loaded successfully")
         else:
             st.error(f"Page '{choice}' is missing a main() function.")
     except Exception as exc:
+        import traceback
         tb = traceback.format_exc()
         st.error(f"❌ Error loading page '{choice}':")
         st.text(tb)
-        log(f"exception loading {choice}: {exc}")
         print(tb, file=sys.stderr)
 
 
-# Only run main() when executed directly, not when imported
 if __name__ == "__main__":
-    print("🚀 Launching Streamlit UI...")
     main()
 
 
