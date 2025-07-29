@@ -899,6 +899,24 @@ def main() -> None:
         st.error(f"Page '{choice}' is missing a main() function")
 
 
+def landing_page() -> None:
+    """Display a minimal Streamlit landing page for health checks."""
+    st.set_page_config(page_title="superNova_2177", layout="centered")
+    if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
+        st.write("ok")
+        return
+
+    st.title("superNova_2177")
+    st.write(
+        "Welcome to the superNova_2177 project. This lightweight Streamlit page "
+        "confirms that the application is running."
+    )
+    st.markdown(
+        "[Launch the full NiceGUI interface](https://github.com/BP-H/superNova_2177)",
+        unsafe_allow_html=True,
+    )
+
+
 if __name__ == "__main__":
-    main()
+    landing_page()
 
