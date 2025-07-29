@@ -42,17 +42,86 @@ def header(title: str, *, layout: str = "centered") -> None:
 
 
 def apply_theme(theme: str) -> None:
-    """Apply light or dark theme styles based on ``theme``."""
+    """Apply global CSS for the selected ``theme``."""
+    font_link = (
+        "<link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;600&"
+        "family=Iosevka&display=swap' rel='stylesheet'>"
+    )
+
     if theme == "dark":
-        css = """
+        css = f"""
+            {font_link}
             <style>
-            body, .stApp { background-color: #1e1e1e; color: #f0f0f0; }
+                :root {{
+                    --bg-color: #121212;
+                    --text-color: #e0e0e0;
+                    --accent-color: #45a1ff;
+                }}
+
+                body, .stApp {{
+                    background-color: var(--bg-color);
+                    color: var(--text-color);
+                    font-family: 'Inter', 'Iosevka', monospace;
+                }}
+
+                .stButton>button {{
+                    background-color: var(--accent-color);
+                    color: var(--bg-color);
+                    border: none;
+                    border-radius: 4px;
+                    padding: 0.25rem 0.75rem;
+                }}
+
+                .stButton>button:hover {{
+                    filter: brightness(1.1);
+                }}
+
+                h1, h2, h3 {{
+                    color: var(--text-color);
+                }}
+
+                hr {{
+                    border-color: var(--accent-color);
+                    opacity: 0.2;
+                }}
             </style>
         """
     else:
-        css = """
+        css = f"""
+            {font_link}
             <style>
-            body, .stApp { background-color: #ffffff; color: #000000; }
+                :root {{
+                    --bg-color: #ffffff;
+                    --text-color: #333333;
+                    --accent-color: #0066cc;
+                }}
+
+                body, .stApp {{
+                    background-color: var(--bg-color);
+                    color: var(--text-color);
+                    font-family: 'Inter', 'Iosevka', monospace;
+                }}
+
+                .stButton>button {{
+                    background-color: var(--accent-color);
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 4px;
+                    padding: 0.25rem 0.75rem;
+                }}
+
+                .stButton>button:hover {{
+                    filter: brightness(1.1);
+                }}
+
+                h1, h2, h3 {{
+                    color: var(--text-color);
+                }}
+
+                hr {{
+                    border-color: var(--accent-color);
+                    opacity: 0.3;
+                }}
             </style>
         """
     st.markdown(css, unsafe_allow_html=True)
