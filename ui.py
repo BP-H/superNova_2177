@@ -899,6 +899,17 @@ def main() -> None:
         st.error(f"Page '{choice}' is missing a main() function")
 
 
+def render_landing_page() -> None:
+    """Display a simple Streamlit landing page."""
+    st.title("superNova_2177")
+    st.write(
+        "Welcome to the superNova_2177 project — a creative research platform."
+    )
+    st.write(
+        "For the full NiceGUI interface, run `python -m transcendental_resonance_frontend`."
+    )
+
+
 if __name__ == "__main__":
-    main()
+    render_landing_page()
 
