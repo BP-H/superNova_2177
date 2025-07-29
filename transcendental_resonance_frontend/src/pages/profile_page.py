@@ -8,8 +8,14 @@ from nicegui import ui
 from utils.api import (TOKEN, api_call, clear_token, get_followers,
                        get_following, get_user, toggle_follow)
 from utils.layout import page_container
-from utils.styles import (THEMES, get_theme, get_theme_name, set_accent,
-                          set_theme)
+from utils.styles import (
+    THEMES,
+    get_theme,
+    get_theme_name,
+    save_theme,
+    set_accent,
+    set_theme,
+)
 
 from .events_page import events_page
 from .groups_page import groups_page
@@ -170,3 +176,20 @@ async def profile_page(username: str | None = None):
                 value=THEME["accent"],
                 on_change=lambda e: set_accent(e.value),
             )
+
+        with ui.column().classes("w-full mt-4"):
+            primary_color = ui.color_input("Primary", value=THEME["primary"])
+            background_color = ui.color_input(
+                "Background", value=THEME["background"]
+            )
+            text_color = ui.color_input("Text", value=THEME["text"])
+
+            def store_custom() -> None:
+                palette = {
+                    "primary": primary_color.value,
+                    "background": background_color.value,
+                    "text": text_color.value,
+                }
+                save_theme(palette)
+
+            ui.button("Save Theme", on_click=store_custom).classes("mt-2")
