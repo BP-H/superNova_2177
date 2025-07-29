@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """
 validation_certifier.py — Unified Validation & Integrity Analysis Pipeline (v4.6)
 

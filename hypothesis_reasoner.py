@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 # hypothesis_reasoner.py — Scientific Judgment Layer (superNova_2177 v3.8)
 """
 This module serves as the "analytical cortex" of the superNova_2177 system,

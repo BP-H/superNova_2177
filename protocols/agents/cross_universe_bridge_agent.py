@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 # protocols/cross_universe_bridge_agent.py
 
 """CrossUniverseBridgeAgent -- verify cross-universe remix provenance.

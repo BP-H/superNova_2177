@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """QuantumResonanceAgent - models symbolic resonance using quantum simulation utilities."""
 
 from __future__ import annotations

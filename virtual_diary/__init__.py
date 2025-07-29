@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Minimal virtual diary interface.
 
 Diary entries are stored as dictionaries in ``virtual_diary.json``. Each entry

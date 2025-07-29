@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Add vote_count and yes_count columns to universe_branches table."""
 from sqlalchemy import inspect, text
 from db_models import engine

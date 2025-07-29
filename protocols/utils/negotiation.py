@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Delegation helpers for multi-agent collaboration."""
 from protocols.core.profiles import AgentProfile
 

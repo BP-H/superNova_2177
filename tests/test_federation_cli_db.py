@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """End-to-end tests for :mod:`federation_cli` using a real SQLite database."""
 
 from __future__ import annotations

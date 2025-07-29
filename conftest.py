@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Proxy module to load shared fixtures from ``tests/conftest.py``.
 
 The import is performed via file location to avoid ``ImportPathMismatchError``

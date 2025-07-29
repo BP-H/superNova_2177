@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 import pytest
 from network.network_coordination_detector import (
     calculate_sophisticated_risk_score,

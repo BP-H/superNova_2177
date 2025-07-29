@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 # auditor_report_formatter.py — Report & Export Formatter for Audit Narratives (v3.9)
 """
 This module transforms introspective outputs from `audit_explainer.py`

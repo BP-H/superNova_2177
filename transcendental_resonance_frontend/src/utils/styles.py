@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Styling utilities for the Transcendental Resonance frontend."""
 
 from typing import Dict, Optional

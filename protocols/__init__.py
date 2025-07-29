@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 # protocols/__init__.py
 
 from ._registry import AGENT_REGISTRY  # noqa: F401

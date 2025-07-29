@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """
 voting_consensus_engine.py — Multi-Validator Consensus Framework (v4.5)
 

@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """CoordinationSentinelAgent - monitors validator submissions for suspicious coordination."""
 
 from typing import List, Dict, Any

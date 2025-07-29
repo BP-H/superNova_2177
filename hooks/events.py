@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Canonical event names used by :class:`HookManager`.
 
 Import these constants when registering or triggering hooks to avoid

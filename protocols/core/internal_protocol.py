@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Base protocol for memory-bound, message-driven agents."""
 from typing import Callable, Dict, Any, List
 import logging

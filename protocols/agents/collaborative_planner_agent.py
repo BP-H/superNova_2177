@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """CollaborativePlannerAgent orchestrates delegation among protocol agents."""
 
 from typing import Dict

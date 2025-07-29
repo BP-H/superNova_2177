@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Immutable tri-species governance enforcement for Remix agents."""
 
 from typing import Dict, Any, List

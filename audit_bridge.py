@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Symbolic Trace Logger & Hypothesis Reference Engine (superNova_2177 v3.6)"""
 
 import json

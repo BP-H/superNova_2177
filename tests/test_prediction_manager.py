@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 import datetime
 from prediction_manager import PredictionManager
 from db_models import SessionLocal, init_db, Base, engine

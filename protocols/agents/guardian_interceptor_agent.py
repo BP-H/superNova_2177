@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 # protocols/guardian_interceptor_agent.py
 
 """GuardianInterceptorAgent – CI/CD defense against hallucinated patches.

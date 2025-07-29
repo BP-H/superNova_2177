@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 # audit_explainer.py — Interpretable Narrative Generator for Causal & Validation Chains (v3.9)
 """
 This module serves as the introspection layer for the scientific reasoning engine,

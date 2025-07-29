@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, TYPE_CHECKING

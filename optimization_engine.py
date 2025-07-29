@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """
 Core logic for system self-tuning and adaptive interventions.
 This module contains the "brain" of the adaptive system, allowing it to

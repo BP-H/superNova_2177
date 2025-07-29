@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 from protocols.agents.collaborative_planner_agent import CollaborativePlannerAgent
 from protocols.core.profiles import AgentProfile
 from protocols.core.internal_protocol import InternalAgentProtocol

@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 from datetime import datetime, timezone
 
 from validators.daily_participation_validator import detect_inactive_users

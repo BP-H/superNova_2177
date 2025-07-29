@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """
 validate_hypothesis.py — CLI Interface for superNova_2177 Validation Pipeline
 

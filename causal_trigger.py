@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 from typing import Optional, Dict, Any, List, cast
 from sqlalchemy.orm import Session
 import logging

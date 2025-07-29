@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 from collections import defaultdict
 
 from protocols.agents.ci_pr_protector_agent import CI_PRProtectorAgent

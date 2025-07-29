@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 # hypothesis_tracker.py — Scientific Hypothesis Lifecycle (superNova_2177 v3.7 - ORM Native)
 """
 Module for structured tracking, validation, and scoring of scientific hypotheses

@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 # --- MODULE: db_models.py ---
 # Database setup from FastAPI files
 import os  # Added for DATABASE_URL environment variable

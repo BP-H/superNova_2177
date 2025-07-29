@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 # run_agents_demo.py
 
 from protocols.utils.skills import EmbodiedAgent, Skill

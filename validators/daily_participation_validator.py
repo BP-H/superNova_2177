@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Daily Participation Validator — detect prolonged user inactivity.
 
 Implements the rule described in RFC 002. The validator checks user

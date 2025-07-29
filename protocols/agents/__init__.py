@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Convenience imports for all protocol agents.
 
 This package dynamically discovers agent classes defined in modules within the

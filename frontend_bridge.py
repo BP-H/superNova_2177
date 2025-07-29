@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Lightweight router for UI callbacks.
 
 This module exposes a simple registry mapping route names to callables.

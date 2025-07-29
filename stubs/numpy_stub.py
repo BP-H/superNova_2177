@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 class ndarray(list):
     """Very small stand-in mimicking ``numpy.ndarray`` for tests."""
 

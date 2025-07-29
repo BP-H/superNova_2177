@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Registry of core protocol agents and their purposes."""
 
 from .agents.ci_pr_protector_agent import CI_PRProtectorAgent

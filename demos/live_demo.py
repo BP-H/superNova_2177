@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """
 Live Demo - Watch superNova_2177 Analyze in Real-Time
 """

@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Main entry point for the Transcendental Resonance frontend."""
 
 from nicegui import ui, background_tasks
