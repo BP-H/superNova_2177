@@ -3,6 +3,17 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import Optional, Generator
 
+# global notification state used for navbar badge
+NOTIFICATION_COUNT: int = 0
+NOTIFICATION_BADGE = None
+
+def set_notification_count(count: int) -> None:
+    """Update the unread notification count and badge text."""
+    global NOTIFICATION_COUNT, NOTIFICATION_BADGE
+    NOTIFICATION_COUNT = count
+    if NOTIFICATION_BADGE is not None:
+        NOTIFICATION_BADGE.text = str(count) if count else ''
+
 try:  # pragma: no cover - allow import without NiceGUI installed
     from nicegui import ui
     from nicegui.element import Element
@@ -42,6 +53,7 @@ def navigation_bar() -> Element:
         from pages.messages_page import messages_page
         from pages.groups_page import groups_page
         from pages.events_page import events_page
+        from pages.notifications_page import notifications_page
         from pages.status_page import status_page
     except Exception:
         # During testing, NiceGUI or page modules may not be available
@@ -60,6 +72,21 @@ def navigation_bar() -> Element:
         ui.button('Events', on_click=lambda: ui.open(events_page)).style(
             f'background: {theme["accent"]}; color: {theme["background"]};'
         )
+
+        with ui.row().classes('items-center'):
+            ui.button(
+                on_click=lambda: ui.open(notifications_page),
+                icon='notifications',
+            ).style(
+                f'background: {theme["accent"]}; color: {theme["background"]};'
+            )
+            global NOTIFICATION_BADGE
+            NOTIFICATION_BADGE = ui.badge(
+                str(NOTIFICATION_COUNT) if NOTIFICATION_COUNT else '',
+                color='red',
+                text_color='white',
+            )
+
         ui.button('Status', on_click=lambda: ui.open(status_page)).style(
             f'background: {theme["accent"]}; color: {theme["background"]};'
         )

@@ -11,7 +11,8 @@ from nicegui import background_tasks, ui
 from .pages import *  # register all pages  # noqa: F401,F403
 from .pages.explore_page import explore_page  # noqa: F401
 from .pages.system_insights_page import system_insights_page  # noqa: F401
-from .utils.api import api_call, clear_token
+from .utils.api import api_call, clear_token, listen_ws
+from .utils.layout import set_notification_count, NOTIFICATION_COUNT
 from .utils.styles import (THEMES, apply_global_styles, get_theme_name,
                            set_theme)
 
@@ -38,6 +39,17 @@ async def keep_backend_awake() -> None:
         await asyncio.sleep(300)
 
 
+async def handle_ws_event(event: dict) -> None:
+    """Increase notification count on notification events."""
+    if event.get("type") == "notification":
+        set_notification_count(NOTIFICATION_COUNT + 1)
+
+
+async def start_ws_listener() -> None:
+    """Background task to keep WebSocket connection alive."""
+    await listen_ws(handle_ws_event)
+
+
 ui.button(
     "Theme",
     on_click=toggle_theme,
@@ -46,6 +58,7 @@ ui.button(
 ui.on_startup(
     lambda: background_tasks.create(keep_backend_awake(), name="backend-pinger")
 )
+ui.on_startup(lambda: background_tasks.create(start_ws_listener(), name="ws-listener"))
 
 # Potential future enhancements:
 # - Real-time updates via WebSockets

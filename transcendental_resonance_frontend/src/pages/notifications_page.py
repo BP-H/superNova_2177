@@ -5,7 +5,7 @@
 
 from nicegui import ui
 from utils.api import TOKEN, api_call, listen_ws
-from utils.layout import page_container
+from utils.layout import page_container, set_notification_count
 from utils.styles import get_theme
 
 from .login_page import login_page
@@ -26,7 +26,7 @@ async def notifications_page():
 
         notifs_list = ui.column().classes("w-full")
 
-        async def refresh_notifs():
+        async def refresh_notifs(mark_read: bool = False):
             notifs = await api_call("GET", "/notifications/") or []
             notifs_list.clear()
             for n in notifs:
@@ -47,7 +47,13 @@ async def notifications_page():
                                 f'background: {THEME["primary"]}; color: {THEME["text"]};'
                             )
 
-        await refresh_notifs()
+            if mark_read:
+                for n in notifs:
+                    if not n["is_read"]:
+                        await api_call("PUT", f"/notifications/{n['id']}/read")
+                set_notification_count(0)
+
+        await refresh_notifs(mark_read=True)
         ui.timer(30, lambda: ui.run_async(refresh_notifs()))
 
         async def handle_event(event: dict) -> None:
