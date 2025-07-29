@@ -33,7 +33,6 @@ Network = None  # imported lazily in run_analysis
 import os
 os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 # ... your other imports here ...
-import streamlit as st
 
 # Bind to the default Streamlit port to satisfy platform health checks
 os.environ["STREAMLIT_SERVER_PORT"] = "8501"
@@ -868,10 +867,8 @@ def render_validation_ui() -> None:
         st.json(st.session_state["agent_output"])
 
 def main() -> None:
-    import streamlit as st
     print("[debug] main() invoked", file=sys.stderr)
     st.title("🤗//⚡//Launching main()")
-    import streamlit as st
     import os
     from importlib import import_module
 
