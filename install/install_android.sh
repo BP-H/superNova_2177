@@ -15,13 +15,12 @@ pip install -r requirements.txt
 FRONTEND_DIR=transcendental_resonance_frontend
 if [ -d "$FRONTEND_DIR" ]; then
     pip install -r "$FRONTEND_DIR/requirements.txt"
-    nicegui "$FRONTEND_DIR/src/main.py" --port 8080 &
 fi
 uvicorn superNova_2177:app --host 0.0.0.0 --port 8000 &
 sleep 2
 python - <<'PY'
 import qrcode, os
-url = 'http://'+os.popen('ip addr show wlan0 | grep "inet "').read().split()[1].split('/')[0]+':8080'
+url = 'http://'+os.popen('ip addr show wlan0 | grep "inet "').read().split()[1].split('/')[0]+':8000'
 print('Scan to open:', url)
 qrcode.make(url).print_ascii(invert=True)
 PY

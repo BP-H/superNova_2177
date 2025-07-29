@@ -18,7 +18,6 @@ asyncpg
 streamlit-ace
 kaleido
 websockets
-nicegui
 
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
