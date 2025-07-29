@@ -40,9 +40,16 @@ async def explore_page() -> None:
             with posts_container:
                 for _ in range(limit):
                     placeholders.append(skeleton_loader().classes("w-full h-32 mb-2"))
-            posts = await api_call("GET", "/vibenodes/trending", params) or []
+            posts = None
+            try:
+                posts = await api_call("GET", "/vibenodes/trending", params)
+            except Exception:
+                posts = None
             for p in placeholders:
                 p.delete()
+            if posts is None:
+                ui.notify('Failed to load posts', color='negative')
+                return
             if not posts:
                 return
             offset += len(posts)
