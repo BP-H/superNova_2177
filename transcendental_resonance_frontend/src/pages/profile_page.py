@@ -43,12 +43,17 @@ async def profile_page(username: str | None = None):
 
     followers = await get_followers(target_username)
     following = await get_following(target_username)
+    avatar_url = user_data.get("avatar_url")
 
     THEME = get_theme()
     with page_container(THEME):
         ui.label(f'Welcome, {user_data["username"]}').classes(
             "text-2xl font-bold mb-4"
         ).style(f'color: {THEME["accent"]};')
+
+        avatar_img = ui.image(
+            avatar_url or "https://via.placeholder.com/150"
+        ).classes("w-32 h-32 rounded-full mb-4")
 
         ui.label(f'Harmony Score: {user_data["harmony_score"]}').classes("mb-2")
         ui.label(f'Creative Spark: {user_data["creative_spark"]}').classes("mb-2")
@@ -74,6 +79,20 @@ async def profile_page(username: str | None = None):
             ui.button("Update Bio", on_click=update_bio).classes("mb-4").style(
                 f'background: {THEME["primary"]}; color: {THEME["text"]};'
             )
+
+            async def handle_avatar_upload(content, name):
+                nonlocal avatar_url
+                files = {"file": (name, content.read(), "multipart/form-data")}
+                resp = await api_call("POST", "/upload/avatar", files=files)
+                if resp and resp.get("avatar_url"):
+                    avatar_img.source = resp["avatar_url"]
+                    avatar_url = resp["avatar_url"]
+                    await api_call("PUT", "/users/me", {"avatar_url": resp["avatar_url"]})
+                    ui.notify("Avatar updated", color="positive")
+
+            ui.upload(
+                on_upload=lambda e: ui.run_async(handle_avatar_upload(e.content, e.name))
+            ).classes("w-full mb-4")
         else:
             ui.label(user_data.get("bio", "")).classes("mb-4")
             is_following = my_data["username"] in followers.get("followers", [])
