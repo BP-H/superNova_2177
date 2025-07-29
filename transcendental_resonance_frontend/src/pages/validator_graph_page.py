@@ -4,7 +4,7 @@ import json
 
 from nicegui import ui
 from utils.api import TOKEN, api_call
-from utils.layout import page_container
+from utils.layout import page_container, navigation_bar
 from utils.styles import get_theme
 
 from .login_page import login_page
@@ -19,6 +19,8 @@ async def validator_graph_page():
 
     THEME = get_theme()
     with page_container(THEME):
+        if TOKEN:
+            navigation_bar()
         ui.label("Validator Graphs").classes("text-2xl font-bold mb-4").style(
             f'color: {THEME["accent"]};'
         )

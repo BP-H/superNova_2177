@@ -15,7 +15,7 @@ from utils.api import (
     toggle_follow,
     get_user_recommendations,
 )
-from utils.layout import page_container
+from utils.layout import page_container, navigation_bar
 from utils.styles import (THEMES, get_theme, get_theme_name, set_accent,
                           set_theme)
 
@@ -63,6 +63,8 @@ async def profile_page(username: str | None = None):
 
     THEME = get_theme()
     with page_container(THEME):
+        if TOKEN:
+            navigation_bar()
         avatar_img = (
             ui.image(avatar_url)
             .classes("w-32 h-32 rounded-full mb-2")

@@ -11,6 +11,6 @@ def test_search_widget_uses_combined_search():
     assert "combined_search" in src
 
 
-def test_page_container_calls_search_widget():
+def test_page_container_has_no_nav_bar():
     src = inspect.getsource(page_container)
-    assert "search_widget()" in src
+    assert "navigation_bar()" not in src
