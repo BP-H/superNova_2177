@@ -320,7 +320,7 @@ directly as that bypasses Streamlit's runtime.
 Exporting plots as static images requires the `kaleido` package. Install it
 using `pip install -r requirements-streamlit.txt` if it isn't already available.
 
-Open [http://localhost:8888](http://localhost:8888) in your browser to interact with the demo. Use the **Reset to Demo** button below the editor to reload `sample_validations.json` at any time.
+Open [http://localhost:8888](http://localhost:8888) in your browser to interact with the demo. Use the **Reset to Demo** button below the editor to reload `sample_validations.json` at any time. Append `?healthz=1` to the URL for a quick health check.
 
 The CI pipeline performs a lightweight health check against the Streamlit server. It simply requests `/?healthz=1` to ensure the app boots correctly:
 
