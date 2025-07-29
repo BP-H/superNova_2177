@@ -896,60 +896,55 @@ def main() -> None:
         if UI_DEBUG:
             print(msg, file=sys.stderr)
 
-    log("main() invoked")
+    log("⚡ main() invoked")
     st.set_page_config(page_title="superNova_2177", layout="wide")
-    st.title("🤗//⚡//Launching main()")
-    log("main() entered")
 
-    # unified health check logic
+    # Unified health check: Path priority for Cloud; query/env fallback for CI/local
     if (
         (ctx := get_script_run_ctx())
         and (req := ctx._get_request())
         and req.path == "/healthz"
     ) or st.query_params.get(HEALTH_CHECK_PARAM) == "1" \
       or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
-        log("health-check branch")
+        log("💊 health-check branch")
         st.write("ok")
-        st.stop()
+        st.stop()  # Halt after response
+        return
 
-        st.write("ok")
-        st.stop()
+    st.title("🤗//⚡//Launching main()")
+    log("main() entered")
 
-    st.title("superNova_2177")
-
-    log(f"loading pages from {PAGES_DIR}")
+    log(f"📁 loading pages from {PAGES_DIR}")
     if not PAGES_DIR.is_dir():
-        log("pages directory missing")
+        log("🚫 pages directory missing")
         st.error("Pages directory not found")
         render_landing_page()
         return
-    else:
-        log("pages directory found")
 
     page_files = sorted(
         p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
     )
     if not page_files:
-        log("pages directory empty")
+        log("⚠️ pages directory empty")
         st.warning("No pages available — showing fallback UI.")
         render_landing_page()
         return
 
     render_main_ui()
     choice = st.sidebar.selectbox("Page", page_files)
-    log(f"loading page {choice}")
+    log(f"📄 loading page: {choice}")
+
     try:
-        from importlib import import_module
         module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
         page_main = getattr(module, "main", None)
         if callable(page_main):
             page_main()
-            log(f"page {choice} loaded")
+            log(f"✅ page {choice} loaded successfully")
         else:
             st.error(f"Page '{choice}' is missing a main() function.")
     except Exception as exc:
         tb = traceback.format_exc()
-        st.error(f"Error loading page '{choice}':")
+        st.error(f"❌ Error loading page '{choice}':")
         st.text(tb)
         log(f"exception loading {choice}: {exc}")
         print(tb, file=sys.stderr)
@@ -960,3 +955,6 @@ if __name__ == "__main__":
 
     sys.argv = ["streamlit", "run", __file__]
     sys.exit(stcli.main())
+
+# Call main() unconditionally for Streamlit Cloud (imports file but doesn't run __main__)
+main()
