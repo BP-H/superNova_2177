@@ -6,5 +6,6 @@ __all__ = [
     "voting",
     "agents",
     "ideas",
+    # preview generator and future chat integrations
     "video",
 ]
