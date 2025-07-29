@@ -156,7 +156,8 @@ def format_analysis_output(result: Dict[str, Any]) -> str:
             dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
             formatted_time = dt.strftime("%Y-%m-%d %H:%M:%S UTC")
             output.append(f"\n🕒 Analyzed: {formatted_time}")
-        except:
+        except ValueError:
+            # Malformed timestamp; fall back to the raw string
             output.append(f"\n🕒 Analyzed: {timestamp}")
     
     return "\n".join(output)
