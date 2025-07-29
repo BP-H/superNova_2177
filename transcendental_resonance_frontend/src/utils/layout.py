@@ -47,3 +47,15 @@ def page_container(theme: Optional[dict] = None) -> Generator[Element, None, Non
     ) as container:
         yield container
 
+
+
+def nav_bar(theme: Optional[dict] = None) -> Element:
+    """Render a simple navigation bar."""
+    theme = theme or get_theme()
+    with ui.row().classes('w-full justify-end p-2').style(
+        f"background: {theme['primary']}; color: {theme['text']};"
+    ) as bar:
+        from ..components.notification_bell import notification_bell
+
+        notification_bell()
+    return bar
