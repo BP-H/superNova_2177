@@ -6,3 +6,8 @@ import sys
 _SRC = Path(__file__).resolve().parent / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
+
+import importlib
+
+if "utils" not in sys.modules:
+    sys.modules["utils"] = importlib.import_module("utils")
