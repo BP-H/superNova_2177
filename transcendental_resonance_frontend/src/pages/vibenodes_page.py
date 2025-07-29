@@ -3,7 +3,7 @@
 from nicegui import ui
 import asyncio
 
-from utils.api import api_call, TOKEN
+from utils.api import api_call, TOKEN, listen_ws
 from utils.styles import get_theme
 from utils.layout import page_container
 from .login_page import login_page
@@ -179,3 +179,9 @@ async def vibenodes_page():
 
 
         await refresh_vibenodes()
+
+        async def handle_event(event: dict) -> None:
+            if event.get("type") == "vibenode_updated":
+                await refresh_vibenodes()
+
+        ui.run_async(listen_ws(handle_event))
