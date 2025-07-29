@@ -30,11 +30,16 @@ async def events_page():
         group_id = ui.input('Group ID').classes('w-full mb-2')
 
         async def create_event():
+            gid_value = group_id.value
+            if gid_value and gid_value.isdigit():
+                gid = int(gid_value)
+            else:
+                gid = None
             data = {
                 'name': e_name.value,
                 'description': e_desc.value,
                 'start_time': e_start.value,
-                'group_id': int(group_id.value),
+                'group_id': gid,
             }
             resp = await api_call('POST', '/events/', data)
             if resp:
