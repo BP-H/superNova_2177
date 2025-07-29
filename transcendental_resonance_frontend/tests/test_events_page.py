@@ -8,3 +8,4 @@ def test_events_page_has_search_widgets():
     src = inspect.getsource(events_page)
     assert "ui.input('Search'" in src
     assert "ui.select(['name', 'date']" in src
+    assert "ui.date(" in src
