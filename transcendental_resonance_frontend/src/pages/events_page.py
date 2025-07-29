@@ -79,5 +79,14 @@ async def events_page():
                         ui.button('Attend/Leave', on_click=attend_fn).style(
                             f'background: {THEME["accent"]}; color: {THEME["background"]};'
                         )
+                        async def share_fn(e_id=e['id']):
+                            link = f"/events/{e_id}"
+                            ui.run_javascript(
+                                f"navigator.clipboard.writeText(window.location.origin + '{link}')"
+                            )
+                            ui.notify('Link copied')
+                        ui.button('Share', on_click=share_fn).style(
+                            f'background: {THEME["primary"]}; color: {THEME["text"]};'
+                        )
 
         await refresh_events()
