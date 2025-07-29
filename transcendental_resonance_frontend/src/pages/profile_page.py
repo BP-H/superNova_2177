@@ -18,6 +18,7 @@ from .messages_page import messages_page
 from .notifications_page import notifications_page
 from .proposals_page import proposals_page
 from .vibenodes_page import vibenodes_page
+from .recommendations_page import recommendations_page
 
 
 @ui.page("/profile")
@@ -141,6 +142,9 @@ async def profile_page(username: str | None = None):
             f'background: {THEME["accent"]}; color: {THEME["background"]};'
         )
         ui.button("Messages", on_click=lambda: ui.open(messages_page)).classes(
+            "w-full mb-2"
+        ).style(f'background: {THEME["accent"]}; color: {THEME["background"]};')
+        ui.button("Discover", on_click=lambda: ui.open(recommendations_page)).classes(
             "w-full mb-2"
         ).style(f'background: {THEME["accent"]}; color: {THEME["background"]};')
         from .system_insights_page import system_insights_page  # lazy import

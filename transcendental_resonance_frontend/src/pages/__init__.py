@@ -12,6 +12,7 @@ __all__ = [
     "explore_page",
     "groups_page",
     "events_page",
+    "recommendations_page",
     "proposals_page",
     "notifications_page",
     "messages_page",
