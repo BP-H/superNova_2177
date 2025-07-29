@@ -1,15 +1,16 @@
 """Validator graph visualization page using Plotly JS."""
 
 import json
-from nicegui import ui
 
-from utils.api import api_call, TOKEN
-from utils.styles import get_theme
+from nicegui import ui
+from utils.api import TOKEN, api_call
 from utils.layout import page_container
+from utils.styles import get_theme
+
 from .login_page import login_page
 
 
-@ui.page('/validator-graphs')
+@ui.page("/validator-graphs")
 async def validator_graph_page():
     """Display validator network graphs."""
     if not TOKEN:
@@ -18,28 +19,28 @@ async def validator_graph_page():
 
     THEME = get_theme()
     with page_container(THEME):
-        ui.label('Validator Graphs').classes('text-2xl font-bold mb-4').style(
+        ui.label("Validator Graphs").classes("text-2xl font-bold mb-4").style(
             f'color: {THEME["accent"]};'
         )
 
-        layout_select = ui.select(
-            ['random', 'circle'], value='random'
-        ).classes('w-full mb-2')
-        filter_input = ui.input('Filter by label').classes('w-full mb-4')
+        layout_select = ui.select(["random", "circle"], value="random").classes(
+            "w-full mb-2"
+        )
+        filter_input = ui.input("Filter by label").classes("w-full mb-4")
 
-        graph_area = ui.html('').classes('w-full h-96')
+        graph_area = ui.html("").classes("w-full h-96")
 
         async def refresh_graph() -> None:
-            analysis = await api_call('GET', '/network-analysis/')
+            analysis = await api_call("GET", "/network-analysis/")
             if not analysis:
                 return
-            nodes = analysis.get('nodes', [])
-            edges = analysis.get('edges', [])
-            filt = (filter_input.value or '').strip().lower()
+            nodes = analysis.get("nodes", [])
+            edges = analysis.get("edges", [])
+            filt = (filter_input.value or "").strip().lower()
             if filt:
-                nodes = [n for n in nodes if filt in str(n.get('label', '')).lower()]
-                ids = {n['id'] for n in nodes}
-                edges = [e for e in edges if e['source'] in ids and e['target'] in ids]
+                nodes = [n for n in nodes if filt in str(n.get("label", "")).lower()]
+                ids = {n["id"] for n in nodes}
+                edges = [e for e in edges if e["source"] in ids and e["target"] in ids]
 
             graph_html = f"""
             <div id='validator_graph'></div>
@@ -84,9 +85,9 @@ async def validator_graph_page():
             """
             graph_area.set_content(graph_html)
 
-        ui.button('Update', on_click=refresh_graph).classes('mb-4').style(
+        ui.button("Update", on_click=refresh_graph).classes("mb-4").style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
         )
-        layout_select.on('change', lambda _: refresh_graph())
-        filter_input.on('change', lambda _: refresh_graph())
+        layout_select.on("change", lambda _: ui.run_async(refresh_graph()))
+        filter_input.on("change", lambda _: ui.run_async(refresh_graph()))
         await refresh_graph()
