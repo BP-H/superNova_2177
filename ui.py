@@ -24,7 +24,11 @@ Network = None  # imported lazily in run_analysis
 # Import Streamlit and register fallback health check
 import streamlit as st
 
-if st.query_params.get("healthz") == "1":
+# Name of the query parameter used for the CI health check. Adjust here if the
+# health check endpoint ever changes.
+HEALTH_CHECK_PARAM = "healthz"
+
+if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
     st.write("ok")
     st.stop()
 
