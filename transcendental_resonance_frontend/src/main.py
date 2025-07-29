@@ -12,7 +12,7 @@ from .pages import *  # register all pages  # noqa: F401,F403
 from .pages.explore_page import explore_page  # noqa: F401
 from .pages.system_insights_page import system_insights_page  # noqa: F401
 from .pages.feed_page import feed_page  # noqa: F401
-from .utils.api import api_call, clear_token
+from .utils.api import api_call, clear_token, listen_ws
 from .utils.loading_overlay import LoadingOverlay
 from .utils.styles import (THEMES, apply_global_styles, get_theme_name,
                            set_theme)
@@ -41,6 +41,17 @@ async def keep_backend_awake() -> None:
         await asyncio.sleep(300)
 
 
+async def notification_listener() -> None:
+    """Listen for real-time events and show toast notifications."""
+
+    async def handle_event(event: dict) -> None:
+        if event.get("type") == "notification":
+            message = event.get("message", "You have a new notification!")
+            ui.notify(message, type="info", position="bottom-right")
+
+    await listen_ws(handle_event)
+
+
 ui.button(
     "Theme",
     on_click=toggle_theme,
@@ -48,6 +59,12 @@ ui.button(
 
 ui.on_startup(
     lambda: background_tasks.create(keep_backend_awake(), name="backend-pinger")
+)
+
+ui.on_startup(
+    lambda: background_tasks.create(
+        notification_listener(), name="notification-listener"
+    )
 )
 
 # Potential future enhancements:
