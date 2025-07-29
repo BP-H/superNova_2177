@@ -50,3 +50,26 @@ async def feed_page() -> None:
                         ui.link('View', f"/notifications/{n['id']}")
 
         await refresh_feed()
+
+        # --- Quick Post Floating Action Button ---
+        post_dialog = ui.dialog()
+        with post_dialog:
+            with ui.card().classes('w-full p-4'):
+                post_input = ui.textarea("What's on your mind?").classes('w-full mb-2')
+
+                async def submit_post() -> None:
+                    data = {'description': post_input.value}
+                    resp = await api_call('POST', '/vibenodes/', data)
+                    if resp:
+                        ui.notify('Posted!', color='positive')
+                        post_input.value = ''
+                        post_dialog.close()
+                        await refresh_feed()
+
+                ui.button('Post', on_click=submit_post).classes('w-full').style(
+                    f'background: {theme["accent"]}; color: {theme["background"]};'
+                )
+
+        ui.button(icon='add', on_click=post_dialog.open).props(
+            'fab fixed bottom-right'
+        )
