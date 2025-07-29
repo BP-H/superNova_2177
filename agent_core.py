@@ -898,7 +898,9 @@ class RemixAgent:
                 user_obj.karma *= self.config.DAILY_DECAY
                 if user_obj.is_genesis:
                     # Apply genesis bonus decay
-                    join_time = datetime.datetime.fromisoformat(u["join_time"])
+                    join_time = datetime.datetime.fromisoformat(
+                        u["join_time"].replace("Z", "+00:00")
+                    )
                     decay_factor = calculate_genesis_bonus_decay(
                         join_time, self.config.GENESIS_BONUS_DECAY_YEARS
                     )
@@ -920,7 +922,9 @@ class RemixAgent:
         for u in users_data:
             harmony_score = safe_decimal(u["harmony_score"])
             is_genesis = u["is_genesis"]
-            join_time = datetime.datetime.fromisoformat(u["join_time"])
+            join_time = datetime.datetime.fromisoformat(
+                u["join_time"].replace("Z", "+00:00")
+            )
             decay = (
                 calculate_genesis_bonus_decay(
                     join_time, self.config.GENESIS_BONUS_DECAY_YEARS
@@ -939,7 +943,9 @@ class RemixAgent:
             if user_data and user_data["consent"]:
                 harmony_score = safe_decimal(user_data["harmony_score"])
                 is_genesis = user_data["is_genesis"]
-                join_time = datetime.datetime.fromisoformat(user_data["join_time"])
+                join_time = datetime.datetime.fromisoformat(
+                    user_data["join_time"].replace("Z", "+00:00")
+                )
                 decay = (
                     calculate_genesis_bonus_decay(
                         join_time, self.config.GENESIS_BONUS_DECAY_YEARS
