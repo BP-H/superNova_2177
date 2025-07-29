@@ -51,6 +51,11 @@ if TYPE_CHECKING:
 
 from moderation_utils import Vaccine
 
+try:  # pragma: no cover - optional dependency may not be available
+    from hooks import events
+except Exception:  # pragma: no cover - graceful fallback
+    events = None  # type: ignore[assignment]
+
 # Provide a minimal fallback implementation of ``LogChain`` if the real
 # class is unavailable at runtime. Tests only require ``add``,
 # ``replay_events``, ``verify`` and ``entries`` attributes.
@@ -132,8 +137,8 @@ class RemixAgent:
         # Track awarded fork badges for users
         self.fork_badges: Dict[str, list[str]] = {}
         # Register hook for cross remix creation events
-        from hooks import events
-        self.hooks.register_hook(events.CROSS_REMIX_CREATED, self.on_cross_remix_created)
+        if events is not None:
+            self.hooks.register_hook(events.CROSS_REMIX_CREATED, self.on_cross_remix_created)
         self.event_count = 0
         self.processed_nonces = {}
         self._cleanup_thread = threading.Thread(
@@ -886,10 +891,10 @@ class RemixAgent:
         )
         self.storage.set_coin(new_coin_id, new_coin.to_dict())
         # Trigger hooks after a successful cross remix
-        from hooks import events
-        self.hooks.fire_hooks(
-            events.CROSS_REMIX_CREATED, {"coin_id": new_coin_id, "user": user}
-        )
+        if events is not None:
+            self.hooks.fire_hooks(
+                events.CROSS_REMIX_CREATED, {"coin_id": new_coin_id, "user": user}
+            )
 
     def _apply_DAILY_DECAY(self, event: ApplyDailyDecayPayload) -> None:
         users = self.storage.get_all_users()
