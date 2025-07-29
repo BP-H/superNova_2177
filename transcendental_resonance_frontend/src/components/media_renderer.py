@@ -11,7 +11,14 @@ def render_media_block(url: str | None, mtype: str | None) -> None:
         ui.image(url).classes("w-full")
     elif mtype.startswith("video"):
         ui.label("\U0001F3A5").classes("text-lg")
-        ui.video(url).classes("w-full")
+        player = ui.video(url).classes("w-full").props("controls")
+        player.on(
+            "error",
+            lambda _: (
+                player.set_visibility(False),
+                ui.icon("videocam_off").classes("text-3xl")
+            ),
+        )
     elif mtype.startswith("audio") or mtype.startswith("music"):
         ui.label("\U0001F3A4").classes("text-lg")
         ui.audio(url).classes("w-full")

@@ -7,6 +7,7 @@ from nicegui import ui
 from utils.api import TOKEN, api_call, listen_ws
 from utils.layout import page_container, navigation_bar
 from components.emoji_toolbar import emoji_toolbar
+from components.social_ui import video_chat_scaffold
 from utils.safe_markdown import safe_markdown
 from utils.styles import get_theme
 
@@ -34,6 +35,17 @@ async def messages_page():
             group_id.on("blur", lambda _: ui.run_async(refresh_messages()))
         content = ui.textarea("Message").classes("w-full mb-2")
         emoji_toolbar(content)
+        ui.button(
+            "Attach Clip",
+            on_click=lambda: ui.notify("Recording feature coming soon"),
+        ).props("outline").classes("mb-2")
+        video_drawer = video_chat_scaffold(THEME)
+        ui.button(
+            "Video Chat",
+            on_click=video_drawer.open,
+        ).classes("mb-2").style(
+            f'background: {THEME["accent"]}; color: {THEME["background"]};'
+        )
 
         async def send_message():
             data = {"content": content.value}
@@ -41,7 +53,11 @@ async def messages_page():
                 endpoint = f"/groups/{group_id.value}/messages"
             else:
                 endpoint = f"/messages/{recipient.value}"
-            resp = await api_call("POST", endpoint, data)
+            try:
+                resp = await api_call("POST", endpoint, data)
+            except Exception:
+                ui.notify("Failed to send", color="negative")
+                return
             if resp:
                 ui.notify("Message sent!", color="positive")
                 await refresh_messages()
