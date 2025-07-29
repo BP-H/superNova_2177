@@ -307,7 +307,7 @@ Run these commands from the repository root. **Do not** execute `python ui.py`
 directly as that bypasses Streamlit's runtime.
 
 Exporting plots as static images requires the `kaleido` package. Install it
-using `pip install -r requirements.txt` if it isn't already available.
+using `pip install -r requirements-streamlit.txt` if it isn't already available.
 
 Open [http://localhost:8888](http://localhost:8888) in your browser to interact with the demo. Use the **Reset to Demo** button below the editor to reload `sample_validations.json` at any time.
 
@@ -333,7 +333,7 @@ Missing packages such as `tqdm` are installed automatically when you run `one_cl
 ### Troubleshooting the UI
 
 - **Missing dependencies**: If the interface fails with `ModuleNotFoundError`, run
-  `pip install -r requirements.txt` to ensure all packages are available.
+  `pip install -r requirements-streamlit.txt` to ensure all packages are available.
 - **Port already in use**: Pass `--server.port` to Streamlit or set the
   `STREAMLIT_SERVER_PORT` environment variable to use a different port.
 - **Browser does not open**: Navigate manually to
@@ -365,9 +365,9 @@ Deploy the demo UI online with Streamlit Cloud:
 2. Sign in to [Streamlit Cloud](https://streamlit.io/cloud) and select **New app**.
 3. Choose the repo and set `streamlit_app.py` as the entry point.
 4. Add your `SECRET_KEY` and set a `DATABASE_URL` secret with your connection string under **Secrets** in the app settings.
-5. Streamlit will install dependencies from `requirements.txt` and launch the app.
+5. Streamlit will install dependencies from `requirements-streamlit.txt` and launch the app.
 
-`kaleido` is bundled in `requirements.txt` so image export features work on Streamlit Cloud.
+`kaleido` is bundled in this file so image export features work on Streamlit Cloud.
 
 After the build completes, you'll get a shareable URL to interact with the validation demo in your browser.
 
