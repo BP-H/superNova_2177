@@ -898,6 +898,13 @@ def render_landing_page() -> None:
     )
     st.write("See the [GitHub repo](https://github.com/BP-H/superNova_2177) for more info.")
 
+def render_landing_page() -> None:
+    """Display a minimal landing page with basic info."""
+    st.set_page_config(page_title="superNova_2177", layout="centered")
+    st.title("superNova_2177")
+    st.write("Welcome to the superNova_2177 project — a creative research platform.")
+    st.write("For the full NiceGUI interface, run: `python -m transcendental_resonance_frontend`.")
+    st.write("See the [GitHub repo](https://github.com/BP-H/superNova_2177) for more info.")
 
 if __name__ == "__main__":
     try:
