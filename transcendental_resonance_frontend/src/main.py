@@ -19,6 +19,7 @@ from .utils.api import (
     clear_token,
     listen_ws,
     on_ws_status_change,
+    OFFLINE_MODE,
 )
 from .utils.loading_overlay import LoadingOverlay
 from .utils.styles import (
@@ -54,6 +55,13 @@ ws_status = (
     .classes("fixed bottom-0 left-0 m-2")
     .style("color: red")
 )
+
+offline_notice = (
+    ui.label("Offline Mode – using mock services.")
+    .classes("fixed bottom-0 right-0 m-2 text-sm")
+    .style("color: orange")
+)
+offline_notice.visible = OFFLINE_MODE
 
 def _update_ws_status(status: str) -> None:
     color = "green" if status == "connected" else "red"

@@ -2,7 +2,6 @@
 
 from functools import wraps, lru_cache
 from typing import Callable, List, Tuple, Dict, Any, Optional
-from config import get_emoji_weights
 import importlib
 import math
 import inspect
@@ -288,7 +287,11 @@ def is_valid_emoji(emoji: str, config: "Config") -> bool:
     """
     if emoji is None or config is None:
         return False
-    return emoji in get_emoji_weights()
+    try:
+        weights = config.get_emoji_weights()
+    except AttributeError:
+        weights = getattr(config, "EMOJI_WEIGHTS", {})
+    return emoji in weights
 
 
 @VerifiedScientificModel(
