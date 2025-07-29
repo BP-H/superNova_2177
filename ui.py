@@ -2,6 +2,19 @@
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 
+import streamlit as st
+
+try:  # basic setup before heavy imports
+    st.set_page_config(page_title="superNova_2177", layout="wide")
+except Exception:
+    pass
+st.title("superNova_2177")
+
+HEALTH_CHECK_PARAM = "healthz"
+if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
+    st.write("ok")
+    st.stop()
+
 import asyncio
 import difflib
 import io
@@ -21,30 +34,15 @@ plt = None  # imported lazily in run_analysis
 nx = None  # imported lazily in run_analysis
 go = None  # imported lazily in run_analysis
 Network = None  # imported lazily in run_analysis
-# Import Streamlit and register fallback health check
-import streamlit as st
-
-# Name of the query parameter used for the CI health check. Adjust here if the
-# health check endpoint ever changes.
-HEALTH_CHECK_PARAM = "healthz"
-
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
-    st.write("ok")
-    st.stop()
-
-# Basic page setup so Streamlit responds immediately on load
-try:
-    st.set_page_config(page_title="superNova_2177", layout="wide")
-except Exception:
-    logger.exception("Failed to configure Streamlit page")
-    print("Failed to configure Streamlit page", file=sys.stderr)
-
-else:
-    st.title("superNova_2177")
-    st.success("\u2705 Streamlit loaded!")
-from streamlit_helpers import (alert, apply_theme, centered_container, header,
-                               theme_selector)
+from streamlit_helpers import (
+    alert,
+    apply_theme,
+    centered_container,
+    header,
+    theme_selector,
+)
 from ui_utils import load_rfc_entries, parse_summary, summarize_text
+from api_key_input import render_api_key_inputs
 
 try:
     from streamlit_app import _run_async
@@ -560,6 +558,16 @@ def render_validation_ui() -> None:
         else:
             alert("SECRET_KEY missing", "warning")
 
+        try:
+            render_api_key_inputs()
+        except Exception as exc:
+            st.warning(f"API key inputs failed: {exc}")
+
+        with st.expander("Future Simulation Inputs"):
+            st.caption(
+                "Video, causal event modeling and symbolic voting will appear here."
+            )
+
         st.divider()
         st.subheader("Settings")
         demo_mode_choice = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
@@ -905,8 +913,10 @@ if __name__ == "__main__":
 
     apply_theme(st.session_state["theme"])
 
+    from ui_utils import render_main_ui
+
     try:
-        main()
+        render_main_ui()
     except Exception as exc:  # pragma: no cover - startup diagnostics
         logger.exception("UI startup failed")
         print(f"Startup failed: {exc}", file=sys.stderr)

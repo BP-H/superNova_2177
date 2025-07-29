@@ -46,3 +46,11 @@ def load_rfc_entries(rfc_dir: Path):
         rfc_entries.append(entry)
         rfc_index[path.stem.lower()] = entry
     return rfc_entries, rfc_index
+
+
+def render_main_ui() -> None:
+    """Entry point wrapper for the main UI module."""
+    from ui import main as _main
+
+    _main()
+
