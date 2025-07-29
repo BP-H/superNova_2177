@@ -1,7 +1,8 @@
 """Media upload page."""
 
-from nicegui import ui
+from nicegui import ui, background_tasks
 import asyncio
+import contextlib
 
 from utils.api import api_call, TOKEN
 from utils.styles import get_theme
@@ -29,15 +30,21 @@ async def upload_page():
         async def handle_upload(event):
             with progress_container:
                 progress = ui.linear_progress(value=0).classes('w-full mb-2')
+
             async def spin():
                 while progress.value < 0.95:
                     await asyncio.sleep(0.1)
                     progress.value += 0.05
-            spinner = asyncio.create_task(spin())
-            files = {'file': (event.name, event.content.read(), 'multipart/form-data')}
-            resp = await api_call('POST', '/upload/', files=files)
-            spinner.cancel()
-            progress.value = 1.0
+
+            spinner = background_tasks.create(spin(), name='upload-progress')
+            try:
+                files = {'file': (event.name, event.content.read(), 'multipart/form-data')}
+                resp = await api_call('POST', '/upload/', files=files)
+            finally:
+                spinner.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await spinner
+                progress.value = 1.0
             if resp:
                 ui.notify(f"Uploaded: {resp['media_url']}", color='positive')
 
