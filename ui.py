@@ -33,23 +33,6 @@ if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
     st.write("ok")
     st.stop()
 
-# Fallback health check endpoint for CI (avoids internal monkey-patching)
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
-    st.write("ok")
-    st.stop()
-
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
-    # Fallback health check endpoint for CI (avoids internal monkey-patching)
-    st.write("ok")
-    st.stop()
-
-# Fallback health check for CI environments
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
-    st.write(
-        "ok"
-    )  # Fallback health check endpoint for CI (avoids internal monkey-patching)
-    st.stop()
-
 # Basic page setup so Streamlit responds immediately on load
 try:
     st.set_page_config(page_title="superNova_2177", layout="wide")
