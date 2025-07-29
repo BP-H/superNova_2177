@@ -50,6 +50,7 @@ async def upload_page():
                 with contextlib.suppress(asyncio.CancelledError):
                     await spinner
 
+
         ui.upload(multiple=True, auto_upload=True,
                   on_upload=lambda e: ui.run_async(handle_upload(e))) \
             .props('label=Drop files here') \
