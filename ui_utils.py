@@ -46,3 +46,17 @@ def load_rfc_entries(rfc_dir: Path):
         rfc_entries.append(entry)
         rfc_index[path.stem.lower()] = entry
     return rfc_entries, rfc_index
+
+
+def render_main_ui() -> None:
+    """Render a minimal placeholder for the Streamlit dashboard."""
+    st.title("superNova_2177")
+    st.write("UI initialization complete.")
+
+
+__all__ = [
+    "summarize_text",
+    "parse_summary",
+    "load_rfc_entries",
+    "render_main_ui",
+]
