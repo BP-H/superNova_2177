@@ -7,6 +7,7 @@ from typing import Any, Awaitable, Callable, Dict, Optional
 
 import httpx
 import websockets
+import asyncio
 from nicegui import ui
 
 # Backend API base URL
@@ -116,36 +117,70 @@ async def toggle_follow(username: str) -> Optional[Dict[str, Any]]:
     return await api_call("POST", f"/users/{username}/follow")
 
 
-async def connect_ws(path: str = "/ws"):
-    """Establish and return a WebSocket connection to the backend."""
+async def connect_ws(path: str = "/ws", retries: int = 3) -> Optional[websockets.WebSocketClientProtocol]:
+    """Establish a WebSocket connection with retry logic."""
     global WS_CONNECTION
     url = BACKEND_URL.replace("http", "ws") + path
     headers = {"Authorization": f"Bearer {TOKEN}"} if TOKEN else None
-    try:
-        WS_CONNECTION = await websockets.connect(url, extra_headers=headers)
-        return WS_CONNECTION
-    except Exception as exc:  # pragma: no cover - network errors
-        logger.error("WebSocket connection failed: %s", exc, exc_info=True)
-        return None
+    delay = 1.0
+    attempt = 0
+    while attempt <= retries:
+        try:
+            WS_CONNECTION = await websockets.connect(url, extra_headers=headers)
+            return WS_CONNECTION
+        except Exception as exc:  # pragma: no cover - network errors
+            logger.error("WebSocket connection failed: %s", exc, exc_info=True)
+            attempt += 1
+            if attempt > retries:
+                break
+            await asyncio.sleep(delay)
+            delay *= 2
+    return None
 
 
-async def listen_ws(handler: Callable[[dict], Awaitable[None]]) -> None:
-    """Listen for events on the WebSocket and pass them to ``handler``."""
+async def listen_ws(
+    handler: Callable[[dict], Awaitable[None]], path: str = "/ws", max_retries: int = 3
+) -> None:
+    """Listen for WebSocket events with automatic reconnection."""
     global WS_CONNECTION
-    ws = await connect_ws()
-    if ws is None:
+    attempt = 0
+    delay = 1.0
+    while attempt <= max_retries:
+        ws = await connect_ws(path, retries=0)
+        if ws is None:
+            attempt += 1
+            await asyncio.sleep(delay)
+            delay *= 2
+            continue
+        try:
+            async for message in ws:
+                try:
+                    data = json.loads(message)
+                except Exception:
+                    data = {"event": "raw", "data": message}
+                try:
+                    await handler(data)
+                except Exception as h_exc:  # pragma: no cover - handler errors
+                    logger.error("WebSocket handler error: %s", h_exc, exc_info=True)
+        except Exception as exc:  # pragma: no cover - network errors
+            logger.error("WebSocket listen error: %s", exc, exc_info=True)
+            attempt += 1
+            await asyncio.sleep(delay)
+            delay *= 2
+        else:
+            break
+        finally:
+            if not ws.closed:
+                await ws.close()
+            if WS_CONNECTION is ws:
+                WS_CONNECTION = None
+
+
+async def send_ws(data: dict) -> None:
+    """Send a JSON event over the active WebSocket connection."""
+    if WS_CONNECTION is None:
         return
     try:
-        async for message in ws:
-            try:
-                data = json.loads(message)
-            except Exception:
-                data = {"event": "raw", "data": message}
-            await handler(data)
+        await WS_CONNECTION.send(json.dumps(data))
     except Exception as exc:  # pragma: no cover - network errors
-        logger.error("WebSocket listen error: %s", exc, exc_info=True)
-    finally:
-        if not ws.closed:
-            await ws.close()
-        if WS_CONNECTION is ws:
-            WS_CONNECTION = None
+        logger.error("WebSocket send error: %s", exc, exc_info=True)
