@@ -44,4 +44,19 @@ async def upload_page():
             .props('label=Drop files here') \
             .classes('w-full mb-4 border-2 border-dashed rounded-lg p-4')
 
-        ui.label('Select or drop files to upload').classes('text-center')
+        ui.label('Select or drop files to upload').classes('text-center mb-8')
+
+        ui.label('Upload New Avatar').classes('text-xl font-bold mb-2').style(
+            f'color: {THEME["accent"]};'
+        )
+
+        async def handle_avatar_upload(event):
+            files = {'file': (event.name, event.content.read(), 'multipart/form-data')}
+            resp = await api_call('POST', '/upload/avatar', files=files)
+            if resp and resp.get('avatar_url'):
+                await api_call('PUT', '/users/me', {'avatar_url': resp['avatar_url']})
+                ui.notify('Avatar updated', color='positive')
+
+        ui.upload(on_upload=lambda e: ui.run_async(handle_avatar_upload(e))) \
+            .props('label=Choose avatar image') \
+            .classes('w-full mb-4')

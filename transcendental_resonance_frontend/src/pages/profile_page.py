@@ -48,17 +48,23 @@ async def profile_page(username: str | None = None):
 
     followers = await get_followers(target_username)
     following = await get_following(target_username)
-    avatar_url = user_data.get("avatar_url")
+
+    # always fetch avatar_url from /users/<username>
+    avatar_resp = await api_call("GET", f"/users/{target_username}") or {}
+    avatar_url = avatar_resp.get("avatar_url")
 
     THEME = get_theme()
     with page_container(THEME):
+        avatar_img = (
+            ui.image(avatar_url)
+            .classes("w-32 h-32 rounded-full mb-2")
+            if avatar_url
+            else ui.icon("person").classes("text-8xl mb-2")
+        )
+
         ui.label(f'Welcome, {user_data["username"]}').classes(
             "text-2xl font-bold mb-4"
         ).style(f'color: {THEME["accent"]};')
-
-        avatar_img = ui.image(
-            avatar_url or "https://via.placeholder.com/150"
-        ).classes("w-32 h-32 rounded-full mb-4")
 
         ui.label(f'Harmony Score: {user_data["harmony_score"]}').classes("mb-2")
         ui.label(f'Creative Spark: {user_data["creative_spark"]}').classes("mb-2")
