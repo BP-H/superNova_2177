@@ -26,6 +26,7 @@ __all__ = [
     "forks_page",
     "validator_graph_page",
     "debug_panel_page",
+    "video_chat_page",
 ]
 
 
