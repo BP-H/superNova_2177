@@ -367,7 +367,23 @@ Deploy the demo UI online with Streamlit Cloud:
 4. Add your `SECRET_KEY` and set a `DATABASE_URL` secret with your connection string under **Secrets** in the app settings.
 5. Streamlit will install dependencies from `requirements-streamlit.txt` and launch the app.
 
-`kaleido` is bundled in this file so image export features work on Streamlit Cloud.
+### Secrets Configuration
+
+Streamlit Cloud stores sensitive values in a private secrets editor. Open the
+app dashboard, choose **Settings → Secrets**, and paste key/value pairs such as:
+
+```toml
+SECRET_KEY = "dev"
+DATABASE_URL = "sqlite:///:memory:"
+```
+
+These defaults match the local development fallback shown above, but you should
+replace them with a strong secret key and a persistent database URL for real
+deployments. See Streamlit's [secrets documentation](https://docs.streamlit.io/streamlit-community-cloud/get-started/deploy-an-app/app-secrets)
+for more detail.
+
+`kaleido` is bundled in `requirements.txt` so image export features work on Streamlit Cloud.
+
 
 After the build completes, you'll get a shareable URL to interact with the validation demo in your browser.
 
