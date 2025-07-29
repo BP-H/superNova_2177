@@ -16,6 +16,7 @@ __all__ = [
     "proposals_page",
     "notifications_page",
     "messages_page",
+    "feed_page",
     "ai_assist_page",
     "upload_page",
     "music_page",
