@@ -49,8 +49,12 @@ async def simulate_entanglement_ui(
     **_: Any,
 ) -> Dict[str, Any]:
     """Run social entanglement simulation between two users."""
-    user1_id = payload["user1_id"]
-    user2_id = payload["user2_id"]
+    user1_id = payload.get("user1_id")
+    user2_id = payload.get("user2_id")
+    if user1_id is None:
+        raise ValueError("simulate_entanglement_ui requires 'user1_id' in payload")
+    if user2_id is None:
+        raise ValueError("simulate_entanglement_ui requires 'user2_id' in payload")
 
     try:
         module = import_module("superNova_2177")
