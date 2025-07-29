@@ -5,8 +5,16 @@
 # Legal & Ethical Safeguards
 
 from nicegui import ui
-from utils.api import (TOKEN, api_call, clear_token, get_followers,
-                       get_following, get_user, toggle_follow)
+from utils.api import (
+    TOKEN,
+    api_call,
+    clear_token,
+    get_followers,
+    get_following,
+    get_user,
+    toggle_follow,
+    get_user_recommendations,
+)
 from utils.layout import page_container
 from utils.styles import (THEMES, get_theme, get_theme_name, set_accent,
                           set_theme)
@@ -170,3 +178,22 @@ async def profile_page(username: str | None = None):
                 value=THEME["accent"],
                 on_change=lambda e: set_accent(e.value),
             )
+
+        ui.label("You may like").classes("text-xl font-bold mt-4").style(
+            f'color: {THEME["accent"]};'
+        )
+        suggestions = ui.column().classes("w-full")
+
+        async def load_suggestions() -> None:
+            recs = await get_user_recommendations()
+            for u in recs:
+                with suggestions:
+                    with ui.card().classes('w-full mb-2').style(
+                        'border: 1px solid #333; background: #1e1e1e;'
+                    ):
+                        ui.label(u.get('username', 'Unknown')).classes('text-lg')
+                        bio = u.get('bio')
+                        if bio:
+                            ui.label(bio).classes('text-sm')
+
+        await load_suggestions()
