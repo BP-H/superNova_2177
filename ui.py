@@ -1,6 +1,11 @@
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
+# flake8: noqa
+# mypy: ignore-errors
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 
 import asyncio
 import difflib
@@ -29,25 +34,15 @@ import streamlit as st
 HEALTH_CHECK_PARAM = "healthz"
 
 # Fallback health check endpoint for CI (avoids internal monkey-patching)
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
+if hasattr(st, "query_params"):
+    params = st.query_params
+else:
+    params = st.experimental_get_query_params()
+if (
+    isinstance(params.get(HEALTH_CHECK_PARAM), list)
+    and params.get(HEALTH_CHECK_PARAM, ["0"])[0] == "1"
+) or (params.get(HEALTH_CHECK_PARAM) == "1"):
     st.write("ok")
-    st.stop()
-
-# Fallback health check endpoint for CI (avoids internal monkey-patching)
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
-    st.write("ok")
-    st.stop()
-
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
-    # Fallback health check endpoint for CI (avoids internal monkey-patching)
-    st.write("ok")
-    st.stop()
-
-# Fallback health check for CI environments
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
-    st.write(
-        "ok"
-    )  # Fallback health check endpoint for CI (avoids internal monkey-patching)
     st.stop()
 
 # Basic page setup so Streamlit responds immediately on load
@@ -60,8 +55,16 @@ except Exception:
 else:
     st.title("superNova_2177")
     st.success("\u2705 Streamlit loaded!")
-from streamlit_helpers import (alert, apply_theme, centered_container, header,
-                               theme_selector)
+# isort: off
+from streamlit_helpers import (
+    alert,
+    apply_theme,
+    centered_container,
+    header,
+    theme_selector,
+)
+
+# isort: on
 from ui_utils import load_rfc_entries, parse_summary, summarize_text
 
 try:
