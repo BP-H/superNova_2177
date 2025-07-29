@@ -37,7 +37,10 @@ async def video_chat_page() -> None:
                 remote_view.source = event.get("data")
 
         async def join_call() -> None:
-            await listen_ws(handle_event)
+            try:
+                await listen_ws(handle_event)
+            except Exception:  # pragma: no cover - network issues
+                ui.notify("Unable to join video chat", color="negative")
 
         async def send_frame() -> None:
             if WS_CONNECTION and local_cam.value:
@@ -47,3 +50,6 @@ async def video_chat_page() -> None:
 
         local_cam.on("capture", lambda _: ui.run_async(send_frame()))
         ui.button("Join Call", on_click=lambda: ui.run_async(join_call()))
+        ui.label("Note: Video chat is unavailable when offline.").classes(
+            "text-xs opacity-75 mt-2"
+        )
