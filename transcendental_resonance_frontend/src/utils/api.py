@@ -1,12 +1,16 @@
 """Utility functions for communicating with the Transcendental Resonance backend."""
 
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
+import asyncio
+import inspect
 import json
 import logging
 import os
-from typing import Any, Awaitable, Callable, Dict, Optional, List
-
-import inspect
-import asyncio
+from typing import (Any, Awaitable, Callable, Coroutine, Dict, List, Optional,
+                    cast)
 
 import httpx
 import websockets
@@ -14,6 +18,7 @@ from nicegui import ui
 
 # Backend API base URL
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+OFFLINE_MODE = os.getenv("OFFLINE_MODE") == "1"
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -45,7 +50,7 @@ def _fire_listeners(listeners: List[Callable[[], Any]]) -> None:
         try:
             result = func()
             if inspect.isawaitable(result):
-                asyncio.create_task(result)
+                asyncio.create_task(cast(Coroutine[Any, Any, Any], result))
         except Exception:  # pragma: no cover - best effort
             logger.exception("API event listener error")
 
@@ -60,7 +65,7 @@ def _fire_ws_status(status: str) -> None:
         try:
             result = func(status)
             if inspect.isawaitable(result):
-                asyncio.create_task(result)
+                asyncio.create_task(cast(Coroutine[Any, Any, Any], result))
         except Exception:
             logger.exception("WS status listener error")
 
@@ -96,6 +101,10 @@ async def api_call(
         default_headers["Authorization"] = f"Bearer {TOKEN}"
 
     _fire_listeners(_start_listeners)
+    if OFFLINE_MODE:
+        logger.info("Offline mode active: skipping API call %s %s", method, endpoint)
+        _fire_listeners(_end_listeners)
+        return None
 
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
@@ -119,14 +128,14 @@ async def api_call(
             response.raise_for_status()
             return response.json() if response.text else None
     except httpx.RequestError as exc:
-        logger.error(
-            "API request failed: %s %s - %s", method, url, exc, exc_info=True
-        )
+        logger.error("API request failed: %s %s - %s", method, url, exc, exc_info=True)
         ui.notify("API request failed", color="negative")
         if return_error:
             return {
                 "error": str(exc),
-                "status_code": getattr(getattr(exc, "response", None), "status_code", None),
+                "status_code": getattr(
+                    getattr(exc, "response", None), "status_code", None
+                ),
             }
         return None
     except asyncio.TimeoutError:
@@ -175,17 +184,25 @@ async def toggle_follow(username: str) -> Optional[Dict[str, Any]]:
 
 async def get_user_recommendations() -> list[Dict[str, Any]]:
     """Return a list of recommended users."""
-    return await api_call("GET", "/recommendations/users") or []
+    return cast(
+        List[Dict[str, Any]], await api_call("GET", "/recommendations/users") or []
+    )
 
 
 async def get_group_recommendations() -> list[Dict[str, Any]]:
     """Return a list of recommended groups."""
-    return await api_call("GET", "/recommendations/groups") or []
+    return cast(
+        List[Dict[str, Any]], await api_call("GET", "/recommendations/groups") or []
+    )
 
 
 async def connect_ws(path: str = "/ws", timeout: float = 5.0):
     """Establish and return a WebSocket connection to the backend."""
     global WS_CONNECTION
+    if OFFLINE_MODE:
+        logger.info("Offline mode active: skipping WebSocket connection")
+        _fire_ws_status("offline")
+        return None
     url = BACKEND_URL.replace("http", "ws") + path
     headers = {"Authorization": f"Bearer {TOKEN}"} if TOKEN else None
     try:
@@ -205,6 +222,10 @@ async def listen_ws(
 ) -> None:
     """Listen for events on the WebSocket and pass them to ``handler``."""
     global WS_CONNECTION
+    if OFFLINE_MODE:
+        logger.info("Offline mode active: skipping WebSocket listener")
+        _fire_ws_status("offline")
+        return
     retry_delay = 3
     while True:
         ws = await connect_ws()
@@ -238,19 +259,19 @@ async def combined_search(query: str) -> list[Dict[str, Any]]:
     params = {"search": query}
     results: list[Dict[str, Any]] = []
 
-    users = await api_call("GET", "/users/", params) or []
+    users = cast(List[Dict[str, Any]], await api_call("GET", "/users/", params) or [])
     for u in users:
         label = u.get("username") or u.get("name")
         if label:
             results.append({"type": "user", "label": label, "id": u.get("username")})
 
-    vns = await api_call("GET", "/vibenodes/", params) or []
+    vns = cast(List[Dict[str, Any]], await api_call("GET", "/vibenodes/", params) or [])
     for vn in vns:
         label = vn.get("name")
         if label:
             results.append({"type": "vibenode", "label": label, "id": vn.get("id")})
 
-    events = await api_call("GET", "/events/", params) or []
+    events = cast(List[Dict[str, Any]], await api_call("GET", "/events/", params) or [])
     for ev in events:
         label = ev.get("name") or ev.get("title")
         if label:

@@ -12,30 +12,17 @@ from nicegui import background_tasks, ui
 
 from .pages import *  # register all pages  # noqa: F401,F403
 from .pages.explore_page import explore_page  # noqa: F401
-from .pages.system_insights_page import system_insights_page  # noqa: F401
 from .pages.feed_page import feed_page  # noqa: F401
-from .utils.api import (
-    api_call,
-    clear_token,
-    listen_ws,
-    on_ws_status_change,
-)
-from .utils.loading_overlay import LoadingOverlay
-from .utils.styles import (
-    THEMES,
-    apply_global_styles,
-    get_theme_name,
-    set_theme,
-    toggle_high_contrast,
-)
-from .utils.features import (
-    notification_drawer,
-    high_contrast_switch,
-    shortcut_help_dialog,
-    theme_personalization_panel,
-    onboarding_overlay,
-)
+from .pages.system_insights_page import system_insights_page  # noqa: F401
 from .utils import ErrorOverlay
+from .utils.api import (OFFLINE_MODE, api_call, clear_token, listen_ws,
+                        on_ws_status_change)
+from .utils.features import (high_contrast_switch, notification_drawer,
+                             onboarding_overlay, shortcut_help_dialog,
+                             theme_personalization_panel)
+from .utils.loading_overlay import LoadingOverlay
+from .utils.styles import (THEMES, apply_global_styles, get_theme_name,
+                           set_theme, toggle_high_contrast)
 
 ui.context.client.on_disconnect(clear_token)
 apply_global_styles()
@@ -50,12 +37,18 @@ theme_personalization_panel()
 error_overlay = ErrorOverlay()
 
 ws_status = (
-    ui.icon("circle")
+    ui.icon("wifi_off" if OFFLINE_MODE else "circle")
     .classes("fixed bottom-0 left-0 m-2")
     .style("color: red")
 )
+if OFFLINE_MODE:
+    ui.badge("Offline").classes("fixed bottom-0 left-8 m-2")
+
 
 def _update_ws_status(status: str) -> None:
+    if OFFLINE_MODE:
+        ws_status.style("color: red")
+        return
     color = "green" if status == "connected" else "red"
     ws_status.style(f"color: {color}")
     if status == "connected":
@@ -64,6 +57,7 @@ def _update_ws_status(status: str) -> None:
     else:
         ui.notify("WebSocket disconnected", color="warning")
         error_overlay.show("Connection lost. Trying to reconnect...")
+
 
 on_ws_status_change(_update_ws_status)
 
@@ -126,6 +120,7 @@ ui.on_startup(
 # - Real-time updates via WebSockets
 # - Internationalization support
 # - Theming options
+
 
 def run_app() -> None:
     """Run the NiceGUI app and retry once on failure."""

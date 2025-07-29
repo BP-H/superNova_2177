@@ -266,6 +266,13 @@ default `8001` is unavailable:
 export METRICS_PORT=9000
 ```
 
+Set `OFFLINE_MODE=1` to disable external network calls during development. The
+app will simulate API responses and skip WebSocket connections.
+
+```bash
+export OFFLINE_MODE=1
+```
+
 Copy `.env.example` to `.env` and set values for `SECRET_KEY` and
 `BACKEND_URL`. Provide your own connection string for `DATABASE_URL` via
 environment variables rather than hard-coding it. Set `DB_MODE=central` if you
