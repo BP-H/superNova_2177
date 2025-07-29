@@ -45,7 +45,7 @@ async def vibenodes_page():
                 if uploaded_media['type'] and uploaded_media['type'].startswith('image'):
                     ui.image(uploaded_media['url']).classes('w-full mb-2')
 
-        ui.upload(on_upload=lambda e: handle_upload(e.content, e.name)).classes('w-full mb-2')
+        ui.upload(on_upload=lambda e: ui.run_async(handle_upload(e.content, e.name))).classes('w-full mb-2')
 
         async def create_vibenode():
             data = {

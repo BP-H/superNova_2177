@@ -21,7 +21,7 @@ async def upload_page():
             f'color: {THEME["accent"]};'
         )
 
-        ui.upload(on_upload=lambda e: handle_upload(e.content, e.name)).classes('w-full mb-4')
+        ui.upload(on_upload=lambda e: ui.run_async(handle_upload(e.content, e.name))).classes('w-full mb-4')
 
         async def handle_upload(content, name):
             files = {'file': (name, content.read(), 'multipart/form-data')}
