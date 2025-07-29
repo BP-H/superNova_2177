@@ -6,12 +6,16 @@
 from __future__ import annotations
 
 import os
+
 import httpx
 
 LLM_API_URL = os.getenv("LLM_API_URL", "https://your-llm-endpoint.com/generate")
 LLM_API_KEY = os.getenv("LLM_API_KEY", "")  # <-- user inserts key here
 
-async def get_speculative_futures(description: str, style: str = "humorous/chaotic good") -> list[str]:
+
+async def get_speculative_futures(
+    description: str, style: str = "humorous/chaotic good"
+) -> list[str]:
     """Return speculative future strings from a remote LLM service."""
     if not LLM_API_KEY:
         return [
@@ -25,9 +29,12 @@ async def get_speculative_futures(description: str, style: str = "humorous/chaot
         }
         headers = {"Authorization": f"Bearer {LLM_API_KEY}"}
         async with httpx.AsyncClient() as client:
-            resp = await client.post(LLM_API_URL, json=payload, headers=headers, timeout=10)
+            resp = await client.post(
+                LLM_API_URL, json=payload, headers=headers, timeout=10
+            )
             return resp.json().get("futures", [])
     except Exception as e:  # pragma: no cover - network errors
         return [f"[LLM ERROR] {e}"]
+
 
 __all__ = ["get_speculative_futures"]

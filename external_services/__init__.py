@@ -5,5 +5,6 @@
 
 from .llm_client import get_speculative_futures
 from .video_client import generate_video_preview
+from .vision_client import analyze_timeline
 
-__all__ = ["get_speculative_futures", "generate_video_preview"]
+__all__ = ["get_speculative_futures", "generate_video_preview", "analyze_timeline"]
