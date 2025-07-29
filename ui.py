@@ -52,7 +52,8 @@ def dprint(msg: str) -> None:
     if DEBUG_MODE:
         print(msg, file=sys.stderr)
 
-dprint("\u23F3 Booting superNova_2177 UI...")
+if os.getenv("UI_DEBUG_PRINTS", "1") != "0":
+    print("\u23F3 Booting superNova_2177 UI...", file=sys.stderr)
 from streamlit_helpers import (
     alert,
     apply_theme,
@@ -122,13 +123,15 @@ from protocols import AGENT_REGISTRY
 from social_tabs import render_social_tab
 from voting_ui import render_voting_tab
 
-try:
-    st_secrets = st.secrets
-except Exception:  # pragma: no cover - optional in dev/CI
-    st_secrets = {
-        "SECRET_KEY": "dev",
-        "DATABASE_URL": "sqlite:///:memory:",
-    }
+def get_st_secrets() -> dict:
+    """Return Streamlit secrets with a fallback for development."""
+    try:
+        return st.secrets  # type: ignore[attr-defined]
+    except Exception:  # pragma: no cover - optional in dev/CI
+        return {
+            "SECRET_KEY": "dev",
+            "DATABASE_URL": "sqlite:///:memory:",
+        }
 
 sample_path = Path(__file__).resolve().parent / "sample_validations.json"
 
@@ -561,8 +564,9 @@ def render_validation_ui() -> None:
             alert("Demo file not found", "warning")
         st.experimental_rerun()
 
-    secret_key = st_secrets.get("SECRET_KEY")
-    database_url = st_secrets.get("DATABASE_URL")
+    secrets = get_st_secrets()
+    secret_key = secrets.get("SECRET_KEY")
+    database_url = secrets.get("DATABASE_URL")
 
     with st.sidebar:
         st.header("Environment")
@@ -875,14 +879,17 @@ def render_validation_ui() -> None:
         st.json(st.session_state["agent_output"])
 
 def main() -> None:
+def main() -> None:
     """Entry point for the Streamlit UI."""
     dprint("main() invoked")
     st.set_page_config(page_title="superNova_2177", layout="wide")
 
+    # CI health check (via query or platform env)
     if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
         st.write("ok")
         return
 
+    # Check Streamlit page directory
     if not PAGES_DIR.is_dir():
         render_landing_page()
         return
@@ -894,6 +901,7 @@ def main() -> None:
 
     render_main_ui()
     choice = st.sidebar.selectbox("Page", page_files)
+
     try:
         module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
         page_main = getattr(module, "main", None)
@@ -907,16 +915,6 @@ def main() -> None:
         st.text(tb)
         print(tb, file=sys.stderr)
 
-
-
-def render_landing_page() -> None:
-    """Display a minimal landing page used when no pages are available."""
-    st.set_page_config(page_title="superNova_2177", layout="centered")
-    st.title("superNova_2177")
-    st.write("Welcome to the superNova_2177 project — a creative research platform.")
-    st.write("No Streamlit pages were found in `transcendental_resonance_frontend/pages`." )
-    st.write("For the full NiceGUI interface, run: `python -m transcendental_resonance_frontend`.")
-    st.write("See the [GitHub repo](https://github.com/BP-H/superNova_2177) for more info.")
 
 if __name__ == "__main__":
     import sys
