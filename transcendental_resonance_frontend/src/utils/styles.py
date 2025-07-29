@@ -101,6 +101,8 @@ def apply_global_styles() -> None:
             'rel="stylesheet">'
         )
 
+    # remove any previously injected global theme style to avoid duplicates
+    ui.run_javascript("document.getElementById('global-theme')?.remove()")
     ui.add_head_html(
         f"""
         <link rel="preconnect" href="https://fonts.googleapis.com">
