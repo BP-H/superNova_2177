@@ -45,5 +45,16 @@ def page_container(theme: Optional[dict] = None) -> Generator[Element, None, Non
     with ui.column().classes('w-full p-4').style(
         f"background: {theme['gradient']}; color: {theme['text']};"
     ) as container:
+        with ui.row().classes('w-full items-center mb-4'):
+            ui.link('Home', '/profile').classes('mr-2')
+            ui.link('VibeNodes', '/vibenodes').classes('mr-2')
+            ui.link('Groups', '/groups').classes('mr-2')
+            ui.link('Events', '/events').classes('mr-2')
+            search_input = ui.input(placeholder='Search').classes('ml-auto')
+            async def go() -> None:
+                ui.open(f'/search?q={search_input.value}')
+
+            search_input.on('keydown.enter', lambda _: ui.run_async(go()))
+            ui.button('Search', on_click=go)
         yield container
 

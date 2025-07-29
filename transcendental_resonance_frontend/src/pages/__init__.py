@@ -10,6 +10,7 @@ __all__ = [
     "proposals_page",
     "notifications_page",
     "messages_page",
+    "search_page",
     "ai_assist_page",
     "upload_page",
     "music_page",
