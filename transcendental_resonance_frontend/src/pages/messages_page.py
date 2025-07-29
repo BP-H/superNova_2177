@@ -1,7 +1,10 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Messaging system page."""
 
 from nicegui import ui
-from utils.api import TOKEN, api_call
+from utils.api import TOKEN, api_call, listen_ws
 from utils.layout import page_container
 from utils.styles import get_theme
 
@@ -52,3 +55,9 @@ async def messages_page():
 
         await refresh_messages()
         ui.timer(30, lambda: ui.run_async(refresh_messages()))
+
+        async def handle_event(event: dict) -> None:
+            if event.get("type") == "message":
+                await refresh_messages()
+
+        ui.run_async(listen_ws(handle_event))

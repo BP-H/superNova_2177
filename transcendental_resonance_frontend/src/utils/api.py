@@ -1,10 +1,12 @@
 """Utility functions for communicating with the Transcendental Resonance backend."""
 
+import json
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Awaitable, Callable, Dict, Optional
 
 import httpx
+import websockets
 from nicegui import ui
 
 # Backend API base URL
@@ -14,6 +16,7 @@ logger = logging.getLogger(__name__)
 logger.propagate = False
 
 TOKEN: Optional[str] = None
+WS_CONNECTION = None
 
 
 async def api_call(
@@ -111,3 +114,38 @@ async def get_following(username: str) -> Dict[str, Any]:
 
 async def toggle_follow(username: str) -> Optional[Dict[str, Any]]:
     return await api_call("POST", f"/users/{username}/follow")
+
+
+async def connect_ws(path: str = "/ws"):
+    """Establish and return a WebSocket connection to the backend."""
+    global WS_CONNECTION
+    url = BACKEND_URL.replace("http", "ws") + path
+    headers = {"Authorization": f"Bearer {TOKEN}"} if TOKEN else None
+    try:
+        WS_CONNECTION = await websockets.connect(url, extra_headers=headers)
+        return WS_CONNECTION
+    except Exception as exc:  # pragma: no cover - network errors
+        logger.error("WebSocket connection failed: %s", exc, exc_info=True)
+        return None
+
+
+async def listen_ws(handler: Callable[[dict], Awaitable[None]]) -> None:
+    """Listen for events on the WebSocket and pass them to ``handler``."""
+    global WS_CONNECTION
+    ws = await connect_ws()
+    if ws is None:
+        return
+    try:
+        async for message in ws:
+            try:
+                data = json.loads(message)
+            except Exception:
+                data = {"event": "raw", "data": message}
+            await handler(data)
+    except Exception as exc:  # pragma: no cover - network errors
+        logger.error("WebSocket listen error: %s", exc, exc_info=True)
+    finally:
+        if not ws.closed:
+            await ws.close()
+        if WS_CONNECTION is ws:
+            WS_CONNECTION = None

@@ -1,7 +1,10 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """User notifications page."""
 
 from nicegui import ui
-from utils.api import TOKEN, api_call
+from utils.api import TOKEN, api_call, listen_ws
 from utils.layout import page_container
 from utils.styles import get_theme
 
@@ -46,3 +49,9 @@ async def notifications_page():
 
         await refresh_notifs()
         ui.timer(30, lambda: ui.run_async(refresh_notifs()))
+
+        async def handle_event(event: dict) -> None:
+            if event.get("type") == "notification":
+                await refresh_notifs()
+
+        ui.run_async(listen_ws(handle_event))
