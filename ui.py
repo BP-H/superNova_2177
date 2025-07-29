@@ -890,10 +890,8 @@ def main() -> None:
     """Entry point for the Streamlit UI."""
     import streamlit as st
     from streamlit.runtime.scriptrunner import get_script_run_ctx
-    from importlib import import_module
 
     UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
-
     def log(msg: str) -> None:
         if UI_DEBUG:
             print(msg, file=sys.stderr)
@@ -901,20 +899,22 @@ def main() -> None:
     log("⚡ main() invoked")
     st.set_page_config(page_title="superNova_2177", layout="wide")
 
-    # -- Unified health check logic
-    ctx = get_script_run_ctx()
+    # Unified health check: Path priority for Cloud; query/env fallback for CI/local
     if (
-        (ctx and (req := ctx._get_request()) and req.path == "/healthz")
-        or st.query_params.get(HEALTH_CHECK_PARAM) == "1"
-        or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz"
-    ):
+        (ctx := get_script_run_ctx())
+        and (req := ctx._get_request())
+        and req.path == "/healthz"
+    ) or st.query_params.get(HEALTH_CHECK_PARAM) == "1" \
+      or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
         log("💊 health-check branch")
         st.write("ok")
-        st.stop()
+        st.stop()  # Halt after response
+        return
 
-    st.title("superNova_2177")
+    st.title("🤗//⚡//Launching main()")
+    log("main() entered")
+
     log(f"📁 loading pages from {PAGES_DIR}")
-
     if not PAGES_DIR.is_dir():
         log("🚫 pages directory missing")
         st.error("Pages directory not found")
@@ -949,10 +949,5 @@ def main() -> None:
         log(f"exception loading {choice}: {exc}")
         print(tb, file=sys.stderr)
 
-
 if __name__ == "__main__":
-    import sys
-    from streamlit.web import cli as stcli
-
-    sys.argv = ["streamlit", "run", __file__]
-    sys.exit(stcli.main())
+    main()
