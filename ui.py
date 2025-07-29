@@ -862,11 +862,11 @@ def render_validation_ui() -> None:
         st.subheader("Agent Output")
         st.json(st.session_state["agent_output"])
 
-
 def main() -> None:
     """Entry point for the Streamlit UI."""
-    st.set_page_config(page_title="superNova_2177", layout="centered")
-    if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
+    st.set_page_config(page_title="superNova_2177", layout="wide")
+
+    if st.query_params.get("healthz") == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
         st.write("ok")
         return
 
@@ -874,7 +874,9 @@ def main() -> None:
         render_landing_page()
         return
 
+    from ui_utils import render_main_ui
     render_main_ui()
+
     page_files = sorted(
         p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
     )
@@ -885,8 +887,7 @@ def main() -> None:
         page_main()
     else:
         st.error(f"Page '{choice}' is missing a main() function")
-
-
+        
 def render_landing_page() -> None:
     """Display a minimal landing page with basic info."""
     st.title("superNova_2177")
