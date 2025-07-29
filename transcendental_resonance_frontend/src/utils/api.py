@@ -14,6 +14,7 @@ from nicegui import ui
 
 # Backend API base URL
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+OFFLINE_MODE: bool = os.getenv("OFFLINE_MODE", "0") == "1"
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
