@@ -37,6 +37,10 @@ async def upload_page():
             files = {'file': (event.name, event.content.read(), 'multipart/form-data')}
             resp = await api_call('POST', '/upload/', files=files)
             spinner.cancel()
+            try:
+                await spinner
+            except asyncio.CancelledError:
+                pass
             progress.value = 1.0
             if resp:
                 ui.notify(f"Uploaded: {resp['media_url']}", color='positive')
