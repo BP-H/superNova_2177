@@ -1,0 +1,23 @@
+-r requirements-minimal.txt
+uvicorn
+python-dotenv
+sympy
+scipy
+tqdm
+statsmodels
+pulp
+matplotlib
+python-snappy
+qutip
+pandas
+pygame
+mido
+midiutil
+qrcode
+asyncpg
+streamlit-ace
+kaleido
+
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
