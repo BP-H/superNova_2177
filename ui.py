@@ -42,9 +42,15 @@ except Exception:
 else:
     st.title("superNova_2177")
     st.success("\u2705 Streamlit loaded!")
-from streamlit_helpers import (alert, apply_theme, centered_container, header,
-                               theme_selector)
-from ui_utils import load_rfc_entries, parse_summary, summarize_text
+from streamlit_helpers import (
+    alert,
+    apply_theme,
+    centered_container,
+    header,
+    theme_selector,
+)
+from api_key_input import render_api_key_ui, render_simulation_stubs
+from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_main_ui
 
 try:
     from streamlit_app import _run_async
@@ -598,26 +604,13 @@ def render_validation_ui() -> None:
         agent_desc = AGENT_REGISTRY.get(agent_choice, {}).get("description")
         if agent_desc:
             st.caption(agent_desc)
-        backend_choice = st.selectbox(
-            "LLM Backend",
-            ["dummy", "GPT-4o", "Claude-3", "Gemini"],
-            index=0,
-        )
-        key_map = {
-            "GPT-4o": "OPENAI_API_KEY",
-            "Claude-3": "ANTHROPIC_API_KEY",
-            "Gemini": "GOOGLE_API_KEY",
-        }
-        api_key = ""
-        if backend_choice in key_map:
-            api_key = st.text_input(
-                f"{backend_choice} API Key",
-                value=st_secrets.get(key_map[backend_choice], ""),
-                type="password",
-            )
+        api_info = render_api_key_ui()
+        backend_choice = api_info.get("model", "dummy")
+        api_key = api_info.get("api_key", "") or ""
         event_type = st.text_input("Event", value="LLM_INCOMING")
         payload_txt = st.text_area("Payload JSON", value="{}", height=100)
         run_agent_clicked = st.button("Run Agent")
+        render_simulation_stubs()
 
         st.divider()
         governance_view = st.checkbox(
@@ -874,6 +867,7 @@ def render_validation_ui() -> None:
 
 
 def main() -> None:
+    render_main_ui()
     header("superNova_2177 Validation Analyzer", layout="wide")
     tab1, tab2, tab3, tab4 = st.tabs(["Validation", "Friends", "Votes", "Agents"])
     with tab1:
