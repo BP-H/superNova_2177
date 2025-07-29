@@ -1,4 +1,9 @@
-"""Unified feed combining VibeNodes, Events, and Notifications."""
+"""Unified feed combining VibeNodes, Events, and Notifications.
+
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+"""
 
 from nicegui import ui
 
@@ -6,6 +11,7 @@ from utils.api import TOKEN, api_call
 from utils.layout import page_container, navigation_bar
 from utils.styles import get_theme
 from utils.features import quick_post_button, skeleton_loader, swipeable_glow_card
+from quantum_futures import generate_futures, SIMULATION_DISCLAIMER
 
 from .login_page import login_page
 
@@ -26,6 +32,11 @@ async def feed_page() -> None:
         )
 
         feed_column = ui.column().classes('w-full')
+
+        show_sim_toggle = ui.switch(
+            'Enable Simulation View', value=False
+        ).classes('mb-4')
+        show_sim_toggle.on('change', lambda _: ui.run_async(refresh_feed()))
 
         post_dialog = ui.dialog()
         with post_dialog:
@@ -52,6 +63,12 @@ async def feed_page() -> None:
                         ui.label('VibeNode').classes('text-sm font-bold')
                         ui.label(vn.get('description', '')).classes('text-sm')
                         ui.link('View', f"/vibenodes/{vn['id']}")
+                        if show_sim_toggle.value:
+                            futures = generate_futures(vn.get('description', '') or str(vn.get('id')), 3)
+                            with ui.expansion('Speculative Futures', value=False).classes('w-full mt-2'):
+                                for fut in futures:
+                                    ui.label(f"{fut['emoji']} {fut['message']}").classes('text-sm italic')
+                                ui.markdown(SIMULATION_DISCLAIMER).classes('text-xs text-grey')
             for ev in events:
                 with feed_column:
                     with swipeable_glow_card().classes('w-full mb-2').style('background: #1e1e1e;'):
