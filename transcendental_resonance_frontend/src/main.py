@@ -36,7 +36,7 @@ from .utils.features import (
     theme_personalization_panel,
     onboarding_overlay,
 )
-from .utils import ErrorOverlay
+from .utils import ErrorOverlay, ApiStatusFooter
 
 ui.context.client.on_disconnect(clear_token)
 apply_global_styles()
@@ -49,6 +49,7 @@ contrast_toggle = high_contrast_switch()
 contrast_toggle.on("change", lambda e: toggle_high_contrast(e.value))
 theme_personalization_panel()
 error_overlay = ErrorOverlay()
+api_status = ApiStatusFooter()
 
 ws_status = (
     ui.icon("circle")
@@ -56,10 +57,12 @@ ws_status = (
     .style("color: red")
 )
 
-if OFFLINE_MODE:
-    ui.label("OFFLINE MODE").classes(
-        "fixed bottom-0 w-full text-center bg-red-600 text-white"
-    )
+offline_notice = (
+    ui.label("OFFLINE MODE – using mock services.")
+    .classes("fixed bottom-0 w-full text-center bg-red-600 text-white text-sm")
+)
+offline_notice.visible = OFFLINE_MODE
+
 
 def _update_ws_status(status: str) -> None:
     color = "green" if status == "connected" else "red"
