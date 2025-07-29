@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Interactive debug panel for dispatching frontend routes."""
 
 from __future__ import annotations
@@ -5,8 +8,10 @@ from __future__ import annotations
 import json
 from nicegui import ui
 
+from utils.api import TOKEN
 from utils.styles import get_theme
 from utils.layout import page_container, navigation_bar
+from utils.api import TOKEN, OFFLINE_MODE
 from frontend_bridge import ROUTES, dispatch_route
 
 # Minimal example payloads for some routes
@@ -35,6 +40,12 @@ async def debug_panel_page() -> None:
         ui.label("Debug Panel").classes("text-2xl font-bold mb-4").style(
             f"color: {theme['accent']};"
         )
+        status = (
+            "Offline Mode – using mock services."
+            if OFFLINE_MODE
+            else "Online Mode"
+        )
+        ui.label(status).classes("text-sm mb-4")
 
         for name, handler in ROUTES.items():
             description = (handler.__doc__ or "").strip().splitlines()[0]

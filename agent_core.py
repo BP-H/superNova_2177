@@ -20,6 +20,7 @@ from types import SimpleNamespace
 from typing import Any, Dict, TYPE_CHECKING
 from virtual_diary import load_entries
 from config import Config, get_emoji_weights
+from hook_manager import HookManager
 
 if TYPE_CHECKING:
     from superNova_2177 import (

@@ -14,7 +14,6 @@ import random
 from typing import Any, Dict, List
 
 from external_services.llm_client import LLMClient
-from external_services.video_client import VideoClient
 from external_services.vision_client import VisionClient
 
 # Satirical disclaimer appended to all speculative output
@@ -39,8 +38,7 @@ async def generate_speculative_futures(
     """Generate playful speculative futures for a VibeNode using ``llm_client``."""
 
     description = node.get("description", "")
-    llm = LLMClient()
-    texts = (await llm.get_speculative_futures(description)).get("futures", [])
+    texts = await get_speculative_futures(description)
     futures: List[Dict[str, str]] = []
     for text in texts[: max(1, num_variants)]:
         emoji = random.choice(list(EMOJI_GLOSSARY.keys()))  # nosec B311
@@ -54,12 +52,10 @@ async def generate_speculative_payload(description: str) -> List[Dict[str, str]]
     llm = LLMClient()
     texts = (await llm.get_speculative_futures(description)).get("futures", [])
     results: List[Dict[str, str]] = []
+    vision = VisionClient()
     for text in texts:
-        video = VideoClient()
-        vision = VisionClient()
-        video_url = (await video.generate_video_preview(prompt=text)).get(
-            "video_url", ""
-        )
+        # Mocking or replacing video preview call if removed
+        video_url = f"https://example.com/fake_video_for_{text[:10]}"
         vision_notes = (await vision.analyze_timeline(video_url)).get("events", [])
         results.append(
             {
@@ -71,23 +67,20 @@ async def generate_speculative_payload(description: str) -> List[Dict[str, str]]
         )
     return results
 
-
 def quantum_video_stub(*_args, **_kwargs) -> None:
     """Placeholder for future WebGL/AI-video integration."""
     return None
 
 
 async def analyze_video_timeline(video_url: str) -> List[str]:
-    """Delegate to :class:`VisionClient` for timeline analysis."""
-    vision = VisionClient()
-    return (await vision.analyze_timeline(video_url)).get("events", [])
+    """Delegate to :func:`analyze_timeline` for vision analysis."""
+    return await analyze_timeline(video_url)
 
 
 __all__ = [
     "DISCLAIMER",
     "EMOJI_GLOSSARY",
     "generate_speculative_futures",
-    "generate_speculative_payload",
     "quantum_video_stub",
     "analyze_video_timeline",
 ]

@@ -30,8 +30,11 @@ try:
     from transcendental_resonance_frontend.src.utils.error_overlay import ErrorOverlay
 except Exception:  # pragma: no cover - fallback when frontend not available
 
-    async def listen_ws(*_args: Any, **_kwargs: Any) -> None:
-        return None
+    def listen_ws(*_args: Any, **_kwargs: Any) -> asyncio.Task:
+        async def dummy() -> None:
+            return None
+
+        return asyncio.create_task(dummy())
 
     def on_ws_status_change(*_args: Any, **_kwargs: Any) -> None:
         return None
@@ -86,7 +89,7 @@ class VibeSimulatorEngine:
         """Begin listening for WebSocket frame metadata."""
 
         if self._listen_task is None:
-            self._listen_task = asyncio.create_task(listen_ws(self._handle_ws_event))
+            self._listen_task = listen_ws(self._handle_ws_event)
 
     async def _on_ws_status_change(self, status: str) -> None:
         self.ws_connected = status == "connected"
