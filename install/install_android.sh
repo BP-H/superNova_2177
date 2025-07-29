@@ -1,4 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/bash
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 # Termux setup script for superNova_2177
 set -e
 pkg install -y python git
