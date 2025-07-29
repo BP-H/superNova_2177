@@ -868,7 +868,7 @@ def render_validation_ui() -> None:
         st.json(st.session_state["agent_output"])
 
 def main() -> None:
-    st.set_page_config(page_title="superNova_2177", layout="wide")  # <- put this first inside main
+    st.set_page_config(page_title="superNova_2177", layout="wide")
     if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
         st.write("ok")
         return
@@ -893,6 +893,7 @@ def main() -> None:
         page_main()
     else:
         st.error(f"Page '{choice}' is missing a main() function")
+        
 def render_landing_page() -> None:
     """Display a minimal landing page with basic info."""
     st.title("superNova_2177")
