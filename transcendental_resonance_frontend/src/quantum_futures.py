@@ -10,11 +10,12 @@ futures for VibeNodes and include stubs for upcoming vision and video hooks.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
 import random
+from typing import Any, Dict, List
 
 from external_services.llm_client import get_speculative_futures
 from external_services.video_client import generate_video_preview
+from external_services.vision_client import analyze_timeline
 
 # Satirical disclaimer appended to all speculative output
 DISCLAIMER = "This is a satirical simulation, not advice or prediction."
@@ -29,7 +30,7 @@ EMOJI_GLOSSARY: Dict[str, str] = {
 
 def _entropy_tag() -> float:
     """Return a random entropy tag used for demo purposes."""
-    return random.random()
+    return random.random()  # nosec B311
 
 
 async def generate_speculative_futures(
@@ -41,23 +42,27 @@ async def generate_speculative_futures(
     texts = await get_speculative_futures(description)
     futures: List[Dict[str, str]] = []
     for text in texts[: max(1, num_variants)]:
-        emoji = random.choice(list(EMOJI_GLOSSARY.keys()))
+        emoji = random.choice(list(EMOJI_GLOSSARY.keys()))  # nosec B311
         futures.append({"text": f"{text} {emoji}", "entropy": f"{_entropy_tag():.2f}"})
     return futures
 
 
 async def generate_speculative_payload(description: str) -> List[Dict[str, str]]:
-    """Return text and video pairs with a disclaimer."""
+    """Return text, video, and vision analysis pairs with a disclaimer."""
 
     texts = await get_speculative_futures(description)
     results: List[Dict[str, str]] = []
     for text in texts:
         video_url = await generate_video_preview(prompt=text)
-        results.append({
-            "text": text,
-            "video_url": video_url,
-            "disclaimer": DISCLAIMER,
-        })
+        vision_notes = await analyze_timeline(video_url)
+        results.append(
+            {
+                "text": text,
+                "video_url": video_url,
+                "vision_notes": vision_notes,
+                "disclaimer": DISCLAIMER,
+            }
+        )
     return results
 
 
@@ -66,9 +71,9 @@ def quantum_video_stub(*_args, **_kwargs) -> None:
     return None
 
 
-def analyze_video_timeline(*_args, **_kwargs) -> List[str]:
-    """Placeholder for vision reasoning agent hooks."""
-    return []
+async def analyze_video_timeline(video_url: str) -> List[str]:
+    """Delegate to :func:`external_services.vision_client.analyze_timeline`."""
+    return await analyze_timeline(video_url)
 
 
 __all__ = [
