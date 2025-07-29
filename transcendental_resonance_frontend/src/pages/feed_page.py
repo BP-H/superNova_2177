@@ -37,15 +37,26 @@ async def feed_page() -> None:
         quick_post_button(lambda: post_dialog.open())
 
         async def refresh_feed() -> None:
-            feed_column.clear()
-            with feed_column:
-                skeleton_loader()
+            if feed_column:
+                feed_column.clear()
+                with feed_column:
+                    skeleton_loader()
 
-            vibenodes = await api_call('GET', '/vibenodes/') or []
-            events = await api_call('GET', '/events/') or []
-            notifs = await api_call('GET', '/notifications/') or []
+            try:
+                vibenodes = await api_call('GET', '/vibenodes/') or []
+                events = await api_call('GET', '/events/') or []
+                notifs = await api_call('GET', '/notifications/') or []
+            except Exception:
+                ui.notify('Failed to load feed', color='negative')
+                return
 
-            feed_column.clear()
+            if feed_column:
+                feed_column.clear()
+
+            if not any([vibenodes, events, notifs]):
+                ui.label('Nothing to show yet').classes('text-sm opacity-50')
+                return
+
             for vn in vibenodes:
                 with feed_column:
                     with swipeable_glow_card().classes('w-full mb-2').style('background: #1e1e1e;'):
@@ -79,8 +90,11 @@ async def feed_page() -> None:
                     if resp:
                         ui.notify('Posted!', color='positive')
                         post_input.value = ''
-                        post_dialog.close()
+                        if post_dialog.open:
+                            post_dialog.close()
                         await refresh_feed()
+                    else:
+                        ui.notify('Failed to post', color='negative')
 
                 ui.button('Post', on_click=submit_post).classes('w-full').style(
                     f'background: {theme["accent"]}; color: {theme["background"]};'
