@@ -148,19 +148,14 @@ ui.on_startup(
 # - Theming options
 
 def run_app() -> None:
-    """Run the NiceGUI app and retry once on failure."""
-    while True:
-        try:
-            ui.run(
-                title="Transcendental Resonance",
-                dark=True,
-                favicon="🌌",
-                reload=False,
-            )
-            break
-        except Exception as exc:  # pragma: no cover - startup failures
-            logger.exception("UI failed to start: %s", exc)
-            time.sleep(2)
+    """Run the NiceGUI app."""
+    ui.run(
+        title="Transcendental Resonance",
+        dark=True,
+        favicon="🌌",
+        reload=False,
+    )
 
 
-run_app()
+if __name__ == "__main__":
+    run_app()
