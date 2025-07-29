@@ -42,9 +42,20 @@ except Exception:
 else:
     st.title("superNova_2177")
     st.success("\u2705 Streamlit loaded!")
-from streamlit_helpers import (alert, apply_theme, centered_container, header,
-                               theme_selector)
-from ui_utils import load_rfc_entries, parse_summary, summarize_text
+from streamlit_helpers import (
+    alert,
+    apply_theme,
+    centered_container,
+    header,
+    theme_selector,
+)
+from ui_utils import (
+    load_rfc_entries,
+    parse_summary,
+    summarize_text,
+    render_main_ui,
+)
+from api_key_input import render_api_key_inputs
 
 try:
     from streamlit_app import _run_async
@@ -560,6 +571,9 @@ def render_validation_ui() -> None:
         else:
             alert("SECRET_KEY missing", "warning")
 
+        st.subheader("API Keys")
+        render_api_key_inputs()
+
         st.divider()
         st.subheader("Settings")
         demo_mode_choice = st.radio("Mode", ["Normal", "Demo"], horizontal=True)
@@ -607,13 +621,13 @@ def render_validation_ui() -> None:
             "GPT-4o": "OPENAI_API_KEY",
             "Claude-3": "ANTHROPIC_API_KEY",
             "Gemini": "GOOGLE_API_KEY",
+            "Groq": "GROQ_API_KEY",
         }
         api_key = ""
         if backend_choice in key_map:
-            api_key = st.text_input(
-                f"{backend_choice} API Key",
-                value=st_secrets.get(key_map[backend_choice], ""),
-                type="password",
+            api_key = st.session_state.get("api_keys", {}).get(
+                key_map[backend_choice],
+                st_secrets.get(key_map[backend_choice], ""),
             )
         event_type = st.text_input("Event", value="LLM_INCOMING")
         payload_txt = st.text_area("Payload JSON", value="{}", height=100)
@@ -874,6 +888,7 @@ def render_validation_ui() -> None:
 
 
 def main() -> None:
+    render_main_ui()
     header("superNova_2177 Validation Analyzer", layout="wide")
     tab1, tab2, tab3, tab4 = st.tabs(["Validation", "Friends", "Votes", "Agents"])
     with tab1:
