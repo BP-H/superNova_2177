@@ -107,7 +107,8 @@ async def notification_listener() -> None:
             message = event.get("message", "You have a new notification!")
             ui.notify(message, type="info", position="bottom-right")
 
-    await listen_ws(handle_event)
+    ws_task = listen_ws(handle_event)
+    await ws_task
 
 
 @ui.page("*")

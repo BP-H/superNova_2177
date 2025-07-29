@@ -45,7 +45,8 @@ async def video_chat_page() -> None:
 
         async def join_call() -> None:
             try:
-                await listen_ws(handle_event)
+                ws_task = listen_ws(handle_event)
+                await ws_task
             except Exception:
                 ui.notify("Realtime updates unavailable", color="warning")
                 join_button.disable()
@@ -53,6 +54,7 @@ async def video_chat_page() -> None:
                 error_overlay.show("Realtime updates unavailable")
 
         join_button.on_click(lambda: ui.run_async(join_call()))
+
 
         async def send_frame() -> None:
             if WS_CONNECTION and local_cam.value:

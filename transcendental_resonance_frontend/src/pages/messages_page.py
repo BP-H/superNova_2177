@@ -130,9 +130,12 @@ async def messages_page():
 
         async def start_ws() -> None:
             try:
-                await listen_ws(handle_event)
+                ws_task = listen_ws(handle_event)
+                ui.context.client.on_disconnect(lambda: ws_task.cancel())
+                await ws_task
             except Exception:
                 ui.notify("Realtime updates unavailable", color="warning")
                 error_overlay.show("Realtime updates unavailable")
 
         ui.run_async(start_ws())
+
