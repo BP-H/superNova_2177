@@ -3,7 +3,10 @@
 import json
 import logging
 import os
-from typing import Any, Awaitable, Callable, Dict, Optional
+from typing import Any, Awaitable, Callable, Dict, Optional, List
+
+import inspect
+import asyncio
 
 import httpx
 import websockets
@@ -17,6 +20,31 @@ logger.propagate = False
 
 TOKEN: Optional[str] = None
 WS_CONNECTION = None
+
+# Callbacks triggered when API requests start or finish
+_start_listeners: List[Callable[[], Any]] = []
+_end_listeners: List[Callable[[], Any]] = []
+
+
+def on_request_start(func: Callable[[], Any]) -> None:
+    """Register a callback fired before each API request."""
+    _start_listeners.append(func)
+
+
+def on_request_end(func: Callable[[], Any]) -> None:
+    """Register a callback fired after each API request."""
+    _end_listeners.append(func)
+
+
+def _fire_listeners(listeners: List[Callable[[], Any]]) -> None:
+    """Invoke listeners synchronously or schedule if coroutine."""
+    for func in list(listeners):
+        try:
+            result = func()
+            if inspect.isawaitable(result):
+                asyncio.create_task(result)
+        except Exception:  # pragma: no cover - best effort
+            logger.exception("API event listener error")
 
 
 async def api_call(
@@ -47,6 +75,8 @@ async def api_call(
         default_headers.update(headers)
     if TOKEN:
         default_headers["Authorization"] = f"Bearer {TOKEN}"
+
+    _fire_listeners(_start_listeners)
 
     try:
         async with httpx.AsyncClient() as client:
@@ -80,6 +110,8 @@ async def api_call(
                 ),
             }
         return None
+    finally:
+        _fire_listeners(_end_listeners)
 
 
 def set_token(token: str) -> None:
