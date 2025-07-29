@@ -12,6 +12,8 @@ THEMES: Dict[str, Dict[str, str]] = {
         "background": "#121212",
         "text": "#ffffff",
         "gradient": "linear-gradient(135deg, #0d47a1 0%, #121212 100%)",
+        "font": "'Inter', sans-serif",
+        "font_url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap",
     },
     "light": {
         "primary": "#1976d2",
@@ -19,6 +21,8 @@ THEMES: Dict[str, Dict[str, str]] = {
         "background": "#ffffff",
         "text": "#000000",
         "gradient": "linear-gradient(135deg, #ffffff 0%, #f3f3f3 100%)",
+        "font": "'Inter', sans-serif",
+        "font_url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap",
     },
     "modern": {
         "primary": "#6200EE",
@@ -26,6 +30,8 @@ THEMES: Dict[str, Dict[str, str]] = {
         "background": "#f5f5f5",
         "text": "#333333",
         "gradient": "linear-gradient(135deg, #6200EE 0%, #03DAC5 100%)",
+        "font": "'Inter', sans-serif",
+        "font_url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap",
     },
     "cyberpunk": {
         "primary": "#FF0080",
@@ -33,6 +39,8 @@ THEMES: Dict[str, Dict[str, str]] = {
         "background": "#050014",
         "text": "#F8F8F2",
         "gradient": "linear-gradient(135deg, #FF0080 0%, #00F0FF 100%)",
+        "font": "'Orbitron', sans-serif",
+        "font_url": "https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap",
     },
     "high_contrast": {
         "primary": "#000000",
@@ -40,6 +48,8 @@ THEMES: Dict[str, Dict[str, str]] = {
         "background": "#000000",
         "text": "#FFFFFF",
         "gradient": "linear-gradient(135deg, #000000 0%, #222222 100%)",
+        "font": "'Inter', sans-serif",
+        "font_url": "https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap",
     },
 }
 
@@ -73,13 +83,12 @@ def apply_global_styles() -> None:
     theme = THEMES[ACTIVE_THEME_NAME].copy()
     theme["accent"] = ACTIVE_ACCENT
 
-    font_family = "'Inter', sans-serif"
-    font_link = "<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap\" rel=\"stylesheet\">"
-    if ACTIVE_THEME_NAME == "cyberpunk":
-        font_family = "'Orbitron', sans-serif"
-        font_link = (
-            "<link href=\"https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap\" rel=\"stylesheet\">"
-        )
+    font_family = theme.get("font", "'Inter', sans-serif")
+    font_url = theme.get(
+        "font_url",
+        "https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap",
+    )
+    font_link = f'<link href="{font_url}" rel="stylesheet">'
 
     ui.add_head_html(
         f"""

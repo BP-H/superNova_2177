@@ -23,6 +23,7 @@ def test_apply_global_styles_injects_css(monkeypatch):
     monkeypatch.setattr(styles, "ui", dummy)
     styles.apply_global_styles()
     assert "global-theme" in captured["html"]
+    assert "fonts.googleapis.com" in captured["html"]
 
 
 def test_set_accent_overrides_default(monkeypatch):
@@ -49,3 +50,11 @@ def test_glow_card_css(monkeypatch):
     monkeypatch.setattr(styles, "ui", dummy)
     styles.apply_global_styles()
     assert ".glow-card" in captured["html"]
+
+
+def test_theme_font_applied(monkeypatch):
+    captured = {}
+    dummy = dummy_ui(captured)
+    monkeypatch.setattr(styles, "ui", dummy)
+    styles.set_theme("cyberpunk")
+    assert "Orbitron" in captured["html"]
