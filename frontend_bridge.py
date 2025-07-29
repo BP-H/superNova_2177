@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from typing import Any, Awaitable, Callable, Dict, Union
 import logging
+import inspect
 
 
 # background task support
@@ -98,15 +99,14 @@ async def dispatch_route(
         raise KeyError(name)
     handler = ROUTES[name]
     result = handler(payload, **kwargs)
+    if inspect.isawaitable(result):
+        result = await result
     if isinstance(result, BackgroundTask):
-
         async def job() -> Dict[str, Any]:
             return await result.coro
 
         job_id = queue_agent.enqueue_job(job)
         return {"job_id": job_id}
-    if isinstance(result, Awaitable):
-        result = await result
     return result
 
 
