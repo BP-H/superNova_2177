@@ -1,7 +1,12 @@
+
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 [server]
 headless = true
-port = 8501
+port = 8888
 enableCORS = false
+address = "0.0.0.0"
 
 [theme]
 base = "dark"
