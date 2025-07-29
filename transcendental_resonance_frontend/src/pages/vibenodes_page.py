@@ -22,8 +22,11 @@ async def vibenodes_page():
             f'color: {THEME["accent"]};'
         )
 
+        ui.label('Trending').classes('text-xl font-bold mb-2')
+        trending_list = ui.column().classes('w-full mb-4')
+
         search_query = ui.input('Search').classes('w-full mb-2')
-        sort_select = ui.select(['name', 'date'], value='name').classes('w-full mb-4')
+        sort_select = ui.select(['name', 'date', 'trending'], value='name').classes('w-full mb-4')
 
         name = ui.input('Name').classes('w-full mb-2')
         description = ui.textarea('Description').classes('w-full mb-2')
@@ -75,12 +78,51 @@ async def vibenodes_page():
             if resp:
                 ui.notify('VibeNode created!', color='positive')
                 await refresh_vibenodes()
+                await refresh_trending()
 
         ui.button('Create VibeNode', on_click=create_vibenode).classes('w-full mb-4').style(
             f'background: {THEME["primary"]}; color: {THEME["text"]};'
         )
 
         vibenodes_list = ui.column().classes('w-full')
+
+        async def refresh_trending():
+            params = {'sort': 'trending', 'limit': 5}
+            trending = await api_call('GET', '/vibenodes/', params) or []
+            trending_list.clear()
+            for vn in trending:
+                with trending_list:
+                    with ui.card().classes('w-full mb-2').style('border: 1px solid #333; background: #1e1e1e;'):
+                        ui.label(vn['name']).classes('text-lg')
+                        ui.label(vn['description']).classes('text-sm')
+                        if vn.get('media_url'):
+                            mtype = vn.get('media_type', '')
+                            if mtype.startswith('image'):
+                                ui.image(vn['media_url']).classes('w-full')
+                            elif mtype.startswith('video'):
+                                ui.video(vn['media_url']).classes('w-full')
+                            elif mtype.startswith('audio') or mtype.startswith('music'):
+                                ui.audio(vn['media_url']).classes('w-full')
+                        ui.label(f"Likes: {vn.get('likes_count', 0)}").classes('text-sm')
+
+                        async def like_fn(vn_id=vn['id']):
+                            await api_call('POST', f'/vibenodes/{vn_id}/like')
+                            await refresh_trending()
+                            await refresh_vibenodes()
+
+                        ui.button('Like/Unlike', on_click=like_fn).style(
+                            f'background: {THEME["accent"]}; color: {THEME["background"]};'
+                        )
+
+                        async def remix_fn(vn_data=vn):
+                            name.value = vn_data['name']
+                            description.value = vn_data['description']
+                            parent_id.value = str(vn_data['id'])
+                            ui.notify('Loaded remix draft', color='info')
+
+                        ui.button('Remix', on_click=remix_fn).style(
+                            f'background: {THEME["primary"]}; color: {THEME["text"]};'
+                        )
 
         async def refresh_vibenodes():
             params = {}
@@ -96,6 +138,8 @@ async def vibenodes_page():
                     vibenodes.sort(key=lambda x: x.get('name', ''))
                 elif sort_select.value == 'date':
                     vibenodes.sort(key=lambda x: x.get('created_at', ''))
+                elif sort_select.value == 'trending':
+                    pass
             vibenodes_list.clear()
             for vn in vibenodes:
                 with vibenodes_list:
@@ -147,4 +191,5 @@ async def vibenodes_page():
                             )
 
 
+        await refresh_trending()
         await refresh_vibenodes()
