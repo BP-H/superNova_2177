@@ -84,7 +84,7 @@ supernova-federate vote <fork_id> --voter Bob --vote yes
    # python setup_env.py --run-app    # launch API after install
    # python setup_env.py --locked     # install from requirements.lock
     # python setup_env.py --build-ui   # build Transcendental Resonance frontend assets
-    # python setup_env.py --launch-ui  # run the Streamlit UI on port 8501
+   # python setup_env.py --launch-ui  # run the Streamlit UI on port 8888
    ```
   You can also let `install.py` choose the appropriate installer for your
   platform:
@@ -259,7 +259,7 @@ docker build -t supernova-2177 .
 To build and run the Streamlit UI inside Docker:
 ```bash
 docker build -t supernova-ui .
-docker run -p 8501:8501 supernova-ui
+docker run -p 8888:8888 supernova-ui
 ```
 
 The build process installs required system libraries such as `libsnappy-dev`
@@ -273,7 +273,7 @@ docker-compose up
 
 
 The application will be available at [http://localhost:8000](http://localhost:8000),
-and the Streamlit UI at [http://localhost:8501](http://localhost:8501).
+and the Streamlit UI at [http://localhost:8888](http://localhost:8888).
 
 
 ## Authentication
@@ -563,7 +563,7 @@ is optional because a secure one will be generated if omitted:
 # optional
 export SECRET_KEY="your-secret"
 export DATABASE_URL="postgresql+asyncpg://<username>:<password>@<hostname>/<database>"
-export BACKEND_URL="http://localhost:8501"
+export BACKEND_URL="http://localhost:8888"
 ```
 
 To connect to a central database instead of the local file, pass
