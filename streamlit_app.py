@@ -1,13 +1,25 @@
-import json
 import asyncio
+import json
+from typing import Any, Coroutine, TypeVar
+
 import streamlit as st
 
-from frontend_bridge import dispatch_route, ROUTES
+from frontend_bridge import ROUTES, dispatch_route
 from streamlit_helpers import apply_theme, header
 
+T = TypeVar("T")
 
-def _run_async(coro):
-    """Execute ``coro`` or schedule it if a loop is already running."""
+
+def _run_async(coro: Coroutine[Any, Any, T]) -> Any:
+    """Execute ``coro`` or schedule it if a loop is already running.
+
+    Example
+    -------
+    >>> async def greet():
+    ...     return "hi"
+    >>> _run_async(greet())
+    'hi'
+    """
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:
