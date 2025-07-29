@@ -3,8 +3,6 @@
 from pathlib import Path
 import streamlit as st
 
-import streamlit as st
-
 
 def summarize_text(text: str, max_len: int = 150) -> str:
     """Basic text summarizer placeholder."""
