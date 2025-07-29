@@ -1,4 +1,5 @@
-import streamlit as st  # make sure this is FIRST(🥺 😂 i know not here but why not 🤷🥳⚡🥺🫶👏☺️🌸)
+import os
+import streamlit as st  # ensure Streamlit is imported early
 
 # STRICTLY A SOCIAL MEDIA PLATFORM
 # Intellectual Property & Artistic Inspiration
@@ -10,7 +11,6 @@ import io
 import json
 import logging
 import math
-import os
 import sys
 import traceback
 
@@ -31,11 +31,8 @@ plt = None  # imported lazily in run_analysis
 nx = None  # imported lazily in run_analysis
 go = None  # imported lazily in run_analysis
 Network = None  # imported lazily in run_analysis
-# Import Streamlit and register fallback health check
-import os
+# Register fallback watcher for environments that can't use inotify
 os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
-# ... your other imports here ...
-import streamlit as st
 
 # Bind to the default Streamlit port to satisfy platform health checks
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
@@ -882,95 +879,46 @@ def render_validation_ui() -> None:
         st.json(st.session_state["agent_output"])
 
 def main() -> None:
-    import streamlit as st
-    def log(msg: str) -> None:
-        if os.getenv("UI_DEBUG_PRINTS", "1") != "0":
-            print(msg, file=sys.stderr)
-
-    log("main() invoked")
-    import streamlit as st
-    import os
-    from importlib import import_module
-
-    # st.set_page_config must be the first Streamlit command
+def main() -> None:
+    """Entry point for the Streamlit UI."""
+    dprint("main() invoked")
     st.set_page_config(page_title="superNova_2177", layout="wide")
-    st.title("🤗//⚡//Launching main()")
-    log("main() entered")
 
+    # CI health check (via query or platform env)
     if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
-        log("health-check branch")
         st.write("ok")
         return
 
-    log(f"loading pages from {PAGES_DIR}")
+    # Check Streamlit page directory
     if not PAGES_DIR.is_dir():
-        log("pages directory missing")
-        st.error("Pages directory not found")
         render_landing_page()
         return
-    else:
-        log("pages directory found")
 
-    page_files = sorted(
-        p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"
-    )
-
+    page_files = sorted(p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py")
     if not page_files:
-        log("pages directory empty")
-        st.warning("No pages available — showing fallback UI.")
         render_landing_page()
         return
 
-    render_main_ui()  # This shows sidebar etc.
-
+    render_main_ui()
     choice = st.sidebar.selectbox("Page", page_files)
-    log(f"loading page {choice}")
+
     try:
-        module = import_module(
-            f"transcendental_resonance_frontend.pages.{choice}"
-        )
+        module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
         page_main = getattr(module, "main", None)
         if callable(page_main):
             page_main()
-            log(f"page {choice} loaded")
         else:
             st.error(f"Page '{choice}' is missing a main() function.")
-    except Exception as e:
-        import traceback
+    except Exception:
+        tb = traceback.format_exc()
         st.error(f"Error loading page '{choice}':")
-        st.text("".join(traceback.format_exception(type(e), e, e.__traceback__)))
-        log(f"exception loading {choice}: {e}")
+        st.text(tb)
+        print(tb, file=sys.stderr)
 
-
-
-def render_landing_page() -> None:
-    """Display a minimal landing page with basic info."""
-    st.set_page_config(page_title="superNova_2177", layout="centered")
-    st.title("superNova_2177")
-    st.write("Welcome to the superNova_2177 project — a creative research platform.")
-    st.write("For the full NiceGUI interface, run: `python -m transcendental_resonance_frontend`.")
-    st.write("See the [GitHub repo](https://github.com/BP-H/superNova_2177) for more info.")
 
 if __name__ == "__main__":
-    import argparse
+    import sys
+    from streamlit.web import cli as stcli
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--debug", action="store_true", help="Enable verbose logs")
-    args = parser.parse_args()
-    if args.debug:
-        DEBUG_MODE = True
-
-    def log(msg: str) -> None:
-        if os.getenv("UI_DEBUG_PRINTS", "1") != "0":
-            print(msg, file=sys.stderr)
-
-    log("__main__ entry")
-
-    try:
-        main()
-    except Exception as e:
-        import traceback
-        st.write("App failed with exception:")
-        st.text("".join(traceback.format_exception(type(e), e, e.__traceback__)))
-        log(f"fatal error: {e}")
-        raise
+    sys.argv = ["streamlit", "run", __file__]
+    sys.exit(stcli.main())
