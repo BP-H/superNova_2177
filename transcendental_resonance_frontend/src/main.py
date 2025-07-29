@@ -19,6 +19,7 @@ from .utils.api import (
     clear_token,
     listen_ws,
     on_ws_status_change,
+    OFFLINE_MODE,
 )
 from .utils.loading_overlay import LoadingOverlay
 from .utils.styles import (
@@ -54,6 +55,11 @@ ws_status = (
     .classes("fixed bottom-0 left-0 m-2")
     .style("color: red")
 )
+
+if OFFLINE_MODE:
+    ui.label("OFFLINE MODE").classes(
+        "fixed bottom-0 w-full text-center bg-red-600 text-white"
+    )
 
 def _update_ws_status(status: str) -> None:
     color = "green" if status == "connected" else "red"
