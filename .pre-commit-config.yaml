@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 repos:
   - repo: https://github.com/psf/black
     rev: 24.4.2
@@ -30,3 +33,8 @@ repos:
         name: patch-monitor
         language: python
         entry: python scripts/patch_monitor_hook.py
+      - id: streamlit-shadow-check
+        name: streamlit-shadow-check
+        language: python
+        entry: python scripts/check_streamlit_shadow.py
+        pass_filenames: false
