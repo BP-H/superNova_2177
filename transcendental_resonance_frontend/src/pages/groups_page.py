@@ -49,11 +49,10 @@ async def groups_page():
                 params['search'] = search_query.value
             if sort_select.value:
                 params['sort'] = sort_select.value
-            groups_list.clear()
-            with groups_list:
-                for _ in range(3):
-                    skeleton_loader().classes('w-full h-20 mb-2')
-            groups = await api_call('GET', '/groups/', params) or []
+            groups = await api_call('GET', '/groups/', params)
+            if groups is None:
+                ui.notify('Failed to load data', color='negative')
+                return
             if search_query.value:
                 groups = [g for g in groups if search_query.value.lower() in g['name'].lower()]
             if sort_select.value:

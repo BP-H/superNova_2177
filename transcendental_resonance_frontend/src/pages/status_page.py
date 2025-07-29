@@ -24,6 +24,9 @@ async def status_page():
 
         async def refresh_status() -> None:
             status = await api_call("GET", "/status")
+            if status is None:
+                ui.notify("Failed to load data", color="negative")
+                return
             if status:
                 status_label.text = f"Status: {status['status']}"
                 harmonizers_label.text = (

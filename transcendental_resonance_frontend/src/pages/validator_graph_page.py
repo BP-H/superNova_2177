@@ -61,6 +61,9 @@ async def validator_graph_page():
 
         async def refresh_graph() -> None:
             analysis = await api_call("GET", "/network-analysis/")
+            if analysis is None:
+                ui.notify("Failed to load data", color="negative")
+                return
             if not analysis:
                 return
             nodes = analysis.get("nodes", [])
