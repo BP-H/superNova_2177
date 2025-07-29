@@ -4,6 +4,7 @@ from nicegui import ui
 from utils.api import api_call
 from utils.layout import page_container
 from utils.styles import get_theme
+from utils.navbar import navigation_bar
 
 
 @ui.page("/status")
@@ -11,6 +12,7 @@ async def status_page():
     """Display real-time system metrics."""
     THEME = get_theme()
     with page_container(THEME):
+        navigation_bar()
         ui.label("System Status").classes("text-2xl font-bold mb-4").style(
             f'color: {THEME["accent"]};'
         )

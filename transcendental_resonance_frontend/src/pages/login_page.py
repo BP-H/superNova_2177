@@ -4,6 +4,7 @@ from nicegui import ui
 
 from utils.api import api_call, set_token
 from utils.styles import get_theme
+from utils.navbar import navigation_bar
 
 
 @ui.page('/')
@@ -13,6 +14,7 @@ async def login_page():
     with ui.column().classes('w-full max-w-md mx-auto p-4').style(
         f'background: {THEME["gradient"]}; color: {THEME["text"]};'
     ):
+        navigation_bar()
         ui.label('Transcendental Resonance').classes(
             'text-3xl font-bold text-center mb-4'
         ).style(f'color: {THEME["accent"]};')
@@ -52,6 +54,7 @@ async def register_page():
     with ui.column().classes('w-full max-w-md mx-auto p-4').style(
         f'background: {THEME["gradient"]}; color: {THEME["text"]};'
     ):
+        navigation_bar()
         ui.label('Register').classes('text-2xl font-bold text-center mb-4').style(
             f'color: {THEME["accent"]};'
         )
