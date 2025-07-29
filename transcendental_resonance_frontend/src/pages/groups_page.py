@@ -5,6 +5,7 @@ from nicegui import ui
 from utils.api import api_call, TOKEN, get_group_recommendations
 from utils.styles import get_theme
 from utils.layout import page_container, navigation_bar
+from utils.features import skeleton_loader
 from .login_page import login_page
 
 
@@ -48,6 +49,10 @@ async def groups_page():
                 params['search'] = search_query.value
             if sort_select.value:
                 params['sort'] = sort_select.value
+            groups_list.clear()
+            with groups_list:
+                for _ in range(3):
+                    skeleton_loader().classes('w-full h-20 mb-2')
             groups = await api_call('GET', '/groups/', params) or []
             if search_query.value:
                 groups = [g for g in groups if search_query.value.lower() in g['name'].lower()]

@@ -6,6 +6,7 @@ import asyncio
 from utils.api import api_call, TOKEN, listen_ws
 from utils.styles import get_theme
 from utils.layout import page_container, navigation_bar
+from utils.features import skeleton_loader
 from components.media_renderer import render_media_block
 from components.emoji_toolbar import emoji_toolbar
 from utils.safe_markdown import safe_markdown
@@ -93,6 +94,10 @@ async def vibenodes_page():
 
         async def refresh_trending():
             params = {'sort': 'trending', 'limit': 5}
+            trending_list.clear()
+            with trending_list:
+                for _ in range(3):
+                    skeleton_loader().classes('w-full h-20 mb-2')
             trending = await api_call('GET', '/vibenodes/', params) or []
             trending_list.clear()
             for vn in trending:
@@ -135,6 +140,10 @@ async def vibenodes_page():
                 params['search'] = search_query.value
             if sort_select.value:
                 params['sort'] = sort_select.value
+            vibenodes_list.clear()
+            with vibenodes_list:
+                for _ in range(3):
+                    skeleton_loader().classes('w-full h-32 mb-2')
             vibenodes = await api_call('GET', '/vibenodes/', params) or []
             if search_query.value:
                 vibenodes = [vn for vn in vibenodes if search_query.value.lower() in vn['name'].lower()]

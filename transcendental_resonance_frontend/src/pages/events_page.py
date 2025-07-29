@@ -11,6 +11,7 @@ from utils.api import api_call, TOKEN, BACKEND_URL
 import httpx
 from utils.styles import get_theme
 from utils.layout import page_container, navigation_bar
+from utils.features import skeleton_loader
 from .login_page import login_page
 
 
@@ -69,6 +70,10 @@ async def events_page():
                 params['search'] = search_query.value
             if sort_select.value:
                 params['sort'] = sort_select.value
+            events_list.clear()
+            with events_list:
+                for _ in range(3):
+                    skeleton_loader().classes('w-full h-20 mb-2')
             events = await api_call('GET', '/events/', params) or []
             if search_query.value:
                 events = [e for e in events if search_query.value.lower() in e['name'].lower()]

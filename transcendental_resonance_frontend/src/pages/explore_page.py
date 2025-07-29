@@ -5,6 +5,7 @@
 from nicegui import ui
 from utils.api import TOKEN, api_call
 from utils.layout import page_container, navigation_bar
+from utils.features import skeleton_loader
 from components.media_renderer import render_media_block
 from utils.styles import get_theme
 
@@ -35,7 +36,13 @@ async def explore_page() -> None:
         async def load_more() -> None:
             nonlocal offset
             params = {"offset": offset, "limit": limit}
+            placeholders = []
+            with posts_container:
+                for _ in range(limit):
+                    placeholders.append(skeleton_loader().classes("w-full h-32 mb-2"))
             posts = await api_call("GET", "/vibenodes/trending", params) or []
+            for p in placeholders:
+                p.delete()
             if not posts:
                 return
             offset += len(posts)
