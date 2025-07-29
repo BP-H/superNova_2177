@@ -2581,6 +2581,75 @@ def follow_unfollow_user(
     return {"message": message}
 
 
+@app.get(
+    "/vibenodes/{vibenode_id}/comments",
+    response_model=list[CommentOut],
+    tags=["Content & Engagement"],
+)
+def get_comments(
+    vibenode_id: int,
+    db: Session = Depends(get_db),
+    current_user: Harmonizer = Depends(get_current_active_user),
+):
+    """Return all comments for a given VibeNode."""
+    vibenode = db.query(VibeNode).filter(VibeNode.id == vibenode_id).first()
+    if not vibenode:
+        raise HTTPException(status_code=404, detail="VibeNode not found")
+    comments = (
+        db.query(Comment)
+        .filter(Comment.vibenode_id == vibenode_id)
+        .order_by(Comment.created_at)
+        .all()
+    )
+    out = []
+    for c in comments:
+        co = CommentOut.model_validate(c)
+        co.replies_count = len(c.replies)
+        out.append(co)
+    return out
+
+
+@app.post(
+    "/vibenodes/{vibenode_id}/comments",
+    response_model=CommentOut,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Content & Engagement"],
+)
+def create_comment(
+    vibenode_id: int,
+    comment: CommentCreate,
+    db: Session = Depends(get_db),
+    current_user: Harmonizer = Depends(get_current_active_user),
+):
+    """Create a new comment on a VibeNode."""
+    vibenode = db.query(VibeNode).filter(VibeNode.id == vibenode_id).first()
+    if not vibenode:
+        raise HTTPException(status_code=404, detail="VibeNode not found")
+    if comment.parent_comment_id:
+        parent = (
+            db.query(Comment)
+            .filter(
+                Comment.id == comment.parent_comment_id,
+                Comment.vibenode_id == vibenode_id,
+            )
+            .first()
+        )
+        if not parent:
+            raise HTTPException(status_code=404, detail="Parent comment not found")
+    db_comment = Comment(
+        content=comment.content,
+        author_id=current_user.id,
+        vibenode_id=vibenode_id,
+        parent_comment_id=comment.parent_comment_id,
+    )
+    db.add(db_comment)
+    db.commit()
+    db.refresh(db_comment)
+    out = CommentOut.model_validate(db_comment)
+    out.replies_count = len(db_comment.replies)
+    return out
+
+
 # STRICTLY A SOCIAL MEDIA PLATFORM - follower counts are symbolic only.
 
 

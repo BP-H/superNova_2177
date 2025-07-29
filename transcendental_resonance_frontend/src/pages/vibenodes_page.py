@@ -112,4 +112,52 @@ async def vibenodes_page():
                             f'background: {THEME["primary"]}; color: {THEME["text"]};'
                         )
 
+                        comments_section = ui.expansion('Comments').classes('w-full mt-2')
+                        comments_container = ui.column().classes('w-full')
+
+                        async def load_comments(vn_id=vn['id'], container=comments_container):
+                            data = await api_call('GET', f'/vibenodes/{vn_id}/comments') or []
+                            container.clear()
+
+                            comment_map = {}
+                            for c in data:
+                                comment_map.setdefault(c.get('parent_comment_id'), []).append(c)
+
+                            async def render(parent_id=None, level=0):
+                                for cm in comment_map.get(parent_id, []):
+                                    with container:
+                                        ui.label(cm['content']).classes('text-sm').style(f'margin-left: {level}rem')
+                                        reply_input = ui.input('Reply...').classes('w-full mb-2').style(f'margin-left: {level}rem')
+
+                                        async def send_reply(cid=cm['id'], inp=reply_input, vid=vn['id']):
+                                            if inp.value:
+                                                await api_call('POST', f'/vibenodes/{vid}/comments', {
+                                                    'content': inp.value,
+                                                    'parent_comment_id': cid,
+                                                })
+                                                inp.value = ''
+                                                await load_comments()
+
+                                        ui.button('Reply', on_click=send_reply).style(
+                                            f'margin-left: {level}rem; background: {THEME["accent"]}; color: {THEME["background"]};'
+                                        )
+                                    await render(cm['id'], level + 1)
+
+                            await render()
+
+                        comment_input = ui.input('Add a comment...').classes('w-full mb-2')
+
+                        async def send_comment(vid=vn['id'], inp=comment_input):
+                            if inp.value:
+                                await api_call('POST', f'/vibenodes/{vid}/comments', {'content': inp.value})
+                                inp.value = ''
+                                await load_comments()
+
+                        ui.button('Post Comment', on_click=send_comment).style(
+                            f'background: {THEME["primary"]}; color: {THEME["text"]};'
+                        )
+                        with comments_section:
+                            comments_container
+                        ui.run_async(load_comments())
+
         await refresh_vibenodes()
