@@ -78,7 +78,7 @@ def run_ui() -> None:
 
 
 def build_frontend(pip: list) -> None:
-    """Install UI deps and build the Transcendental Resonance frontend."""
+    """Install UI dependencies for the Transcendental Resonance frontend."""
     frontend_dir = Path('transcendental_resonance_frontend')
     ui_reqs = frontend_dir / 'requirements.txt'
     if ui_reqs.is_file():
@@ -88,14 +88,6 @@ def build_frontend(pip: list) -> None:
             logging.error('Failed to install UI dependencies: %s', exc)
             logging.error('Check your internet connection and try again.')
             raise
-    ui_script = frontend_dir / 'src' / 'main.py'
-    nicegui = [venv_bin('nicegui')] if not in_virtualenv() else ['nicegui']
-    try:
-        subprocess.check_call(nicegui + ['build', str(ui_script)])
-    except subprocess.CalledProcessError as exc:
-        logging.error('Failed to build the frontend: %s', exc)
-        logging.error('Ensure Node.js and NiceGUI are properly installed.')
-        raise
 
 
 def main() -> None:

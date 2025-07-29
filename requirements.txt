@@ -41,4 +41,3 @@ kaleido
 websockets
 plotly
 pyvis
-nicegui
