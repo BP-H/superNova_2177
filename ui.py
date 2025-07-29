@@ -10,10 +10,11 @@ import logging
 import math
 import os
 import sys
+import time
 import traceback
 from datetime import datetime
+from importlib import import_module
 from pathlib import Path
-import time
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -29,7 +30,7 @@ import streamlit as st
 # health check endpoint ever changes.
 HEALTH_CHECK_PARAM = "healthz"
 
-print("\u23F3 Booting superNova_2177 UI...", file=sys.stderr)
+print("\u23f3 Booting superNova_2177 UI...", file=sys.stderr)
 
 try:
     st.set_page_config(page_title="superNova_2177", layout="wide")
@@ -37,20 +38,19 @@ except Exception:  # pragma: no cover - defensive
     logger.exception("Failed to configure Streamlit page")
     print("Failed to configure Streamlit page", file=sys.stderr)
 
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
+if (
+    st.query_params.get(HEALTH_CHECK_PARAM) == "1"
+    or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz"
+):
     st.write("ok")
     st.stop()
 
 st.write("Booting...")
-from streamlit_helpers import (
-    alert,
-    apply_theme,
-    centered_container,
-    header,
-    theme_selector,
-)
 from api_key_input import render_api_key_ui, render_simulation_stubs
-from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_main_ui
+from streamlit_helpers import (alert, apply_theme, centered_container, header,
+                               theme_selector)
+from ui_utils import (load_rfc_entries, parse_summary, render_main_ui,
+                      summarize_text)
 
 
 def _run_async(coro):
@@ -120,6 +120,9 @@ except Exception:  # pragma: no cover - optional in dev/CI
     }
 
 sample_path = Path(__file__).resolve().parent / "sample_validations.json"
+PAGES_DIR = (
+    Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
+)
 
 try:
     from validation_certifier import Config as VCConfig
@@ -865,17 +868,18 @@ def render_validation_ui() -> None:
 
 
 def main() -> None:
-    render_main_ui()
-    header("superNova_2177 Validation Analyzer", layout="wide")
-    tab1, tab2, tab3, tab4 = st.tabs(["Validation", "Friends", "Votes", "Agents"])
-    with tab1:
-        render_validation_ui()
-    with tab2:
-        render_social_tab()
-    with tab3:
-        render_voting_tab()
-    with tab4:
-        render_agent_insights_tab()
+    """Render the selected Streamlit page."""
+    page_files = [p.stem for p in PAGES_DIR.glob("*.py") if p.name != "__init__.py"]
+    page_files.sort()
+    if not page_files:
+        st.error("No pages available")
+        return
+    choice = st.sidebar.selectbox("Page", page_files)
+    module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
+    if hasattr(module, "main"):
+        module.main()
+    else:  # pragma: no cover - developer error
+        st.error(f"Page {choice} missing main()")
 
 
 if __name__ == "__main__":
@@ -910,11 +914,12 @@ if __name__ == "__main__":
                 boot_status.update(f"Startup failed: {exc}", state="error")
                 st.error(f"UI startup failed: {exc}")
                 break
-            boot_status.update(f"Retrying... ({attempt}/{max_attempts})", state="running")
+            boot_status.update(
+                f"Retrying... ({attempt}/{max_attempts})", state="running"
+            )
             time.sleep(1)
         else:
             boot_status.update("Ready", state="complete")
             print("UI Booted", file=sys.stderr)
             st.success("✅ UI Booted")
             break
-
