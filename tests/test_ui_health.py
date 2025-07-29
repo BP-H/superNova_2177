@@ -32,9 +32,10 @@ def test_healthz_endpoint():
     proc = _start_server(port)
     try:
         # Wait for server to come up
+        url = f"http://localhost:{port}/?healthz=1"
         for _ in range(30):
             try:
-                res = requests.get(f"http://localhost:{port}/?healthz=1", timeout=1)
+                res = requests.get(url, timeout=1)
                 if res.status_code == 200:
                     break
             except Exception:
@@ -46,7 +47,7 @@ def test_healthz_endpoint():
             raise RuntimeError("Streamlit did not start in time")
 
         start = time.time()
-        resp = requests.get(f"http://localhost:{port}/?healthz=1", timeout=5)
+        resp = requests.get(url, timeout=5)
         elapsed = time.time() - start
         assert resp.status_code == 200
         assert "ok" in resp.text.lower()
