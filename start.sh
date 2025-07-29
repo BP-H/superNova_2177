@@ -3,8 +3,8 @@
 # Intellectual Property & Artistic Inspiration
 # Legal & Ethical Safeguards
 
-# Launch the NiceGUI wrapper for Streamlit Cloud
-UI_FILE="transcendental_resonance_frontend/ui.py"
+# Launch the Streamlit UI
+UI_FILE="ui.py"
 
 if [[ ! -f "$UI_FILE" ]]; then
   echo "❌ $UI_FILE not found. Please ensure it exists." >&2
