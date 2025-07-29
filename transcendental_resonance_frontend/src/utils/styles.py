@@ -1,5 +1,9 @@
 """Styling utilities for the Transcendental Resonance frontend."""
 
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 from typing import Dict, Optional
 
 from nicegui import ui
@@ -12,6 +16,13 @@ THEMES: Dict[str, Dict[str, str]] = {
         "background": "#121212",
         "text": "#ffffff",
         "gradient": "linear-gradient(135deg, #0d47a1 0%, #121212 100%)",
+    },
+    "minimalist_dark": {
+        "primary": "#2b2b2b",
+        "accent": "#5e9ed6",
+        "background": "#1a1a1a",
+        "text": "#f0f0f0",
+        "gradient": "linear-gradient(135deg, #2b2b2b 0%, #1a1a1a 100%)",
     },
     "light": {
         "primary": "#1976d2",
@@ -74,13 +85,15 @@ def apply_global_styles() -> None:
     theme["accent"] = ACTIVE_ACCENT
 
     font_family = "'Inter', sans-serif"
-    font_link = "<link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap\" rel=\"stylesheet\">"
+    font_link = '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">'
     if ACTIVE_THEME_NAME == "cyberpunk":
         font_family = "'Orbitron', sans-serif"
-        font_link = (
-            "<link href=\"https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap\" rel=\"stylesheet\">"
-        )
+        font_link = '<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">'
+    elif ACTIVE_THEME_NAME == "minimalist_dark":
+        font_family = "'Iosevka', monospace"
+        font_link = '<link href="https://fonts.googleapis.com/css2?family=Iosevka:wght@400;700&display=swap" rel="stylesheet">'
 
+    ui.run_javascript("document.getElementById('global-theme')?.remove()")
     ui.add_head_html(
         f"""
         <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -90,7 +103,7 @@ def apply_global_styles() -> None:
             body {{ font-family: {font_family}; background: {theme['background']}; color: {theme['text']}; }}
             .q-btn:hover {{ border: 1px solid {theme['accent']}; }}
             .futuristic-gradient {{ background: {theme['gradient']}; }}
-            .glow-card {{ border: 1px solid {theme["accent"]}; box-shadow: 0 0 6px {theme["accent"]}; }}
+            .glow-card {{ border: 1px solid {theme['accent']}; box-shadow: 0 0 6px {theme['accent']}; }}
         </style>
         """
     )
@@ -128,6 +141,7 @@ def set_accent(color: str) -> None:
 
 
 _previous_theme = ACTIVE_THEME_NAME
+
 
 def toggle_high_contrast(enabled: bool) -> None:
     """Enable or disable high contrast mode."""

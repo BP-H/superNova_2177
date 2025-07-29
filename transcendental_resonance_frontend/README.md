@@ -32,5 +32,5 @@ Replace the backend URL with the `BACKEND_URL` environment variable if your API 
 ## Notes
 
 This UI is mobile-first with a futuristic aesthetic. A theme selector cycles between
-dark, light, and a new **modern** palette powered by the Inter font.
+dark, a minimalist dark mode, light, and a **modern** palette powered by the Inter font.
 Future improvements include real-time notifications and internationalization.
