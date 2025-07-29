@@ -13,8 +13,11 @@ from __future__ import annotations
 from typing import Any, Dict, List
 import random
 
-from external_services.llm_client import get_speculative_futures
-from external_services.video_client import generate_video_preview
+from external_services import LLMClient, VideoClient
+
+# Shared clients for module-level use
+_llm = LLMClient()
+_video = VideoClient()
 
 # Satirical disclaimer appended to all speculative output
 DISCLAIMER = "This is a satirical simulation, not advice or prediction."
@@ -35,27 +38,27 @@ def _entropy_tag() -> float:
 async def generate_speculative_futures(
     node: Dict[str, Any], num_variants: int = 3
 ) -> List[Dict[str, str]]:
-    """Generate playful speculative futures for a VibeNode using ``llm_client``."""
+    """Generate playful speculative futures for a VibeNode."""
 
     description = node.get("description", "")
-    texts = await get_speculative_futures(description)
+    items = await _llm.get_speculative_futures(description)
     futures: List[Dict[str, str]] = []
-    for text in texts[: max(1, num_variants)]:
+    for item in items[: max(1, num_variants)]:
         emoji = random.choice(list(EMOJI_GLOSSARY.keys()))
-        futures.append({"text": f"{text} {emoji}", "entropy": f"{_entropy_tag():.2f}"})
+        futures.append({"text": f"{item['text']} {emoji}", "entropy": f"{_entropy_tag():.2f}"})
     return futures
 
 
 async def generate_speculative_payload(description: str) -> List[Dict[str, str]]:
     """Return text and video pairs with a disclaimer."""
 
-    texts = await get_speculative_futures(description)
+    texts = await _llm.get_speculative_futures(description)
     results: List[Dict[str, str]] = []
-    for text in texts:
-        video_url = await generate_video_preview(prompt=text)
+    for item in texts:
+        video = await _video.generate_video_preview(prompt=item["text"])
         results.append({
-            "text": text,
-            "video_url": video_url,
+            "text": item["text"],
+            "video_url": video["url"],
             "disclaimer": DISCLAIMER,
         })
     return results

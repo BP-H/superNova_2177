@@ -3,7 +3,14 @@
 # Legal & Ethical Safeguards
 """Plug-and-play modules for external AI services."""
 
-from .llm_client import get_speculative_futures
-from .video_client import generate_video_preview
+from .base_client import BaseClient
+from .llm_client import LLMClient
+from .video_client import VideoClient
+from .vision_client import VisionClient
 
-__all__ = ["get_speculative_futures", "generate_video_preview"]
+__all__ = [
+    "BaseClient",
+    "LLMClient",
+    "VideoClient",
+    "VisionClient",
+]

@@ -6,16 +6,30 @@
 from __future__ import annotations
 
 import os
+from typing import Any, Dict
 
-# Future use: https://runwayml.com or https://kling.ai
-VIDEO_API_KEY = os.getenv("VIDEO_API_KEY", "")
-VIDEO_API_URL = os.getenv("VIDEO_API_URL", "")
+from .base_client import BaseClient
 
-async def generate_video_preview(prompt: str) -> str:
-    """Return a URL for a generated video preview."""
-    if not VIDEO_API_KEY or not VIDEO_API_URL:
-        return "https://example.com/placeholder.mp4"
-    # TODO: implement real API call
-    return "https://your-api.com/generated_clip.mp4"
 
-__all__ = ["generate_video_preview"]
+class VideoClient(BaseClient):
+    """Video generation client with consistent offline behavior."""
+
+    PLACEHOLDER_URL = "https://example.com/placeholder.mp4"
+
+    def __init__(self, api_key: str | None = None, api_url: str | None = None, offline: bool | None = None) -> None:
+        api_key = api_key or os.getenv("VIDEO_API_KEY", "")
+        api_url = api_url or os.getenv("VIDEO_API_URL", "")
+        super().__init__(api_key, api_url, offline)
+
+    async def generate_video_preview(self, prompt: str) -> Dict[str, Any]:
+        """Return a URL for a generated video preview."""
+        placeholder = {"url": self.PLACEHOLDER_URL}
+        if self.offline:
+            return self._offline_response(placeholder)
+        try:
+            raise NotImplementedError("Video API not implemented")
+        except Exception as e:  # pragma: no cover - until implemented
+            return self._error_response(e, placeholder)
+
+
+__all__ = ["VideoClient"]
