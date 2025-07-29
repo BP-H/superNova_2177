@@ -898,6 +898,7 @@ def main() -> None:
 
     log("⚡ main() invoked")
     st.set_page_config(page_title="superNova_2177", layout="wide")
+    log("App started")
 
     # Unified health check: Path priority for Cloud; query/env fallback for CI/local
     if (
@@ -951,3 +952,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+main()
