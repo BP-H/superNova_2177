@@ -1,6 +1,7 @@
 """Styling utilities for the Transcendental Resonance frontend."""
 
 from typing import Dict, Optional
+import json
 
 from nicegui import ui
 
@@ -29,10 +30,45 @@ THEMES: Dict[str, Dict[str, str]] = {
     },
 }
 
+# Custom themes created by the user are stored separately so they can be
+# persisted to and loaded from ``localStorage``.
+CUSTOM_THEMES: Dict[str, Dict[str, str]] = {}
+
 # Currently active theme name and accent color. They can be changed at runtime
 # and are persisted in the browser ``localStorage``.
 ACTIVE_THEME_NAME: str = "dark"
 ACTIVE_ACCENT: str = THEMES[ACTIVE_THEME_NAME]["accent"]
+
+
+def _persist_custom_themes() -> None:
+    """Write custom themes to ``localStorage``."""
+    try:
+        ui.run_javascript(
+            f"localStorage.setItem('customThemes', '{json.dumps(CUSTOM_THEMES)}')"
+        )
+    except Exception:
+        # Accessing localStorage may fail during testing
+        pass
+
+
+def save_custom_theme(name: str, theme: Dict[str, str]) -> None:
+    """Save a new custom theme and persist it."""
+    CUSTOM_THEMES[name] = theme
+    THEMES[name] = theme
+    _persist_custom_themes()
+
+
+def create_custom_theme(name: str, background: str, text: str) -> None:
+    """Create and store a custom theme using the current accent."""
+    base = THEMES[ACTIVE_THEME_NAME]
+    theme = {
+        "primary": base["primary"],
+        "accent": ACTIVE_ACCENT,
+        "background": background,
+        "text": text,
+        "gradient": f"linear-gradient(135deg, {background} 0%, {background} 100%)",
+    }
+    save_custom_theme(name, theme)
 
 
 def apply_global_styles() -> None:
@@ -40,6 +76,20 @@ def apply_global_styles() -> None:
     global ACTIVE_THEME_NAME, ACTIVE_ACCENT
 
     try:
+        stored_custom = ui.run_javascript(
+            "localStorage.getItem('customThemes')",
+            respond=True,
+        )
+        if isinstance(stored_custom, str) and stored_custom:
+            try:
+                data = json.loads(stored_custom)
+                if isinstance(data, dict):
+                    CUSTOM_THEMES.update(
+                        {k: v for k, v in data.items() if isinstance(v, dict)}
+                    )
+                    THEMES.update(CUSTOM_THEMES)
+            except Exception:
+                pass
         stored_theme: Optional[str] = ui.run_javascript(
             "localStorage.getItem('theme')",
             respond=True,
