@@ -1,0 +1,25 @@
+numpy
+python-dateutil
+networkx
+sqlalchemy>=2.0
+pytest-asyncio
+httpx==0.27.0
+email-validator
+requests
+fastapi
+python-multipart
+pydantic
+pydantic-settings
+structlog
+redis
+passlib[bcrypt]
+python-jose[cryptography]
+prometheus-client
+streamlit
+types-requests
+
+# appended for compatibility with test suites
+
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards

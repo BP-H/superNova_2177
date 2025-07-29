@@ -365,9 +365,10 @@ Deploy the demo UI online with Streamlit Cloud:
 2. Sign in to [Streamlit Cloud](https://streamlit.io/cloud) and select **New app**.
 3. Choose the repo and set `streamlit_app.py` as the entry point.
 4. Add your `SECRET_KEY` and set a `DATABASE_URL` secret with your connection string under **Secrets** in the app settings.
-5. Streamlit will install dependencies from `requirements.txt` and launch the app.
+5. Streamlit will install dependencies from `requirements.txt` and launch the app. For faster builds, point the app to `requirements-streamlit.txt`, which mirrors `requirements-minimal.txt` but omits heavy libraries such as **torch**, **transformers**, `sentence-transformers`, `qutip`, and `pygame`.
 
-`kaleido` is bundled in `requirements.txt` so image export features work on Streamlit Cloud.
+`kaleido` is bundled in `requirements.txt` so image export features work on Streamlit Cloud. The smaller `requirements-streamlit.txt` also includes the mandatory legal language:
+`STRICTLY A SOCIAL MEDIA PLATFORM`, `Intellectual Property & Artistic Inspiration`, and `Legal & Ethical Safeguards`.
 
 After the build completes, you'll get a shareable URL to interact with the validation demo in your browser.
 
