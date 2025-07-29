@@ -19,7 +19,7 @@ class JobQueueAgent(InternalAgentProtocol):
         self,
         func: Callable[..., Any],
         *args: Any,
-        on_complete: Callable[[Any], Awaitable[None]] | None = None,
+        on_complete: Callable[[Any], Awaitable[None] | None] | None = None,
         **kwargs: Any,
     ) -> str:
         """Schedule ``func`` to run asynchronously and return a job ID."""
@@ -36,12 +36,16 @@ class JobQueueAgent(InternalAgentProtocol):
                 self.jobs[job_id]["status"] = "done"
                 self.jobs[job_id]["result"] = result
                 if on_complete:
-                    await on_complete(result)
+                    result = on_complete(result)
+                    if inspect.isawaitable(result):
+                        await result
             except Exception as e:  # pragma: no cover - log only
                 self.jobs[job_id]["status"] = "error"
                 self.jobs[job_id]["error"] = str(e)
                 if on_complete:
-                    await on_complete({"error": str(e)})
+                    result = on_complete({"error": str(e)})
+                    if inspect.isawaitable(result):
+                        await result
 
         asyncio.create_task(runner())
         return job_id
