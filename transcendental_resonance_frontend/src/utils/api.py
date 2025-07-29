@@ -105,8 +105,7 @@ async def api_call(
     if OFFLINE_MODE:
         logger.info("Offline mode: skipping API call %s %s", method, endpoint)
         _fire_listeners(_end_listeners)
-        return [] if method == "GET" else {}
-        logger.info("Offline mode: %s %s skipped", method, endpoint)
+        return None
 
 
     try:
@@ -235,8 +234,6 @@ async def connect_ws(path: str = "/ws", timeout: float = 5.0):
         return None
 
 
-def listen_ws(
-    handler: Callable[[dict], Awaitable[None]], *, reconnect: bool = True
 async def listen_ws(
     handler: Callable[[dict], Awaitable[None]], *, reconnect: bool = True
 ) -> asyncio.Task:
@@ -270,12 +267,6 @@ async def listen_ws(
                 if WS_CONNECTION is ws:
                     WS_CONNECTION = None
                 _fire_ws_status("disconnected")
-            if not reconnect:
-                break
-            await asyncio.sleep(retry_delay)
-
-    return asyncio.create_task(_listen())
-
             if not reconnect:
                 break
             await asyncio.sleep(retry_delay)
