@@ -13,6 +13,7 @@ import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
+import time
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
@@ -28,20 +29,19 @@ import streamlit as st
 # health check endpoint ever changes.
 HEALTH_CHECK_PARAM = "healthz"
 
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
-    st.write("ok")
-    st.stop()
+print("\u23F3 Booting superNova_2177 UI...", file=sys.stderr)
 
-# Basic page setup so Streamlit responds immediately on load
 try:
     st.set_page_config(page_title="superNova_2177", layout="wide")
-except Exception:
+except Exception:  # pragma: no cover - defensive
     logger.exception("Failed to configure Streamlit page")
     print("Failed to configure Streamlit page", file=sys.stderr)
 
-else:
-    st.title("superNova_2177")
-    st.success("\u2705 Streamlit loaded!")
+if st.query_params.get(HEALTH_CHECK_PARAM) == "1" or os.environ.get("PATH_INFO", "").rstrip("/") == "/healthz":
+    st.write("ok")
+    st.stop()
+
+st.write("Booting...")
 from streamlit_helpers import (
     alert,
     apply_theme,
@@ -899,13 +899,24 @@ if __name__ == "__main__":
 
     apply_theme(st.session_state["theme"])
 
-    try:
-        main()
-    except Exception as exc:  # pragma: no cover - startup diagnostics
-        logger.exception("UI startup failed")
-        print(f"Startup failed: {exc}", file=sys.stderr)
-        traceback.print_exc(file=sys.stderr)
-        st.error(f"UI startup failed: {exc}")
-    else:
-        print("UI Booted", file=sys.stderr)
-        st.success("✅ UI Booted")
+    boot_status = st.status("Initializing...", expanded=False)
+    max_attempts = 2
+    for attempt in range(1, max_attempts + 1):
+        try:
+            main()
+        except Exception as exc:  # pragma: no cover - startup diagnostics
+            logger.exception("UI startup failed")
+            print(f"Startup failed (attempt {attempt}): {exc}", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
+            if attempt >= max_attempts:
+                boot_status.update(f"Startup failed: {exc}", state="error")
+                st.error(f"UI startup failed: {exc}")
+                break
+            boot_status.update(f"Retrying... ({attempt}/{max_attempts})", state="running")
+            time.sleep(1)
+        else:
+            boot_status.update("Ready", state="complete")
+            print("UI Booted", file=sys.stderr)
+            st.success("✅ UI Booted")
+            break
+
