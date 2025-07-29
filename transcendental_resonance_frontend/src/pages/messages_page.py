@@ -4,7 +4,8 @@
 """Messaging system page."""
 
 from nicegui import ui
-from utils.api import TOKEN, api_call, listen_ws
+from utils.api import TOKEN, api_call, listen_ws, send_ws
+from utils.realtime_utils import get_username, get_user_cached, humanize_timestamp
 from utils.layout import page_container
 from utils.styles import get_theme
 
@@ -26,12 +27,20 @@ async def messages_page():
 
         recipient = ui.input("Recipient Username").classes("w-full mb-2")
         content = ui.textarea("Message").classes("w-full mb-2")
+        content.on(
+            "input",
+            lambda _: ui.run_async(
+                send_ws({"type": "typing", "recipient": recipient.value})
+            ),
+        )
+        typing_label = ui.label().classes("text-sm italic mb-2")
 
         async def send_message():
             data = {"content": content.value}
             resp = await api_call("POST", f"/messages/{recipient.value}", data)
             if resp:
                 ui.notify("Message sent!", color="positive")
+                content.value = ""
                 await refresh_messages()
 
         ui.button("Send", on_click=send_message).classes("w-full mb-4").style(
@@ -74,15 +83,24 @@ async def messages_page():
             messages = await api_call("GET", "/messages/") or []
             messages_list.clear()
             for m in messages:
+                username = await get_username(m.get("sender_id"))
+                user_data = await get_user_cached(m.get("sender_id")) or {}
+                avatar_url = user_data.get("avatar_url")
+                ts = humanize_timestamp(m.get("timestamp") or m.get("created_at", ""))
                 with messages_list:
                     with (
                         ui.card()
                         .classes("w-full mb-2")
-                        .style("border: 1px solid #333; background: #1e1e1e;")
+                        .style(f"border: 1px solid #333; background: {THEME['background']};")
                     ):
-                        with ui.row().classes("items-center justify-between"):
+                        with ui.row().classes("items-start justify-between"):
+                            ui.image(
+                                avatar_url or "https://via.placeholder.com/40"
+                            ).classes("w-8 h-8 rounded-full mr-2")
                             with ui.column().classes("grow"):
-                                ui.label(f"From: {m['sender_id']}").classes("text-sm")
+                                with ui.row().classes("items-center justify-between"):
+                                    ui.label(username).classes("text-sm font-bold")
+                                    ui.label(ts).classes("text-xs text-gray-400")
                                 ui.label(m["content"]).classes("text-sm")
                             ui.button(
                                 on_click=lambda msg=m: ui.run_async(open_edit(msg)),
@@ -92,8 +110,22 @@ async def messages_page():
         await refresh_messages()
         ui.timer(30, lambda: ui.run_async(refresh_messages()))
 
+        typing_timers: dict[int, ui.timer] = {}
+
         async def handle_event(event: dict) -> None:
-            if event.get("type") == "message":
+            etype = event.get("type")
+            if etype == "message":
                 await refresh_messages()
+            elif etype == "typing":
+                sender = event.get("sender_id")
+                username = await get_username(sender)
+                typing_label.text = f"{username} is typing..."
+
+                def clear() -> None:
+                    typing_label.text = ""
+
+                if sender in typing_timers:
+                    typing_timers[sender].stop()
+                typing_timers[sender] = ui.timer(2, clear, once=True)
 
         ui.run_async(listen_ws(handle_event))
