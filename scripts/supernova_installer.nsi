@@ -1,3 +1,6 @@
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 !define APPNAME "SuperNova 2177"
 !define APPEXE "supernova-cli.exe"
 !define OUTPUT "superNova_2177_Installer.exe"

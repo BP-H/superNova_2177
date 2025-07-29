@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 set -euo pipefail
 
 # Build the superNova_2177 CLI into a platform specific package.

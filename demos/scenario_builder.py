@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
 """Scenario Builder for superNova_2177
 
 This script generates a custom set of validation entries based on
