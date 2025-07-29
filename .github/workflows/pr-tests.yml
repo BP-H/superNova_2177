@@ -70,6 +70,7 @@ jobs:
             exit 1
           fi
           curl -f http://localhost:"$PORT"
+          # Fallback health check query param
           curl -f "http://localhost:$PORT/?healthz=1"
           pkill streamlit
       - name: Print Streamlit logs on failure

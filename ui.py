@@ -33,23 +33,6 @@ if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
     st.write("ok")
     st.stop()
 
-# Fallback health check endpoint for CI (avoids internal monkey-patching)
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
-    st.write("ok")
-    st.stop()
-
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
-    # Fallback health check endpoint for CI (avoids internal monkey-patching)
-    st.write("ok")
-    st.stop()
-
-# Fallback health check for CI environments
-if st.query_params.get(HEALTH_CHECK_PARAM) == "1":
-    st.write(
-        "ok"
-    )  # Fallback health check endpoint for CI (avoids internal monkey-patching)
-    st.stop()
-
 # Basic page setup so Streamlit responds immediately on load
 try:
     st.set_page_config(page_title="superNova_2177", layout="wide")
@@ -60,9 +43,10 @@ except Exception:
 else:
     st.title("superNova_2177")
     st.success("\u2705 Streamlit loaded!")
-from streamlit_helpers import (alert, apply_theme, centered_container, header,
-                               theme_selector)
-from ui_utils import load_rfc_entries, parse_summary, summarize_text
+from streamlit_helpers import apply_theme  # noqa: E402
+from streamlit_helpers import alert, centered_container, header, theme_selector
+from ui_utils import (load_rfc_entries, parse_summary,  # noqa: E402,F401
+                      summarize_text)
 
 try:
     from streamlit_app import _run_async
@@ -119,11 +103,11 @@ except Exception:  # pragma: no cover - optional dependency
 
 from typing import Any
 
-from agent_ui import render_agent_insights_tab
-from llm_backends import get_backend
-from protocols import AGENT_REGISTRY
-from social_tabs import render_social_tab
-from voting_ui import render_voting_tab
+from agent_ui import render_agent_insights_tab  # noqa: E402
+from llm_backends import get_backend  # noqa: E402
+from protocols import AGENT_REGISTRY  # noqa: E402
+from social_tabs import render_social_tab  # noqa: E402
+from voting_ui import render_voting_tab  # noqa: E402
 
 try:
     st_secrets = st.secrets
