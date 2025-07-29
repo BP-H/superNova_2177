@@ -34,6 +34,13 @@ THEMES: Dict[str, Dict[str, str]] = {
         "text": "#F8F8F2",
         "gradient": "linear-gradient(135deg, #FF0080 0%, #00F0FF 100%)",
     },
+    "high_contrast": {
+        "primary": "#000000",
+        "accent": "#FFFF00",
+        "background": "#000000",
+        "text": "#FFFFFF",
+        "gradient": "linear-gradient(135deg, #000000 0%, #222222 100%)",
+    },
 }
 
 # Currently active theme name and accent color. They can be changed at runtime
@@ -83,6 +90,7 @@ def apply_global_styles() -> None:
             body {{ font-family: {font_family}; background: {theme['background']}; color: {theme['text']}; }}
             .q-btn:hover {{ border: 1px solid {theme['accent']}; }}
             .futuristic-gradient {{ background: {theme['gradient']}; }}
+            .glow-card {{ border: 1px solid {theme["accent"]}; box-shadow: 0 0 6px {theme["accent"]}; }}
         </style>
         """
     )
@@ -118,3 +126,14 @@ def set_accent(color: str) -> None:
     ui.run_javascript(f"localStorage.setItem('accent', '{color}')")
     apply_global_styles()
 
+
+_previous_theme = ACTIVE_THEME_NAME
+
+def toggle_high_contrast(enabled: bool) -> None:
+    """Enable or disable high contrast mode."""
+    global _previous_theme
+    if enabled:
+        _previous_theme = ACTIVE_THEME_NAME
+        set_theme("high_contrast")
+    else:
+        set_theme(_previous_theme)
