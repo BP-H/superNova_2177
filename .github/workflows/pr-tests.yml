@@ -27,6 +27,13 @@ jobs:
       - name: Check patch compliance
         run: |
           python scripts/check_disclaimers.py origin/${{ github.event.pull_request.base.ref }} || echo 'Patch compliance check failed (missing git?)'
+      - name: Fail if stray streamlit.py exists
+        run: |
+          if find . -name "streamlit.py" | grep -q "."; then
+            echo "streamlit.py found. Please remove conflicting file." >&2
+            find . -name "streamlit.py"
+            exit 1
+          fi
       - name: Install dependencies with fallback mirror
         run: |
           python -m pip install --upgrade pip
