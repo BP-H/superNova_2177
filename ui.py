@@ -1,24 +1,24 @@
-import os
-import streamlit as st  # ensure Streamlit is imported early
-
-# STRICTLY A SOCIAL MEDIA PLATFORM
-# Intellectual Property & Artistic Inspiration
-# Legal & Ethical Safeguards
-
 import asyncio
 import difflib
 import io
 import json
 import logging
 import math
+import os
 import sys
 import traceback
-
 # Default port controlled by start.sh via STREAMLIT_PORT; old setting kept
 # for reference but disabled.
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 from datetime import datetime
 from pathlib import Path
+
+import streamlit as st  # ensure Streamlit is imported early
+
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 
@@ -47,21 +47,19 @@ PAGES_DIR = (
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
 UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
 
+
 def log(msg: str) -> None:
     if UI_DEBUG:
         print(msg, file=sys.stderr)
 
+
 if UI_DEBUG:
     log("\u23f3 Booting superNova_2177 UI...")
-from streamlit_helpers import (
-    alert,
-    apply_theme,
-    centered_container,
-    header,
-    theme_selector,
-)
 from api_key_input import render_api_key_ui, render_simulation_stubs
-from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_main_ui
+from streamlit_helpers import (alert, apply_theme, centered_container, header,
+                               theme_selector)
+from ui_utils import (load_rfc_entries, parse_summary, render_main_ui,
+                      summarize_text)
 
 
 def _run_async(coro):
@@ -880,22 +878,22 @@ def render_validation_ui() -> None:
         st.subheader("Agent Output")
         st.json(st.session_state["agent_output"])
 
+
 import streamlit as st
+
 
 def main() -> None:
     """Entry point for the Streamlit UI."""
-    import streamlit as st
     from importlib import import_module
+
+    import streamlit as st
 
     st.set_page_config(page_title="superNova_2177", layout="wide")
 
     # Unified health check using query params or PATH_INFO
     params = st.query_params
     path_info = os.environ.get("PATH_INFO", "").rstrip("/")
-    if (
-        "1" in params.get("healthz", [])
-        or path_info == "/healthz"
-    ):
+    if "1" in params.get("healthz", []) or path_info == "/healthz":
         st.write("ok")
         st.stop()
         return
@@ -919,7 +917,7 @@ def main() -> None:
     choice = st.sidebar.selectbox("Page", page_files)
 
     try:
-        module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
+        module = import_module(f"pages.{choice}")
         page_main = getattr(module, "main", None)
         if callable(page_main):
             page_main()
@@ -927,6 +925,7 @@ def main() -> None:
             st.error(f"Page '{choice}' is missing a main() function.")
     except Exception as exc:
         import traceback
+
         tb = traceback.format_exc()
         st.error(f"❌ Error loading page '{choice}':")
         st.text(tb)
@@ -935,5 +934,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-
