@@ -16,11 +16,11 @@ def _run_page(module_name: str) -> None:
 
 
 def test_import_ideas_page():
-    _run_page("transcendental_resonance_frontend.pages.ideas")
+    _run_page("pages.ideas")
 
 
 def test_import_video_page():
-    _run_page("transcendental_resonance_frontend.pages.video")
+    _run_page("pages.video")
 
 
 @pytest.mark.asyncio

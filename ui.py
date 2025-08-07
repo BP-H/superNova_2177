@@ -1,16 +1,11 @@
-import os
-import streamlit as st  # ensure Streamlit is imported early
-
-# STRICTLY A SOCIAL MEDIA PLATFORM
-# Intellectual Property & Artistic Inspiration
-# Legal & Ethical Safeguards
-
+# isort: skip_file
 import asyncio
 import difflib
 import io
 import json
 import logging
 import math
+import os
 import sys
 import traceback
 
@@ -19,6 +14,13 @@ import traceback
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 from datetime import datetime
 from pathlib import Path
+
+import streamlit as st  # ensure Streamlit is imported early
+
+# STRICTLY A SOCIAL MEDIA PLATFORM
+# Intellectual Property & Artistic Inspiration
+# Legal & Ethical Safeguards
+
 
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
 
@@ -40,28 +42,31 @@ os.environ["STREAMLIT_WATCHER_TYPE"] = "poll"
 HEALTH_CHECK_PARAM = "healthz"
 
 # Directory containing Streamlit page modules
-PAGES_DIR = (
-    Path(__file__).resolve().parent / "transcendental_resonance_frontend" / "pages"
-)
+PAGES_DIR = Path(__file__).resolve().parent / "pages"
 
 # Toggle verbose output via ``UI_DEBUG_PRINTS``
 UI_DEBUG = os.getenv("UI_DEBUG_PRINTS", "1") != "0"
+
 
 def log(msg: str) -> None:
     if UI_DEBUG:
         print(msg, file=sys.stderr)
 
+
 if UI_DEBUG:
     log("\u23f3 Booting superNova_2177 UI...")
-from streamlit_helpers import (
+# isort: off
+from api_key_input import render_api_key_ui, render_simulation_stubs  # noqa: E402
+from streamlit_helpers import (  # noqa: E402
     alert,
     apply_theme,
     centered_container,
     header,
     theme_selector,
 )
-from api_key_input import render_api_key_ui, render_simulation_stubs
-from ui_utils import load_rfc_entries, parse_summary, summarize_text, render_main_ui
+from ui_utils import render_main_ui  # noqa: E402
+
+# isort: on
 
 
 def _run_async(coro):
@@ -114,13 +119,10 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     update_validator_reputations = None
 
-from typing import Any
+from typing import Any  # noqa: E402
 
-from agent_ui import render_agent_insights_tab
-from llm_backends import get_backend
-from protocols import AGENT_REGISTRY
-from social_tabs import render_social_tab
-from voting_ui import render_voting_tab
+from llm_backends import get_backend  # noqa: E402
+from protocols import AGENT_REGISTRY  # noqa: E402
 
 
 def get_st_secrets() -> dict:
@@ -504,6 +506,7 @@ def boot_diagnostic_ui():
 
 def render_validation_ui() -> None:
     """Main entry point for the validation analysis UI."""
+    global agent
     header("superNova_2177 Validation Analyzer", layout="wide")
 
     ts_placeholder = st.empty()
@@ -512,7 +515,12 @@ def render_validation_ui() -> None:
             timespec="seconds"
         )
     ts_placeholder.markdown(
-        f"<div style='position:fixed;top:0;right:0;background:rgba(0,0,0,0.6);color:white;padding:0.25em 0.5em;border-radius:0 0 0 4px;'>Session start: {st.session_state['session_start_ts']} UTC</div>",
+        (
+            "<div style='position:fixed;top:0;right:0;"
+            "background:rgba(0,0,0,0.6);color:white;"
+            "padding:0.25em 0.5em;border-radius:0 0 0 4px;'>"
+            f"Session start: {st.session_state['session_start_ts']} UTC</div>"
+        ),
         unsafe_allow_html=True,
     )
     if "diary" not in st.session_state:
@@ -758,7 +766,7 @@ def render_validation_ui() -> None:
                     )
                 elif agent:
                     try:
-                        user_count = len(agent.storage.get_all_users())
+                        user_count: int | str = len(agent.storage.get_all_users())
                     except Exception:
                         user_count = "?"
                     st.write(f"User count: {user_count}")
@@ -880,22 +888,19 @@ def render_validation_ui() -> None:
         st.subheader("Agent Output")
         st.json(st.session_state["agent_output"])
 
-import streamlit as st
 
 def main() -> None:
     """Entry point for the Streamlit UI."""
-    import streamlit as st
     from importlib import import_module
+
+    global agent
 
     st.set_page_config(page_title="superNova_2177", layout="wide")
 
     # Unified health check using query params or PATH_INFO
     params = st.query_params
     path_info = os.environ.get("PATH_INFO", "").rstrip("/")
-    if (
-        "1" in params.get("healthz", [])
-        or path_info == "/healthz"
-    ):
+    if "1" in params.get("healthz", []) or path_info == "/healthz":
         st.write("ok")
         st.stop()
         return
@@ -904,7 +909,6 @@ def main() -> None:
 
     if not PAGES_DIR.is_dir():
         st.error("Pages directory not found")
-        render_landing_page()
         return
 
     page_files = sorted(
@@ -912,28 +916,24 @@ def main() -> None:
     )
     if not page_files:
         st.warning("No pages available — showing fallback UI.")
-        render_landing_page()
         return
 
     render_main_ui()
     choice = st.sidebar.selectbox("Page", page_files)
 
     try:
-        module = import_module(f"transcendental_resonance_frontend.pages.{choice}")
+        module = import_module(f"pages.{choice}")
         page_main = getattr(module, "main", None)
         if callable(page_main):
             page_main()
         else:
             st.error(f"Page '{choice}' is missing a main() function.")
     except Exception as exc:
-        import traceback
         tb = traceback.format_exc()
-        st.error(f"❌ Error loading page '{choice}':")
+        st.error(f"❌ Error loading page '{choice}': {exc}")
         st.text(tb)
         print(tb, file=sys.stderr)
 
 
 if __name__ == "__main__":
     main()
-
-
