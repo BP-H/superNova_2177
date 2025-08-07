@@ -1,6 +1,7 @@
 import importlib
 import sys
 import types
+
 import pytest
 
 
@@ -28,6 +29,12 @@ class DummyEl(DummyCtx):
     def props(self, *args):
         return self
 
+    def on_click(self, *args, **kwargs):
+        pass
+
+    def disable(self):
+        pass
+
 
 class StubUI:
     def __init__(self):
@@ -48,8 +55,15 @@ class StubUI:
         return DummyEl()
 
     def button(self, label, on_click=None, **kwargs):
-        self.button_callbacks.append((label, on_click))
-        return DummyEl()
+        el = DummyEl()
+
+        def _on_click(cb=None, **k):
+            self.button_callbacks.append((label, cb))
+
+        el.on_click = _on_click
+        if on_click:
+            el.on_click(on_click)
+        return el
 
     def run_async(self, coro):
         self.last_coro = coro
@@ -83,6 +97,7 @@ async def test_join_call_notifies(monkeypatch):
     monkeypatch.setitem(sys.modules, "websockets", types.ModuleType("websockets"))
 
     import importlib
+
     import transcendental_resonance_frontend.src.utils.layout as layout
 
     importlib.reload(layout)
@@ -95,11 +110,13 @@ async def test_join_call_notifies(monkeypatch):
     monkeypatch.setattr(api, "listen_ws", bad_listen_ws)
     monkeypatch.setattr(api, "TOKEN", "t", raising=False)
 
-    page = importlib.reload(
-        importlib.import_module(
-            "transcendental_resonance_frontend.src.pages.video_chat_page"
-        )
-    )
+    page = importlib.reload(importlib.import_module("pages.video_chat_page"))
+
+    class DummyErrorOverlay:
+        def show(self, *a, **k):
+            pass
+
+    monkeypatch.setattr(page, "ErrorOverlay", DummyErrorOverlay)
     monkeypatch.setattr(page, "listen_ws", bad_listen_ws)
     monkeypatch.setattr(page, "TOKEN", "t", raising=False)
 

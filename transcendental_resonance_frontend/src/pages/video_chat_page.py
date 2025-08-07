@@ -45,18 +45,15 @@ async def video_chat_page() -> None:
 
         async def join_call() -> None:
             try:
-        async def join_call() -> None:
-            try:
                 ws_task = listen_ws(handle_event)
                 await ws_task
             except Exception:  # pragma: no cover - network issues
-                ui.notify("Realtime updates unavailable", color="warning")
+                ui.notify("Unable to join video chat", color="negative")
                 join_button.disable()
                 local_cam.disable()
                 error_overlay.show("Realtime updates unavailable")
 
         join_button.on_click(lambda: ui.run_async(join_call()))
-
 
         async def send_frame() -> None:
             if WS_CONNECTION and local_cam.value:
@@ -65,8 +62,6 @@ async def video_chat_page() -> None:
                 )
 
         local_cam.on("capture", lambda _: ui.run_async(send_frame()))
-        join_button = ui.button("Join Call", on_click=lambda: ui.run_async(join_call()))
         ui.label("Note: Video chat is unavailable when offline.").classes(
             "text-xs opacity-75 mt-2"
         )
-

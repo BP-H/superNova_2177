@@ -8,7 +8,6 @@ import math
 import os
 import sys
 import traceback
-
 # Default port controlled by start.sh via STREAMLIT_PORT; old setting kept
 # for reference but disabled.
 # os.environ["STREAMLIT_SERVER_PORT"] = "8501"
@@ -55,6 +54,7 @@ def log(msg: str) -> None:
 
 if UI_DEBUG:
     log("\u23f3 Booting superNova_2177 UI...")
+
 # isort: off
 from api_key_input import render_api_key_ui, render_simulation_stubs  # noqa: E402
 from streamlit_helpers import (  # noqa: E402
@@ -64,8 +64,12 @@ from streamlit_helpers import (  # noqa: E402
     header,
     theme_selector,
 )
-from ui_utils import render_main_ui  # noqa: E402
-
+from ui_utils import (  # noqa: E402
+    load_rfc_entries,
+    parse_summary,
+    render_main_ui,
+    summarize_text,
+)
 # isort: on
 
 
@@ -888,12 +892,15 @@ def render_validation_ui() -> None:
         st.subheader("Agent Output")
         st.json(st.session_state["agent_output"])
 
+import streamlit as st
+
 
 def main() -> None:
     """Entry point for the Streamlit UI."""
     from importlib import import_module
 
     global agent
+
 
     st.set_page_config(page_title="superNova_2177", layout="wide")
 
@@ -929,6 +936,9 @@ def main() -> None:
         else:
             st.error(f"Page '{choice}' is missing a main() function.")
     except Exception as exc:
+        import traceback
+
+
         tb = traceback.format_exc()
         st.error(f"❌ Error loading page '{choice}': {exc}")
         st.text(tb)
