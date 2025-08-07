@@ -7,17 +7,15 @@ Display proposal ideas from the RFC directory.
 
 from __future__ import annotations
 
-import streamlit as st
 from pathlib import Path
+
+import streamlit as st
 
 from ui_utils import summarize_text
 
 # Load the initial proposals document containing the idea list
 IDEAS_FILE = (
-    Path(__file__).resolve().parents[2]
-    / "rfcs"
-    / "001-initial-proposals"
-    / "README.md"
+    Path(__file__).resolve().parents[1] / "rfcs" / "001-initial-proposals" / "README.md"
 )
 
 
